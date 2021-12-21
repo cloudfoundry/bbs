@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
 
@@ -232,6 +233,11 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		}
 	}
 
+	if request.Update.IsRoutesGroupUpdated(beforeDesiredLRP.Routes, internalroutes.INTERNAL_ROUTER) {
+		logger.Debug("updating-lrp-routes")
+		h.updateInstances(req.Context(), logger, request.ProcessGuid, request.Update)
+	}
+
 	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
 }
 
@@ -375,6 +381,43 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						logger.Error("failed-stopping-lrp-instance", err)
 					}
 				}
+			}
+		}
+	}
+}
+
+func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) {
+	logger = logger.Session("updating-instances", lager.Data{"process_guid": processGuid})
+	actualLRPs, err := h.actualLRPDB.ActualLRPs(ctx, logger.Session("fetch-actuals"), models.ActualLRPFilter{ProcessGuid: processGuid})
+	if err != nil {
+		logger.Error("failed-fetching-actual-lrps", err)
+		return
+	}
+
+	for i := 0; i < len(actualLRPs); i++ {
+		lrp := actualLRPs[i]
+
+		if lrp.Presence != models.ActualLRP_Evacuating && lrp.State != models.ActualLRPStateUnclaimed && lrp.State != models.ActualLRPStateCrashed {
+			cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
+			if err != nil {
+				logger.Error("failed-fetching-cell-presence", err)
+				continue
+			}
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			if err != nil {
+				logger.Error("create-rep-client-failed", err)
+				continue
+			}
+			logger.Debug("updating-lrp-instance")
+			internalRoutes, err := internalroutes.InternalRoutesFromRoutingInfo(*update.Routes)
+			if err != nil {
+				logger.Error("getting-internal-routes-failed", err)
+				continue
+			}
+			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes)
+			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
+			if err != nil {
+				logger.Error("updating-lrp-instance", err)
 			}
 		}
 	}

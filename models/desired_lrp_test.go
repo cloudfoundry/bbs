@@ -446,6 +446,71 @@ var _ = Describe("DesiredLRP", func() {
 			schedulingInfo.ApplyUpdate(update)
 			Expect(schedulingInfo).To(Equal(expectedSchedulingInfo))
 		})
+
+		Describe("IsRoutesGroupUpdated", func() {
+			var (
+				routes *models.Routes
+				update *models.DesiredLRPUpdate
+			)
+
+			BeforeEach(func() {
+				rawMessage := json.RawMessage([]byte(`{"port": 8080,"hosts":["new-route-1","new-route-2"]}`))
+				routes = &models.Routes{
+					"router-group-1": &rawMessage,
+				}
+				update = &models.DesiredLRPUpdate{}
+			})
+
+			Context("when update does not contain routes", func() {
+				BeforeEach(func() {
+					update.SetInstances(2)
+				})
+
+				It("returns false", func() {
+					Expect(update.IsRoutesGroupUpdated(routes, "router-group-1")).To(BeFalse())
+				})
+			})
+
+			Context("when update contains routes", func() {
+				BeforeEach(func() {
+					update.Routes = routes
+				})
+
+				It("returns true when provided routes are not set", func() {
+					Expect(update.IsRoutesGroupUpdated(nil, "router-group-1")).To(BeTrue())
+				})
+
+				Context("when the requested group does not exist in any of the routes", func() {
+					It("returns false", func() {
+						rawMessage := json.RawMessage([]byte(`{"port": 8080,"hosts":["new-route-1","new-route-2"]}`))
+						providedRoutes := &models.Routes{
+							"router-group-2": &rawMessage,
+						}
+						Expect(update.IsRoutesGroupUpdated(providedRoutes, "router-group-1")).To(BeTrue())
+						Expect(update.IsRoutesGroupUpdated(providedRoutes, "router-group-2")).To(BeTrue())
+						Expect(update.IsRoutesGroupUpdated(providedRoutes, "router-group-3")).To(BeTrue())
+					})
+				})
+
+				Context("when the requested group exists in both routes", func() {
+					It("returns true if contents are different", func() {
+						rawMessage := json.RawMessage([]byte(`{"port": 8081,"hosts":["new-route-3","new-route-4"]}`))
+						providedRoutes := &models.Routes{
+							"router-group-1": &rawMessage,
+						}
+						Expect(update.IsRoutesGroupUpdated(providedRoutes, "router-group-1")).To(BeTrue())
+					})
+
+					It("returns false if contents are the same", func() {
+						rawMessage := json.RawMessage([]byte(`{"port": 8080,"hosts":["new-route-1","new-route-2"]}`))
+						providedRoutes := &models.Routes{
+							"router-group-1": &rawMessage,
+						}
+						Expect(update.IsRoutesGroupUpdated(providedRoutes, "router-group-1")).To(BeFalse())
+					})
+				})
+			})
+		})
 	})
 
 	Describe("VersionDownTo", func() {

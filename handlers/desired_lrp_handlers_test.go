@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -1189,6 +1190,108 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+					})
+				})
+			})
+
+			Context("when the routes were changed", func() {
+				var (
+					cfRouterContent, internalRouterContent []byte
+					actualLRPs                             []*models.ActualLRP
+				)
+
+				BeforeEach(func() {
+					cfRouterContent = []byte("[{\"hostname\":\"foo.cf-app.com\"}]")
+					internalRouterContent = []byte("[{\"hostname\":\"foo.apps.internal\"}]")
+					beforeDesiredLRP.Routes = &models.Routes{
+						"cf-router":       (*json.RawMessage)(&cfRouterContent),
+						"internal-router": (*json.RawMessage)(&internalRouterContent),
+					}
+					fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
+
+					fakeServiceClient.CellByIdReturns(&models.CellPresence{
+						RepAddress: "some-address",
+						RepUrl:     "http://some-address",
+					}, nil)
+				})
+
+				Context("when internal routes were changed", func() {
+					BeforeEach(func() {
+						newInternalRouterContent := []byte("[{\"hostname\":\"updated.apps.internal\"}]")
+						update.Routes = &models.Routes{
+							"cf-router":       (*json.RawMessage)(&cfRouterContent),
+							"internal-router": (*json.RawMessage)(&newInternalRouterContent),
+						}
+					})
+
+					Context("when LRPs are present and not unclaimed or crashed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("updates actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(2))
+						})
+					})
+
+					Context("when LRP is evacuating", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidEvacuatingActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidEvacuatingActualLRP("some-guid", int32(1))
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+
+					Context("when LRP is unclaimed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							lrp1.State = models.ActualLRPStateUnclaimed
+							lrp2.State = models.ActualLRPStateUnclaimed
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+
+					Context("when LRP is crashed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							lrp1.State = models.ActualLRPStateCrashed
+							lrp2.State = models.ActualLRPStateCrashed
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+				})
+
+				Context("when internal routes were not changed", func() {
+					BeforeEach(func() {
+						newCfRouterContent := []byte("[{\"hostname\":\"foo.cf-app.com\"},{\"hostname\":\"another.cf-app.com\"}]")
+						update.Routes = &models.Routes{
+							"cf-router":       (*json.RawMessage)(&newCfRouterContent),
+							"internal-router": (*json.RawMessage)(&internalRouterContent),
+						}
+					})
+
+					It("does not update actual LRPs", func() {
+						Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
 					})
 				})
 			})
