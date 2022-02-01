@@ -33,7 +33,7 @@ brew install protobuf
 ### Linux
 
 1. Download a zip archive of the latest protobuf release from [here](https://github.com/google/protobuf/releases).
-1. Unzip the archive in `/usr/local`.
+1. Unzip the archive in `/usr/local` (including /bin and /include folders).
 1. `chmod a+x /usr/local/bin/protoc` to make sure you can use the binary.
 
 > If you already have an older version of protobuf installed, you must
