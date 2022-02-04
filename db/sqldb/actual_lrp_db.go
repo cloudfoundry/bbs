@@ -3,6 +3,7 @@ package sqldb
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -116,6 +117,13 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 		logger.Error("failed-to-serialize-net-info", err)
 		return nil, err
 	}
+
+	internalRoutesData, err := db.encodeInternalRouteData(logger, []*models.ActualLRPInternalRoute{})
+	if err != nil {
+		logger.Error("failed-to-serialize-internal-routes", err)
+		return nil, err
+	}
+
 	now := db.clock.Now().UnixNano()
 	err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		_, err := db.insert(ctx, logger, tx, actualLRPsTable,
@@ -128,6 +136,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 				"net_info":               netInfoData,
 				"modification_tag_epoch": guid,
 				"modification_tag_index": 0,
+				"internal_routes":        internalRoutesData,
 			},
 		)
 
@@ -139,10 +148,11 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 		return nil, err
 	}
 	return &models.ActualLRP{
-		ActualLRPKey:    *key,
-		State:           models.ActualLRPStateUnclaimed,
-		Since:           now,
-		ModificationTag: models.ModificationTag{Epoch: guid, Index: 0},
+		ActualLRPKey:            *key,
+		State:                   models.ActualLRPStateUnclaimed,
+		Since:                   now,
+		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
+		ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 	}, nil
 }
 
@@ -267,7 +277,14 @@ func (db *SQLDB) ClaimActualLRP(ctx context.Context, logger lager.Logger, proces
 	return &beforeActualLRP, actualLRP, err
 }
 
-func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (*models.ActualLRP, *models.ActualLRP, error) {
+func (db *SQLDB) StartActualLRP(
+	ctx context.Context,
+	logger lager.Logger,
+	key *models.ActualLRPKey,
+	instanceKey *models.ActualLRPInstanceKey,
+	netInfo *models.ActualLRPNetInfo,
+	internalRoutes []*models.ActualLRPInternalRoute,
+) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.Session("db-start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -279,7 +296,7 @@ func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *m
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err == models.ErrResourceNotFound {
-			actualLRP, err = db.createRunningActualLRP(ctx, logger, key, instanceKey, netInfo, tx)
+			actualLRP, err = db.createRunningActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes, tx)
 			return err
 		}
 
@@ -307,6 +324,7 @@ func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *m
 
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.ActualLRPNetInfo = *netInfo
+		actualLRP.ActualLrpInternalRoutes = internalRoutes
 		actualLRP.State = models.ActualLRPStateRunning
 		actualLRP.Since = now
 		actualLRP.ModificationTag.Increment()
@@ -315,6 +333,12 @@ func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *m
 		netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
 			logger.Error("failed-to-serialize-net-info", err)
+			return err
+		}
+
+		internalRoutesData, err := db.encodeInternalRouteData(logger, internalRoutes)
+		if err != nil {
+			logger.Error("failed-to-serialize-internalroutes", err)
 			return err
 		}
 
@@ -327,6 +351,7 @@ func (db *SQLDB) StartActualLRP(ctx context.Context, logger lager.Logger, key *m
 				"placement_error":        actualLRP.PlacementError,
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
+				"internal_routes":        internalRoutesData,
 			},
 			"process_guid = ? AND instance_index = ? AND presence = ?",
 			key.ProcessGuid, key.Index, models.ActualLRP_Ordinary,
@@ -514,7 +539,7 @@ func (db *SQLDB) RemoveActualLRP(ctx context.Context, logger lager.Logger, proce
 	})
 }
 
-func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, tx helpers.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, tx helpers.Tx) (*models.ActualLRP, error) {
 	now := db.clock.Now().UnixNano()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -526,11 +551,18 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 	actualLRP.ActualLRPKey = *key
 	actualLRP.ActualLRPInstanceKey = *instanceKey
 	actualLRP.ActualLRPNetInfo = *netInfo
+	actualLRP.ActualLrpInternalRoutes = internalRoutes
 	actualLRP.State = models.ActualLRPStateRunning
 	actualLRP.Since = now
 
 	netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
 	if err != nil {
+		return nil, err
+	}
+
+	internalRoutesData, err := db.encodeInternalRouteData(logger, internalRoutes)
+	if err != nil {
+		logger.Error("failed-to-serialize-internalroutes", err)
 		return nil, err
 	}
 
@@ -543,6 +575,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 			"cell_id":                actualLRP.ActualLRPInstanceKey.CellId,
 			"state":                  actualLRP.State,
 			"net_info":               netInfoData,
+			"internal_routes":        internalRoutesData,
 			"since":                  actualLRP.Since,
 			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 			"modification_tag_index": actualLRP.ModificationTag.Index,
@@ -557,6 +590,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 
 func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, error) {
 	var netInfoData []byte
+	var internalRoutesData []byte
 	var actualLRP models.ActualLRP
 
 	err := row.Scan(
@@ -570,6 +604,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		&actualLRP.PlacementError,
 		&actualLRP.Since,
 		&netInfoData,
+		&internalRoutesData,
 		&actualLRP.ModificationTag.Epoch,
 		&actualLRP.ModificationTag.Index,
 		&actualLRP.CrashCount,
@@ -587,6 +622,19 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 			return &actualLRP, models.ErrDeserialize
 		}
 	}
+
+	var internalRoutes []*models.ActualLRPInternalRoute
+	decodedData, err := db.encoder.Decode(internalRoutesData)
+	if err != nil {
+		logger.Error("failed-decrypting-internal-routes", err)
+		return nil, err
+	}
+	err = json.Unmarshal(decodedData, &internalRoutes)
+	if err != nil {
+		logger.Error("failed-parsing-internal-routes", err)
+		return nil, err
+	}
+	actualLRP.ActualLrpInternalRoutes = internalRoutes
 
 	return &actualLRP, nil
 }
@@ -649,4 +697,18 @@ func (db *SQLDB) scanAndCleanupActualLRPs(ctx context.Context, logger lager.Logg
 	}
 
 	return result, nil
+}
+
+func (db *SQLDB) encodeInternalRouteData(logger lager.Logger, routes []*models.ActualLRPInternalRoute) ([]byte, error) {
+	routeData, err := json.Marshal(routes)
+	if err != nil {
+		logger.Error("failed-marshalling-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	encodedData, err := db.encoder.Encode(routeData)
+	if err != nil {
+		logger.Error("failed-encrypting-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	return encodedData, nil
 }

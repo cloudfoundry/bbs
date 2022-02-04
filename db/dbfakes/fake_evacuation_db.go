@@ -11,7 +11,7 @@ import (
 )
 
 type FakeEvacuationDB struct {
-	EvacuateActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (*models.ActualLRP, error)
+	EvacuateActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (*models.ActualLRP, error)
 	evacuateActualLRPMutex       sync.RWMutex
 	evacuateActualLRPArgsForCall []struct {
 		arg1 context.Context
@@ -19,6 +19,7 @@ type FakeEvacuationDB struct {
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
+		arg6 []*models.ActualLRPInternalRoute
 	}
 	evacuateActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -46,7 +47,12 @@ type FakeEvacuationDB struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo) (*models.ActualLRP, error) {
+func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute) (*models.ActualLRP, error) {
+	var arg6Copy []*models.ActualLRPInternalRoute
+	if arg6 != nil {
+		arg6Copy = make([]*models.ActualLRPInternalRoute, len(arg6))
+		copy(arg6Copy, arg6)
+	}
 	fake.evacuateActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateActualLRPReturnsOnCall[len(fake.evacuateActualLRPArgsForCall)]
 	fake.evacuateActualLRPArgsForCall = append(fake.evacuateActualLRPArgsForCall, struct {
@@ -55,13 +61,14 @@ func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 context.Context, arg2 lager
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
-	}{arg1, arg2, arg3, arg4, arg5})
+		arg6 []*models.ActualLRPInternalRoute
+	}{arg1, arg2, arg3, arg4, arg5, arg6Copy})
 	stub := fake.EvacuateActualLRPStub
 	fakeReturns := fake.evacuateActualLRPReturns
-	fake.recordInvocation("EvacuateActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("EvacuateActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy})
 	fake.evacuateActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -75,17 +82,17 @@ func (fake *FakeEvacuationDB) EvacuateActualLRPCallCount() int {
 	return len(fake.evacuateActualLRPArgsForCall)
 }
 
-func (fake *FakeEvacuationDB) EvacuateActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (*models.ActualLRP, error)) {
+func (fake *FakeEvacuationDB) EvacuateActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (*models.ActualLRP, error)) {
 	fake.evacuateActualLRPMutex.Lock()
 	defer fake.evacuateActualLRPMutex.Unlock()
 	fake.EvacuateActualLRPStub = stub
 }
 
-func (fake *FakeEvacuationDB) EvacuateActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
+func (fake *FakeEvacuationDB) EvacuateActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) {
 	fake.evacuateActualLRPMutex.RLock()
 	defer fake.evacuateActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
 }
 
 func (fake *FakeEvacuationDB) EvacuateActualLRPReturns(result1 *models.ActualLRP, result2 error) {

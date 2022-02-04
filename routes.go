@@ -18,7 +18,8 @@ const (
 
 	// Actual LRP Lifecycle
 	ClaimActualLRPRoute_r0  = "ClaimActualLRP"
-	StartActualLRPRoute_r0  = "StartActualLRP"
+	StartActualLRPRoute_r1  = "StartActualLRP"
+	StartActualLRPRoute_r0  = "StartActualLRP_r0" // DEPRECATED
 	CrashActualLRPRoute_r0  = "CrashActualLRP"
 	FailActualLRPRoute_r0   = "FailActualLRP"
 	RemoveActualLRPRoute_r0 = "RemoveActualLRP"
@@ -29,7 +30,8 @@ const (
 	EvacuateClaimedActualLRPRoute_r0  = "EvacuateClaimedActualLRP"
 	EvacuateCrashedActualLRPRoute_r0  = "EvacuateCrashedActualLRP"
 	EvacuateStoppedActualLRPRoute_r0  = "EvacuateStoppedActualLRP"
-	EvacuateRunningActualLRPRoute_r0  = "EvacuateRunningActualLRP"
+	EvacuateRunningActualLRPRoute_r1  = "EvacuateRunningActualLRP"
+	EvacuateRunningActualLRPRoute_r0  = "EvacuateRunningActualLRP_r0" // DEPRECATED
 
 	// Desired LRPs
 	DesiredLRPsRoute_r3               = "DesiredLRPs"
@@ -85,6 +87,7 @@ var Routes = rata.Routes{
 
 	// Actual LRP Lifecycle
 	{Path: "/v1/actual_lrps/claim", Method: "POST", Name: ClaimActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/start.r1", Method: "POST", Name: StartActualLRPRoute_r1},
 	{Path: "/v1/actual_lrps/start", Method: "POST", Name: StartActualLRPRoute_r0},
 	{Path: "/v1/actual_lrps/crash", Method: "POST", Name: CrashActualLRPRoute_r0},
 	{Path: "/v1/actual_lrps/fail", Method: "POST", Name: FailActualLRPRoute_r0},
@@ -96,6 +99,7 @@ var Routes = rata.Routes{
 	{Path: "/v1/actual_lrps/evacuate_claimed", Method: "POST", Name: EvacuateClaimedActualLRPRoute_r0},
 	{Path: "/v1/actual_lrps/evacuate_crashed", Method: "POST", Name: EvacuateCrashedActualLRPRoute_r0},
 	{Path: "/v1/actual_lrps/evacuate_stopped", Method: "POST", Name: EvacuateStoppedActualLRPRoute_r0},
+	{Path: "/v1/actual_lrps/evacuate_running.r1", Method: "POST", Name: EvacuateRunningActualLRPRoute_r1},
 	{Path: "/v1/actual_lrps/evacuate_running", Method: "POST", Name: EvacuateRunningActualLRPRoute_r0},
 
 	// Desired LRPs

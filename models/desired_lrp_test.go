@@ -10,8 +10,9 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	. "code.cloudfoundry.org/bbs/test_helpers"
 	"github.com/gogo/protobuf/proto"
+
+	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -337,6 +338,34 @@ var _ = Describe("DesiredLRP", func() {
 		It("saves the created at time on the run info", func() {
 			_, runInfo := desiredLRP.CreateComponents(time.Unix(123, 456))
 			Expect(runInfo.CreatedAt).To(BeEquivalentTo((time.Unix(123, 456).UnixNano())))
+		})
+	})
+
+	Describe("RoutesFromRouterGroup", func() {
+		It("Returns routes for the given router group", func() {
+			rawRoutes := json.RawMessage(`[
+        {
+          "hostnames": [
+            "some-route.example.com"
+          ],
+          "port": 8080
+        }
+      ]`)
+			expectedRoutes := models.Routes{"cf-router": &rawRoutes}
+			Expect(desiredLRP.RoutesFromRouterGroup("cf-router")).To(Equal(&expectedRoutes))
+		})
+
+		Context("When there aren't routes for the given router group", func() {
+			It("Returns an empty Routes object", func() {
+				Expect(desiredLRP.RoutesFromRouterGroup("not-valid-router-group")).To(Equal(&models.Routes{}))
+			})
+		})
+
+		Context("When the desired lrp doesn't have any routes", func() {
+			It("Returns an empty Routes object", func() {
+				desiredLRP.Routes = nil
+				Expect(desiredLRP.RoutesFromRouterGroup("doesn't- matter")).To(Equal(&models.Routes{}))
+			})
 		})
 	})
 

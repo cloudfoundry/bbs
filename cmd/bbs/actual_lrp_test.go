@@ -84,6 +84,7 @@ var _ = Describe("ActualLRP API", func() {
 
 		netInfo         models.ActualLRPNetInfo
 		unclaimedLRPKey models.ActualLRPKey
+		internalRoutes  []*models.ActualLRPInternalRoute
 
 		filter models.ActualLRPFilter
 
@@ -114,6 +115,7 @@ var _ = Describe("ActualLRP API", func() {
 		otherLRPInstanceKey = models.NewActualLRPInstanceKey(otherInstanceGuid, otherCellID)
 
 		netInfo = models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressHost, models.NewPortMapping(8080, 80))
+		internalRoutes = model_helpers.NewActualLRPInternalRoutes()
 
 		unclaimedLRPKey = models.NewActualLRPKey(unclaimedProcessGuid, unclaimedIndex, unclaimedDomain)
 
@@ -121,37 +123,42 @@ var _ = Describe("ActualLRP API", func() {
 		crashingLRPInstanceKey = models.NewActualLRPInstanceKey(crashingInstanceGuid, otherCellID)
 
 		baseLRP = &models.ActualLRP{
-			ActualLRPKey:         baseLRPKey,
-			ActualLRPInstanceKey: baseLRPInstanceKey,
-			ActualLRPNetInfo:     netInfo,
-			State:                models.ActualLRPStateRunning,
+			ActualLRPKey:            baseLRPKey,
+			ActualLRPInstanceKey:    baseLRPInstanceKey,
+			ActualLRPNetInfo:        netInfo,
+			State:                   models.ActualLRPStateRunning,
+			ActualLrpInternalRoutes: internalRoutes,
 		}
 
 		evacuatingLRP = &models.ActualLRP{
-			ActualLRPKey:         evacuatingLRPKey,
-			ActualLRPInstanceKey: evacuatingLRPInstanceKey,
-			ActualLRPNetInfo:     netInfo,
-			State:                models.ActualLRPStateRunning,
-			Presence:             models.ActualLRP_Evacuating,
+			ActualLRPKey:            evacuatingLRPKey,
+			ActualLRPInstanceKey:    evacuatingLRPInstanceKey,
+			ActualLRPNetInfo:        netInfo,
+			State:                   models.ActualLRPStateRunning,
+			Presence:                models.ActualLRP_Evacuating,
+			ActualLrpInternalRoutes: internalRoutes,
 		}
 
 		evacuatingInstanceLRP = &models.ActualLRP{
-			ActualLRPKey: evacuatingLRPKey,
-			State:        models.ActualLRPStateUnclaimed,
+			ActualLRPKey:            evacuatingLRPKey,
+			State:                   models.ActualLRPStateUnclaimed,
+			ActualLrpInternalRoutes: internalRoutes,
 		}
 
 		otherLRP0 = &models.ActualLRP{
-			ActualLRPKey:         otherLRP0Key,
-			ActualLRPInstanceKey: otherLRPInstanceKey,
-			ActualLRPNetInfo:     netInfo,
-			State:                models.ActualLRPStateRunning,
+			ActualLRPKey:            otherLRP0Key,
+			ActualLRPInstanceKey:    otherLRPInstanceKey,
+			ActualLRPNetInfo:        netInfo,
+			State:                   models.ActualLRPStateRunning,
+			ActualLrpInternalRoutes: internalRoutes,
 		}
 
 		otherLRP1 = &models.ActualLRP{
-			ActualLRPKey:         otherLRP1Key,
-			ActualLRPInstanceKey: otherLRPInstanceKey,
-			ActualLRPNetInfo:     netInfo,
-			State:                models.ActualLRPStateRunning,
+			ActualLRPKey:            otherLRP1Key,
+			ActualLRPInstanceKey:    otherLRPInstanceKey,
+			ActualLRPNetInfo:        netInfo,
+			State:                   models.ActualLRPStateRunning,
+			ActualLrpInternalRoutes: internalRoutes,
 		}
 
 		unclaimedLRP = &models.ActualLRP{
@@ -160,15 +167,17 @@ var _ = Describe("ActualLRP API", func() {
 		}
 
 		crashingLRP = &models.ActualLRP{
-			ActualLRPKey: crashingLRPKey,
-			State:        models.ActualLRPStateCrashed,
-			CrashReason:  "crash",
-			CrashCount:   3,
+			ActualLRPKey:            crashingLRPKey,
+			State:                   models.ActualLRPStateCrashed,
+			CrashReason:             "crash",
+			CrashCount:              3,
+			ActualLrpInternalRoutes: internalRoutes,
 		}
 
 		retiredLRP = &models.ActualLRP{
-			ActualLRPKey: retiredLRPKey,
-			State:        models.ActualLRPStateRunning,
+			ActualLRPKey:            retiredLRPKey,
+			State:                   models.ActualLRPStateRunning,
+			ActualLrpInternalRoutes: internalRoutes,
 		}
 
 		var err error
@@ -177,24 +186,24 @@ var _ = Describe("ActualLRP API", func() {
 		baseDesiredLRP.Domain = baseDomain
 		err = client.DesireLRP(logger, baseDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, &baseLRPKey, &baseLRPInstanceKey, &netInfo)
+		err = client.StartActualLRP(logger, &baseLRPKey, &baseLRPInstanceKey, &netInfo, internalRoutes)
 		Expect(err).NotTo(HaveOccurred())
 
 		otherDesiredLRP := model_helpers.NewValidDesiredLRP(otherLRP0.ProcessGuid)
 		otherDesiredLRP.Domain = otherDomain
 		Expect(client.DesireLRP(logger, otherDesiredLRP)).To(Succeed())
-		err = client.StartActualLRP(logger, &otherLRP0Key, &otherLRPInstanceKey, &netInfo)
+		err = client.StartActualLRP(logger, &otherLRP0Key, &otherLRPInstanceKey, &netInfo, internalRoutes)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, &otherLRP1Key, &otherLRPInstanceKey, &netInfo)
+		err = client.StartActualLRP(logger, &otherLRP1Key, &otherLRPInstanceKey, &netInfo, internalRoutes)
 		Expect(err).NotTo(HaveOccurred())
 
 		evacuatingDesiredLRP := model_helpers.NewValidDesiredLRP(evacuatingLRP.ProcessGuid)
 		evacuatingDesiredLRP.Domain = evacuatingDomain
 		err = client.DesireLRP(logger, evacuatingDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo)
+		err = client.StartActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, internalRoutes)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = client.EvacuateRunningActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo)
+		_, err = client.EvacuateRunningActualLRP(logger, &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, internalRoutes)
 		Expect(err).NotTo(HaveOccurred())
 
 		unclaimedDesiredLRP := model_helpers.NewValidDesiredLRP(unclaimedLRP.ProcessGuid)
@@ -206,7 +215,7 @@ var _ = Describe("ActualLRP API", func() {
 		crashingDesiredLRP.Domain = crashingDomain
 		Expect(client.DesireLRP(logger, crashingDesiredLRP)).To(Succeed())
 		for i := 0; i < 3; i++ {
-			err = client.StartActualLRP(logger, &crashingLRPKey, &crashingLRPInstanceKey, &netInfo)
+			err = client.StartActualLRP(logger, &crashingLRPKey, &crashingLRPInstanceKey, &netInfo, internalRoutes)
 			Expect(err).NotTo(HaveOccurred())
 			err = client.CrashActualLRP(logger, &crashingLRPKey, &crashingLRPInstanceKey, "crash")
 			Expect(err).NotTo(HaveOccurred())
@@ -216,7 +225,7 @@ var _ = Describe("ActualLRP API", func() {
 		retiredDesiredLRP.Domain = retiredDomain
 		err = client.DesireLRP(logger, retiredDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, &retiredLRPKey, &retiredLRPInstanceKey, &netInfo)
+		err = client.StartActualLRP(logger, &retiredLRPKey, &retiredLRPInstanceKey, &netInfo, internalRoutes)
 		Expect(err).NotTo(HaveOccurred())
 		retireErr := client.RetireActualLRP(logger, &retiredLRPKey)
 		Expect(retireErr).NotTo(HaveOccurred())
@@ -343,10 +352,11 @@ var _ = Describe("ActualLRP API", func() {
 				tlsNetInfo = models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressHost, models.NewPortMappingWithTLSProxy(8080, 80, 60042, 443))
 
 				tlsEnabledLRP = &models.ActualLRP{
-					ActualLRPKey:         tlsEnabledLRPKey,
-					ActualLRPInstanceKey: tlsEnabledLRPInstanceKey,
-					ActualLRPNetInfo:     tlsNetInfo,
-					State:                models.ActualLRPStateRunning,
+					ActualLRPKey:            tlsEnabledLRPKey,
+					ActualLRPInstanceKey:    tlsEnabledLRPInstanceKey,
+					ActualLRPNetInfo:        tlsNetInfo,
+					State:                   models.ActualLRPStateRunning,
+					ActualLrpInternalRoutes: internalRoutes,
 				}
 
 				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ProcessGuid)
@@ -354,7 +364,7 @@ var _ = Describe("ActualLRP API", func() {
 
 				err := client.DesireLRP(logger, tlsEnabledDesiredLRP)
 				Expect(err).NotTo(HaveOccurred())
-				err = client.StartActualLRP(logger, &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo)
+				err = client.StartActualLRP(logger, &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo, internalRoutes)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -438,10 +448,11 @@ var _ = Describe("ActualLRP API", func() {
 				tlsNetInfo = models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressHost, models.NewPortMappingWithTLSProxy(8080, 80, 60042, 443))
 
 				tlsEnabledLRP = &models.ActualLRP{
-					ActualLRPKey:         tlsEnabledLRPKey,
-					ActualLRPInstanceKey: tlsEnabledLRPInstanceKey,
-					ActualLRPNetInfo:     tlsNetInfo,
-					State:                models.ActualLRPStateRunning,
+					ActualLRPKey:            tlsEnabledLRPKey,
+					ActualLRPInstanceKey:    tlsEnabledLRPInstanceKey,
+					ActualLRPNetInfo:        tlsNetInfo,
+					State:                   models.ActualLRPStateRunning,
+					ActualLrpInternalRoutes: internalRoutes,
 				}
 
 				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ProcessGuid)
@@ -449,7 +460,7 @@ var _ = Describe("ActualLRP API", func() {
 
 				err := client.DesireLRP(logger, tlsEnabledDesiredLRP)
 				Expect(err).NotTo(HaveOccurred())
-				err = client.StartActualLRP(logger, &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo)
+				err = client.StartActualLRP(logger, &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo, internalRoutes)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -545,7 +556,7 @@ var _ = Describe("ActualLRP API", func() {
 				CellId:       "my-cell-id",
 				InstanceGuid: "my-instance-guid",
 			}
-			startErr = client.StartActualLRP(logger, &unclaimedLRPKey, &instanceKey, &netInfo)
+			startErr = client.StartActualLRP(logger, &unclaimedLRPKey, &instanceKey, &netInfo, internalRoutes)
 		})
 
 		It("starts the actual_lrp", func() {
@@ -555,6 +566,7 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.State = models.ActualLRPStateRunning
 			expectedActualLRP.ActualLRPInstanceKey = instanceKey
 			expectedActualLRP.ActualLRPNetInfo = netInfo
+			expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, unclaimedProcessGuid, unclaimedIndex)
 			Expect(err).NotTo(HaveOccurred())

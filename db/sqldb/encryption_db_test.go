@@ -216,10 +216,11 @@ var _ = Describe("Encryption", func() {
 
 		Context("net_info encryption", func() {
 			var (
-				processGuid = "uniqueprocessguid"
-				netInfo     string
-				cryptor     encryption.Cryptor
-				encoder     format.Encoder
+				processGuid    = "uniqueprocessguid"
+				netInfo        string
+				internalRoutes string
+				cryptor        encryption.Cryptor
+				encoder        format.Encoder
 			)
 
 			BeforeEach(func() {
@@ -241,15 +242,19 @@ var _ = Describe("Encryption", func() {
 					Expect(err).NotTo(HaveOccurred())
 					netInfo = string(info)
 
+					internalRoutesEncoded, err := encoder.Encode([]byte("{}"))
+					Expect(err).NotTo(HaveOccurred())
+					internalRoutes = string(internalRoutesEncoded)
+
 					queryStr := `
 						INSERT INTO actual_lrps
-							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state)
-						VALUES (?, ?, ?, ?, ?, ?)`
+							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes)
+						VALUES (?, ?, ?, ?, ?, ?, ?)`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo, 0, "10", "yo")
+						processGuid, "fake-domain", netInfo, 0, "10", "yo", internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -275,15 +280,19 @@ var _ = Describe("Encryption", func() {
 				BeforeEach(func() {
 					netInfo = ""
 
+					internalRoutesEncoded, err := encoder.Encode([]byte("{}"))
+					Expect(err).NotTo(HaveOccurred())
+					internalRoutes = string(internalRoutesEncoded)
+
 					queryStr := `
 						INSERT INTO actual_lrps
-							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state)
-						VALUES (?, ?, ?, ?, ?, ?)`
+							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes)
+						VALUES (?, ?, ?, ?, ?, ?, ?)`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
-					_, err := db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo, 0, "10", "yo")
+					_, err = db.ExecContext(ctx, queryStr,
+						processGuid, "fake-domain", netInfo, 0, "10", "yo", internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -306,15 +315,19 @@ var _ = Describe("Encryption", func() {
 					Expect(err).NotTo(HaveOccurred())
 					netInfo1 := string(info)
 
+					internalRoutesEncoded, err := encoder.Encode([]byte("{}"))
+					Expect(err).NotTo(HaveOccurred())
+					internalRoutes = string(internalRoutesEncoded)
+
 					queryStr := `
 						INSERT INTO actual_lrps
-							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state)
-						VALUES (?, ?, ?, ?, ?, ?)`
+							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes)
+						VALUES (?, ?, ?, ?, ?, ?, ?)`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo1, 0, "10", "yo")
+						processGuid, "fake-domain", netInfo1, 0, "10", "yo", internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 
 					info, err = encoder.Encode([]byte("actual value 2"))
@@ -322,7 +335,7 @@ var _ = Describe("Encryption", func() {
 					netInfo2 := string(info)
 
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo2, 1, "10", "yo")
+						processGuid, "fake-domain", netInfo2, 1, "10", "yo", internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 
 					info, err = encoder.Encode([]byte("actual value 3"))
@@ -330,7 +343,7 @@ var _ = Describe("Encryption", func() {
 					netInfo3 := string(info)
 
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo3, 2, "10", "yo")
+						processGuid, "fake-domain", netInfo3, 2, "10", "yo", internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

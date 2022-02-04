@@ -120,9 +120,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			processGuid = "process-guid"
 			index       = int32(1)
 
-			key         models.ActualLRPKey
-			instanceKey models.ActualLRPInstanceKey
-			netInfo     models.ActualLRPNetInfo
+			key            models.ActualLRPKey
+			instanceKey    models.ActualLRPInstanceKey
+			netInfo        models.ActualLRPNetInfo
+			internalRoutes []*models.ActualLRPInternalRoute
 
 			requestBody interface{}
 		)
@@ -138,10 +139,12 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				"cell-id-0",
 			)
 			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
+			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
 			requestBody = &models.StartActualLRPRequest{
-				ActualLrpKey:         &key,
-				ActualLrpInstanceKey: &instanceKey,
-				ActualLrpNetInfo:     &netInfo,
+				ActualLrpKey:            &key,
+				ActualLrpInstanceKey:    &instanceKey,
+				ActualLrpNetInfo:        &netInfo,
+				ActualLrpInternalRoutes: internalRoutes,
 			}
 		})
 
@@ -152,10 +155,11 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-			_, _, actualKey, actualInstanceKey, actualNetInfo := fakeController.StartActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes := fakeController.StartActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
 			Expect(actualNetInfo).To(Equal(&netInfo))
+			Expect(actualInternalRoutes).To(Equal(internalRoutes))
 		})
 
 		Context("when starting the actual lrp in the DB succeeds", func() {

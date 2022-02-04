@@ -42,7 +42,7 @@ type FakeEvacuationController struct {
 	evacuateCrashedActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	EvacuateRunningActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)
+	EvacuateRunningActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)
 	evacuateRunningActualLRPMutex       sync.RWMutex
 	evacuateRunningActualLRPArgsForCall []struct {
 		arg1 context.Context
@@ -50,6 +50,7 @@ type FakeEvacuationController struct {
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
+		arg6 []*models.ActualLRPInternalRoute
 	}
 	evacuateRunningActualLRPReturns struct {
 		result1 bool
@@ -223,7 +224,12 @@ func (fake *FakeEvacuationController) EvacuateCrashedActualLRPReturnsOnCall(i in
 	}{result1}
 }
 
-func (fake *FakeEvacuationController) EvacuateRunningActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo) (bool, error) {
+func (fake *FakeEvacuationController) EvacuateRunningActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute) (bool, error) {
+	var arg6Copy []*models.ActualLRPInternalRoute
+	if arg6 != nil {
+		arg6Copy = make([]*models.ActualLRPInternalRoute, len(arg6))
+		copy(arg6Copy, arg6)
+	}
 	fake.evacuateRunningActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateRunningActualLRPReturnsOnCall[len(fake.evacuateRunningActualLRPArgsForCall)]
 	fake.evacuateRunningActualLRPArgsForCall = append(fake.evacuateRunningActualLRPArgsForCall, struct {
@@ -232,13 +238,14 @@ func (fake *FakeEvacuationController) EvacuateRunningActualLRP(arg1 context.Cont
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
-	}{arg1, arg2, arg3, arg4, arg5})
+		arg6 []*models.ActualLRPInternalRoute
+	}{arg1, arg2, arg3, arg4, arg5, arg6Copy})
 	stub := fake.EvacuateRunningActualLRPStub
 	fakeReturns := fake.evacuateRunningActualLRPReturns
-	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy})
 	fake.evacuateRunningActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -252,17 +259,17 @@ func (fake *FakeEvacuationController) EvacuateRunningActualLRPCallCount() int {
 	return len(fake.evacuateRunningActualLRPArgsForCall)
 }
 
-func (fake *FakeEvacuationController) EvacuateRunningActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)) {
+func (fake *FakeEvacuationController) EvacuateRunningActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)) {
 	fake.evacuateRunningActualLRPMutex.Lock()
 	defer fake.evacuateRunningActualLRPMutex.Unlock()
 	fake.EvacuateRunningActualLRPStub = stub
 }
 
-func (fake *FakeEvacuationController) EvacuateRunningActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
+func (fake *FakeEvacuationController) EvacuateRunningActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) {
 	fake.evacuateRunningActualLRPMutex.RLock()
 	defer fake.evacuateRunningActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateRunningActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
 }
 
 func (fake *FakeEvacuationController) EvacuateRunningActualLRPReturns(result1 bool, result2 error) {

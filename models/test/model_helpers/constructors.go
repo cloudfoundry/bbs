@@ -10,13 +10,14 @@ import (
 
 func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := &models.ActualLRP{
-		ActualLRPKey:         models.NewActualLRPKey(guid, index, "some-domain"),
-		ActualLRPInstanceKey: models.NewActualLRPInstanceKey("some-guid", "some-cell"),
-		ActualLRPNetInfo:     models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444)),
-		CrashCount:           33,
-		CrashReason:          "badness",
-		State:                models.ActualLRPStateRunning,
-		Since:                1138,
+		ActualLRPKey:            models.NewActualLRPKey(guid, index, "some-domain"),
+		ActualLRPInstanceKey:    models.NewActualLRPInstanceKey("some-guid", "some-cell"),
+		ActualLRPNetInfo:        models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444)),
+		ActualLrpInternalRoutes: NewActualLRPInternalRoutes(),
+		CrashCount:              33,
+		CrashReason:             "badness",
+		State:                   models.ActualLRPStateRunning,
+		Since:                   1138,
 		ModificationTag: models.ModificationTag{
 			Epoch: "some-epoch",
 			Index: 999,
@@ -26,6 +27,12 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	Expect(err).NotTo(HaveOccurred())
 
 	return actualLRP
+}
+
+func NewActualLRPInternalRoutes() []*models.ActualLRPInternalRoute {
+	return []*models.ActualLRPInternalRoute{
+		{Hostname: "some-internal-route.apps.internal"},
+	}
 }
 
 func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {

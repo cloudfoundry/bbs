@@ -281,6 +281,11 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 		})
 	}
 
+	// TODO
+	// for _, key := range convergenceResult.LRPsWithInternalRouteDiffs {
+	// 	h.handler.UpdateLRPInstance(each of the lrps that need their internal routes updated)
+	// }
+
 	var throttler *workpool.Throttler
 	throttler, err = workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {

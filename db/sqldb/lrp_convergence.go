@@ -79,6 +79,20 @@ func newConvergence(db *SQLDB) *convergence {
 	}
 }
 
+// TODO
+// func (c *convergence) lRPsWithInternalRouteDiffs () {
+// 	desiredLRPs := c.selectDesiredLRPSWithInternalRoutes()
+// 	actualLRPs := c.selectActualCorrespondingLRPs(desiredLRPs)
+
+// 	for each actual {
+// 		for each desired {
+// 			if actual.internalroutes != desired.internalroutes {
+// 				add actual to result
+// 			}
+// 		}
+// 	}
+// }
+
 // Adds stale UNCLAIMED Actual LRPs to the list of start requests.
 func (c *convergence) staleUnclaimedActualLRPs(ctx context.Context, logger lager.Logger, now time.Time) {
 	logger = logger.Session("stale-unclaimed-actual-lrps")

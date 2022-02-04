@@ -81,7 +81,8 @@ func New(
 
 		// Actual LRP Lifecycle
 		bbs.ClaimActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.ClaimActualLRP), emitter)),
-		bbs.StartActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP), emitter)),
+		bbs.StartActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP_r0), emitter)), // DEPRECATED
+		bbs.StartActualLRPRoute_r1:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP), emitter)),
 		bbs.CrashActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.CrashActualLRP), emitter)),
 		bbs.RetireActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.RetireActualLRP), emitter)),
 		bbs.FailActualLRPRoute_r0:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.FailActualLRP), emitter)),
@@ -92,7 +93,8 @@ func New(
 		bbs.EvacuateClaimedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateClaimedActualLRP), emitter)),
 		bbs.EvacuateCrashedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateCrashedActualLRP), emitter)),
 		bbs.EvacuateStoppedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateStoppedActualLRP), emitter)),
-		bbs.EvacuateRunningActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP), emitter)),
+		bbs.EvacuateRunningActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP_r0), emitter)), // DEPRECATED
+		bbs.EvacuateRunningActualLRPRoute_r1:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP), emitter)),
 
 		// Desired LRPs
 		bbs.DesiredLRPsRoute_r3:               route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs), emitter)),

@@ -83,7 +83,7 @@ type FakeActualLRPLifecycleController struct {
 	retireActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	StartActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) error
+	StartActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) error
 	startActualLRPMutex       sync.RWMutex
 	startActualLRPArgsForCall []struct {
 		arg1 context.Context
@@ -91,6 +91,7 @@ type FakeActualLRPLifecycleController struct {
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
+		arg6 []*models.ActualLRPInternalRoute
 	}
 	startActualLRPReturns struct {
 		result1 error
@@ -424,7 +425,12 @@ func (fake *FakeActualLRPLifecycleController) RetireActualLRPReturnsOnCall(i int
 	}{result1}
 }
 
-func (fake *FakeActualLRPLifecycleController) StartActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo) error {
+func (fake *FakeActualLRPLifecycleController) StartActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute) error {
+	var arg6Copy []*models.ActualLRPInternalRoute
+	if arg6 != nil {
+		arg6Copy = make([]*models.ActualLRPInternalRoute, len(arg6))
+		copy(arg6Copy, arg6)
+	}
 	fake.startActualLRPMutex.Lock()
 	ret, specificReturn := fake.startActualLRPReturnsOnCall[len(fake.startActualLRPArgsForCall)]
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
@@ -433,13 +439,14 @@ func (fake *FakeActualLRPLifecycleController) StartActualLRP(arg1 context.Contex
 		arg3 *models.ActualLRPKey
 		arg4 *models.ActualLRPInstanceKey
 		arg5 *models.ActualLRPNetInfo
-	}{arg1, arg2, arg3, arg4, arg5})
+		arg6 []*models.ActualLRPInternalRoute
+	}{arg1, arg2, arg3, arg4, arg5, arg6Copy})
 	stub := fake.StartActualLRPStub
 	fakeReturns := fake.startActualLRPReturns
-	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy})
 	fake.startActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1
@@ -453,17 +460,17 @@ func (fake *FakeActualLRPLifecycleController) StartActualLRPCallCount() int {
 	return len(fake.startActualLRPArgsForCall)
 }
 
-func (fake *FakeActualLRPLifecycleController) StartActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) error) {
+func (fake *FakeActualLRPLifecycleController) StartActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) error) {
 	fake.startActualLRPMutex.Lock()
 	defer fake.startActualLRPMutex.Unlock()
 	fake.StartActualLRPStub = stub
 }
 
-func (fake *FakeActualLRPLifecycleController) StartActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
+func (fake *FakeActualLRPLifecycleController) StartActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) {
 	fake.startActualLRPMutex.RLock()
 	defer fake.startActualLRPMutex.RUnlock()
 	argsForCall := fake.startActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
 }
 
 func (fake *FakeActualLRPLifecycleController) StartActualLRPReturns(result1 error) {

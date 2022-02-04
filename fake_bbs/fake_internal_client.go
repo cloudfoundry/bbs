@@ -261,13 +261,14 @@ type FakeInternalClient struct {
 		result1 bool
 		result2 error
 	}
-	EvacuateRunningActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)
+	EvacuateRunningActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)
 	evacuateRunningActualLRPMutex       sync.RWMutex
 	evacuateRunningActualLRPArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 		arg4 *models.ActualLRPNetInfo
+		arg5 []*models.ActualLRPInternalRoute
 	}
 	evacuateRunningActualLRPReturns struct {
 		result1 bool
@@ -404,13 +405,14 @@ type FakeInternalClient struct {
 	retireActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	StartActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) error
+	StartActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) error
 	startActualLRPMutex       sync.RWMutex
 	startActualLRPArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 		arg4 *models.ActualLRPNetInfo
+		arg5 []*models.ActualLRPInternalRoute
 	}
 	startActualLRPReturns struct {
 		result1 error
@@ -1759,7 +1761,12 @@ func (fake *FakeInternalClient) EvacuateCrashedActualLRPReturnsOnCall(i int, res
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) EvacuateRunningActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo) (bool, error) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo, arg5 []*models.ActualLRPInternalRoute) (bool, error) {
+	var arg5Copy []*models.ActualLRPInternalRoute
+	if arg5 != nil {
+		arg5Copy = make([]*models.ActualLRPInternalRoute, len(arg5))
+		copy(arg5Copy, arg5)
+	}
 	fake.evacuateRunningActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateRunningActualLRPReturnsOnCall[len(fake.evacuateRunningActualLRPArgsForCall)]
 	fake.evacuateRunningActualLRPArgsForCall = append(fake.evacuateRunningActualLRPArgsForCall, struct {
@@ -1767,13 +1774,14 @@ func (fake *FakeInternalClient) EvacuateRunningActualLRP(arg1 lager.Logger, arg2
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 		arg4 *models.ActualLRPNetInfo
-	}{arg1, arg2, arg3, arg4})
+		arg5 []*models.ActualLRPInternalRoute
+	}{arg1, arg2, arg3, arg4, arg5Copy})
 	stub := fake.EvacuateRunningActualLRPStub
 	fakeReturns := fake.evacuateRunningActualLRPReturns
-	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5Copy})
 	fake.evacuateRunningActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4)
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1787,17 +1795,17 @@ func (fake *FakeInternalClient) EvacuateRunningActualLRPCallCount() int {
 	return len(fake.evacuateRunningActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) EvacuateRunningActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)) {
 	fake.evacuateRunningActualLRPMutex.Lock()
 	defer fake.evacuateRunningActualLRPMutex.Unlock()
 	fake.EvacuateRunningActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) EvacuateRunningActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) {
 	fake.evacuateRunningActualLRPMutex.RLock()
 	defer fake.evacuateRunningActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateRunningActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeInternalClient) EvacuateRunningActualLRPReturns(result1 bool, result2 error) {
@@ -2454,7 +2462,12 @@ func (fake *FakeInternalClient) RetireActualLRPReturnsOnCall(i int, result1 erro
 	}{result1}
 }
 
-func (fake *FakeInternalClient) StartActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo) error {
+func (fake *FakeInternalClient) StartActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo, arg5 []*models.ActualLRPInternalRoute) error {
+	var arg5Copy []*models.ActualLRPInternalRoute
+	if arg5 != nil {
+		arg5Copy = make([]*models.ActualLRPInternalRoute, len(arg5))
+		copy(arg5Copy, arg5)
+	}
 	fake.startActualLRPMutex.Lock()
 	ret, specificReturn := fake.startActualLRPReturnsOnCall[len(fake.startActualLRPArgsForCall)]
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
@@ -2462,13 +2475,14 @@ func (fake *FakeInternalClient) StartActualLRP(arg1 lager.Logger, arg2 *models.A
 		arg2 *models.ActualLRPKey
 		arg3 *models.ActualLRPInstanceKey
 		arg4 *models.ActualLRPNetInfo
-	}{arg1, arg2, arg3, arg4})
+		arg5 []*models.ActualLRPInternalRoute
+	}{arg1, arg2, arg3, arg4, arg5Copy})
 	stub := fake.StartActualLRPStub
 	fakeReturns := fake.startActualLRPReturns
-	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5Copy})
 	fake.startActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4)
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2482,17 +2496,17 @@ func (fake *FakeInternalClient) StartActualLRPCallCount() int {
 	return len(fake.startActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) StartActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) error) {
+func (fake *FakeInternalClient) StartActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) error) {
 	fake.startActualLRPMutex.Lock()
 	defer fake.startActualLRPMutex.Unlock()
 	fake.StartActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) StartActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) {
+func (fake *FakeInternalClient) StartActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) {
 	fake.startActualLRPMutex.RLock()
 	defer fake.startActualLRPMutex.RUnlock()
 	argsForCall := fake.startActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeInternalClient) StartActualLRPReturns(result1 error) {

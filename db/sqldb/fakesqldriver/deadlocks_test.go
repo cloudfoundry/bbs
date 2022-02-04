@@ -160,7 +160,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("EvacuateActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.EvacuateActualLRP(ctx, logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{})
+			_, err := sqlDB.EvacuateActualLRP(ctx, logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
@@ -216,7 +216,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("StartActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.StartActualLRP(ctx, logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{})
+			_, _, err := sqlDB.StartActualLRP(ctx, logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})

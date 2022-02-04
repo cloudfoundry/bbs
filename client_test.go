@@ -48,6 +48,132 @@ var _ = Describe("Client", func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 
+	Context("internal endpoints with different versions", func() {
+		var (
+			internalClient bbs.InternalClient
+		)
+		JustBeforeEach(func() {
+			var err error
+			internalClient, err = bbs.NewClientWithConfig(cfg)
+			Expect(err).ToNot(HaveOccurred())
+		})
+		Context("StartActualLRP", func() {
+			It("Calls the current endpoint", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
+					),
+				)
+
+				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.RespondWith(http.StatusNotFound, nil),
+					),
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start"),
+						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
+					),
+				)
+
+				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("Returns an error if the current call returns a non-successful non-404 status code", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.RespondWith(http.StatusForbidden, nil),
+					),
+				)
+
+				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).To(MatchError("Invalid Response with status code: 403"))
+			})
+
+			It("Still returns an error if the fallback call fails", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.RespondWith(http.StatusNotFound, nil),
+					),
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start"),
+						ghttp.RespondWith(http.StatusForbidden, nil),
+					),
+				)
+
+				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).To(MatchError("Invalid Response with status code: 403"))
+			})
+		})
+
+		Context("evacuateRunningActualLrp", func() {
+			It("Calls the current endpoint", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
+					),
+				)
+
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.RespondWith(http.StatusNotFound, nil),
+					),
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running"),
+						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
+					),
+				)
+
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("Returns an error if the current call returns a non-successful non-404 status code", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.RespondWith(http.StatusForbidden, nil),
+					),
+				)
+
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).To(MatchError("Invalid Response with status code: 403"))
+			})
+
+			It("Still returns an error if the fallback call fails", func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.RespondWith(http.StatusNotFound, nil),
+					),
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running"),
+						ghttp.RespondWith(http.StatusForbidden, nil),
+					),
+				)
+
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				Expect(err).To(MatchError("Invalid Response with status code: 403"))
+			})
+		})
+	})
+
 	Context("when the request timeout is explicitly set", func() {
 		Context("when the client is not configured to use TLS", func() {
 			BeforeEach(func() {

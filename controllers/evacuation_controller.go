@@ -238,7 +238,13 @@ func (h *EvacuationController) EvacuateCrashedActualLRP(ctx context.Context, log
 // Refer to
 // https://github.com/cloudfoundry/diego-notes/tree/2cbd7451#harmonizing-during-evacuation
 // for more details.
-func (h *EvacuationController) EvacuateRunningActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (bool, error) {
+func (h *EvacuationController) EvacuateRunningActualLRP(
+	ctx context.Context,
+	logger lager.Logger,
+	actualLRPKey *models.ActualLRPKey,
+	actualLRPInstanceKey *models.ActualLRPInstanceKey,
+	netInfo *models.ActualLRPNetInfo,
+	internalRoutes []*models.ActualLRPInternalRoute) (bool, error) {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
@@ -302,7 +308,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(ctx context.Context, log
 		// FIXME: there might be a bug when the LRP is originally in the CLAIMED
 		// state.  db.EvacuateActualLRP always create an evacuating LRP in the
 		// running state regardless.
-		newLRP, err := h.db.EvacuateActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, netInfo)
+		newLRP, err := h.db.EvacuateActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, netInfo, internalRoutes)
 
 		if err != nil {
 			logger.Error("failed-evacuating-actual-lrp", err)
@@ -394,7 +400,7 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
 
-	evacuating, err := h.db.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo)
+	evacuating, err := h.db.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes)
 	if err != nil {
 		return err
 	}

@@ -198,7 +198,7 @@ var _ = Describe("Events API", func() {
 
 					By("evacuating the ActualLRP")
 					initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
-					_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo)
+					_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
 					Expect(err).NotTo(HaveOccurred())
 					auctioneerRequests := auctioneerServer.ReceivedRequests()
 					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
@@ -226,7 +226,7 @@ var _ = Describe("Events API", func() {
 					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 					By("starting and then evacuating the ActualLRP on another cell")
-					err = client.StartActualLRP(logger, &key, &newInstanceKey, &netInfo)
+					err = client.StartActualLRP(logger, &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
 
 					Expect(err).NotTo(HaveOccurred())
 
@@ -237,7 +237,7 @@ var _ = Describe("Events API", func() {
 					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 					initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
-					_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo)
+					_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
 					Expect(err).NotTo(HaveOccurred())
 					auctioneerRequests = auctioneerServer.ReceivedRequests()
 					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
