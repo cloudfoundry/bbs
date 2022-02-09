@@ -782,23 +782,31 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 	Context("lrps with internal routes that needs updated", func() {
 		var (
-			actualLRP1, actualLRP2, actualLRP3          *models.ActualLRP
-			cell1Presence, cell2Presence, cell3Presence models.CellPresence
+			actualLRPKeyWithInternalRoutes1, actualLRPKeyWithInternalRoutes2, actualLRPKeyWithInternalRoutes3 db.ActualLRPKeyWithInternalRoutes
+			cell1Presence, cell2Presence, cell3Presence                                                       models.CellPresence
 		)
 
 		BeforeEach(func() {
-			actualLRP1 = model_helpers.NewValidActualLRP("guid1", 1)
-			actualLRP1.CellId = "cell-id-1"
-			actualLRP2 = model_helpers.NewValidActualLRP("guid2", 1)
-			actualLRP2.CellId = "cell-id-2"
-			actualLRP3 = model_helpers.NewValidActualLRP("guid3", 1)
-			actualLRP3.CellId = "cell-id-3"
+			actualLRPKey1 := models.NewActualLRPKey("guid1", 1, "some-domain")
+			actualLRPInstanceKey1 := models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "cell-id-1"}
+			actualLRPKey2 := models.NewActualLRPKey("guid2", 1, "some-domain")
+			actualLRPInstanceKey2 := models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "cell-id-2"}
+			actualLRPKey3 := models.NewActualLRPKey("guid3", 1, "some-domain")
+			actualLRPInstanceKey3 := models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "cell-id-3"}
+
+			desiredInternalRoutes := internalroutes.InternalRoutes{
+				{Hostname: "some-internal-route.apps.internal"},
+			}
+			actualLRPKeyWithInternalRoutes1 = db.ActualLRPKeyWithInternalRoutes{Key: &actualLRPKey1, InstanceKey: &actualLRPInstanceKey1, DesiredInternalRoutes: desiredInternalRoutes}
+			actualLRPKeyWithInternalRoutes2 = db.ActualLRPKeyWithInternalRoutes{Key: &actualLRPKey2, InstanceKey: &actualLRPInstanceKey2, DesiredInternalRoutes: desiredInternalRoutes}
+			actualLRPKeyWithInternalRoutes3 = db.ActualLRPKeyWithInternalRoutes{Key: &actualLRPKey3, InstanceKey: &actualLRPInstanceKey3, DesiredInternalRoutes: desiredInternalRoutes}
+
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
-				LRPsWithInternalRouteChanges: []*models.ActualLRP{actualLRP1, actualLRP2, actualLRP3},
+				KeysWithInternalRouteChanges: []*db.ActualLRPKeyWithInternalRoutes{&actualLRPKeyWithInternalRoutes1, &actualLRPKeyWithInternalRoutes2, &actualLRPKeyWithInternalRoutes3},
 			})
-			cell1Presence = models.NewCellPresence(actualLRP1.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
-			cell2Presence = models.NewCellPresence(actualLRP2.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
-			cell3Presence = models.NewCellPresence(actualLRP3.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
+			cell1Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+			cell2Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
+			cell3Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
 			fakeServiceClient.CellByIdCalls(func(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 				switch cellId {
 				case "cell-id-1":
@@ -823,9 +831,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				cellIds[i] = id
 			}
 
-			Expect(cellIds).To(ContainElement(actualLRP1.CellId))
-			Expect(cellIds).To(ContainElement(actualLRP2.CellId))
-			Expect(cellIds).To(ContainElement(actualLRP3.CellId))
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId))
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId))
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId))
 		})
 
 		It("creates a rep client for each actuallrp's cell", func() {
@@ -860,9 +868,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			}
 
 			internalRoutes := internalroutes.InternalRoutes{internalroutes.InternalRoute{Hostname: "some-internal-route.apps.internal"}}
-			expectedLRP1Update := rep.NewLRPUpdate(actualLRP1.ActualLRPInstanceKey.InstanceGuid, actualLRP1.ActualLRPKey, internalRoutes)
-			expectedLRP2Update := rep.NewLRPUpdate(actualLRP2.ActualLRPInstanceKey.InstanceGuid, actualLRP2.ActualLRPKey, internalRoutes)
-			expectedLRP3Update := rep.NewLRPUpdate(actualLRP3.ActualLRPInstanceKey.InstanceGuid, actualLRP3.ActualLRPKey, internalRoutes)
+			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes1.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes1.Key, internalRoutes)
+			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes2.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes2.Key, internalRoutes)
+			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes3.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes3.Key, internalRoutes)
 
 			Expect(updates).To(ContainElement(expectedLRP1Update))
 			Expect(updates).To(ContainElement(expectedLRP2Update))

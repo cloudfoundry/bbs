@@ -1,12 +1,15 @@
 package sqldb_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
+	bbsdb "code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/routing-info/internalroutes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -1379,5 +1382,53 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(results.KeysToRetire).To(BeEmpty())
 			})
 		})
+	})
+
+	Context("when there are actual LRPs with internal routes different from desired LRP internal routes", func() {
+		var (
+			processGuid, domain              string
+			lrpKey1, lrpKey2                 models.ActualLRPKey
+			lrpInstanceKey1, lrpInstanceKey2 models.ActualLRPInstanceKey
+		)
+
+		BeforeEach(func() {
+			domain = "some-domain"
+			processGuid = "desired-with-different-internal-routes"
+			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
+			desiredLRP.Domain = domain
+			desiredLRP.Instances = 2
+			err := sqlDB.DesireLRP(ctx, logger, desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
+			lrpKey1 = models.NewActualLRPKey(processGuid, 0, domain)
+			lrpInstanceKey1 = models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey1, &lrpInstanceKey1, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpKey2 = models.NewActualLRPKey(processGuid, 1, domain)
+			lrpInstanceKey2 = models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &lrpInstanceKey2, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			Expect(err).NotTo(HaveOccurred())
+
+			rawInternalRoutes := json.RawMessage(`[{"hostname":"some-other-internal-route.apps.internal"}]`)
+			update := models.DesiredLRPUpdate{
+				Routes: &models.Routes{internalroutes.INTERNAL_ROUTER: &rawInternalRoutes},
+			}
+			_, err = sqlDB.UpdateDesiredLRP(ctx, logger, processGuid, &update)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("returns the LRP keys with changed internal routes", func() {
+			result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
+			desiredInternalRoutes := internalroutes.InternalRoutes{
+				{Hostname: "some-other-internal-route.apps.internal"},
+			}
+			lrpKeyWithInternalRoutes1 := bbsdb.ActualLRPKeyWithInternalRoutes{Key: &lrpKey1, InstanceKey: &lrpInstanceKey1, DesiredInternalRoutes: desiredInternalRoutes}
+			lrpKeyWithInternalRoutes2 := bbsdb.ActualLRPKeyWithInternalRoutes{Key: &lrpKey2, InstanceKey: &lrpInstanceKey2, DesiredInternalRoutes: desiredInternalRoutes}
+
+			Expect(result.KeysWithInternalRouteChanges).To(ConsistOf(&lrpKeyWithInternalRoutes1, &lrpKeyWithInternalRoutes2))
+		})
+
 	})
 })

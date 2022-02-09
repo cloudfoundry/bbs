@@ -75,6 +75,14 @@ var (
 		actualLRPsTable + ".crash_reason",
 	}
 
+	actualLRPIDColumns = helpers.ColumnList{
+		actualLRPsTable + ".process_guid",
+		actualLRPsTable + ".instance_index",
+		actualLRPsTable + ".domain",
+		actualLRPsTable + ".instance_guid",
+		actualLRPsTable + ".cell_id",
+	}
+
 	domainColumns = helpers.ColumnList{
 		domainsTable + ".domain",
 		domainsTable + ".expire_time",
@@ -257,6 +265,22 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(ctx context.Context, logger lager.Logg
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
 		models.ActualLRP_Ordinary,
 	)
+}
+
+func (db *SQLDB) selectLRPsWithRoutes(ctx context.Context, logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+	query := fmt.Sprintf(`
+		SELECT %s
+			FROM desired_lrps
+			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
+			WHERE actual_lrps.state = ? AND actual_lrps.presence = ?
+		`,
+		strings.Join(
+			append(actualLRPIDColumns, actualLRPsTable+".internal_routes", desiredLRPsTable+".routes"),
+			", ",
+		),
+	)
+
+	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_Ordinary)
 }
 
 func (db *SQLDB) CountDesiredInstances(ctx context.Context, logger lager.Logger) int {

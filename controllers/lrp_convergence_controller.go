@@ -286,10 +286,10 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 		})
 	}
 
-	for _, lrp := range convergenceResult.LRPsWithInternalRouteChanges {
-		dereferencedLRP := *lrp
+	for _, lrpKey := range convergenceResult.KeysWithInternalRouteChanges {
+		dereferencedLRPKey := *lrpKey
 		works = append(works, func() {
-			cellPresence, err := h.serviceClient.CellById(logger, dereferencedLRP.CellId)
+			cellPresence, err := h.serviceClient.CellById(logger, dereferencedLRPKey.InstanceKey.CellId)
 			if err != nil {
 				logger.Error("failed-fetching-cell-presence", err)
 				return
@@ -302,16 +302,14 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 			}
 
 			var internalRoutes internalroutes.InternalRoutes
-			for _, ir := range dereferencedLRP.ActualLrpInternalRoutes {
+			for _, ir := range dereferencedLRPKey.DesiredInternalRoutes {
 				internalRoutes = append(internalRoutes, internalroutes.InternalRoute{Hostname: ir.Hostname})
 			}
-			lrpUpdate := rep.NewLRPUpdate(dereferencedLRP.ActualLRPInstanceKey.InstanceGuid, dereferencedLRP.ActualLRPKey, internalRoutes)
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)
 			}
-			// TODO
-			//   emit a change event?
 		})
 	}
 
