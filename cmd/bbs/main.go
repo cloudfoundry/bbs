@@ -345,6 +345,7 @@ func main() {
 		actualLRPInstanceHub,
 		auctioneerClient,
 		serviceClient,
+		repClientFactory,
 		actualLRPController,
 		bbsConfig.ConvergenceWorkers,
 		lrpStatMetronNotifier,

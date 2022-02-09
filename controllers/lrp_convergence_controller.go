@@ -12,6 +12,8 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
 
@@ -30,6 +32,7 @@ type LRPConvergenceController struct {
 	actualLRPInstanceHub   events.Hub
 	auctioneerClient       auctioneer.Client
 	serviceClient          serviceclient.ServiceClient
+	repClientFactory       rep.ClientFactory
 	retirer                Retirer
 	convergenceWorkersSize int
 	lrpStatMetronNotifier  metrics.LRPStatMetronNotifier
@@ -45,6 +48,7 @@ func NewLRPConvergenceController(
 	actualLRPInstanceHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
+	repClientFactory rep.ClientFactory,
 	retirer Retirer,
 	convergenceWorkersSize int,
 	lrpStatMetronNotifier metrics.LRPStatMetronNotifier,
@@ -59,6 +63,7 @@ func NewLRPConvergenceController(
 		actualLRPInstanceHub:   actualLRPInstanceHub,
 		auctioneerClient:       auctioneerClient,
 		serviceClient:          serviceClient,
+		repClientFactory:       repClientFactory,
 		retirer:                retirer,
 		convergenceWorkersSize: convergenceWorkersSize,
 		lrpStatMetronNotifier:  lrpStatMetronNotifier,
@@ -281,10 +286,34 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 		})
 	}
 
-	// TODO
-	// for _, key := range convergenceResult.LRPsWithInternalRouteDiffs {
-	// 	h.handler.UpdateLRPInstance(each of the lrps that need their internal routes updated)
-	// }
+	for _, lrp := range convergenceResult.LRPsWithInternalRouteChanges {
+		dereferencedLRP := *lrp
+		works = append(works, func() {
+			cellPresence, err := h.serviceClient.CellById(logger, dereferencedLRP.CellId)
+			if err != nil {
+				logger.Error("failed-fetching-cell-presence", err)
+				return
+			}
+
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			if err != nil {
+				logger.Error("create-rep-client-failed", err)
+				return
+			}
+
+			var internalRoutes internalroutes.InternalRoutes
+			for _, ir := range dereferencedLRP.ActualLrpInternalRoutes {
+				internalRoutes = append(internalRoutes, internalroutes.InternalRoute{Hostname: ir.Hostname})
+			}
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRP.ActualLRPInstanceKey.InstanceGuid, dereferencedLRP.ActualLRPKey, internalRoutes)
+			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
+			if err != nil {
+				logger.Error("updating-lrp-instance", err)
+			}
+			// TODO
+			//   emit a change event?
+		})
+	}
 
 	var throttler *workpool.Throttler
 	throttler, err = workpool.NewThrottler(h.convergenceWorkersSize, works)
