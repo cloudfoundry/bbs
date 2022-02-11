@@ -6,6 +6,7 @@
 |                | domain                 | character varying(255)  | No        | Domain to which the DesiredLRP belong (either cf-apps or cf-tasks)                                                             |
 |                | state                  | character varying(255)  | No        | One of UNCLAIMED, CLAIMED, RUNNING OR CRASHED                                                                                  |
 |                | instance_guid          | character varying(255)  | No        | Globally unique id for this row                                                                                                |
+|                | internal_routes        | text                    | YES       | Internal route hostnames used for generating cert SANs in support of C2C TLS                                                   |
 |                | cell_id                | character varying(255)  | No        | Id of the cell on which the LRP is CLAIMED OR RUNNING                                                                          |
 |                | placement_error        | character varying(1024) | No        | Most recent placement error that the Auctioneer encountered                                                                    |
 |                | since                  | bigint                  | No        | Time when the ActualLRP state was last updated                                                                                 |
