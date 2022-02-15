@@ -64,6 +64,40 @@ var _ = Describe("AddInternalRoutesToActualLrp", func() {
 			Expect(internalRoutes).To(Equal("{}"))
 		})
 
+		It("adds empty internal routes to all existing actual_lrp rows", func() {
+			_, err := rawSQLDB.Exec(
+				helpers.RebindForFlavor(
+					`INSERT INTO actual_lrps
+						(process_guid, instance_index, domain, state, net_info,
+						modification_tag_epoch, modification_tag_index)
+					VALUES (?, ?, ?, ?, ?, ?, ?)`,
+					flavor,
+				),
+				"guid-1", 10, "cfapps", "RUNNING", "", "epoch", 0,
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = rawSQLDB.Exec(
+				helpers.RebindForFlavor(
+					`INSERT INTO actual_lrps
+						(process_guid, instance_index, domain, state, net_info,
+						modification_tag_epoch, modification_tag_index)
+					VALUES (?, ?, ?, ?, ?, ?, ?)`,
+					flavor,
+				),
+				"guid-2", 11, "cfapps", "RUNNING", "", "epoch", 0,
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(migration.Up(logger)).To(Succeed())
+
+			var internalRoutesNullCount int
+			query := helpers.RebindForFlavor("SELECT COUNT(*) FROM actual_lrps WHERE internal_routes IS NULL;", flavor)
+			row := rawSQLDB.QueryRow(query)
+			Expect(row.Scan(&internalRoutesNullCount)).To(Succeed())
+			Expect(internalRoutesNullCount).To(Equal(2))
+		})
+
 		It("is idempotent", func() {
 			testIdempotency(rawSQLDB, migration, logger)
 		})

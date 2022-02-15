@@ -47,7 +47,7 @@ func (e *AddInternalRoutesToActualLrp) Up(logger lager.Logger) error {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	alterTableSQL := "ALTER TABLE actual_lrps ADD COLUMN internal_routes MEDIUMTEXT NOT NULL;"
+	alterTableSQL := "ALTER TABLE actual_lrps ADD COLUMN internal_routes MEDIUMTEXT;"
 	logger.Info("altering the table", lager.Data{"query": alterTableSQL})
 	_, err := e.rawSQLDB.Exec(helpers.RebindForFlavor(alterTableSQL, e.dbFlavor))
 	if err != nil {

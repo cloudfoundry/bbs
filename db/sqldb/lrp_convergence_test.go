@@ -1386,9 +1386,9 @@ var _ = Describe("LRPConvergence", func() {
 
 	Context("when there are actual LRPs with internal routes different from desired LRP internal routes", func() {
 		var (
-			processGuid, domain              string
-			lrpKey1, lrpKey2                 models.ActualLRPKey
-			lrpInstanceKey1, lrpInstanceKey2 models.ActualLRPInstanceKey
+			processGuid, domain                               string
+			lrpKey1, lrpKey2, lrpKey3                         models.ActualLRPKey
+			lrpInstanceKey1, lrpInstanceKey2, lrpInstanceKey3 models.ActualLRPInstanceKey
 		)
 
 		BeforeEach(func() {
@@ -1396,7 +1396,7 @@ var _ = Describe("LRPConvergence", func() {
 			processGuid = "desired-with-different-internal-routes"
 			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
 			desiredLRP.Domain = domain
-			desiredLRP.Instances = 2
+			desiredLRP.Instances = 3
 			err := sqlDB.DesireLRP(ctx, logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -1409,6 +1409,18 @@ var _ = Describe("LRPConvergence", func() {
 			lrpKey2 = models.NewActualLRPKey(processGuid, 1, domain)
 			lrpInstanceKey2 = models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}
 			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &lrpInstanceKey2, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpKey3 = models.NewActualLRPKey(processGuid, 2, domain)
+			lrpInstanceKey3 = models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "existing-cell"}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey3, &lrpInstanceKey3, &actualLRPNetInfo, nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			queryStr := "UPDATE actual_lrps SET internal_routes = ? WHERE process_guid = ? AND instance_index = ?;"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.ExecContext(ctx, queryStr, nil, lrpKey3.ProcessGuid, lrpKey3.Index)
 			Expect(err).NotTo(HaveOccurred())
 
 			rawInternalRoutes := json.RawMessage(`[{"hostname":"some-other-internal-route.apps.internal"}]`)
@@ -1426,9 +1438,9 @@ var _ = Describe("LRPConvergence", func() {
 			}
 			lrpKeyWithInternalRoutes1 := bbsdb.ActualLRPKeyWithInternalRoutes{Key: &lrpKey1, InstanceKey: &lrpInstanceKey1, DesiredInternalRoutes: desiredInternalRoutes}
 			lrpKeyWithInternalRoutes2 := bbsdb.ActualLRPKeyWithInternalRoutes{Key: &lrpKey2, InstanceKey: &lrpInstanceKey2, DesiredInternalRoutes: desiredInternalRoutes}
+			lrpKeyWithInternalRoutes3 := bbsdb.ActualLRPKeyWithInternalRoutes{Key: &lrpKey3, InstanceKey: &lrpInstanceKey3, DesiredInternalRoutes: desiredInternalRoutes}
 
-			Expect(result.KeysWithInternalRouteChanges).To(ConsistOf(&lrpKeyWithInternalRoutes1, &lrpKeyWithInternalRoutes2))
+			Expect(result.KeysWithInternalRouteChanges).To(ConsistOf(&lrpKeyWithInternalRoutes1, &lrpKeyWithInternalRoutes2, &lrpKeyWithInternalRoutes3))
 		})
-
 	})
 })

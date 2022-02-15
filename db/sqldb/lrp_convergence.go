@@ -205,16 +205,18 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 			continue
 		}
 
-		var actualInternalRoutes []*models.ActualLRPInternalRoute
-		decodedActualData, err := c.encoder.Decode(actualRouteData)
-		if err != nil {
-			logger.Error("failed-decrypting-desired-routes", err)
-			continue
-		}
-		err = json.Unmarshal(decodedActualData, &actualInternalRoutes)
-		if err != nil {
-			logger.Error("failed-parsing-desired-routes", err)
-			continue
+		actualInternalRoutes := []*models.ActualLRPInternalRoute{}
+		if len(actualRouteData) > 0 {
+			decodedActualData, err := c.encoder.Decode(actualRouteData)
+			if err != nil {
+				logger.Error("failed-decrypting-desired-routes", err)
+				continue
+			}
+			err = json.Unmarshal(decodedActualData, &actualInternalRoutes)
+			if err != nil {
+				logger.Error("failed-parsing-desired-routes", err)
+				continue
+			}
 		}
 
 		logger.Debug("Desired routes", lager.Data{"routes": desiredRoutes})

@@ -344,6 +344,41 @@ var _ = Describe("ActualLRPDB", func() {
 				},
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 			})
+
+			nullInternalRoutesActualLRPKey := &models.ActualLRPKey{
+				ProcessGuid: "guid-null-internal-routes",
+				Index:       2,
+				Domain:      "domain1",
+			}
+			nullInteralRoutesInstanceKey := &models.ActualLRPInstanceKey{
+				InstanceGuid: "i-guid-null-internal-routes",
+				CellId:       "cell2",
+			}
+			fakeClock.Increment(time.Hour)
+			_, err = sqlDB.CreateUnclaimedActualLRP(ctx, logger, nullInternalRoutesActualLRPKey)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ClaimActualLRP(ctx, logger, nullInternalRoutesActualLRPKey.ProcessGuid, nullInternalRoutesActualLRPKey.Index, nullInteralRoutesInstanceKey)
+			Expect(err).NotTo(HaveOccurred())
+			queryStr = "UPDATE actual_lrps SET internal_routes = ? WHERE process_guid = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.ExecContext(ctx, queryStr, nil, nullInternalRoutesActualLRPKey.ProcessGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *nullInternalRoutesActualLRPKey,
+				ActualLRPInstanceKey: *nullInteralRoutesInstanceKey,
+				ActualLRPNetInfo:     models.ActualLRPNetInfo{},
+				State:                models.ActualLRPStateClaimed,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 1,
+				},
+				Presence:                models.ActualLRP_Ordinary,
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
+			})
 		})
 
 		It("returns all the actual lrps", func() {

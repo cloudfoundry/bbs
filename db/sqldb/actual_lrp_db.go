@@ -623,16 +623,18 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		}
 	}
 
-	var internalRoutes []*models.ActualLRPInternalRoute
-	decodedData, err := db.encoder.Decode(internalRoutesData)
-	if err != nil {
-		logger.Error("failed-decrypting-internal-routes", err)
-		return nil, err
-	}
-	err = json.Unmarshal(decodedData, &internalRoutes)
-	if err != nil {
-		logger.Error("failed-parsing-internal-routes", err)
-		return nil, err
+	internalRoutes := []*models.ActualLRPInternalRoute{}
+	if len(internalRoutesData) > 0 {
+		decodedData, err := db.encoder.Decode(internalRoutesData)
+		if err != nil {
+			logger.Error("failed-decrypting-internal-routes", err)
+			return nil, err
+		}
+		err = json.Unmarshal(decodedData, &internalRoutes)
+		if err != nil {
+			logger.Error("failed-parsing-internal-routes", err)
+			return nil, err
+		}
 	}
 	actualLRP.ActualLrpInternalRoutes = internalRoutes
 
