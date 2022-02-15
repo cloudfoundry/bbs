@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"reflect"
 	"strings"
 	"time"
 
@@ -310,6 +311,7 @@ func (db *SQLDB) StartActualLRP(
 		if actualLRP.ActualLRPKey.Equal(key) &&
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
 			actualLRP.ActualLRPNetInfo.Equal(netInfo) &&
+			reflect.DeepEqual(actualLRP.ActualLrpInternalRoutes, internalRoutes) &&
 			actualLRP.State == models.ActualLRPStateRunning {
 			logger.Debug("nothing-to-change")
 			return nil

@@ -1002,6 +1002,21 @@ var _ = Describe("ActualLRPDB", func() {
 							})
 						})
 
+						Context("and the internal routes are the same", func() {
+							It("does nothing", func() {
+								beforeActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+
+								_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
+								Expect(err).NotTo(HaveOccurred())
+
+								afterActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(beforeActualLRPs).To(BeEquivalentTo(afterActualLRPs))
+							})
+						})
+
 						Context("and the net info is NOT the same", func() {
 							var (
 								expectedActualLRPs []*models.ActualLRP
@@ -1025,6 +1040,35 @@ var _ = Describe("ActualLRPDB", func() {
 								Expect(err).NotTo(HaveOccurred())
 
 								expectedActualLRPs[0].ActualLRPNetInfo = *newNetInfo
+								expectedActualLRPs[0].ModificationTag.Increment()
+								Expect(actualLRPs).To(BeEquivalentTo(expectedActualLRPs))
+								Expect(actualLRPs).To(ConsistOf(afterActualLRP))
+							})
+						})
+
+						Context("and the internal routes are NOT the same", func() {
+							var (
+								expectedActualLRPs []*models.ActualLRP
+								newInternalRoutes  []*models.ActualLRPInternalRoute
+							)
+
+							BeforeEach(func() {
+								var err error
+								expectedActualLRPs, err = sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+								newInternalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-new-internalroute"}}
+							})
+
+							It("updates the internal routes", func() {
+								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, newInternalRoutes)
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(expectedActualLRPs).To(ConsistOf(beforeActualLRP))
+
+								actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+
+								expectedActualLRPs[0].ActualLrpInternalRoutes = newInternalRoutes
 								expectedActualLRPs[0].ModificationTag.Increment()
 								Expect(actualLRPs).To(BeEquivalentTo(expectedActualLRPs))
 								Expect(actualLRPs).To(ConsistOf(afterActualLRP))
