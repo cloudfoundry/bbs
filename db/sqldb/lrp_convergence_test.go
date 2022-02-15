@@ -1423,7 +1423,25 @@ var _ = Describe("LRPConvergence", func() {
 			_, err = db.ExecContext(ctx, queryStr, nil, lrpKey3.ProcessGuid, lrpKey3.Index)
 			Expect(err).NotTo(HaveOccurred())
 
-			rawInternalRoutes := json.RawMessage(`[{"hostname":"some-other-internal-route.apps.internal"}]`)
+			lrpKey4 := models.NewActualLRPKey(processGuid, 3, domain)
+			lrpInstanceKey4 := models.ActualLRPInstanceKey{InstanceGuid: "ig-4", CellId: "existing-cell"}
+			sameInternalRoutes := []*models.ActualLRPInternalRoute{
+				{Hostname: "some-internal-route.apps.internal"},
+				{Hostname: "some-other-internal-route.apps.internal"},
+			}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey4, &lrpInstanceKey4, &actualLRPNetInfo, sameInternalRoutes)
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpKey5 := models.NewActualLRPKey(processGuid, 4, domain)
+			lrpInstanceKey5 := models.ActualLRPInstanceKey{InstanceGuid: "ig-5", CellId: "existing-cell"}
+			internalRoutesInDifferentOrder := []*models.ActualLRPInternalRoute{
+				{Hostname: "some-other-internal-route.apps.internal"},
+				{Hostname: "some-internal-route.apps.internal"},
+			}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey5, &lrpInstanceKey5, &actualLRPNetInfo, internalRoutesInDifferentOrder)
+			Expect(err).NotTo(HaveOccurred())
+
+			rawInternalRoutes := json.RawMessage(`[{"hostname":"some-internal-route.apps.internal"},{"hostname":"some-other-internal-route.apps.internal"}]`)
 			update := models.DesiredLRPUpdate{
 				Routes: &models.Routes{internalroutes.INTERNAL_ROUTER: &rawInternalRoutes},
 			}
@@ -1434,6 +1452,7 @@ var _ = Describe("LRPConvergence", func() {
 		It("returns the LRP keys with changed internal routes", func() {
 			result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
 			desiredInternalRoutes := internalroutes.InternalRoutes{
+				{Hostname: "some-internal-route.apps.internal"},
 				{Hostname: "some-other-internal-route.apps.internal"},
 			}
 			lrpKeyWithInternalRoutes1 := bbsdb.ActualLRPKeyWithInternalRoutes{Key: &lrpKey1, InstanceKey: &lrpInstanceKey1, DesiredInternalRoutes: desiredInternalRoutes}

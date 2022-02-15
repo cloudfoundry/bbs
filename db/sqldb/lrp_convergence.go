@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -205,7 +204,7 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 			continue
 		}
 
-		actualInternalRoutes := []*models.ActualLRPInternalRoute{}
+		actualInternalRoutes := internalroutes.InternalRoutes{}
 		if len(actualRouteData) > 0 {
 			decodedActualData, err := c.encoder.Decode(actualRouteData)
 			if err != nil {
@@ -219,14 +218,13 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 			}
 		}
 
-		logger.Debug("Desired routes", lager.Data{"routes": desiredRoutes})
 		desiredInternalRoutes, err := internalroutes.InternalRoutesFromRoutingInfo(desiredRoutes)
 		if err != nil {
 			logger.Error("failed-getting-internal-routes-from-desired", err)
 			continue
 		}
 
-		if !reflect.DeepEqual(desiredInternalRoutes, actualInternalRoutes) {
+		if !actualInternalRoutes.Equal(desiredInternalRoutes) {
 			c.keysWithInternalRouteChanges = append(c.keysWithInternalRouteChanges, &db.ActualLRPKeyWithInternalRoutes{
 				Key:                   actualLRPKey,
 				InstanceKey:           actualLRPInstanceKey,
