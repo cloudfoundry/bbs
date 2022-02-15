@@ -30,8 +30,10 @@ const (
 	DeleteContainer      = false
 	DefaultRetryCount    = 3
 
-	NotFoundResponseMessage = "Invalid Response with status code: 404"
+	InvalidResponseMessage = "Invalid Response with status code: %d"
 )
+
+var EndpointNotFoundErr = models.NewError(models.Error_InvalidResponse, fmt.Sprintf(InvalidResponseMessage, 404))
 
 //go:generate counterfeiter -o fake_bbs/fake_internal_client.go . InternalClient
 //go:generate counterfeiter -o fake_bbs/fake_client.go . Client
@@ -427,7 +429,7 @@ func (c *client) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 	}
 	response := models.ActualLRPLifecycleResponse{}
 	err := c.doRequest(logger, StartActualLRPRoute_r1, nil, nil, &request, &response)
-	if endpointNotFound(err) {
+	if err != nil && err == EndpointNotFoundErr {
 		err = c.doRequest(logger, StartActualLRPRoute_r0, nil, nil, &request, &response)
 	}
 
@@ -523,7 +525,7 @@ func (c *client) EvacuateRunningActualLRP(logger lager.Logger, key *models.Actua
 		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
 	})
-	if endpointNotFound(err) {
+	if err != nil && err == EndpointNotFoundErr {
 		keepContainer, err = c.doEvacRequest(logger, EvacuateRunningActualLRPRoute_r0, KeepContainer, &models.EvacuateRunningActualLRPRequest{
 			ActualLrpKey:            key,
 			ActualLrpInstanceKey:    instanceKey,
@@ -946,15 +948,12 @@ func handleProtoResponse(response *http.Response, responseObject proto.Message) 
 }
 
 func handleNonProtoResponse(response *http.Response) error {
+	if response.StatusCode == 404 {
+		return EndpointNotFoundErr
+	}
+
 	if response.StatusCode > 299 {
-		return models.NewError(models.Error_InvalidResponse, fmt.Sprintf("Invalid Response with status code: %d", response.StatusCode))
+		return models.NewError(models.Error_InvalidResponse, fmt.Sprintf(InvalidResponseMessage, response.StatusCode))
 	}
 	return nil
-}
-
-func endpointNotFound(err error) bool {
-	bbsErr := models.ConvertError(err)
-	return bbsErr != nil &&
-		bbsErr.Type == models.Error_InvalidResponse &&
-		bbsErr.Message == NotFoundResponseMessage
 }
