@@ -288,20 +288,6 @@ func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPScheduling
 	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
 }
 
-func (desired DesiredLRP) RoutesFromRouterGroup(routerGroup string) *Routes {
-	if desired.Routes == nil {
-		return &Routes{}
-	}
-
-	if routes := (*desired.Routes)[routerGroup]; routes != nil {
-		return &Routes{
-			routerGroup: routes,
-		}
-	}
-
-	return &Routes{}
-}
-
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
 

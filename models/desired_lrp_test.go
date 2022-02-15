@@ -341,34 +341,6 @@ var _ = Describe("DesiredLRP", func() {
 		})
 	})
 
-	Describe("RoutesFromRouterGroup", func() {
-		It("Returns routes for the given router group", func() {
-			rawRoutes := json.RawMessage(`[
-        {
-          "hostnames": [
-            "some-route.example.com"
-          ],
-          "port": 8080
-        }
-      ]`)
-			expectedRoutes := models.Routes{"cf-router": &rawRoutes}
-			Expect(desiredLRP.RoutesFromRouterGroup("cf-router")).To(Equal(&expectedRoutes))
-		})
-
-		Context("When there aren't routes for the given router group", func() {
-			It("Returns an empty Routes object", func() {
-				Expect(desiredLRP.RoutesFromRouterGroup("not-valid-router-group")).To(Equal(&models.Routes{}))
-			})
-		})
-
-		Context("When the desired lrp doesn't have any routes", func() {
-			It("Returns an empty Routes object", func() {
-				desiredLRP.Routes = nil
-				Expect(desiredLRP.RoutesFromRouterGroup("doesn't- matter")).To(Equal(&models.Routes{}))
-			})
-		})
-	})
-
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
 			jsonSerialization, err := json.Marshal(desiredLRP)
