@@ -5,7 +5,14 @@ import (
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/routing-info/internalroutes"
 )
+
+type ActualLRPKeyWithInternalRoutes struct {
+	Key                   *models.ActualLRPKey
+	InstanceKey           *models.ActualLRPInstanceKey
+	DesiredInternalRoutes internalroutes.InternalRoutes
+}
 
 //go:generate counterfeiter . LRPDB
 
@@ -18,6 +25,7 @@ type ConvergenceResult struct {
 	SuspectClaimedKeys           []*models.ActualLRPKey
 	KeysToRetire                 []*models.ActualLRPKey
 	KeysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
+	KeysWithInternalRouteChanges []*ActualLRPKeyWithInternalRoutes
 	MissingCellIds               []string
 	Events                       []models.Event
 	InstanceEvents               []models.Event

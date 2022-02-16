@@ -15,6 +15,7 @@ func (db *SQLDB) EvacuateActualLRP(
 	lrpKey *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
+	internalRoutes []*models.ActualLRPInternalRoute,
 ) (*models.ActualLRP, error) {
 	logger = logger.Session("db-evacuate-actual-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
 	logger.Debug("starting")
@@ -30,7 +31,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
-			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, tx)
+			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, internalRoutes, tx)
 			return err
 		}
 
@@ -52,11 +53,18 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = *netInfo
+		actualLRP.ActualLrpInternalRoutes = internalRoutes
 		actualLRP.Presence = models.ActualLRP_Evacuating
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
 			logger.Error("failed-serializing-net-info", err)
+			return err
+		}
+
+		internalRoutesData, err := db.encodeInternalRouteData(logger, internalRoutes)
+		if err != nil {
+			logger.Error("failed-to-serialize-internalroutes", err)
 			return err
 		}
 
@@ -66,6 +74,7 @@ func (db *SQLDB) EvacuateActualLRP(
 				"instance_guid":          actualLRP.InstanceGuid,
 				"cell_id":                actualLRP.CellId,
 				"net_info":               netInfoData,
+				"internal_routes":        internalRoutesData,
 				"state":                  actualLRP.State,
 				"since":                  actualLRP.Since,
 				"modification_tag_index": actualLRP.ModificationTag.Index,
@@ -128,11 +137,18 @@ func (db *SQLDB) createEvacuatingActualLRP(
 	lrpKey *models.ActualLRPKey,
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
+	internalRoutes []*models.ActualLRPInternalRoute,
 	tx helpers.Tx,
 ) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
 	if err != nil {
 		logger.Error("failed-serializing-net-info", err)
+		return nil, err
+	}
+
+	internalRoutesData, err := db.encodeInternalRouteData(logger, internalRoutes)
+	if err != nil {
+		logger.Error("failed-to-serialize-internalroutes", err)
 		return nil, err
 	}
 
@@ -143,13 +159,14 @@ func (db *SQLDB) createEvacuatingActualLRP(
 	}
 
 	actualLRP := &models.ActualLRP{
-		ActualLRPKey:         *lrpKey,
-		ActualLRPInstanceKey: *instanceKey,
-		ActualLRPNetInfo:     *netInfo,
-		State:                models.ActualLRPStateRunning,
-		Since:                now.UnixNano(),
-		ModificationTag:      models.ModificationTag{Epoch: guid, Index: 0},
-		Presence:             models.ActualLRP_Evacuating,
+		ActualLRPKey:            *lrpKey,
+		ActualLRPInstanceKey:    *instanceKey,
+		ActualLRPNetInfo:        *netInfo,
+		ActualLrpInternalRoutes: internalRoutes,
+		State:                   models.ActualLRPStateRunning,
+		Since:                   now.UnixNano(),
+		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
+		Presence:                models.ActualLRP_Evacuating,
 	}
 
 	sqlAttributes := helpers.SQLAttributes{
@@ -161,6 +178,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		"cell_id":                actualLRP.CellId,
 		"state":                  actualLRP.State,
 		"net_info":               netInfoData,
+		"internal_routes":        internalRoutesData,
 		"since":                  actualLRP.Since,
 		"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 		"modification_tag_index": actualLRP.ModificationTag.Index,

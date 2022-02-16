@@ -58,13 +58,19 @@ The cell calls `StartActualLRP` to report to the BBS that it has started an Actu
 ### BBS API Endpoint
 
 POST an [StartActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#StartActualLRPRequest)
+to `/v1/actual_lrps/start.r1`
+and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+
+### Deprecated Endpoints
+
+POST an [StartActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#StartActualLRPRequest)
 to `/v1/actual_lrps/start`
 and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
 ```go
-StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
+StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) error
 ```
 
 #### Inputs
@@ -74,6 +80,7 @@ StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *model
   * `InstanceGuid string`: The GUID of the instance to start.
   * `CellID string`: ID of the Cell starting the ActualLRP.
 * `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
+* `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
 
 #### Output
 
@@ -97,6 +104,9 @@ err := client.StartActualLRP(logger, &models.ActualLRPKey{
 	    Address: "1.2.3.4",
 	    models.NewPortMapping(10,20),
 	    InstanceAddress: "2.2.2.2",
+	},
+	[]*models.ActualLRPInternalRoute{
+	    {Hostname: "some-internal-route.apps.internal"},
 	},
 )
 if err != nil {
@@ -375,13 +385,19 @@ The cell calls `EvacuateRunningActualLRP` to evacuate an ActualLRP it has starte
 ### BBS API Endpoint
 
 POST an [EvacuateRunningActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuateRunningActualLRPRequest)
+to `/v1/actual_lrps/evacuate_running.r1`
+and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuationResponse).
+
+#### Deprecated Endpoints
+
+POST an [EvacuateRunningActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuateRunningActualLRPRequest)
 to `/v1/actual_lrps/evacuate_running`
 and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuationResponse).
 
 ### Golang Client API
 
 ```go
-EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (bool, error)
+EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) (bool, error)
 ```
 
 #### Inputs
@@ -389,6 +405,7 @@ EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instance
 * `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
 * `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the running ActualLRP to evacuate.
 * `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
+* `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
 
 #### Output
 
@@ -412,6 +429,9 @@ keepContainer, err := client.EvacuateRunningActualLRP(logger, &models.ActualLRPK
 	    Address: "1.2.3.4",
 	    models.NewPortMapping(10,20),
 	    InstanceAddress: "2.2.2.2",
+	},
+	[]*models.ActualLRPInternalRoute{
+	    {Hostname: "some-internal-route.apps.internal"},
 	},
 )
 if err != nil {

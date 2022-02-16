@@ -29,7 +29,11 @@ const (
 	KeepContainer        = true
 	DeleteContainer      = false
 	DefaultRetryCount    = 3
+
+	InvalidResponseMessage = "Invalid Response with status code: %d"
 )
+
+var EndpointNotFoundErr = models.NewError(models.Error_InvalidResponse, fmt.Sprintf(InvalidResponseMessage, 404))
 
 //go:generate counterfeiter -o fake_bbs/fake_internal_client.go . InternalClient
 //go:generate counterfeiter -o fake_bbs/fake_client.go . Client
@@ -44,13 +48,13 @@ type InternalClient interface {
 	Client
 
 	ClaimActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
-	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error
+	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) error
 	CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 
 	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)
+	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)
 	EvacuateStoppedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateCrashedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
 	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
@@ -416,17 +420,21 @@ func (c *client) ClaimActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 	return response.Error.ToError()
 }
 
-func (c *client) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) error {
+func (c *client) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) error {
 	request := models.StartActualLRPRequest{
-		ActualLrpKey:         key,
-		ActualLrpInstanceKey: instanceKey,
-		ActualLrpNetInfo:     netInfo,
+		ActualLrpKey:            key,
+		ActualLrpInstanceKey:    instanceKey,
+		ActualLrpNetInfo:        netInfo,
+		ActualLrpInternalRoutes: internalRoutes,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, StartActualLRPRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, StartActualLRPRoute_r1, nil, nil, &request, &response)
+	if err != nil && err == EndpointNotFoundErr {
+		err = c.doRequest(logger, StartActualLRPRoute_r0, nil, nil, &request, &response)
+	}
+
 	if err != nil {
 		return err
-
 	}
 	return response.Error.ToError()
 }
@@ -510,12 +518,23 @@ func (c *client) EvacuateStoppedActualLRP(logger lager.Logger, key *models.Actua
 	})
 }
 
-func (c *client) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo) (bool, error) {
-	return c.doEvacRequest(logger, EvacuateRunningActualLRPRoute_r0, KeepContainer, &models.EvacuateRunningActualLRPRequest{
-		ActualLrpKey:         key,
-		ActualLrpInstanceKey: instanceKey,
-		ActualLrpNetInfo:     netInfo,
+func (c *client) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) (bool, error) {
+	keepContainer, err := c.doEvacRequest(logger, EvacuateRunningActualLRPRoute_r1, KeepContainer, &models.EvacuateRunningActualLRPRequest{
+		ActualLrpKey:            key,
+		ActualLrpInstanceKey:    instanceKey,
+		ActualLrpNetInfo:        netInfo,
+		ActualLrpInternalRoutes: internalRoutes,
 	})
+	if err != nil && err == EndpointNotFoundErr {
+		keepContainer, err = c.doEvacRequest(logger, EvacuateRunningActualLRPRoute_r0, KeepContainer, &models.EvacuateRunningActualLRPRequest{
+			ActualLrpKey:            key,
+			ActualLrpInstanceKey:    instanceKey,
+			ActualLrpNetInfo:        netInfo,
+			ActualLrpInternalRoutes: internalRoutes,
+		})
+	}
+
+	return keepContainer, err
 }
 
 func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
@@ -929,8 +948,12 @@ func handleProtoResponse(response *http.Response, responseObject proto.Message) 
 }
 
 func handleNonProtoResponse(response *http.Response) error {
+	if response.StatusCode == 404 {
+		return EndpointNotFoundErr
+	}
+
 	if response.StatusCode > 299 {
-		return models.NewError(models.Error_InvalidResponse, fmt.Sprintf("Invalid Response with status code: %d", response.StatusCode))
+		return models.NewError(models.Error_InvalidResponse, fmt.Sprintf(InvalidResponseMessage, response.StatusCode))
 	}
 	return nil
 }

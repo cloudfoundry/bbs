@@ -12,6 +12,8 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
 
@@ -30,6 +32,7 @@ type LRPConvergenceController struct {
 	actualLRPInstanceHub   events.Hub
 	auctioneerClient       auctioneer.Client
 	serviceClient          serviceclient.ServiceClient
+	repClientFactory       rep.ClientFactory
 	retirer                Retirer
 	convergenceWorkersSize int
 	lrpStatMetronNotifier  metrics.LRPStatMetronNotifier
@@ -45,6 +48,7 @@ func NewLRPConvergenceController(
 	actualLRPInstanceHub events.Hub,
 	auctioneerClient auctioneer.Client,
 	serviceClient serviceclient.ServiceClient,
+	repClientFactory rep.ClientFactory,
 	retirer Retirer,
 	convergenceWorkersSize int,
 	lrpStatMetronNotifier metrics.LRPStatMetronNotifier,
@@ -59,6 +63,7 @@ func NewLRPConvergenceController(
 		actualLRPInstanceHub:   actualLRPInstanceHub,
 		auctioneerClient:       auctioneerClient,
 		serviceClient:          serviceClient,
+		repClientFactory:       repClientFactory,
 		retirer:                retirer,
 		convergenceWorkersSize: convergenceWorkersSize,
 		lrpStatMetronNotifier:  lrpStatMetronNotifier,
@@ -278,6 +283,33 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 
 			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
 			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
+		})
+	}
+
+	for _, lrpKey := range convergenceResult.KeysWithInternalRouteChanges {
+		dereferencedLRPKey := *lrpKey
+		works = append(works, func() {
+			cellPresence, err := h.serviceClient.CellById(logger, dereferencedLRPKey.InstanceKey.CellId)
+			if err != nil {
+				logger.Error("failed-fetching-cell-presence", err)
+				return
+			}
+
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			if err != nil {
+				logger.Error("create-rep-client-failed", err)
+				return
+			}
+
+			var internalRoutes internalroutes.InternalRoutes
+			for _, ir := range dereferencedLRPKey.DesiredInternalRoutes {
+				internalRoutes = append(internalRoutes, internalroutes.InternalRoute{Hostname: ir.Hostname})
+			}
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes)
+			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
+			if err != nil {
+				logger.Error("updating-lrp-instance", err)
+			}
 		})
 	}
 

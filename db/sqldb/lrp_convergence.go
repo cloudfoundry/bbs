@@ -3,6 +3,7 @@ package sqldb
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/routing-info/internalroutes"
 )
 
 func (sqldb *SQLDB) ConvergeLRPs(ctx context.Context, logger lager.Logger, cellSet models.CellSet) db.ConvergenceResult {
@@ -38,6 +40,7 @@ func (sqldb *SQLDB) ConvergeLRPs(ctx context.Context, logger lager.Logger, cellS
 	converge.suspectRunningActualLRPs(ctx, logger)
 	converge.suspectClaimedActualLRPs(ctx, logger)
 	converge.crashedActualLRPs(ctx, logger, now)
+	converge.lrpsWithInternalRouteChanges(ctx, logger)
 
 	return db.ConvergenceResult{
 		MissingLRPKeys:               converge.missingLRPKeys,
@@ -51,6 +54,7 @@ func (sqldb *SQLDB) ConvergeLRPs(ctx context.Context, logger lager.Logger, cellS
 		SuspectKeysWithExistingCells: converge.suspectKeysWithExistingCells,
 		SuspectRunningKeys:           converge.suspectRunningKeys,
 		SuspectClaimedKeys:           converge.suspectClaimedKeys,
+		KeysWithInternalRouteChanges: converge.keysWithInternalRouteChanges,
 	}
 }
 
@@ -71,6 +75,8 @@ type convergence struct {
 	missingLRPKeys []*models.ActualLRPKeyWithSchedulingInfo
 
 	unstartedLRPKeys []*models.ActualLRPKeyWithSchedulingInfo
+
+	keysWithInternalRouteChanges []*db.ActualLRPKeyWithInternalRoutes
 }
 
 func newConvergence(db *SQLDB) *convergence {
@@ -142,6 +148,88 @@ func (c *convergence) crashedActualLRPs(ctx context.Context, logger lager.Logger
 			})
 			logger.Info("creating-start-request",
 				lager.Data{"reason": "crashed-instance", "process_guid": actual.ProcessGuid, "index": index})
+		}
+	}
+
+	if rows.Err() != nil {
+		logger.Error("failed-getting-next-row", rows.Err())
+	}
+
+	return
+}
+
+func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger lager.Logger) {
+	logger = logger.Session("lrps-with-internal-route-changes")
+	rows, err := c.selectLRPsWithRoutes(ctx, logger, c.db)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return
+	}
+
+	for rows.Next() {
+		actualLRPKey := &models.ActualLRPKey{}
+		actualLRPInstanceKey := &models.ActualLRPInstanceKey{}
+		var actualRouteData []byte
+		var desiredRouteData []byte
+
+		values := []interface{}{
+			&actualLRPKey.ProcessGuid,
+			&actualLRPKey.Index,
+			&actualLRPKey.Domain,
+			&actualLRPInstanceKey.InstanceGuid,
+			&actualLRPInstanceKey.CellId,
+			&actualRouteData,
+			&desiredRouteData,
+		}
+
+		err := rows.Scan(values...)
+		if err == sql.ErrNoRows {
+			continue
+		}
+
+		if err != nil {
+			logger.Error("failed-scanning", err)
+			continue
+		}
+
+		var desiredRoutes models.Routes
+		decodedDesiredData, err := c.encoder.Decode(desiredRouteData)
+		if err != nil {
+			logger.Error("failed-decrypting-actual-routes", err)
+			continue
+		}
+		err = json.Unmarshal(decodedDesiredData, &desiredRoutes)
+		if err != nil {
+			logger.Error("failed-parsing-actual-routes", err)
+			continue
+		}
+
+		actualInternalRoutes := internalroutes.InternalRoutes{}
+		if len(actualRouteData) > 0 {
+			decodedActualData, err := c.encoder.Decode(actualRouteData)
+			if err != nil {
+				logger.Error("failed-decrypting-desired-routes", err)
+				continue
+			}
+			err = json.Unmarshal(decodedActualData, &actualInternalRoutes)
+			if err != nil {
+				logger.Error("failed-parsing-desired-routes", err)
+				continue
+			}
+		}
+
+		desiredInternalRoutes, err := internalroutes.InternalRoutesFromRoutingInfo(desiredRoutes)
+		if err != nil {
+			logger.Error("failed-getting-internal-routes-from-desired", err)
+			continue
+		}
+
+		if !actualInternalRoutes.Equal(desiredInternalRoutes) {
+			c.keysWithInternalRouteChanges = append(c.keysWithInternalRouteChanges, &db.ActualLRPKeyWithInternalRoutes{
+				Key:                   actualLRPKey,
+				InstanceKey:           actualLRPInstanceKey,
+				DesiredInternalRoutes: desiredInternalRoutes,
+			})
 		}
 	}
 

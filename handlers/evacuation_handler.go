@@ -14,7 +14,7 @@ type EvacuationController interface {
 	RemoveEvacuatingActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	EvacuateClaimedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateCrashedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
-	EvacuateRunningActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo) (bool, error)
+	EvacuateRunningActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)
 	EvacuateStoppedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 }
 
@@ -122,7 +122,29 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo)
+	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.ActualLrpInternalRoutes)
+	response.Error = models.ConvertError(err)
+	response.KeepContainer = keepContainer
+}
+
+func (h *EvacuationHandler) EvacuateRunningActualLRP_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("evacuate-running-actual-lrp")
+	logger.Info("starting")
+	defer logger.Info("completed")
+
+	response := &models.EvacuationResponse{}
+	response.KeepContainer = true
+	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
+	defer writeResponse(w, response)
+
+	request := &models.EvacuateRunningActualLRPRequest{}
+	err := parseRequest(logger, req, request)
+	if err != nil {
+		response.Error = models.ConvertError(err)
+		return
+	}
+
+	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, []*models.ActualLRPInternalRoute{})
 	response.Error = models.ConvertError(err)
 	response.KeepContainer = keepContainer
 }

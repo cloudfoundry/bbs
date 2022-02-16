@@ -19,7 +19,8 @@ import (
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/rep/repfakes"
+	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/routing-info/internalroutes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -63,9 +64,6 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
 		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
-		fakeRepClientFactory = new(repfakes.FakeClientFactory)
-		fakeRepClient = new(repfakes.FakeClient)
-		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 		fakeServiceClient.CellByIdReturns(nil, errors.New("hi"))
 		fakeLRPStatMetronNotifier = new(mfakes.FakeLRPStatMetronNotifier)
 
@@ -89,6 +87,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			actualLRPInstanceHub,
 			fakeAuctioneerClient,
 			fakeServiceClient,
+			fakeRepClientFactory,
 			retirer,
 			2,
 			fakeLRPStatMetronNotifier,
@@ -778,6 +777,149 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			removedEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
 			Expect(ok).To(BeTrue())
 			Expect(removedEvent).To(Equal(expectedInstanceRemovedEvent))
+		})
+	})
+
+	Context("lrps with internal routes that needs updated", func() {
+		var (
+			actualLRPKeyWithInternalRoutes1, actualLRPKeyWithInternalRoutes2, actualLRPKeyWithInternalRoutes3 db.ActualLRPKeyWithInternalRoutes
+			cell1Presence, cell2Presence, cell3Presence                                                       models.CellPresence
+		)
+
+		BeforeEach(func() {
+			actualLRPKey1 := models.NewActualLRPKey("guid1", 1, "some-domain")
+			actualLRPInstanceKey1 := models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "cell-id-1"}
+			actualLRPKey2 := models.NewActualLRPKey("guid2", 1, "some-domain")
+			actualLRPInstanceKey2 := models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "cell-id-2"}
+			actualLRPKey3 := models.NewActualLRPKey("guid3", 1, "some-domain")
+			actualLRPInstanceKey3 := models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "cell-id-3"}
+
+			desiredInternalRoutes := internalroutes.InternalRoutes{
+				{Hostname: "some-internal-route.apps.internal"},
+			}
+			actualLRPKeyWithInternalRoutes1 = db.ActualLRPKeyWithInternalRoutes{Key: &actualLRPKey1, InstanceKey: &actualLRPInstanceKey1, DesiredInternalRoutes: desiredInternalRoutes}
+			actualLRPKeyWithInternalRoutes2 = db.ActualLRPKeyWithInternalRoutes{Key: &actualLRPKey2, InstanceKey: &actualLRPInstanceKey2, DesiredInternalRoutes: desiredInternalRoutes}
+			actualLRPKeyWithInternalRoutes3 = db.ActualLRPKeyWithInternalRoutes{Key: &actualLRPKey3, InstanceKey: &actualLRPInstanceKey3, DesiredInternalRoutes: desiredInternalRoutes}
+
+			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
+				KeysWithInternalRouteChanges: []*db.ActualLRPKeyWithInternalRoutes{&actualLRPKeyWithInternalRoutes1, &actualLRPKeyWithInternalRoutes2, &actualLRPKeyWithInternalRoutes3},
+			})
+			cell1Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+			cell2Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
+			cell3Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
+			fakeServiceClient.CellByIdCalls(func(logger lager.Logger, cellId string) (*models.CellPresence, error) {
+				switch cellId {
+				case "cell-id-1":
+					return &cell1Presence, nil
+				case "cell-id-2":
+					return &cell2Presence, nil
+				case "cell-id-3":
+					return &cell3Presence, nil
+				}
+
+				return nil, errors.New("wat")
+			})
+		})
+
+		It("gets each actuallrp's cell presence", func() {
+			Eventually(fakeServiceClient.CellByIdCallCount()).Should(Equal(3))
+
+			cellIds := make([]string, 3)
+
+			for i := 0; i < 3; i++ {
+				_, id := fakeServiceClient.CellByIdArgsForCall(i)
+				cellIds[i] = id
+			}
+
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId))
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId))
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId))
+		})
+
+		It("creates a rep client for each actuallrp's cell", func() {
+			Eventually(fakeRepClientFactory.CreateClientCallCount()).Should(Equal(3))
+
+			repAddresses := make([]string, 3)
+			repURLs := make([]string, 3)
+
+			for i := 0; i < 3; i++ {
+				address, url := fakeRepClientFactory.CreateClientArgsForCall(i)
+				repAddresses[i] = address
+				repURLs[i] = url
+			}
+
+			Expect(repAddresses).To(ContainElement(cell1Presence.RepAddress))
+			Expect(repAddresses).To(ContainElement(cell2Presence.RepAddress))
+			Expect(repAddresses).To(ContainElement(cell3Presence.RepAddress))
+
+			Expect(repURLs).To(ContainElement(cell1Presence.RepUrl))
+			Expect(repURLs).To(ContainElement(cell2Presence.RepUrl))
+			Expect(repURLs).To(ContainElement(cell3Presence.RepUrl))
+		})
+
+		It("calls UpdateLRPInstance on the rep client", func() {
+			Eventually(fakeRepClient.UpdateLRPInstanceCallCount()).Should(Equal(3))
+
+			updates := make([]rep.LRPUpdate, 3)
+
+			for i := 0; i < 3; i++ {
+				_, update := fakeRepClient.UpdateLRPInstanceArgsForCall(i)
+				updates[i] = update
+			}
+
+			internalRoutes := internalroutes.InternalRoutes{internalroutes.InternalRoute{Hostname: "some-internal-route.apps.internal"}}
+			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes1.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes1.Key, internalRoutes)
+			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes2.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes2.Key, internalRoutes)
+			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes3.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes3.Key, internalRoutes)
+
+			Expect(updates).To(ContainElement(expectedLRP1Update))
+			Expect(updates).To(ContainElement(expectedLRP2Update))
+			Expect(updates).To(ContainElement(expectedLRP3Update))
+		})
+
+		Context("when fetching cell presence fails", func() {
+			BeforeEach(func() {
+				fakeServiceClient.CellByIdReturns(nil, errors.New("kaboom"))
+			})
+
+			It("does not call CreateClient", func() {
+				Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(0))
+			})
+
+			It("does not call UpdateLRPInstance", func() {
+				Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+			})
+
+			It("logs the error", func() {
+				Eventually(logger).Should(gbytes.Say("failed-fetching-cell-presence"))
+				Eventually(logger).Should(gbytes.Say("kaboom"))
+			})
+		})
+
+		Context("when creating rep client fails", func() {
+			BeforeEach(func() {
+				fakeRepClientFactory.CreateClientReturns(nil, errors.New("kaboom"))
+			})
+
+			It("does not call UpdateLRPInstance", func() {
+				Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+			})
+
+			It("logs the error", func() {
+				Eventually(logger).Should(gbytes.Say("create-rep-client-failed"))
+				Eventually(logger).Should(gbytes.Say("kaboom"))
+			})
+		})
+
+		Context("when NewLRPUpdate fails", func() {
+			BeforeEach(func() {
+				fakeRepClient.UpdateLRPInstanceReturns(errors.New("kaboom"))
+			})
+
+			It("logs the error", func() {
+				Eventually(logger).Should(gbytes.Say("updating-lrp-instance"))
+				Eventually(logger).Should(gbytes.Say("kaboom"))
+			})
 		})
 	})
 })

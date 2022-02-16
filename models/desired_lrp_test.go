@@ -10,8 +10,9 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	. "code.cloudfoundry.org/bbs/test_helpers"
 	"github.com/gogo/protobuf/proto"
+
+	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"

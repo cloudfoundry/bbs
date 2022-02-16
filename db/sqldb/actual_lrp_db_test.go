@@ -19,9 +19,10 @@ var _ = Describe("ActualLRPDB", func() {
 
 	Describe("ChangeActualLRPPresence", func() {
 		var (
-			key         *models.ActualLRPKey
-			instanceKey *models.ActualLRPInstanceKey
-			netInfo     *models.ActualLRPNetInfo
+			key            *models.ActualLRPKey
+			instanceKey    *models.ActualLRPInstanceKey
+			netInfo        *models.ActualLRPNetInfo
+			internalRoutes []*models.ActualLRPInternalRoute
 		)
 
 		BeforeEach(func() {
@@ -34,13 +35,14 @@ var _ = Describe("ActualLRPDB", func() {
 				Ports:           []*models.PortMapping{},
 				InstanceAddress: "1.1.1.1",
 			}
+			internalRoutes = model_helpers.NewActualLRPInternalRoutes()
 		})
 
 		Context("when the lrp exists", func() {
 			BeforeEach(func() {
 				_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, key)
 				Expect(err).NotTo(HaveOccurred())
-				_, _, err = sqlDB.StartActualLRP(ctx, logger, key, instanceKey, netInfo)
+				_, _, err = sqlDB.StartActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -58,7 +60,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(err).NotTo(HaveOccurred())
 					_, err = sqlDB.CreateUnclaimedActualLRP(ctx, logger, key)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, key, instanceKey, netInfo)
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -79,7 +81,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("because it has the wrong presence", func() {
 				BeforeEach(func() {
-					_, err := sqlDB.EvacuateActualLRP(ctx, logger, key, instanceKey, netInfo)
+					_, err := sqlDB.EvacuateActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -109,6 +111,7 @@ var _ = Describe("ActualLRPDB", func() {
 			expectedActualLRP := models.NewUnclaimedActualLRP(*key, fakeClock.Now().UnixNano())
 			expectedActualLRP.ModificationTag.Epoch = "my-awesome-guid"
 			expectedActualLRP.ModificationTag.Index = 0
+			expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 			actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
 			Expect(err).NotTo(HaveOccurred())
@@ -176,6 +179,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "mod-tag-guid",
 					Index: 1,
 				},
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 			})
 
 			actualLRPKey2 := &models.ActualLRPKey{
@@ -202,6 +206,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "mod-tag-guid",
 					Index: 1,
 				},
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 			})
 
 			actualLRPKey3 := &models.ActualLRPKey{
@@ -227,6 +232,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "mod-tag-guid",
 					Index: 1,
 				},
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 			})
 
 			actualLRPKey4 := &models.ActualLRPKey{
@@ -244,6 +250,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "mod-tag-guid",
 					Index: 0,
 				},
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 			})
 
 			actualLRPKey5 := &models.ActualLRPKey{
@@ -275,7 +282,8 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "mod-tag-guid",
 					Index: 1,
 				},
-				Presence: models.ActualLRP_Evacuating,
+				Presence:                models.ActualLRP_Evacuating,
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 			})
 
 			actualLRPKey6 := &models.ActualLRPKey{
@@ -296,7 +304,8 @@ var _ = Describe("ActualLRPDB", func() {
 				Address:         "0.0.0.0",
 				InstanceAddress: "1.1.1.1",
 			}
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, actualLRPKey6, instanceKey6, &netInfo)
+			internalRoutes := model_helpers.NewActualLRPInternalRoutes()
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, actualLRPKey6, instanceKey6, &netInfo, internalRoutes)
 			Expect(err).NotTo(HaveOccurred())
 			queryStr = "UPDATE actual_lrps SET presence = ? WHERE process_guid = ? AND instance_index = ? AND presence = ?"
 			if test_helpers.UsePostgres() {
@@ -321,7 +330,8 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "mod-tag-guid",
 					Index: 2,
 				},
-				Presence: models.ActualLRP_Suspect,
+				Presence:                models.ActualLRP_Suspect,
+				ActualLrpInternalRoutes: internalRoutes,
 			})
 			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
 				ActualLRPKey:         *actualLRPKey6,
@@ -332,6 +342,42 @@ var _ = Describe("ActualLRPDB", func() {
 					Epoch: "mod-tag-guid",
 					Index: 1,
 				},
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
+			})
+
+			nullInternalRoutesActualLRPKey := &models.ActualLRPKey{
+				ProcessGuid: "guid-null-internal-routes",
+				Index:       2,
+				Domain:      "domain1",
+			}
+			nullInteralRoutesInstanceKey := &models.ActualLRPInstanceKey{
+				InstanceGuid: "i-guid-null-internal-routes",
+				CellId:       "cell2",
+			}
+			fakeClock.Increment(time.Hour)
+			_, err = sqlDB.CreateUnclaimedActualLRP(ctx, logger, nullInternalRoutesActualLRPKey)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, err = sqlDB.ClaimActualLRP(ctx, logger, nullInternalRoutesActualLRPKey.ProcessGuid, nullInternalRoutesActualLRPKey.Index, nullInteralRoutesInstanceKey)
+			Expect(err).NotTo(HaveOccurred())
+			queryStr = "UPDATE actual_lrps SET internal_routes = ? WHERE process_guid = ?"
+			if test_helpers.UsePostgres() {
+				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+			}
+			_, err = db.ExecContext(ctx, queryStr, nil, nullInternalRoutesActualLRPKey.ProcessGuid)
+			Expect(err).NotTo(HaveOccurred())
+
+			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
+				ActualLRPKey:         *nullInternalRoutesActualLRPKey,
+				ActualLRPInstanceKey: *nullInteralRoutesInstanceKey,
+				ActualLRPNetInfo:     models.ActualLRPNetInfo{},
+				State:                models.ActualLRPStateClaimed,
+				Since:                fakeClock.Now().UnixNano(),
+				ModificationTag: models.ModificationTag{
+					Epoch: "mod-tag-guid",
+					Index: 1,
+				},
+				Presence:                models.ActualLRP_Ordinary,
+				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 			})
 		})
 
@@ -343,7 +389,8 @@ var _ = Describe("ActualLRPDB", func() {
 
 		It("prunes all actual lrps containing invalid data", func() {
 			actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
-			_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRPWithInvalidData.ActualLRPKey, &actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo)
+			internalRoutes := model_helpers.NewActualLRPInternalRoutes()
+			_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRPWithInvalidData.ActualLRPKey, &actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo, internalRoutes)
 			Expect(err).NotTo(HaveOccurred())
 			queryStr := `UPDATE actual_lrps SET net_info = 'garbage' WHERE process_guid = 'invalid'`
 			if test_helpers.UsePostgres() {
@@ -499,6 +546,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.ModificationTag.Increment()
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
@@ -511,9 +559,12 @@ var _ = Describe("ActualLRPDB", func() {
 
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
 					expectedActualLRP.Since = lrpCreationTime.UnixNano()
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
+
 					Expect(beforeActualLRP).To(Equal(expectedActualLRP))
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
+
 					Expect(err).NotTo(HaveOccurred())
 					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
@@ -542,6 +593,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
@@ -562,6 +614,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.State = models.ActualLRPStateClaimed
 						expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 						fakeClock.Increment(time.Hour)
 
@@ -583,6 +636,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
+						Expect(err).NotTo(HaveOccurred())
 						Expect(actualLRPs).To(HaveLen(1))
 						expectedActualLRP = actualLRPs[0]
 					})
@@ -604,6 +658,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			Context("and the actual lrp is RUNNING", func() {
+				var internalRoutes []*models.ActualLRPInternalRoute
 				BeforeEach(func() {
 					netInfo := models.ActualLRPNetInfo{
 						Address:         "0.0.0.0",
@@ -613,6 +668,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 					expectedActualLRP.ModificationTag.Increment()
 
+					internalRoutes = model_helpers.NewActualLRPInternalRoutes()
 					_, _, err := sqlDB.StartActualLRP(ctx, logger, &models.ActualLRPKey{
 						ProcessGuid: expectedActualLRP.ProcessGuid,
 						Index:       expectedActualLRP.Index,
@@ -621,7 +677,7 @@ var _ = Describe("ActualLRPDB", func() {
 						InstanceGuid: instanceKey.InstanceGuid,
 						CellId:       instanceKey.CellId,
 					},
-						&netInfo)
+						&netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -637,6 +693,8 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.State = models.ActualLRPStateClaimed
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ModificationTag.Increment()
+						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
+
 						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
 				})
@@ -726,6 +784,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
 					expectedActualLRP.Since = lrpCreationTime.UnixNano()
 					expectedActualLRP.Presence = models.ActualLRP_Evacuating
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 				})
 
 				It("returns an error", func() {
@@ -769,9 +828,10 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("StartActualLRP", func() {
 		Context("when the actual lrp exists", func() {
 			var (
-				instanceKey *models.ActualLRPInstanceKey
-				netInfo     *models.ActualLRPNetInfo
-				actualLRP   *models.ActualLRP
+				instanceKey    *models.ActualLRPInstanceKey
+				netInfo        *models.ActualLRPNetInfo
+				actualLRP      *models.ActualLRP
+				internalRoutes []*models.ActualLRPInternalRoute
 			)
 
 			BeforeEach(func() {
@@ -786,6 +846,7 @@ var _ = Describe("ActualLRPDB", func() {
 					InstanceAddress: "2.2.2.2",
 				}
 
+				internalRoutes = model_helpers.NewActualLRPInternalRoutes()
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: models.ActualLRPKey{
 						ProcessGuid: "the-guid",
@@ -800,7 +861,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and the actual lrp is UNCLAIMED", func() {
 				It("transitions the state to RUNNING", func() {
-					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -815,12 +876,13 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 1,
 					}
+					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 					expectedActualLRP := *actualLRP
 					expectedActualLRP.State = models.ActualLRPStateUnclaimed
@@ -829,6 +891,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 0,
 					}
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -845,7 +908,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("transitions the state to RUNNING", func() {
-					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -860,12 +923,13 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 2,
 					}
+					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
 
 				It("returns the existing actual lrp", func() {
-					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 
 					expectedActualLRP := *actualLRP
@@ -877,6 +941,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 1,
 					}
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
@@ -888,7 +953,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Context("and the instance key is different", func() {
 					It("transitions the state to RUNNING, updating the instance key", func() {
 						otherInstanceKey := &models.ActualLRPInstanceKey{CellId: "some-other-cell", InstanceGuid: "some-other-instance-guid"}
-						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, otherInstanceKey, netInfo)
+						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, otherInstanceKey, netInfo, internalRoutes)
 						Expect(err).NotTo(HaveOccurred())
 
 						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -903,6 +968,7 @@ var _ = Describe("ActualLRPDB", func() {
 							Epoch: "my-awesome-guid",
 							Index: 2,
 						}
+						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -910,7 +976,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("and the actual lrp is RUNNING", func() {
 					BeforeEach(func() {
-						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 						Expect(err).NotTo(HaveOccurred())
 					})
 
@@ -920,7 +986,7 @@ var _ = Describe("ActualLRPDB", func() {
 								beforeActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 								Expect(err).NotTo(HaveOccurred())
 
-								_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+								_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 								Expect(err).NotTo(HaveOccurred())
 
 								afterActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -930,9 +996,24 @@ var _ = Describe("ActualLRPDB", func() {
 							})
 
 							It("returns the same actual lrp group for before and after", func() {
-								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 								Expect(err).NotTo(HaveOccurred())
 								Expect(beforeActualLRP).To(Equal(afterActualLRP))
+							})
+						})
+
+						Context("and the internal routes are the same", func() {
+							It("does nothing", func() {
+								beforeActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+
+								_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
+								Expect(err).NotTo(HaveOccurred())
+
+								afterActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(beforeActualLRPs).To(BeEquivalentTo(afterActualLRPs))
 							})
 						})
 
@@ -950,7 +1031,7 @@ var _ = Describe("ActualLRPDB", func() {
 							})
 
 							It("updates the net info", func() {
-								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, newNetInfo)
+								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, newNetInfo, internalRoutes)
 								Expect(err).NotTo(HaveOccurred())
 
 								Expect(expectedActualLRPs).To(ConsistOf(beforeActualLRP))
@@ -964,11 +1045,40 @@ var _ = Describe("ActualLRPDB", func() {
 								Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 							})
 						})
+
+						Context("and the internal routes are NOT the same", func() {
+							var (
+								expectedActualLRPs []*models.ActualLRP
+								newInternalRoutes  []*models.ActualLRPInternalRoute
+							)
+
+							BeforeEach(func() {
+								var err error
+								expectedActualLRPs, err = sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+								newInternalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-new-internalroute"}}
+							})
+
+							It("updates the internal routes", func() {
+								beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, newInternalRoutes)
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(expectedActualLRPs).To(ConsistOf(beforeActualLRP))
+
+								actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
+								Expect(err).NotTo(HaveOccurred())
+
+								expectedActualLRPs[0].ActualLrpInternalRoutes = newInternalRoutes
+								expectedActualLRPs[0].ModificationTag.Increment()
+								Expect(actualLRPs).To(BeEquivalentTo(expectedActualLRPs))
+								Expect(actualLRPs).To(ConsistOf(afterActualLRP))
+							})
+						})
 					})
 
 					Context("and the instance key is not the same", func() {
 						It("returns an ErrActualLRPCannotBeStarted", func() {
-							_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &models.ActualLRPInstanceKey{CellId: "some-other-cell", InstanceGuid: "some-other-instance-guid"}, netInfo)
+							_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &models.ActualLRPInstanceKey{CellId: "some-other-cell", InstanceGuid: "some-other-instance-guid"}, netInfo, internalRoutes)
 							Expect(err).To(Equal(models.ErrActualLRPCannotBeStarted))
 						})
 					})
@@ -991,7 +1101,7 @@ var _ = Describe("ActualLRPDB", func() {
 					})
 
 					It("transitions the state to RUNNING", func() {
-						beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+						beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(err).NotTo(HaveOccurred())
@@ -1004,6 +1114,7 @@ var _ = Describe("ActualLRPDB", func() {
 							Epoch: "my-awesome-guid",
 							Index: 1,
 						}
+						expectedBeforeActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 						Expect(beforeActualLRP).To(Equal(&expectedBeforeActualLRP))
 
 						fetchedActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -1018,6 +1129,7 @@ var _ = Describe("ActualLRPDB", func() {
 							Epoch: "my-awesome-guid",
 							Index: 2,
 						}
+						expectedAfterActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 						Expect(fetchedActualLRPs).To(ContainElement(afterActualLRP))
 						Expect(fetchedActualLRPs).To(ContainElement(&expectedAfterActualLRP))
@@ -1028,9 +1140,10 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual lrp does not exist", func() {
 			var (
-				instanceKey *models.ActualLRPInstanceKey
-				netInfo     *models.ActualLRPNetInfo
-				actualLRP   *models.ActualLRP
+				instanceKey    *models.ActualLRPInstanceKey
+				netInfo        *models.ActualLRPNetInfo
+				actualLRP      *models.ActualLRP
+				internalRoutes []*models.ActualLRPInternalRoute
 			)
 
 			BeforeEach(func() {
@@ -1044,6 +1157,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Ports:   []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
 				}
 
+				internalRoutes = model_helpers.NewActualLRPInternalRoutes()
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: models.ActualLRPKey{
 						ProcessGuid: "the-guid",
@@ -1058,7 +1172,7 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 
 			It("creates the actual lrp", func() {
-				beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+				beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(beforeActualLRP).To(Equal(&models.ActualLRP{}))
 
@@ -1068,6 +1182,7 @@ var _ = Describe("ActualLRPDB", func() {
 				expectedActualLRP := *actualLRP
 				expectedActualLRP.State = models.ActualLRPStateRunning
 				expectedActualLRP.ActualLRPNetInfo = *netInfo
+				expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 				expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 				expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
@@ -1093,7 +1208,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("creates a new actual LRP", func() {
-					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					beforeActualLRP, afterActualLRP, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(beforeActualLRP).To(Equal(&models.ActualLRP{}))
 
@@ -1103,6 +1218,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP := *actualLRP
 					expectedActualLRP.State = models.ActualLRPStateRunning
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
+					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
@@ -1116,9 +1232,10 @@ var _ = Describe("ActualLRPDB", func() {
 	Describe("CrashActualLRP", func() {
 		Context("when the actual lrp exists", func() {
 			var (
-				instanceKey *models.ActualLRPInstanceKey
-				netInfo     *models.ActualLRPNetInfo
-				actualLRP   *models.ActualLRP
+				instanceKey    *models.ActualLRPInstanceKey
+				netInfo        *models.ActualLRPNetInfo
+				actualLRP      *models.ActualLRP
+				internalRoutes []*models.ActualLRPInternalRoute
 			)
 
 			BeforeEach(func() {
@@ -1132,6 +1249,7 @@ var _ = Describe("ActualLRPDB", func() {
 					Ports:           []*models.PortMapping{{ContainerPort: 8080, HostPort: 9090}},
 					InstanceAddress: "2.2.2.2",
 				}
+				internalRoutes = model_helpers.NewActualLRPInternalRoutes()
 
 				actualLRP = &models.ActualLRP{
 					ActualLRPKey: models.ActualLRPKey{
@@ -1148,7 +1266,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and it is RUNNING", func() {
 				BeforeEach(func() {
-					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 					actualLRP.ModificationTag.Increment()
 				})
@@ -1162,6 +1280,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
+					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
@@ -1186,6 +1305,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashReason = crashReason[:1013] + "(truncated)"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1206,6 +1326,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1241,6 +1362,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1292,6 +1414,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.State = models.ActualLRPStateClaimed
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.Since = fakeClock.Now().Add(-time.Hour).UnixNano()
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
@@ -1330,6 +1453,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashReason = "because it didn't go well"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1365,6 +1489,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.CrashReason = "some other failure reason"
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1373,7 +1498,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("and it's already CRASHED", func() {
 				BeforeEach(func() {
-					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 					actualLRP.ModificationTag.Increment()
 
@@ -1448,7 +1573,7 @@ var _ = Describe("ActualLRPDB", func() {
 					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &evacuatingLRP.ActualLRPKey)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, &evacuatingLRP.ActualLRPKey, evacuatingInstanceKey, netInfo)
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, &evacuatingLRP.ActualLRPKey, evacuatingInstanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 					queryStr := `
 							UPDATE actual_lrps SET presence = ?
@@ -1477,7 +1602,7 @@ var _ = Describe("ActualLRPDB", func() {
 					_, err = sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo)
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 
 				})
@@ -1545,6 +1670,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 1,
 					}
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
@@ -1566,6 +1692,7 @@ var _ = Describe("ActualLRPDB", func() {
 							Epoch: "my-awesome-guid",
 							Index: 1,
 						}
+						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1585,6 +1712,8 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 0,
 					}
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
+
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 				})
@@ -1780,6 +1909,7 @@ var _ = Describe("ActualLRPDB", func() {
 						Epoch: "my-awesome-guid",
 						Index: 1,
 					}
+					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					Expect(beforeActualLRP).To(BeEquivalentTo(&expectedActualLRP))
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
