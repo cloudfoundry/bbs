@@ -3,6 +3,7 @@ package sqldb_test
 import (
 	"crypto/rand"
 	"fmt"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -127,7 +128,7 @@ var _ = Describe("Encryption", func() {
 	}
 
 	Describe("PerformEncryption", func() {
-		It("recursively re-encrypts all existing records", func() {
+		It("recursively re-encrypts tasks and desired lrps", func() {
 			var cryptor encryption.Cryptor
 			var encoder format.Encoder
 
@@ -214,7 +215,7 @@ var _ = Describe("Encryption", func() {
 			Expect(decryptedVolumePlacement).To(Equal(unencodedVolumePlacement))
 		})
 
-		Context("net_info encryption", func() {
+		Context("actual_lrps encryption", func() {
 			var (
 				processGuid    = "uniqueprocessguid"
 				netInfo        string
@@ -262,17 +263,20 @@ var _ = Describe("Encryption", func() {
 					cryptor := makeCryptor("new")
 					encoder := format.NewEncoder(cryptor)
 
-					var netInfo []byte
-					queryStr := "SELECT net_info FROM actual_lrps WHERE process_guid = ?"
+					var dbNetInfo, dbInternalRoutes []byte
+					queryStr := "SELECT net_info, internal_routes FROM actual_lrps WHERE process_guid = ?"
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					row := db.QueryRowContext(ctx, queryStr, processGuid)
-					err := row.Scan(&netInfo)
+					err := row.Scan(&dbNetInfo, &dbInternalRoutes)
 					Expect(err).NotTo(HaveOccurred())
-					decrypted, err := encoder.Decode(netInfo)
+					decryptedNetInfo, err := encoder.Decode(dbNetInfo)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(string(decrypted)).To(Equal("actual value"))
+					Expect(string(decryptedNetInfo)).To(Equal("actual value"))
+					decryptedInternalRoutes, err := encoder.Decode(dbInternalRoutes)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(string(decryptedInternalRoutes)).To(Equal("{}"))
 				})
 			})
 
@@ -398,6 +402,119 @@ var _ = Describe("Encryption", func() {
 			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 			err = sqlDB.PerformEncryption(ctx, logger)
 			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("encrypts all text columns except for whitelisted", func() {
+			cryptor := makeCryptor("old")
+			encoder := format.NewEncoder(cryptor)
+
+			tablesWithRequiredKeys := map[string]map[string]interface{}{
+				"tasks": map[string]interface{}{"guid": "some-guid", "domain": "fake-domain"},
+				"desired_lrps": map[string]interface{}{
+					"process_guid":           "some-guid",
+					"domain":                 "fake-domain",
+					"log_guid":               "some-log-guid",
+					"instances":              1,
+					"memory_mb":              10,
+					"disk_mb":                10,
+					"rootfs":                 "some-root-fs",
+					"modification_tag_epoch": "10",
+				},
+				"actual_lrps": map[string]interface{}{
+					"process_guid":           "some-guid",
+					"instance_index":         0,
+					"domain":                 "fake-domain",
+					"state":                  "running",
+					"modification_tag_epoch": "10",
+				},
+			}
+			dataTypesToEncrypt := map[string]bool{"text": true, "mediumtext": true, "longtext": true}
+			whiteListedFields := map[string]map[string]bool{
+				"tasks":        map[string]bool{"result": true},
+				"desired_lrps": map[string]bool{"annotation": true, "placement_tags": true},
+				"actual_lrps":  map[string]bool{},
+			}
+			var columnName, dataType string
+			dataToStore, err := encoder.Encode([]byte("actual value"))
+			Expect(err).NotTo(HaveOccurred())
+
+			needsToBeEncrypted := map[string][]string{}
+
+			for table, primaryKeys := range tablesWithRequiredKeys {
+				queryStr := "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				rows, err := db.QueryContext(ctx, queryStr, table)
+				Expect(err).NotTo(HaveOccurred())
+				defer rows.Close()
+
+				for rows.Next() {
+					err := rows.Scan(&columnName, &dataType)
+					Expect(err).NotTo(HaveOccurred())
+					if _, ok := dataTypesToEncrypt[dataType]; ok {
+						if _, ok := whiteListedFields[table][columnName]; ok {
+							continue
+						}
+						if _, ok := needsToBeEncrypted[table]; !ok {
+							needsToBeEncrypted[table] = []string{}
+						}
+						needsToBeEncrypted[table] = append(needsToBeEncrypted[table], columnName)
+					}
+				}
+
+				var columnNames, marks []string
+				var values []interface{}
+				for primaryKeyName, primaryKeyValue := range primaryKeys {
+					columnNames = append(columnNames, primaryKeyName)
+					values = append(values, primaryKeyValue)
+					marks = append(marks, "?")
+				}
+
+				for _, columnName := range needsToBeEncrypted[table] {
+					columnNames = append(columnNames, columnName)
+					values = append(values, dataToStore)
+					marks = append(marks, "?")
+				}
+
+				columnNamesStr := strings.Join(columnNames, ",")
+				marksStr := strings.Join(marks, ",")
+
+				queryStr = fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, table, columnNamesStr, marksStr)
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err = db.ExecContext(ctx, queryStr, values...)
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			cryptor = makeCryptor("new", "old")
+			encoder = format.NewEncoder(cryptor)
+
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+			err = sqlDB.PerformEncryption(ctx, logger)
+			Expect(err).NotTo(HaveOccurred())
+
+			cryptor = makeCryptor("new")
+			encoder = format.NewEncoder(cryptor)
+
+			for table, columns := range needsToBeEncrypted {
+				for _, column := range columns {
+					var reEncryptedData []byte
+					queryStr := fmt.Sprintf("SELECT %s FROM %s", column, table)
+					rowsEncrypted, err := db.QueryContext(ctx, queryStr)
+					Expect(err).NotTo(HaveOccurred())
+					defer rowsEncrypted.Close()
+
+					for rowsEncrypted.Next() {
+						err = rowsEncrypted.Scan(&reEncryptedData)
+						Expect(err).NotTo(HaveOccurred())
+						decryptedData, err := encoder.Decode(reEncryptedData)
+						Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("Decrypting column %s on table %s", column, table))
+						Expect(string(decryptedData)).To(Equal("actual value"), fmt.Sprintf("Decrypting column %s on table %s", column, table))
+					}
+				}
+			}
 		})
 	})
 })
