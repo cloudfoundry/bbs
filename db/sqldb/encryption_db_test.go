@@ -438,7 +438,7 @@ var _ = Describe("Encryption", func() {
 			dataToStore, err := encoder.Encode([]byte("actual value"))
 			Expect(err).NotTo(HaveOccurred())
 
-			needsToBeEncrypted := map[string][]string{}
+			needsToBeEncrypted := map[string]map[string]bool{}
 
 			for table, primaryKeys := range tablesWithRequiredKeys {
 				queryStr := "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = ?"
@@ -457,9 +457,9 @@ var _ = Describe("Encryption", func() {
 							continue
 						}
 						if _, ok := needsToBeEncrypted[table]; !ok {
-							needsToBeEncrypted[table] = []string{}
+							needsToBeEncrypted[table] = map[string]bool{}
 						}
-						needsToBeEncrypted[table] = append(needsToBeEncrypted[table], columnName)
+						needsToBeEncrypted[table][columnName] = true
 					}
 				}
 
@@ -471,10 +471,12 @@ var _ = Describe("Encryption", func() {
 					marks = append(marks, "?")
 				}
 
-				for _, columnName := range needsToBeEncrypted[table] {
-					columnNames = append(columnNames, columnName)
-					values = append(values, dataToStore)
-					marks = append(marks, "?")
+				for columnName, encryptIt := range needsToBeEncrypted[table] {
+					if encryptIt {
+						columnNames = append(columnNames, columnName)
+						values = append(values, dataToStore)
+						marks = append(marks, "?")
+					}
 				}
 
 				columnNamesStr := strings.Join(columnNames, ",")
@@ -499,19 +501,21 @@ var _ = Describe("Encryption", func() {
 			encoder = format.NewEncoder(cryptor)
 
 			for table, columns := range needsToBeEncrypted {
-				for _, column := range columns {
-					var reEncryptedData []byte
-					queryStr := fmt.Sprintf("SELECT %s FROM %s", column, table)
-					rowsEncrypted, err := db.QueryContext(ctx, queryStr)
-					Expect(err).NotTo(HaveOccurred())
-					defer rowsEncrypted.Close()
-
-					for rowsEncrypted.Next() {
-						err = rowsEncrypted.Scan(&reEncryptedData)
+				for column, encryptIt := range columns {
+					if encryptIt {
+						var reEncryptedData []byte
+						queryStr := fmt.Sprintf("SELECT %s FROM %s", column, table)
+						rowsEncrypted, err := db.QueryContext(ctx, queryStr)
 						Expect(err).NotTo(HaveOccurred())
-						decryptedData, err := encoder.Decode(reEncryptedData)
-						Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("Decrypting column %s on table %s", column, table))
-						Expect(string(decryptedData)).To(Equal("actual value"), fmt.Sprintf("Decrypting column %s on table %s", column, table))
+						defer rowsEncrypted.Close()
+
+						for rowsEncrypted.Next() {
+							err = rowsEncrypted.Scan(&reEncryptedData)
+							Expect(err).NotTo(HaveOccurred())
+							decryptedData, err := encoder.Decode(reEncryptedData)
+							Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("Decrypting column %s on table %s", column, table))
+							Expect(string(decryptedData)).To(Equal("actual value"), fmt.Sprintf("Decrypting column %s on table %s", column, table))
+						}
 					}
 				}
 			}
