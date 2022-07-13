@@ -68,6 +68,7 @@ message DesiredLRPRunInfo {
   map<string, MetricTagValue> metric_tags = 25;
 
   repeated Sidecar sidecars = 26;
+  int64 log_rate_limit_bytes_per_second = 27 [(gogoproto.jsontag) = "log_rate_limit_bytes_per_second"];
 }
 
 // helper message for marshalling routes

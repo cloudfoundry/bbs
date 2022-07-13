@@ -28,7 +28,6 @@ var (
 		desiredLRPsTable + ".instances",
 		desiredLRPsTable + ".memory_mb",
 		desiredLRPsTable + ".disk_mb",
-		desiredLRPsTable + ".log_rate_limit",
 		desiredLRPsTable + ".max_pids",
 		desiredLRPsTable + ".rootfs",
 		desiredLRPsTable + ".routes",

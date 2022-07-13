@@ -49,7 +49,6 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		LogGuid:                       schedInfo.LogGuid,
 		MemoryMb:                      schedInfo.MemoryMb,
 		DiskMb:                        schedInfo.DiskMb,
-		LogRateLimitBytesPerSecond:    schedInfo.LogRateLimitBytesPerSecond,
 		MaxPids:                       schedInfo.MaxPids,
 		RootFs:                        schedInfo.RootFs,
 		Instances:                     schedInfo.Instances,
@@ -80,6 +79,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		ImageLayers:                   runInfo.ImageLayers,
 		MetricTags:                    runInfo.MetricTags,
 		Sidecars:                      runInfo.Sidecars,
+		LogRateLimitBytesPerSecond:    runInfo.LogRateLimitBytesPerSecond,
 	}
 }
 
@@ -277,6 +277,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.ImageLayers,
 		d.MetricTags,
 		d.Sidecars,
+		d.LogRateLimitBytesPerSecond,
 	)
 }
 
@@ -583,6 +584,7 @@ func NewDesiredLRPRunInfo(
 	imageLayers []*ImageLayer,
 	metricTags map[string]*MetricTagValue,
 	sidecars []*Sidecar,
+	logRateLimitBytesPerSecond int64,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -610,6 +612,7 @@ func NewDesiredLRPRunInfo(
 		ImageLayers:                   imageLayers,
 		MetricTags:                    metricTags,
 		Sidecars:                      sidecars,
+		LogRateLimitBytesPerSecond:    logRateLimitBytesPerSecond,
 	}
 }
 
