@@ -49,6 +49,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		LogGuid:                       schedInfo.LogGuid,
 		MemoryMb:                      schedInfo.MemoryMb,
 		DiskMb:                        schedInfo.DiskMb,
+		LogRateLimitBytesPerSecond:    schedInfo.LogRateLimitBytesPerSecond,
 		MaxPids:                       schedInfo.MaxPids,
 		RootFs:                        schedInfo.RootFs,
 		Instances:                     schedInfo.Instances,

@@ -96,6 +96,7 @@ message DesiredLRPResource {
   int32 disk_mb = 2 [(gogoproto.jsontag) = "disk_mb"];
   string root_fs = 3 [(gogoproto.jsontag) = "rootfs"];
   int32 max_pids = 4 [(gogoproto.jsontag) = "max_pids"];
+  int64 log_rate_limit_bytes_per_second = 5 [(gogoproto.jsontag) = "log_rate_limit_bytes_per_second"];
 }
 
 message DesiredLRP {
@@ -143,4 +144,5 @@ message DesiredLRP {
   map<string, MetricTagValue> metric_tags = 35;
 
   repeated Sidecar sidecars = 36;
+  int64 log_rate_limit_bytes_per_second = 37 [(gogoproto.jsontag) = "log_rate_limit_bytes_per_second"];
 }
