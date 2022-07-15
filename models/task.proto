@@ -40,6 +40,7 @@ message TaskDefinition {
   string image_username = 23 [(gogoproto.jsontag) =  "image_username"];
   string image_password = 24 [(gogoproto.jsontag) =  "image_password"];
   repeated ImageLayer image_layers = 25;
+  int64 log_rate_limit_bytes_per_second = 26 [(gogoproto.jsontag) = "log_rate_limit_bytes_per_second"];
 }
 
 message Task {
