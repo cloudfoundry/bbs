@@ -318,6 +318,10 @@ func (desired DesiredLRP) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"disk_mb"})
 	}
 
+	if desired.GetLogRateLimitBytesPerSecond() < -1 {
+		validationError = validationError.Append(ErrInvalidField{"log_rate_limit_bytes_per_second"})
+	}
+
 	if len(desired.GetAnnotation()) > maximumAnnotationLength {
 		validationError = validationError.Append(ErrInvalidField{"annotation"})
 	}
@@ -697,6 +701,10 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 			validationError = validationError.Append(ErrInvalidField{"check_definition"})
 			validationError = validationError.Append(err)
 		}
+	}
+
+	if runInfo.LogRateLimitBytesPerSecond < -1 {
+		validationError = validationError.Append(ErrInvalidField{"log_rate_limit_bytes_per_second"})
 	}
 
 	return validationError.ToError()

@@ -1112,6 +1112,23 @@ var _ = Describe("DesiredLRP", func() {
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "annotation")
 		})
 
+		Context("when a log rate limit is specified", func() {
+			It("cannot be less than -1", func() {
+				desiredLRP.LogRateLimitBytesPerSecond = -2
+				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "log_rate_limit_bytes_per_second")
+			})
+
+			It("allows -1 to indicate no log rate limit", func() {
+				desiredLRP.LogRateLimitBytesPerSecond = -1
+				Expect(desiredLRP.Validate()).ToNot(HaveOccurred())
+			})
+
+			It("allows zero as a log rate limit", func() {
+				desiredLRP.LogRateLimitBytesPerSecond = 0
+				Expect(desiredLRP.Validate()).ToNot(HaveOccurred())
+			})
+		})
+
 		Context("when security group is present", func() {
 			It("must be valid", func() {
 				desiredLRP.EgressRules = []*models.SecurityGroupRule{{
@@ -1495,6 +1512,7 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 		Entry("invalid layers", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "some-url"}}, nil, []*models.Sidecar{}, logRateLimitBytesPerSecond), "image_layer"),
 		Entry("invalid metric tags", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}, []*models.Sidecar{}, logRateLimitBytesPerSecond), "metric_tags"),
 		Entry("invalid sidecars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{{DiskMb: -1}}, logRateLimitBytesPerSecond), "sidecars"),
+		Entry("invalid log rate limit", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, nil, []*models.Sidecar{{DiskMb: -1}}, -2), "log_rate_limit_bytes_per_second"),
 	)
 })
 
