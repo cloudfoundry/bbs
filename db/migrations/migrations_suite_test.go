@@ -45,7 +45,7 @@ func TestMigrations(t *testing.T) {
 var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
 
-	dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
+	dbName := fmt.Sprintf("diego_%d", GinkgoParallelProcess())
 	sqlRunner = test_helpers.NewSQLRunner(dbName)
 	sqlProcess = ginkgomon.Invoke(sqlRunner)
 

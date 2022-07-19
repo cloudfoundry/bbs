@@ -25,7 +25,7 @@ var _ = Describe("SQL Helpers", func() {
 		helper = helpers.NewSQLHelper(dbFlavor)
 		mon = monitor.New()
 
-		tableName = fmt.Sprintf("dummy_%d", GinkgoParallelNode())
+		tableName = fmt.Sprintf("dummy_%d", GinkgoParallelProcess())
 		tableQuery := fmt.Sprintf("CREATE TABLE %s (existingcol INT);", tableName)
 		_, err := db.Exec(tableQuery)
 		Expect(err).NotTo(HaveOccurred())

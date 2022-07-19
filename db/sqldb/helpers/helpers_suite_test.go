@@ -31,7 +31,7 @@ var (
 )
 
 var _ = BeforeEach(func() {
-	dbName = fmt.Sprintf("diego_%d", GinkgoParallelNode())
+	dbName = fmt.Sprintf("diego_%d", GinkgoParallelProcess())
 
 	if test_helpers.UsePostgres() {
 		dbDriverName = "postgres"
@@ -93,7 +93,7 @@ var _ = AfterEach(func() {
 	db, err := helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
-	_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelProcess()))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Close()).NotTo(HaveOccurred())
 })

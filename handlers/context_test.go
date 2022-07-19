@@ -40,7 +40,7 @@ var _ = Describe("Context", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 
-		dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
+		dbName := fmt.Sprintf("diego_%d", GinkgoParallelProcess())
 		sqlRunner := test_helpers.NewSQLRunner(dbName)
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 

@@ -94,14 +94,14 @@ var _ = BeforeSuite(func() {
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 
 	// Ensure that if another test failed to clean up we can still proceed
-	rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelProcess()))
 
-	_, err = rawDB.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelNode()))
+	_, err = rawDB.Exec(fmt.Sprintf("CREATE DATABASE diego_%d", GinkgoParallelProcess()))
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(rawDB.Close()).To(Succeed())
 
-	connStringWithDB := fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelNode())
+	connStringWithDB := fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelProcess())
 	rawDB, err = helpers.Connect(logger, dbDriverName, connStringWithDB, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
@@ -171,7 +171,7 @@ var _ = AfterSuite(func() {
 	rawDB, err := helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
-	_, err = rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelNode()))
+	_, err = rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelProcess()))
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Close()).NotTo(HaveOccurred())
 })

@@ -86,7 +86,7 @@ var _ = SynchronizedBeforeSuite(
 	},
 	func(binPaths []byte) {
 		grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
-		startPort := 1050 * GinkgoParallelNode()
+		startPort := 1050 * GinkgoParallelProcess()
 		portRange := 1000
 		var err error
 		portAllocator, err = portauthority.New(startPort, startPort+portRange)
@@ -98,7 +98,7 @@ var _ = SynchronizedBeforeSuite(
 
 		SetDefaultEventuallyTimeout(15 * time.Second)
 
-		dbName := fmt.Sprintf("diego_%d", GinkgoParallelNode())
+		dbName := fmt.Sprintf("diego_%d", GinkgoParallelProcess())
 		sqlRunner = test_helpers.NewSQLRunner(dbName)
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
