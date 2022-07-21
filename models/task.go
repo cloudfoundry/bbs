@@ -122,8 +122,10 @@ func (def *TaskDefinition) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"disk_mb"})
 	}
 
-	if def.LogRateLimitBytesPerSecond < -1 {
-		validationError = validationError.Append(ErrInvalidField{"log_rate_limit_bytes_per_second"})
+	if limit := def.LogRateLimit; limit != nil {
+		if limit.BytesPerSecond < -1 {
+			validationError = validationError.Append(ErrInvalidField{"log_rate_limit"})
+		}
 	}
 
 	if def.MaxPids < 0 {
