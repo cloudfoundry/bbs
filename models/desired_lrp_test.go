@@ -1126,7 +1126,7 @@ var _ = Describe("DesiredLRP", func() {
 			})
 
 			It("allows zero as a log rate limit", func() {
-				desiredLRP.LogRateLimit = &models.LogRateLimit{BytesPerSecond: -1}
+				desiredLRP.LogRateLimit = &models.LogRateLimit{BytesPerSecond: 0}
 				Expect(desiredLRP.Validate()).ToNot(HaveOccurred())
 			})
 		})

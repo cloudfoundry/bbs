@@ -46,7 +46,9 @@ var _ = Describe("Task", func() {
 		"failure_reason":"because i said so",
 		"memory_mb":256,
 		"disk_mb":1024,
-		"log_rate_limit_bytes_per_second": 2048,
+		"log_rate_limit": {
+			"bytes_per_second": 2048
+		},
 		"cpu_weight": 42,
 		"privileged": true,
 		"log_guid": "123",
