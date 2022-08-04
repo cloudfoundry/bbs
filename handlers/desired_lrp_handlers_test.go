@@ -977,14 +977,19 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(response.Error).To(BeNil())
 			})
 
-			It("emits a create event to the hub", func(done Done) {
-				Eventually(desiredHub.EmitCallCount).Should(Equal(1))
-				event := desiredHub.EmitArgsForCall(0)
-				changeEvent, ok := event.(*models.DesiredLRPChangedEvent)
-				Expect(ok).To(BeTrue())
-				Expect(changeEvent.Before).To(Equal(beforeDesiredLRP))
-				Expect(changeEvent.After).To(Equal(afterDesiredLRP))
-				close(done)
+			It("emits a create event to the hub", func() {
+				done := make(chan interface{})
+				timeout := 5
+				go func() {
+					Eventually(desiredHub.EmitCallCount).Should(Equal(1))
+					event := desiredHub.EmitArgsForCall(0)
+					changeEvent, ok := event.(*models.DesiredLRPChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(changeEvent.Before).To(Equal(beforeDesiredLRP))
+					Expect(changeEvent.After).To(Equal(afterDesiredLRP))
+					close(done)
+				}()
+				Eventually(done, timeout).Should(BeClosed())
 			})
 
 			Context("when the number of instances changes", func() {
@@ -1366,17 +1371,22 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(response.Error).To(BeNil())
 			})
 
-			It("emits a delete event to the hub", func(done Done) {
-				Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
-				_, _, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
-				Expect(actualProcessGuid).To(Equal(processGuid))
+			It("emits a delete event to the hub", func() {
+				done := make(chan interface{})
+				timeout := 5
+				go func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+					_, _, actualProcessGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+					Expect(actualProcessGuid).To(Equal(processGuid))
 
-				Eventually(desiredHub.EmitCallCount).Should(Equal(1))
-				event := desiredHub.EmitArgsForCall(0)
-				removeEvent, ok := event.(*models.DesiredLRPRemovedEvent)
-				Expect(ok).To(BeTrue())
-				Expect(removeEvent.DesiredLrp).To(Equal(desiredLRP))
-				close(done)
+					Eventually(desiredHub.EmitCallCount).Should(Equal(1))
+					event := desiredHub.EmitArgsForCall(0)
+					removeEvent, ok := event.(*models.DesiredLRPRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(removeEvent.DesiredLrp).To(Equal(desiredLRP))
+					close(done)
+				}()
+				Eventually(done, timeout).Should(BeClosed())
 			})
 
 			Context("when there are running instances on a present cell", func() {
