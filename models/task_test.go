@@ -46,6 +46,9 @@ var _ = Describe("Task", func() {
 		"failure_reason":"because i said so",
 		"memory_mb":256,
 		"disk_mb":1024,
+		"log_rate_limit": {
+			"bytes_per_second": 2048
+		},
 		"cpu_weight": 42,
 		"privileged": true,
 		"log_guid": "123",
@@ -116,15 +119,16 @@ var _ = Describe("Task", func() {
 					ChecksumAlgorithm: "md5",
 					ChecksumValue:     "some value",
 				}),
-				MemoryMb:    256,
-				DiskMb:      1024,
-				MaxPids:     256,
-				CpuWeight:   42,
-				Privileged:  true,
-				LogGuid:     "123",
-				LogSource:   "APP",
-				MetricsGuid: "456",
-				ResultFile:  "some-file.txt",
+				MemoryMb:     256,
+				DiskMb:       1024,
+				LogRateLimit: &models.LogRateLimit{BytesPerSecond: 2048},
+				MaxPids:      256,
+				CpuWeight:    42,
+				Privileged:   true,
+				LogGuid:      "123",
+				LogSource:    "APP",
+				MetricsGuid:  "456",
+				ResultFile:   "some-file.txt",
 
 				EgressRules: []*models.SecurityGroupRule{
 					{
@@ -380,6 +384,22 @@ var _ = Describe("Task", func() {
 					},
 				},
 			},
+			{
+				"log_rate_limit",
+				&models.Task{
+					Domain:   "some-domain",
+					TaskGuid: "task-guid",
+					TaskDefinition: &models.TaskDefinition{
+						RootFs: "some:rootfs",
+						Action: models.WrapAction(&models.RunAction{
+							Path: "ls",
+							User: "me",
+						}),
+						LogRateLimit: &models.LogRateLimit{BytesPerSecond: -2},
+					},
+				},
+			},
+
 			{
 				"max_pids",
 				&models.Task{
