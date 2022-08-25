@@ -10,6 +10,7 @@ import (
 
 const (
 	mysqlFlavor    = "mysql"
+	mysql8Flavor   = "mysql8"
 	postgresFlavor = "postgres"
 )
 
@@ -26,7 +27,7 @@ func driver() string {
 }
 
 func UseMySQL() bool {
-	return driver() == mysqlFlavor
+	return driver() == mysqlFlavor || driver() == mysql8Flavor
 }
 
 func UsePostgres() bool {
