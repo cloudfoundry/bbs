@@ -9,7 +9,6 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/locket/models/modelsfakes"
-	"code.cloudfoundry.org/rep/maintain/maintainfakes"
 	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,12 +16,11 @@ import (
 
 var _ = Describe("ServiceClient", func() {
 	var (
-		cellPresenceClient                    *maintainfakes.FakeCellPresenceClient
-		locketClient                          *modelsfakes.FakeLocketClient
-		serviceClient                         serviceclient.ServiceClient
-		logger                                *lagertest.TestLogger
-		cellPresence1, cellPresence2          *models.CellPresence
-		cellPresence2Alternate, cellPresence3 *models.CellPresence
+		locketClient                 *modelsfakes.FakeLocketClient
+		serviceClient                serviceclient.ServiceClient
+		logger                       *lagertest.TestLogger
+		cellPresence1, cellPresence2 *models.CellPresence
+		cellPresence3                *models.CellPresence
 	)
 
 	resourceFromPresence := func(presence *models.CellPresence) *locketmodels.Resource {
@@ -42,7 +40,6 @@ var _ = Describe("ServiceClient", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("service-client")
 
-		cellPresenceClient = &maintainfakes.FakeCellPresenceClient{}
 		locketClient = &modelsfakes.FakeLocketClient{}
 
 		cellPresence1 = &models.CellPresence{
@@ -53,33 +50,26 @@ var _ = Describe("ServiceClient", func() {
 			CellId:     "cell-2",
 			RepAddress: "cell-2-address",
 		}
-		cellPresence2Alternate = &models.CellPresence{
-			CellId:     "cell-2",
-			RepAddress: "cell-2-address-different",
-		}
 		cellPresence3 = &models.CellPresence{
 			CellId:     "cell-3",
 			RepAddress: "cell-3-address",
 		}
 
-		serviceClient = serviceclient.NewServiceClient(cellPresenceClient, locketClient)
+		serviceClient = serviceclient.NewServiceClient(locketClient)
 	})
 
 	Context("Cells", func() {
 		BeforeEach(func() {
-			cellPresenceClient.CellsReturns(models.NewCellSetFromList(
-				[]*models.CellPresence{cellPresence1, cellPresence2Alternate, cellPresence3},
-			), nil)
-
 			locketClient.FetchAllReturns(&locketmodels.FetchAllResponse{
 				Resources: []*locketmodels.Resource{
+					resourceFromPresence(cellPresence1),
 					resourceFromPresence(cellPresence2),
 					resourceFromPresence(cellPresence3),
 				},
 			}, nil)
 		})
 
-		It("fetches the cells from the locket client and consul", func() {
+		It("fetches the cells from the locket client", func() {
 			set, err := serviceClient.Cells(logger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(set).To(HaveLen(3))
@@ -88,21 +78,9 @@ var _ = Describe("ServiceClient", func() {
 			Expect(set["cell-2"]).To(Equal(cellPresence2))
 			Expect(set["cell-3"]).To(Equal(cellPresence3))
 
-			Expect(cellPresenceClient.CellsCallCount()).To(Equal(1))
 			Expect(locketClient.FetchAllCallCount()).To(Equal(1))
 			_, request, _ := locketClient.FetchAllArgsForCall(0)
 			Expect(request).To(Equal(&locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.PRESENCE}))
-		})
-
-		Context("when fetching the cells from consul fails", func() {
-			BeforeEach(func() {
-				cellPresenceClient.CellsReturns(nil, errors.New("boom"))
-			})
-
-			It("returns an error", func() {
-				_, err := serviceClient.Cells(logger)
-				Expect(err).To(HaveOccurred())
-			})
 		})
 
 		Context("when fetching the cells from the locket client fails", func() {
@@ -120,6 +98,7 @@ var _ = Describe("ServiceClient", func() {
 			BeforeEach(func() {
 				locketClient.FetchAllReturns(&locketmodels.FetchAllResponse{
 					Resources: []*locketmodels.Resource{
+						resourceFromPresence(cellPresence1),
 						resourceFromPresence(cellPresence2),
 						resourceFromPresence(cellPresence3),
 						&locketmodels.Resource{
@@ -140,30 +119,10 @@ var _ = Describe("ServiceClient", func() {
 				Expect(set["cell-3"]).To(Equal(cellPresence3))
 			})
 		})
-
-		Context("when the cell presence client is nil", func() {
-			BeforeEach(func() {
-				serviceClient = serviceclient.NewServiceClient(nil, locketClient)
-			})
-
-			It("only fetches the cells from the locket client", func() {
-				set, err := serviceClient.Cells(logger)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(set).To(HaveLen(2))
-
-				Expect(set["cell-2"]).To(Equal(cellPresence2))
-				Expect(set["cell-3"]).To(Equal(cellPresence3))
-
-				Expect(locketClient.FetchAllCallCount()).To(Equal(1))
-				_, request, _ := locketClient.FetchAllArgsForCall(0)
-				Expect(request).To(Equal(&locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.PRESENCE}))
-			})
-		})
 	})
 
 	Context("CellById", func() {
 		BeforeEach(func() {
-			cellPresenceClient.CellByIdReturns(cellPresence2Alternate, nil)
 			locketClient.FetchReturns(&locketmodels.FetchResponse{
 				Resource: resourceFromPresence(cellPresence2),
 			}, nil)
@@ -174,37 +133,14 @@ var _ = Describe("ServiceClient", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(presence).To(Equal(cellPresence2))
 
-			Expect(cellPresenceClient.CellByIdCallCount()).To(Equal(1))
-			_, cellID := cellPresenceClient.CellByIdArgsForCall(0)
-			Expect(cellID).To(Equal("cell-1"))
 			Expect(locketClient.FetchCallCount()).To(Equal(1))
 			_, request, _ := locketClient.FetchArgsForCall(0)
 			Expect(request).To(Equal(&locketmodels.FetchRequest{Key: "cell-1"}))
 		})
 
-		Context("when the presence only exists in consul", func() {
-			BeforeEach(func() {
-				locketClient.FetchReturns(nil, errors.New("boom?"))
-			})
-
-			It("uses that cell presence", func() {
-				presence, err := serviceClient.CellById(logger, "cell-1")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(presence).To(Equal(cellPresence2Alternate))
-
-				Expect(cellPresenceClient.CellByIdCallCount()).To(Equal(1))
-				_, cellID := cellPresenceClient.CellByIdArgsForCall(0)
-				Expect(cellID).To(Equal("cell-1"))
-				Expect(locketClient.FetchCallCount()).To(Equal(1))
-				_, request, _ := locketClient.FetchArgsForCall(0)
-				Expect(request).To(Equal(&locketmodels.FetchRequest{Key: "cell-1"}))
-			})
-		})
-
-		Context("when the cell presence does not exist in either locket or consul", func() {
+		Context("when the cell presence does not exist", func() {
 			BeforeEach(func() {
 				locketClient.FetchReturns(nil, locketmodels.ErrResourceNotFound)
-				cellPresenceClient.CellByIdReturns(nil, models.ErrResourceNotFound)
 			})
 
 			It("returns an error", func() {
@@ -231,7 +167,7 @@ var _ = Describe("ServiceClient", func() {
 
 		Context("when the cell presence client is nil", func() {
 			BeforeEach(func() {
-				serviceClient = serviceclient.NewServiceClient(nil, locketClient)
+				serviceClient = serviceclient.NewServiceClient(locketClient)
 			})
 
 			It("fetches the cell presence from ", func() {
@@ -259,34 +195,13 @@ var _ = Describe("ServiceClient", func() {
 	})
 
 	Context("CellEvents", func() {
-		var testChan chan models.CellEvent
-
 		BeforeEach(func() {
-			testChan = make(chan models.CellEvent, 1)
-			cellPresenceClient.CellEventsReturns(testChan)
+			serviceClient = serviceclient.NewServiceClient(locketClient)
 		})
 
-		It("calls the cell presence client cell events", func() {
+		It("returns nil", func() {
 			events := serviceClient.CellEvents(logger)
-			Expect(cellPresenceClient.CellEventsCallCount()).To(Equal(1))
-
-			event := models.NewCellDisappearedEvent([]string{"jim", "danny"})
-			Eventually(testChan).Should(BeSent(event))
-
-			var eventReceived models.CellEvent
-			Eventually(events).Should(Receive(&eventReceived))
-			Expect(eventReceived).To(Equal(event))
-		})
-
-		Context("when the cell presence client is nil", func() {
-			BeforeEach(func() {
-				serviceClient = serviceclient.NewServiceClient(nil, locketClient)
-			})
-
-			It("returns nil", func() {
-				events := serviceClient.CellEvents(logger)
-				Expect(events).To(BeNil())
-			})
+			Expect(events).To(BeNil())
 		})
 	})
 })

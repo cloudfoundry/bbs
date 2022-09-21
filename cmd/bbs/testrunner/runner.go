@@ -29,7 +29,7 @@ func New(binPath string, bbsConfig config.BBSConfig) *ginkgomon.Runner {
 		Name:              "bbs",
 		Command:           exec.Command(binPath, "-config", f.Name()),
 		StartCheck:        "bbs.started",
-		StartCheckTimeout: 10 * time.Second,
+		StartCheckTimeout: 20 * time.Second,
 		Cleanup: func() {
 			// do not use Expect otherwise a race condition will happen
 			os.RemoveAll(f.Name())

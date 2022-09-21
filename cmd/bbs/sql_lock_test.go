@@ -33,7 +33,6 @@ var _ = Describe("SqlLock", func() {
 
 		locketAddress = fmt.Sprintf("localhost:%d", locketPort)
 		locketRunner = locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
-			cfg.ConsulCluster = consulRunner.ConsulCluster()
 			cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 			cfg.DatabaseDriver = sqlRunner.DriverName()
 			cfg.ListenAddress = locketAddress
@@ -41,8 +40,7 @@ var _ = Describe("SqlLock", func() {
 		locketProcess = ginkgomon.Invoke(locketRunner)
 
 		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
-		bbsConfig.LocketAddress = locketAddress
-		bbsConfig.LocksLocketEnabled = true
+		bbsConfig.ClientLocketConfig.LocketAddress = locketAddress
 	})
 
 	JustBeforeEach(func() {
@@ -58,32 +56,13 @@ var _ = Describe("SqlLock", func() {
 	})
 
 	Context("with invalid configuration", func() {
-		Context("when SkipConsulLock is true", func() {
+		Context("when the locket address is not configured", func() {
 			BeforeEach(func() {
 				bbsConfig.LocketAddress = ""
-				bbsConfig.SkipConsulLock = true
 			})
-			Context("when LocketEnabled is false", func() {
-				BeforeEach(func() {
-					bbsConfig.LocksLocketEnabled = false
-				})
-				It("exits with an error", func() {
-					Eventually(bbsProcess.Wait()).Should(Receive(Not(BeNil())))
-				})
-			})
-		})
-		Context("when LocketEnabled is true", func() {
-			BeforeEach(func() {
-				bbsConfig.LocksLocketEnabled = true
-			})
-			Context("when the locket address is not configured", func() {
-				BeforeEach(func() {
-					bbsConfig.LocketAddress = ""
-				})
 
-				It("exits with an error", func() {
-					Eventually(bbsProcess.Wait()).Should(Receive(Not(BeNil())))
-				})
+			It("exits with an error", func() {
+				Eventually(bbsProcess.Wait()).Should(Receive(Not(BeNil())))
 			})
 		})
 
@@ -160,94 +139,7 @@ var _ = Describe("SqlLock", func() {
 			})
 		})
 
-		Context("when skip consul locks is true", func() {
-			var competingBBSLockProcess ifrit.Process
-
-			BeforeEach(func() {
-				bbsConfig.SkipConsulLock = true
-				competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&testhelpers.FakeIngressClient{}))
-				competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
-			})
-
-			AfterEach(func() {
-				ginkgomon.Kill(competingBBSLockProcess)
-			})
-
-			It("does not acquire the consul lock", func() {
-				Eventually(func() bool {
-					return client.Ping(logger)
-				}).Should(BeTrue())
-			})
-		})
-
-		Context("when skip consul locks is false", func() {
-			var competingBBSLockProcess ifrit.Process
-
-			AfterEach(func() {
-				ginkgomon.Kill(competingBBSLockProcess)
-			})
-
-			Context("when locket enabled is false", func() {
-				BeforeEach(func() {
-					bbsConfig.LocksLocketEnabled = false
-					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&testhelpers.FakeIngressClient{}))
-					competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
-				})
-
-				It("blocks on waiting for the lock", func() {
-					Consistently(func() bool {
-						return client.Ping(logger)
-					}).Should(BeFalse())
-				})
-
-				Context("and the lock becomes available", func() {
-					JustBeforeEach(func() {
-						Consistently(func() bool {
-							return client.Ping(logger)
-						}).Should(BeFalse())
-
-						ginkgomon.Interrupt(competingBBSLockProcess)
-					})
-
-					It("grabs the lock", func() {
-						Eventually(func() bool {
-							return client.Ping(logger)
-						}, 5*locket.RetryInterval).Should(BeTrue())
-					})
-				})
-			})
-
-			Context("when locket enabled is true", func() {
-				BeforeEach(func() {
-					competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&testhelpers.FakeIngressClient{}))
-					competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
-				})
-
-				It("blocks on waiting for the lock", func() {
-					Consistently(func() bool {
-						return client.Ping(logger)
-					}).Should(BeFalse())
-				})
-
-				Context("and the lock becomes available", func() {
-					JustBeforeEach(func() {
-						Consistently(func() bool {
-							return client.Ping(logger)
-						}).Should(BeFalse())
-
-						ginkgomon.Interrupt(competingBBSLockProcess)
-					})
-
-					It("grabs the lock", func() {
-						Eventually(func() bool {
-							return client.Ping(logger)
-						}, 5*locket.RetryInterval).Should(BeTrue())
-					})
-				})
-			})
-		})
-
-		Context("when the sql lock is not available", func() {
+		Context("when locket enabled is true", func() {
 			var competingProcess ifrit.Process
 
 			BeforeEach(func() {
@@ -277,24 +169,10 @@ var _ = Describe("SqlLock", func() {
 				ginkgomon.Interrupt(competingProcess)
 			})
 
-			It("does not become active", func() {
+			It("blocks on waiting for the lock", func() {
 				Consistently(func() bool {
 					return client.Ping(logger)
 				}).Should(BeFalse())
-			})
-
-			It("emits metric about not holding lock", func() {
-				Eventually(testMetricsChan).Should(Receive(
-					testhelpers.MatchV2MetricAndValue(
-						testhelpers.MetricAndValue{Name: "LockHeld", Value: 0},
-					),
-				))
-			})
-
-			Context("and continues to be unavailable", func() {
-				It("exits", func() {
-					Eventually(bbsProcess.Wait(), locket.DefaultSessionTTL*2).Should(Receive())
-				})
 			})
 
 			Context("and the lock becomes available", func() {
@@ -306,11 +184,78 @@ var _ = Describe("SqlLock", func() {
 					ginkgomon.Interrupt(competingProcess)
 				})
 
-				It("grabs the lock and becomes active", func() {
+				It("grabs the lock", func() {
 					Eventually(func() bool {
 						return client.Ping(logger)
 					}, 5*locket.RetryInterval).Should(BeTrue())
 				})
+			})
+		})
+	})
+
+	Context("when the sql lock is not available", func() {
+		var competingProcess ifrit.Process
+
+		BeforeEach(func() {
+			locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+			Expect(err).NotTo(HaveOccurred())
+
+			lockIdentifier := &locketmodels.Resource{
+				Key:      "bbs",
+				Owner:    "Your worst enemy.",
+				Value:    "Something",
+				TypeCode: locketmodels.LOCK,
+			}
+
+			clock := clock.NewClock()
+			competingRunner := lock.NewLockRunner(
+				logger,
+				locketClient,
+				lockIdentifier,
+				locket.DefaultSessionTTLInSeconds,
+				clock,
+				locket.RetryInterval,
+			)
+			competingProcess = ginkgomon.Invoke(competingRunner)
+		})
+
+		AfterEach(func() {
+			ginkgomon.Interrupt(competingProcess)
+		})
+
+		It("does not become active", func() {
+			Consistently(func() bool {
+				return client.Ping(logger)
+			}).Should(BeFalse())
+		})
+
+		It("emits metric about not holding lock", func() {
+			Eventually(testMetricsChan).Should(Receive(
+				testhelpers.MatchV2MetricAndValue(
+					testhelpers.MetricAndValue{Name: "LockHeld", Value: 0},
+				),
+			))
+		})
+
+		Context("and continues to be unavailable", func() {
+			It("exits", func() {
+				Eventually(bbsProcess.Wait(), locket.DefaultSessionTTL*2).Should(Receive())
+			})
+		})
+
+		Context("and the lock becomes available", func() {
+			JustBeforeEach(func() {
+				Consistently(func() bool {
+					return client.Ping(logger)
+				}).Should(BeFalse())
+
+				ginkgomon.Interrupt(competingProcess)
+			})
+
+			It("grabs the lock and becomes active", func() {
+				Eventually(func() bool {
+					return client.Ping(logger)
+				}, 5*locket.RetryInterval).Should(BeTrue())
 			})
 		})
 	})
