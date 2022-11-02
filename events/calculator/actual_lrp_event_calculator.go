@@ -78,6 +78,93 @@ type ActualLRPEventCalculator struct {
 	ActualLRPInstanceHub events.Hub
 }
 
+// EmitCrashEvents emits only the events for a crash scenario. Specifically:
+//   - A CrashEvent each for the Group Hub and the Instance Hub
+//   - A ChangedEvent for the Group Hub
+//   - Either a ChangedEvent or a Removed and Created Event for the Instance Hub, depending on the state
+//     of the ActualLRP
+//
+// This function was added to work around a bug in the existing logic for EmitEvents, where CrashedEvents
+// were not being emitted due to the CrashResetTimeout
+func (e ActualLRPEventCalculator) EmitCrashEvents(beforeSet, afterSet []*models.ActualLRP) {
+	beforeGroup := models.ResolveActualLRPGroup(beforeSet)
+	afterGroup := models.ResolveActualLRPGroup(removeNilLRPs(afterSet))
+
+	groupEvents := []models.Event{}
+	if !beforeGroup.Instance.Equal(afterGroup.Instance) {
+		if afterGroup.Instance == nil {
+			groupEvents = append(groupEvents, models.NewActualLRPRemovedEvent(beforeGroup.Instance.ToActualLRPGroup()))
+		} else if beforeGroup.Instance == nil {
+			groupEvents = append(groupEvents, models.NewActualLRPCreatedEvent(afterGroup.Instance.ToActualLRPGroup()))
+		} else {
+			groupEvents = append(groupEvents,
+				models.NewActualLRPCrashedEvent(beforeGroup.Instance, afterGroup.Instance),
+				models.NewActualLRPChangedEvent(beforeGroup, afterGroup),
+			)
+		}
+	}
+
+	if !beforeGroup.Evacuating.Equal(afterGroup.Evacuating) {
+		if afterGroup.Evacuating == nil {
+			groupEvents = append(groupEvents, models.NewActualLRPRemovedEvent(beforeGroup.Evacuating.ToActualLRPGroup()))
+		} else if beforeGroup.Evacuating == nil {
+			groupEvents = append(groupEvents, models.NewActualLRPCreatedEvent(afterGroup.Evacuating.ToActualLRPGroup()))
+		} else {
+			groupEvents = append(groupEvents,
+				models.NewActualLRPCrashedEvent(beforeGroup.Evacuating, afterGroup.Evacuating),
+				models.NewActualLRPChangedEvent(beforeGroup, afterGroup),
+			)
+		}
+	}
+
+	sort.Slice(groupEvents, func(i, j int) bool {
+		return EventScore(groupEvents[i]) > EventScore(groupEvents[j])
+	})
+
+	for _, ev := range groupEvents {
+		e.ActualLRPGroupHub.Emit(ev)
+	}
+
+	instanceEvents := []models.Event{}
+	for i := range afterSet {
+		before := beforeSet[i]
+		after := afterSet[i]
+
+		if before.Equal(after) {
+			continue
+		}
+
+		if after == nil {
+			instanceEvents = append(instanceEvents,
+				models.NewActualLRPInstanceRemovedEvent(before),
+			)
+		} else if before == nil {
+			instanceEvents = append(instanceEvents,
+				models.NewActualLRPInstanceCreatedEvent(after),
+			)
+		} else if after.State == models.ActualLRPStateCrashed {
+			instanceEvents = append(instanceEvents,
+				models.NewActualLRPCrashedEvent(before, after),
+				models.NewActualLRPInstanceChangedEvent(before, after),
+			)
+		} else {
+			instanceEvents = append(instanceEvents,
+				models.NewActualLRPCrashedEvent(before, after),
+				models.NewActualLRPInstanceCreatedEvent(after),
+				models.NewActualLRPInstanceRemovedEvent(before),
+			)
+		}
+	}
+
+	sort.Slice(instanceEvents, func(i, j int) bool {
+		return EventScore(instanceEvents[i]) > EventScore(instanceEvents[j])
+	})
+
+	for _, ev := range instanceEvents {
+		e.ActualLRPInstanceHub.Emit(ev)
+	}
+}
+
 // EmitEvents emits the events such as when the changes identified in the
 // events are applied to the beforeSet the resulting state is equal to
 // afterSet.  The beforeSet and afterSet are assumed to have the same process
@@ -154,12 +241,6 @@ func generateUpdateInstanceEvents(before, after *models.ActualLRP) []models.Even
 func generateUnclaimedInstanceEvents(before, after *models.ActualLRP) []models.Event {
 	events := []models.Event{}
 
-	// This LRP probably transitioned from Claimed/Running -> Crashed ->
-	// Unclaimed because it was restartable
-	if after.CrashCount > before.CrashCount {
-		events = append(events, models.NewActualLRPCrashedEvent(before, after))
-	}
-
 	// we can get here if auctioneer calls FailActualLRP
 	if before.State == models.ActualLRPStateUnclaimed {
 		return append(events, models.NewActualLRPInstanceChangedEvent(before, after))
@@ -209,12 +290,6 @@ func generateCrashedGroupEvents(before, after *models.ActualLRP) []models.Event 
 
 func generateUnclaimedGroupEvents(before, after *models.ActualLRP) []models.Event {
 	events := []models.Event{}
-
-	// This LRP probably transitioned from Claimed/Running -> Crashed ->
-	// Unclaimed because it was restartable
-	if after.CrashCount > before.CrashCount {
-		events = append(events, models.NewActualLRPCrashedEvent(before, after))
-	}
 
 	return append(
 		events,

@@ -216,24 +216,6 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 						Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
 					})
 				})
-
-				Context("with an incremented crash count", func() {
-					BeforeEach(func() {
-						updatedLRP.CrashCount += 1
-					})
-
-					It("emits an additional ActualLRPCrashedEvent to each hub", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
-						Expect(actualHub.EmitCallCount()).To(Equal(2))
-						Expect(actualInstanceHub.EmitCallCount()).To(Equal(3))
-
-						groupCrashedEvent := actualHub.EmitArgsForCall(0)
-						instanceCrashedEvent := actualInstanceHub.EmitArgsForCall(0)
-
-						Expect(groupCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
-						Expect(instanceCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
-					})
-				})
 			})
 
 			Context("to CLAIMED", func() {
@@ -523,6 +505,134 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					originalLRP,
 					evacuatingLRP,
 				))))
+			})
+		})
+	})
+
+	Describe("EmitCrashEvents", func() {
+		var originalLRP, updatedLRP *models.ActualLRP
+		var beforeSet, afterSet []*models.ActualLRP
+
+		BeforeEach(func() {
+			originalLRP = model_helpers.NewValidActualLRP("some-guid", 0)
+			updatedLRP = model_helpers.NewValidActualLRP("some-guid", 0)
+		})
+
+		JustBeforeEach(func() {
+			beforeSet = []*models.ActualLRP{originalLRP}
+			afterSet = []*models.ActualLRP{updatedLRP}
+		})
+
+		Context("to UNCLAIMED", func() {
+			BeforeEach(func() {
+				updatedLRP.State = models.ActualLRPStateUnclaimed
+			})
+
+			Context("from RUNNING", func() {
+				BeforeEach(func() {
+					originalLRP.State = models.ActualLRPStateRunning
+				})
+
+				It("emits crashed and changed events to group hub and crashed, created and removed to instance hub", func() {
+					eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+					Expect(actualHub.EmitCallCount()).To(Equal(2))
+					Expect(actualInstanceHub.EmitCallCount()).To(Equal(3))
+
+					groupCrashedEvent := actualHub.EmitArgsForCall(0)
+					Expect(groupCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
+
+					changedEvent := actualHub.EmitArgsForCall(1)
+					Expect(changedEvent).To(Equal(models.NewActualLRPChangedEvent(originalLRP.ToActualLRPGroup(), updatedLRP.ToActualLRPGroup())))
+
+					instanceCrashedEvent := actualInstanceHub.EmitArgsForCall(0)
+					Expect(instanceCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
+
+					createdEvent := actualInstanceHub.EmitArgsForCall(1)
+					Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP)))
+
+					removedEvent := actualInstanceHub.EmitArgsForCall(2)
+					Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
+				})
+			})
+
+			Context("from CLAIMED", func() {
+				BeforeEach(func() {
+					originalLRP.State = models.ActualLRPStateClaimed
+				})
+
+				It("emits crashed and changed events to group hub and crashed, created and removed to instance hub", func() {
+					eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+					Expect(actualHub.EmitCallCount()).To(Equal(2))
+					Expect(actualInstanceHub.EmitCallCount()).To(Equal(3))
+
+					groupCrashedEvent := actualHub.EmitArgsForCall(0)
+					Expect(groupCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
+
+					changedEvent := actualHub.EmitArgsForCall(1)
+					Expect(changedEvent).To(Equal(models.NewActualLRPChangedEvent(originalLRP.ToActualLRPGroup(), updatedLRP.ToActualLRPGroup())))
+
+					instanceCrashedEvent := actualInstanceHub.EmitArgsForCall(0)
+					Expect(instanceCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
+
+					createdEvent := actualInstanceHub.EmitArgsForCall(1)
+					Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP)))
+
+					removedEvent := actualInstanceHub.EmitArgsForCall(2)
+					Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
+				})
+			})
+		})
+
+		Context("to CRASHED", func() {
+			BeforeEach(func() {
+				updatedLRP.State = models.ActualLRPStateCrashed
+			})
+
+			It("emits crashed and changed events to both the group hub and the instance hub", func() {
+				eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+				Expect(actualHub.EmitCallCount()).To(Equal(2))
+				Expect(actualInstanceHub.EmitCallCount()).To(Equal(2))
+
+				groupCrashedEvent := actualHub.EmitArgsForCall(0)
+				Expect(groupCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
+
+				groupChangedEvent := actualHub.EmitArgsForCall(1)
+				Expect(groupChangedEvent).To(Equal(models.NewActualLRPChangedEvent(originalLRP.ToActualLRPGroup(), updatedLRP.ToActualLRPGroup())))
+
+				instanceCrashedEvent := actualInstanceHub.EmitArgsForCall(0)
+				Expect(instanceCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
+
+				instanceChangedEvent := actualInstanceHub.EmitArgsForCall(1)
+				Expect(instanceChangedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+			})
+		})
+
+		Context("when instance is evacuating", func() {
+			BeforeEach(func() {
+				originalLRP.Presence = models.ActualLRP_Evacuating
+				updatedLRP.Presence = models.ActualLRP_Evacuating
+			})
+
+			Context("to UNCLAIMED", func() {
+				BeforeEach(func() {
+					updatedLRP.State = models.ActualLRPStateUnclaimed
+				})
+
+				Context("from RUNNING", func() {
+					BeforeEach(func() {
+						originalLRP.State = models.ActualLRPStateRunning
+					})
+
+					It("emits crashed and changed events to group hub", func() {
+						eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+						Expect(actualHub.EmitCallCount()).To(Equal(2))
+						groupCrashedEvent := actualHub.EmitArgsForCall(0)
+						Expect(groupCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
+
+						changedEvent := actualHub.EmitArgsForCall(1)
+						Expect(changedEvent).To(Equal(models.NewActualLRPChangedEvent(originalLRP.ToActualLRPGroup(), updatedLRP.ToActualLRPGroup())))
+					})
+				})
 			})
 		})
 	})
