@@ -547,7 +547,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 	})
 
-	FDescribe("CrashActualLRP", func() {
+	Describe("CrashActualLRP", func() {
 		var (
 			errorMessage  string
 			lrps          []*models.ActualLRP
