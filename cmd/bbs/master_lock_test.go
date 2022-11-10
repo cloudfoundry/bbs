@@ -3,8 +3,9 @@ package main_test
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
-	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/locket"
+	"code.cloudfoundry.org/locket/lock"
+	locketmodels "code.cloudfoundry.org/locket/models"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -17,11 +18,29 @@ var _ = Describe("MasterLock", func() {
 		var competingBBSLockProcess ifrit.Process
 
 		BeforeEach(func() {
-			competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(&mfakes.FakeIngressClient{}))
-			competingBBSLockProcess = ifrit.Invoke(competingBBSLock)
+			locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+			Expect(err).NotTo(HaveOccurred())
+
+			lockIdentifier := &locketmodels.Resource{
+				Key:      "bbs",
+				Owner:    "Your worst enemy.",
+				Value:    "Something",
+				TypeCode: locketmodels.LOCK,
+			}
+
+			clock := clock.NewClock()
+			competingBBSLockRunner := lock.NewLockRunner(
+				logger,
+				locketClient,
+				lockIdentifier,
+				locket.DefaultSessionTTLInSeconds,
+				clock,
+				locket.RetryInterval,
+			)
+			competingBBSLockProcess = ginkgomon.Invoke(competingBBSLockRunner)
 
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-			bbsRunner.StartCheck = "bbs.consul-lock.acquiring-lock"
+			bbsRunner.StartCheck = "bbs.locket-lock.started"
 
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 		})
@@ -49,11 +68,11 @@ var _ = Describe("MasterLock", func() {
 		BeforeEach(func() {
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
-			consulRunner.Reset()
+			ginkgomon.Kill(locketProcess)
 		})
 
 		It("exits with an error", func() {
-			Eventually(bbsRunner.ExitCode, 3).Should(Equal(1))
+			Eventually(bbsRunner.ExitCode, 16).Should(Equal(1))
 		})
 	})
 })

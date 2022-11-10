@@ -653,7 +653,6 @@ var _ = Describe("ActualLRP API", func() {
 				locketAddress := fmt.Sprintf("localhost:%d", locketPort)
 
 				locketRunner := locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
-					cfg.ConsulCluster = consulRunner.ConsulCluster()
 					cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 					cfg.DatabaseDriver = sqlRunner.DriverName()
 					cfg.ListenAddress = locketAddress
@@ -662,19 +661,6 @@ var _ = Describe("ActualLRP API", func() {
 				locketProcess = ginkgomon.Invoke(locketRunner)
 				bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
 				bbsConfig.LocketAddress = locketAddress
-
-				cellPresence := models.NewCellPresence(
-					"some-cell",
-					"cell.example.com",
-					"http://cell.example.com",
-					"the-zone",
-					models.NewCellCapacity(128, 1024, 6),
-					[]string{},
-					[]string{},
-					[]string{},
-					[]string{},
-				)
-				consulHelper.RegisterCell(&cellPresence)
 			})
 
 			AfterEach(func() {

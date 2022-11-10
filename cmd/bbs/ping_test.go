@@ -5,8 +5,9 @@ import (
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/clock"
-	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/locket"
+	"code.cloudfoundry.org/locket/lock"
+	locketmodels "code.cloudfoundry.org/locket/models"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
@@ -15,8 +16,6 @@ import (
 )
 
 var _ = Describe("Ping API", func() {
-	var fakeMetronClient = &mfakes.FakeIngressClient{}
-
 	Describe("Protobuf Ping", func() {
 		It("returns true when the bbs is running", func() {
 			By("having the bbs down", func() {
@@ -24,12 +23,31 @@ var _ = Describe("Ping API", func() {
 			})
 
 			By("starting the bbs without a lock", func() {
-				competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(fakeMetronClient))
-				competingBBSLockProcess := ifrit.Invoke(competingBBSLock)
+				locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+				Expect(err).NotTo(HaveOccurred())
+
+				lockIdentifier := &locketmodels.Resource{
+					Key:      "bbs",
+					Owner:    "Your worst enemy.",
+					Value:    "Something",
+					TypeCode: locketmodels.LOCK,
+				}
+
+				clock := clock.NewClock()
+				competingBBSLockRunner := lock.NewLockRunner(
+					logger,
+					locketClient,
+					lockIdentifier,
+					locket.DefaultSessionTTLInSeconds,
+					clock,
+					locket.RetryInterval,
+				)
+
+				competingBBSLockProcess := ifrit.Invoke(competingBBSLockRunner)
 				defer ginkgomon.Kill(competingBBSLockProcess)
 
 				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-				bbsRunner.StartCheck = "bbs.consul-lock.acquiring-lock"
+				bbsRunner.StartCheck = "bbs.locket-lock.started"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
 				Expect(client.Ping(logger)).To(BeFalse())
@@ -63,14 +81,32 @@ var _ = Describe("Ping API", func() {
 			})
 
 			By("starting the bbs without a lock", func() {
-				competingBBSLock := locket.NewLock(logger, consulClient, locket.LockSchemaPath("bbs_lock"), []byte{}, clock.NewClock(), locket.RetryInterval, locket.DefaultSessionTTL, locket.WithMetronClient(fakeMetronClient))
-				competingBBSLockProcess := ifrit.Invoke(competingBBSLock)
+				locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+				Expect(err).NotTo(HaveOccurred())
+
+				lockIdentifier := &locketmodels.Resource{
+					Key:      "bbs",
+					Owner:    "Your worst enemy.",
+					Value:    "Something",
+					TypeCode: locketmodels.LOCK,
+				}
+
+				clock := clock.NewClock()
+				competingBBSLockRunner := lock.NewLockRunner(
+					logger,
+					locketClient,
+					lockIdentifier,
+					locket.DefaultSessionTTLInSeconds,
+					clock,
+					locket.RetryInterval,
+				)
+
+				competingBBSLockProcess := ifrit.Invoke(competingBBSLockRunner)
 				defer ginkgomon.Kill(competingBBSLockProcess)
 
 				bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
-				bbsRunner.StartCheck = "bbs.consul-lock.acquiring-lock"
+				bbsRunner.StartCheck = "bbs.locket-lock.started"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
-
 				Eventually(ping).Should(BeTrue())
 			})
 		})
