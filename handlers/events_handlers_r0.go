@@ -139,6 +139,10 @@ func (h *LRPInstanceEventHandler) commonSubscribe(logger lager.Logger, w http.Re
 			return event, err
 		}
 		event = models.VersionDesiredLRPsTo(event, target)
+				switch event := event.(type) {
+		case *models.DesiredLRPCreatedEvent:
+			event.DesiredLrp.EgressRules = nil
+		}
 		return event, err
 	}
 
