@@ -20,7 +20,9 @@ import (
 
 const MAX_CB_RETRIES = 3
 
-//go:generate counterfeiter . TaskCompletionClient
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate . TaskCompletionClient
 
 type CompletedTaskHandler func(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, taskHub events.Hub, task *models.Task)
 

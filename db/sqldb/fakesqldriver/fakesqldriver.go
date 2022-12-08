@@ -2,25 +2,27 @@ package fakesqldriver
 
 import "database/sql/driver"
 
-//go:generate counterfeiter . Driver
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate . Driver
 type Driver interface {
 	Open(name string) (driver.Conn, error)
 }
 
-//go:generate counterfeiter . Conn
+//counterfeiter:generate . Conn
 type Conn interface {
 	Prepare(query string) (driver.Stmt, error)
 	Close() error
 	Begin() (driver.Tx, error)
 }
 
-//go:generate counterfeiter . Tx
+//counterfeiter:generate . Tx
 type Tx interface {
 	Commit() error
 	Rollback() error
 }
 
-//go:generate counterfeiter . Stmt
+//counterfeiter:generate . Stmt
 type Stmt interface {
 	Close() error
 	NumInput() int

@@ -17,7 +17,9 @@ import (
 	"code.cloudfoundry.org/workpool"
 )
 
-//go:generate counterfeiter -o fakes/fake_retirer.go . Retirer
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate -o fakes/fake_retirer.go . Retirer
 type Retirer interface {
 	RetireActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) error
 }

@@ -14,7 +14,7 @@ type ActualLRPKeyWithInternalRoutes struct {
 	DesiredInternalRoutes internalroutes.InternalRoutes
 }
 
-//go:generate counterfeiter . LRPDB
+//counterfeiter:generate . LRPDB
 
 type ConvergenceResult struct {
 	MissingLRPKeys               []*models.ActualLRPKeyWithSchedulingInfo

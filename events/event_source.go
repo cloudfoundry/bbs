@@ -69,7 +69,9 @@ func NewEventFromModelEvent(eventID int, event models.Event) (sse.Event, error) 
 	}, nil
 }
 
-//go:generate counterfeiter -o eventfakes/fake_event_source.go . EventSource
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate -o eventfakes/fake_event_source.go . EventSource
 
 // EventSource provides sequential access to a stream of events.
 type EventSource interface {
@@ -86,7 +88,7 @@ type EventSource interface {
 	Close() error
 }
 
-//go:generate counterfeiter -o eventfakes/fake_raw_event_source.go . RawEventSource
+//counterfeiter:generate -o eventfakes/fake_raw_event_source.go . RawEventSource
 
 type RawEventSource interface {
 	Next() (sse.Event, error)

@@ -8,7 +8,9 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o migrationfakes/fake_migration.go . Migration
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate -o migrationfakes/fake_migration.go . Migration
 
 type Migration interface {
 	String() string

@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o fake_controllers/fake_task_controller.go . TaskController
+//counterfeiter:generate -o fake_controllers/fake_task_controller.go . TaskController
 
 type TaskController interface {
 	Tasks(ctx context.Context, logger lager.Logger, domain, cellId string) ([]*models.Task, error)

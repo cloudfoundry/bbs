@@ -9,7 +9,9 @@ import (
 
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)
 
-//go:generate counterfeiter -o fakes/fake_emitter.go . Emitter
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate -o fakes/fake_emitter.go . Emitter
 type Emitter interface {
 	IncrementRequestCounter(delta int)
 	UpdateLatency(latency time.Duration)

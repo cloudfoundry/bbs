@@ -14,12 +14,14 @@ import (
 	"code.cloudfoundry.org/clock"
 )
 
-//go:generate counterfeiter -o fake_controllers/fake_lrp_convergence_controller.go . LrpConvergenceController
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate -o fake_controllers/fake_lrp_convergence_controller.go . LrpConvergenceController
 type LrpConvergenceController interface {
 	ConvergeLRPs(ctx context.Context, logger lager.Logger)
 }
 
-//go:generate counterfeiter -o fake_controllers/fake_task_controller.go . TaskController
+//counterfeiter:generate -o fake_controllers/fake_task_controller.go . TaskController
 type TaskController interface {
 	ConvergeTasks(ctx context.Context, logger lager.Logger, kickTaskDuration, expirePendingTaskDuration, expireCompletedTaskDuration time.Duration) error
 }
