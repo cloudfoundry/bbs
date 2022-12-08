@@ -156,7 +156,7 @@ type ExternalActualLRPClient interface {
 }
 
 /*
-The ExternalDesiredLRPClient is used to access and manipulate Disired LRPs.
+The ExternalDesiredLRPClient is used to access and manipulate Desired LRPs.
 */
 type ExternalDesiredLRPClient interface {
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter
