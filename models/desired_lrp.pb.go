@@ -391,10 +391,12 @@ func (m *ProtoRoutes) GetRoutes() map[string][]byte {
 
 type DesiredLRPUpdate struct {
 	// Types that are valid to be assigned to OptionalInstances:
+	//
 	//	*DesiredLRPUpdate_Instances
 	OptionalInstances isDesiredLRPUpdate_OptionalInstances `protobuf_oneof:"optional_instances"`
 	Routes            *Routes                              `protobuf:"bytes,2,opt,name=routes,proto3,customtype=Routes" json:"routes,omitempty"`
 	// Types that are valid to be assigned to OptionalAnnotation:
+	//
 	//	*DesiredLRPUpdate_Annotation
 	OptionalAnnotation isDesiredLRPUpdate_OptionalAnnotation `protobuf_oneof:"optional_annotation"`
 }
