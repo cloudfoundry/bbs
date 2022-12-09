@@ -331,19 +331,6 @@ var _ = Describe("DesiredLRP", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Describe("CreateComponents", func() {
-		It("decomposes the desired lrp into its component parts", func() {
-			schedInfo, runInfo := desiredLRP.CreateComponents(time.Unix(123, 456))
-			newDesired := models.NewDesiredLRP(schedInfo, runInfo)
-			Expect(newDesired).To(DeepEqual(desiredLRP))
-		})
-
-		It("saves the created at time on the run info", func() {
-			_, runInfo := desiredLRP.CreateComponents(time.Unix(123, 456))
-			Expect(runInfo.CreatedAt).To(BeEquivalentTo((time.Unix(123, 456).UnixNano())))
-		})
-	})
-
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
 			jsonSerialization, err := json.Marshal(desiredLRP)

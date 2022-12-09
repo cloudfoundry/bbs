@@ -286,10 +286,6 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 	return &newDesired
 }
 
-func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
-	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
-}
-
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
 
