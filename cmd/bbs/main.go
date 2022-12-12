@@ -26,10 +26,12 @@ import (
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/migration"
+	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	cfhttp "code.cloudfoundry.org/cfhttp/v2"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/consuladapter"
 	"code.cloudfoundry.org/debugserver"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/go-loggregator/v8/runtimeemitter"
@@ -41,7 +43,10 @@ import (
 	"code.cloudfoundry.org/locket/lockheldmetrics"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
+	"code.cloudfoundry.org/rep/maintain"
 	"code.cloudfoundry.org/tlsconfig"
+	"github.com/hashicorp/consul/api"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -77,7 +82,21 @@ func main() {
 
 	clock := clock.NewClock()
 
-	_, portString, err := net.SplitHostPort(bbsConfig.HealthAddress)
+	consulClient, err := consuladapter.NewClientFromUrl(bbsConfig.ConsulCluster)
+	if err != nil {
+		logger.Fatal("new-consul-client-failed", err)
+	}
+
+	_, portString, err := net.SplitHostPort(bbsConfig.ListenAddress)
+	if err != nil {
+		logger.Fatal("failed-invalid-listen-address", err)
+	}
+	portNum, err := net.LookupPort("tcp", portString)
+	if err != nil {
+		logger.Fatal("failed-invalid-listen-port", err)
+	}
+
+	_, portString, err = net.SplitHostPort(bbsConfig.HealthAddress)
 	if err != nil {
 		logger.Fatal("failed-invalid-health-address", err)
 	}
@@ -207,31 +226,38 @@ func main() {
 
 	locks := []grouper.Member{}
 
+	if !bbsConfig.SkipConsulLock {
+		maintainer := initializeLockMaintainer(logger, consulClient, clock, &bbsConfig, metronClient)
+		locks = append(locks, grouper.Member{"lock-maintainer", maintainer})
+	}
+
 	var locketClient locketmodels.LocketClient
-	locketClient, err = locket.NewClient(logger, bbsConfig.ClientLocketConfig)
-	if err != nil {
-		logger.Fatal("failed-to-create-locket-client", err)
-	}
 
-	if bbsConfig.UUID == "" {
-		logger.Fatal("invalid-uuid", errors.New("invalid-uuid-from-config"))
-	}
+	if bbsConfig.LocksLocketEnabled {
+		locketClient, err = locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+		if err != nil {
+			logger.Fatal("failed-to-create-locket-client", err)
+		}
+		if bbsConfig.UUID == "" {
+			logger.Fatal("invalid-uuid", errors.New("invalid-uuid-from-config"))
+		}
 
-	lockIdentifier := &locketmodels.Resource{
-		Key:      bbsLockKey,
-		Owner:    bbsConfig.UUID,
-		TypeCode: locketmodels.LOCK,
-		Type:     locketmodels.LockType,
-	}
+		lockIdentifier := &locketmodels.Resource{
+			Key:      bbsLockKey,
+			Owner:    bbsConfig.UUID,
+			TypeCode: locketmodels.LOCK,
+			Type:     locketmodels.LockType,
+		}
 
-	locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
-		logger,
-		locketClient,
-		lockIdentifier,
-		locket.DefaultSessionTTLInSeconds,
-		clock,
-		locket.SQLRetryInterval,
-	)})
+		locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
+			logger,
+			locketClient,
+			lockIdentifier,
+			locket.DefaultSessionTTLInSeconds,
+			clock,
+			locket.SQLRetryInterval,
+		)})
+	}
 
 	var lock ifrit.Runner
 	switch len(locks) {
@@ -240,10 +266,25 @@ func main() {
 	case 1:
 		lock = locks[0]
 	default:
-		lock = jointlock.NewJointLock(clock, 2*time.Second, locks...)
+		lock = jointlock.NewJointLock(clock, locket.DefaultSessionTTL, locks...)
 	}
 
-	serviceClient := serviceclient.NewServiceClient(locketClient)
+	var cellPresenceClient maintain.CellPresenceClient
+	if bbsConfig.DetectConsulCellRegistrations {
+		cellPresenceClient = maintain.NewCellPresenceClient(consulClient, clock)
+	}
+	var locketCellPresenceClient locketmodels.LocketClient
+	locketCellPresenceClient = serviceclient.NewNoopLocketClient()
+	if bbsConfig.CellRegistrationsLocketEnabled {
+		if locketClient == nil {
+			locketClient, err = locket.NewClient(logger, bbsConfig.ClientLocketConfig)
+			if err != nil {
+				logger.Fatal("failed-to-create-locket-client", err)
+			}
+		}
+		locketCellPresenceClient = locketClient
+	}
+	serviceClient := serviceclient.NewServiceClient(cellPresenceClient, locketCellPresenceClient)
 
 	logger.Info("report-interval", lager.Data{"value": bbsConfig.ReportInterval})
 	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
@@ -309,17 +350,7 @@ func main() {
 		bbsConfig.ConvergenceWorkers,
 		lrpStatMetronNotifier,
 	)
-
-	taskController := controllers.NewTaskController(
-		sqlDB,
-		cbWorkPool,
-		auctioneerClient,
-		serviceClient,
-		repClientFactory,
-		taskHub,
-		taskStatMetronNotifier,
-		bbsConfig.MaxTaskRetries,
-	)
+	taskController := controllers.NewTaskController(sqlDB, cbWorkPool, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, bbsConfig.MaxTaskRetries)
 
 	convergerProcess := converger.New(
 		logger,
@@ -359,6 +390,11 @@ func main() {
 		{"lrp-stat-metron-notifier", lrpStatMetronNotifier},
 		{"task-stat-metron-notifier", taskStatMetronNotifier},
 		{"db-stat-metron-notifier", dbStatMetronNotifier},
+	}
+
+	if bbsConfig.EnableConsulServiceRegistration {
+		registrationRunner := initializeRegistrationRunner(logger, consulClient, portNum, clock)
+		members = append(members, grouper.Member{"registration-runner", registrationRunner})
 	}
 
 	if bbsConfig.DebugAddress != "" {
@@ -417,6 +453,55 @@ func hubMaintainer(logger lager.Logger, desiredHub, actualHub, taskHub events.Hu
 		}
 		return nil
 	}
+}
+
+func initializeRegistrationRunner(
+	logger lager.Logger,
+	consulClient consuladapter.Client,
+	port int,
+	clock clock.Clock) ifrit.Runner {
+	registration := &api.AgentServiceRegistration{
+		Name: "bbs",
+		Port: port,
+		Check: &api.AgentServiceCheck{
+			TTL: "20s",
+		},
+	}
+	return locket.NewRegistrationRunner(logger, registration, consulClient, locket.RetryInterval, clock)
+}
+
+func initializeLockMaintainer(
+	logger lager.Logger,
+	consulClient consuladapter.Client,
+	clock clock.Clock,
+	bbsConfig *config.BBSConfig,
+	metronClient loggingclient.IngressClient,
+) ifrit.Runner {
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		logger.Fatal("Couldn't generate uuid", err)
+	}
+
+	if bbsConfig.AdvertiseURL == "" {
+		logger.Fatal("Advertise URL must be specified", nil)
+	}
+
+	bbsPresence := models.NewBBSPresence(uuid.String(), bbsConfig.AdvertiseURL)
+	bbsPresenceJSON, err := models.ToJSON(bbsPresence)
+	if err != nil {
+		logger.Fatal("Failed to serialize bbs presence to json", err)
+	}
+
+	return locket.NewLock(
+		logger,
+		consulClient,
+		locket.LockSchemaPath("bbs_lock"),
+		bbsPresenceJSON,
+		clock,
+		time.Duration(bbsConfig.LockRetryInterval),
+		time.Duration(bbsConfig.LockTTL),
+		locket.WithMetronClient(metronClient),
+	)
 }
 
 func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig) auctioneer.Client {

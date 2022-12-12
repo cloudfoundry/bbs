@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager"
 	locketmodels "code.cloudfoundry.org/locket/models"
+	"code.cloudfoundry.org/rep/maintain"
 	"golang.org/x/net/context"
 )
 
@@ -23,12 +24,14 @@ type ServiceClient interface {
 }
 
 type serviceClient struct {
-	locketClient locketmodels.LocketClient
+	cellPresenceClient maintain.CellPresenceClient
+	locketClient       locketmodels.LocketClient
 }
 
-func NewServiceClient(locketClient locketmodels.LocketClient) *serviceClient {
+func NewServiceClient(cellPresenceClient maintain.CellPresenceClient, locketClient locketmodels.LocketClient) *serviceClient {
 	return &serviceClient{
-		locketClient: locketClient,
+		cellPresenceClient: cellPresenceClient,
+		locketClient:       locketClient,
 	}
 }
 
@@ -36,6 +39,15 @@ func (s *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 	logger = logger.Session("cells")
 
 	var cellSet = models.CellSet{}
+
+	if s.cellPresenceClient != nil {
+		var err error
+		cellSet, err = s.cellPresenceClient.Cells(logger)
+		if err != nil {
+			logger.Error("failed-to-fetch-cells-from-consul", err)
+			return nil, err
+		}
+	}
 
 	resp, err := s.locketClient.FetchAll(context.Background(), &locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.PRESENCE})
 	if err != nil {
@@ -58,16 +70,27 @@ func (s *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 	logger = logger.Session("cell-by-id", lager.Data{"cell-id": cellId})
 	var presence *models.CellPresence
+	var consulErr error
+
+	if s.cellPresenceClient != nil {
+		presence, consulErr = s.cellPresenceClient.CellById(logger, cellId)
+		if consulErr != nil {
+			logger.Debug("failed-to-fetch-presence-from-consul", lager.Data{"error": consulErr})
+		}
+	}
 
 	resp, locketErr := s.locketClient.Fetch(context.Background(), &locketmodels.FetchRequest{
 		Key: cellId,
 	})
 	if locketErr != nil {
-		logger.Error("failed-to-fetch-presence-from-locket", locketErr)
-		if grpc.Code(locketErr) == codes.NotFound {
-			return nil, models.ErrResourceNotFound
+		if (s.cellPresenceClient != nil && consulErr != nil) || s.cellPresenceClient == nil {
+			logger.Error("failed-to-fetch-presence-from-locket", locketErr)
+			if grpc.Code(locketErr) == codes.NotFound {
+				return nil, models.ErrResourceNotFound
+			}
+			return nil, locketErr
 		}
-		return nil, locketErr
+		return presence, nil
 	}
 
 	var err error
@@ -81,6 +104,9 @@ func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.Ce
 }
 
 func (s *serviceClient) CellEvents(logger lager.Logger) <-chan models.CellEvent {
+	if s.cellPresenceClient != nil {
+		return s.cellPresenceClient.CellEvents(logger)
+	}
 	return nil
 }
 

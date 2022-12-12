@@ -20,6 +20,8 @@ import (
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
+	"code.cloudfoundry.org/consuladapter"
+	"code.cloudfoundry.org/consuladapter/consulrunner"
 	diego_logging_client "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/durationjson"
@@ -29,8 +31,6 @@ import (
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/locket"
-	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
-	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -56,11 +56,12 @@ var (
 	bbsConfig         bbsconfig.BBSConfig
 	bbsRunner         *ginkgomon.Runner
 	bbsProcess        ifrit.Process
-	locketHelper      *test_helpers.LocketHelper
+	consulRunner      *consulrunner.ClusterRunner
+	consulClient      consuladapter.Client
+	consulHelper      *test_helpers.ConsulHelper
 	auctioneerServer  *ghttp.Server
 	testMetricsChan   chan *loggregator_v2.Envelope
 	locketBinPath     string
-	locketProcess     ifrit.Process
 	testIngressServer *testhelpers.TestIngressServer
 
 	signalMetricsChan chan struct{}
@@ -100,11 +101,29 @@ var _ = SynchronizedBeforeSuite(
 		dbName := fmt.Sprintf("diego_%d", GinkgoParallelProcess())
 		sqlRunner = test_helpers.NewSQLRunner(dbName)
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
+
+		consulStartingPort, err := portAllocator.ClaimPorts(consulrunner.PortOffsetLength)
+		Expect(err).NotTo(HaveOccurred())
+
+		consulRunner = consulrunner.NewClusterRunner(
+			consulrunner.ClusterRunnerConfig{
+				StartingPort: int(consulStartingPort),
+				NumNodes:     1,
+				Scheme:       "http",
+			},
+		)
+
+		consulRunner.Start()
+		consulRunner.WaitUntilReady()
 	},
 )
 
 var _ = SynchronizedAfterSuite(func() {
 	ginkgomon.Kill(sqlProcess)
+
+	if consulRunner != nil {
+		consulRunner.Stop()
+	}
 }, func() {
 	gexec.CleanupBuildArtifacts()
 })
@@ -115,17 +134,8 @@ var _ = BeforeEach(func() {
 	ctx = context.Background()
 	fixturesPath := path.Join(os.Getenv("DIEGO_RELEASE_DIR"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
 
-	locketPort, err := portAllocator.ClaimPorts(1)
-	Expect(err).NotTo(HaveOccurred())
-
-	locketAddress := fmt.Sprintf("localhost:%d", locketPort)
-
-	locketRunner := locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
-		cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
-		cfg.DatabaseDriver = sqlRunner.DriverName()
-		cfg.ListenAddress = locketAddress
-	})
-	locketProcess = ginkgomon.Invoke(locketRunner)
+	consulRunner.Reset()
+	consulClient = consulRunner.NewClient()
 
 	metronCAFile := path.Join(fixturesPath, "metron", "CA.crt")
 	metronClientCertFile := path.Join(fixturesPath, "metron", "client.crt")
@@ -169,34 +179,37 @@ var _ = BeforeEach(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	bbsConfig = bbsconfig.BBSConfig{
-		SessionName:                 "bbs",
-		CommunicationTimeout:        durationjson.Duration(10 * time.Second),
-		RequireSSL:                  true,
-		DesiredLRPCreationTimeout:   durationjson.Duration(1 * time.Minute),
-		ExpireCompletedTaskDuration: durationjson.Duration(2 * time.Minute),
-		ExpirePendingTaskDuration:   durationjson.Duration(30 * time.Minute),
-		KickTaskDuration:            durationjson.Duration(30 * time.Second),
-		LockTTL:                     durationjson.Duration(1 * time.Second),
-		LockRetryInterval:           durationjson.Duration(locket.RetryInterval),
-		ConvergenceWorkers:          20,
-		UpdateWorkers:               1000,
-		TaskCallbackWorkers:         1000,
-		MaxOpenDatabaseConnections:  200,
-		MaxIdleDatabaseConnections:  200,
-		AuctioneerRequireTLS:        false,
-		RepClientSessionCacheSize:   0,
-		RepRequireTLS:               false,
+		SessionName:                     "bbs",
+		CommunicationTimeout:            durationjson.Duration(10 * time.Second),
+		RequireSSL:                      true,
+		DesiredLRPCreationTimeout:       durationjson.Duration(1 * time.Minute),
+		ExpireCompletedTaskDuration:     durationjson.Duration(2 * time.Minute),
+		ExpirePendingTaskDuration:       durationjson.Duration(30 * time.Minute),
+		EnableConsulServiceRegistration: false,
+		KickTaskDuration:                durationjson.Duration(30 * time.Second),
+		LockTTL:                         durationjson.Duration(locket.DefaultSessionTTL),
+		LockRetryInterval:               durationjson.Duration(locket.RetryInterval),
+		ConvergenceWorkers:              20,
+		UpdateWorkers:                   1000,
+		TaskCallbackWorkers:             1000,
+		MaxOpenDatabaseConnections:      200,
+		MaxIdleDatabaseConnections:      200,
+		AuctioneerRequireTLS:            false,
+		RepClientSessionCacheSize:       0,
+		RepRequireTLS:                   false,
 
 		ListenAddress:     bbsAddress,
 		AdvertiseURL:      bbsURL.String(),
 		AuctioneerAddress: auctioneerServer.URL(),
+		ConsulCluster:     consulRunner.ConsulCluster(),
 
-		DatabaseDriver:           sqlRunner.DriverName(),
-		DatabaseConnectionString: sqlRunner.ConnectionString(),
-		ReportInterval:           durationjson.Duration(time.Second / 2),
-		HealthAddress:            bbsHealthAddress,
-
-		ClientLocketConfig: locketrunner.ClientLocketConfig(),
+		DatabaseDriver:                 sqlRunner.DriverName(),
+		DatabaseConnectionString:       sqlRunner.ConnectionString(),
+		DetectConsulCellRegistrations:  true,
+		ReportInterval:                 durationjson.Duration(time.Second / 2),
+		HealthAddress:                  bbsHealthAddress,
+		CellRegistrationsLocketEnabled: false,
+		LocksLocketEnabled:             false,
 
 		EncryptionConfig: encryption.EncryptionConfig{
 			EncryptionKeys: map[string]string{"label": "key"},
@@ -223,16 +236,11 @@ var _ = BeforeEach(func() {
 			CertPath:           metronClientCertFile,
 		},
 	}
-
-	bbsConfig.ClientLocketConfig.LocketAddress = locketAddress
-	locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
-	Expect(err).NotTo(HaveOccurred())
-	locketHelper = test_helpers.NewLocketHelper(logger, locketClient)
+	consulHelper = test_helpers.NewConsulHelper(logger, consulClient)
 })
 
 var _ = AfterEach(func() {
 	ginkgomon.Kill(bbsProcess)
-	ginkgomon.Kill(locketProcess)
 
 	// Make sure the healthcheck server is really gone before trying to start up
 	// the bbs again in another test.

@@ -13,6 +13,7 @@ import (
 	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	"code.cloudfoundry.org/locket/lock"
 	locketmodels "code.cloudfoundry.org/locket/models"
+	"code.cloudfoundry.org/rep/maintain"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
@@ -33,6 +34,7 @@ var _ = Describe("CellPresence", func() {
 		locketAddress = fmt.Sprintf("localhost:%d", locketPort)
 
 		locketRunner = locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
+			cfg.ConsulCluster = consulRunner.ConsulCluster()
 			cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 			cfg.DatabaseDriver = sqlRunner.DriverName()
 			cfg.ListenAddress = locketAddress
@@ -42,6 +44,7 @@ var _ = Describe("CellPresence", func() {
 
 		bbsConfig.ClientLocketConfig = locketrunner.ClientLocketConfig()
 		bbsConfig.LocketAddress = locketAddress
+		bbsConfig.CellRegistrationsLocketEnabled = true
 	})
 
 	JustBeforeEach(func() {
@@ -58,12 +61,28 @@ var _ = Describe("CellPresence", func() {
 
 	Context("Cells", func() {
 		var (
-			cellPresenceLocket ifrit.Process
-			presenceLocket     *models.CellPresence
+			cellPresenceLocket, cellPresenceConsul ifrit.Process
+			presenceLocket, presenceConsul         *models.CellPresence
 		)
 
 		BeforeEach(func() {
 			clock := clock.NewClock()
+			presenceConsul = &models.CellPresence{
+				CellId:     "cell-consul",
+				RepAddress: "cell-consul-address",
+				RepUrl:     "http://cell-consul-url",
+				Zone:       "consul-zone",
+				Capacity:   &models.CellCapacity{1, 2, 3},
+			}
+
+			cellPresenceClient := maintain.NewCellPresenceClient(consulClient, clock)
+			cellPresenceConsul = ifrit.Invoke(cellPresenceClient.NewCellPresenceRunner(
+				logger,
+				presenceConsul,
+				locket.RetryInterval,
+				locket.DefaultSessionTTL,
+			))
+
 			locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -99,22 +118,59 @@ var _ = Describe("CellPresence", func() {
 
 		AfterEach(func() {
 			ginkgomon.Interrupt(cellPresenceLocket)
+			ginkgomon.Interrupt(cellPresenceConsul)
 		})
 
-		Context("when locket api location is not provided", func() {
-			BeforeEach(func() {
-				bbsConfig.LocketAddress = ""
+		Context("when detect consul cell registrations and cell registrations locket enabled are both true", func() {
+			Context("when locket api location is not provided", func() {
+				BeforeEach(func() {
+					bbsConfig.LocketAddress = ""
+				})
+				It("exits with an error", func() {
+					Eventually(bbsProcess.Wait()).Should(Receive(Not(BeNil())))
+				})
 			})
-			It("exits with an error", func() {
-				Eventually(bbsProcess.Wait()).Should(Receive(Not(BeNil())))
+			It("returns cell presences from both locket and consul", func() {
+				Eventually(bbsProcess.Ready()).Should(BeClosed())
+				presences, err := client.Cells(logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(presences).To(ConsistOf(presenceLocket, presenceConsul))
 			})
 		})
-		It("returns cell presence", func() {
-			Eventually(bbsProcess.Ready()).Should(BeClosed())
-			presences, err := client.Cells(logger)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(presences).To(ConsistOf(presenceLocket))
+
+		Context("when detect consul cell registrations is false", func() {
+			BeforeEach(func() {
+				bbsConfig.DetectConsulCellRegistrations = false
+			})
+
+			Context("when locket api location is not provided", func() {
+				BeforeEach(func() {
+					bbsConfig.LocketAddress = ""
+				})
+				It("exits with an error", func() {
+					Eventually(bbsProcess.Wait()).Should(Receive(Not(BeNil())))
+				})
+			})
+
+			It("only returns cell presences from locket", func() {
+				Eventually(bbsProcess.Ready()).Should(BeClosed())
+				presences, err := client.Cells(logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(presences).To(ConsistOf(presenceLocket))
+			})
+		})
+
+		Context("when cell registrations locket enabled is false", func() {
+			BeforeEach(func() {
+				bbsConfig.CellRegistrationsLocketEnabled = false
+			})
+
+			It("only returns cell presences from consul", func() {
+				Eventually(bbsProcess.Ready()).Should(BeClosed())
+				presences, err := client.Cells(logger)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(presences).To(ConsistOf(presenceConsul))
+			})
 		})
 	})
-
 })

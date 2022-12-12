@@ -46,7 +46,7 @@ var _ = Describe("Convergence API", func() {
 				[]string{},
 				[]string{},
 			)
-			locketHelper.RegisterCell(&cellPresence)
+			consulHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
 			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
 			err := client.DesireLRP(logger, desiredLRP)
@@ -133,16 +133,15 @@ var _ = Describe("Convergence API", func() {
 							[]string{},
 							[]string{},
 						)
-						locketHelper.RegisterCell(&cellPresence)
+						consulHelper.RegisterCell(&cellPresence)
 					})
 
 					It("it transitions back to Ordinary", func() {
-						// Eventually(func() models.ActualLRP_Presence {
-						// 	group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
-						// 	Expect(err).NotTo(HaveOccurred())
-						// 	return group.Instance.Presence
-						// }).Should(Equal(models.ActualLRP_Ordinary))
-						Expect(1).To(Equal(1))
+						Eventually(func() models.ActualLRP_Presence {
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							Expect(err).NotTo(HaveOccurred())
+							return group.Instance.Presence
+						}).Should(Equal(models.ActualLRP_Ordinary))
 					})
 				})
 
