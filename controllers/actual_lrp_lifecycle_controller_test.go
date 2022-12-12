@@ -746,7 +746,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				fakeActualLRPDB.ActualLRPsReturns(lrps, nil)
 			})
 
-			It("should not emit any events because the ActualLRPGroup remains unchanged", func() {
+			It("should not emit any group events because the ActualLRPGroup remains unchanged", func() {
 				err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 				Expect(err).NotTo(HaveOccurred())
 
