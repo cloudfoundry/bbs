@@ -138,8 +138,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithMetricTags := []*models.DesiredLRP{
-						&models.DesiredLRP{MetricTags: map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}}},
-						&models.DesiredLRP{MetricsGuid: "some-metrics-guid"},
+						{MetricTags: map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}}},
+						{MetricsGuid: "some-metrics-guid"},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
 
@@ -272,8 +272,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithMetricTags := []*models.DesiredLRP{
-						&models.DesiredLRP{MetricTags: map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}}},
-						&models.DesiredLRP{MetricsGuid: "some-metrics-guid"},
+						{MetricTags: map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}}},
+						{MetricsGuid: "some-metrics-guid"},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
 
@@ -443,7 +443,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRPWithMetricTags := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					MetricTags:  map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}},
+					MetricTags:  map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
 				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
@@ -552,7 +552,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRPWithMetricTags := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					MetricTags:  map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}},
+					MetricTags:  map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
 				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
