@@ -1300,6 +1300,467 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					})
 				})
 			})
+
+			Context("when metric tags are provided", func() {
+				var expectedTags map[string]*models.MetricTagValue
+
+				BeforeEach(func() {
+					expectedTags = map[string]*models.MetricTagValue{
+						"some-tag": {Static: "some-value"},
+					}
+
+					update = &models.DesiredLRPUpdate{MetricTags: expectedTags}
+					update.SetAnnotation("new-annotation")
+
+					requestBody = &models.UpdateDesiredLRPRequest{
+						ProcessGuid: processGuid,
+						Update:      update,
+					}
+				})
+				It("updates the desired LRP with them", func() {
+					Expect(fakeDesiredLRPDB.UpdateDesiredLRPCallCount()).To(Equal(1))
+					_, _, actualProcessGuid, actualUpdate := fakeDesiredLRPDB.UpdateDesiredLRPArgsForCall(0)
+					Expect(actualProcessGuid).To(Equal(processGuid))
+					Expect(actualUpdate).To(Equal(update))
+
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPLifecycleResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(response.Error).To(BeNil())
+				})
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(nil, models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
+	Describe("UpdateDesiredLRP_r0", func() {
+		var (
+			processGuid      string
+			update           *models.DesiredLRPUpdate
+			beforeDesiredLRP *models.DesiredLRP
+			afterDesiredLRP  *models.DesiredLRP
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			processGuid = "some-guid"
+			someText := "some-text"
+			beforeDesiredLRP = model_helpers.NewValidDesiredLRP(processGuid)
+			beforeDesiredLRP.Instances = 4
+			afterDesiredLRP = model_helpers.NewValidDesiredLRP(processGuid)
+			afterDesiredLRP.Annotation = someText
+
+			update = &models.DesiredLRPUpdate{}
+			update.SetAnnotation(someText)
+
+			requestBody = &models.UpdateDesiredLRPRequest{
+				ProcessGuid: processGuid,
+				Update:      update,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.UpdateDesiredLRP_r0(logger, responseRecorder, request)
+		})
+
+		Context("when updating desired lrp in DB succeeds", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
+				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(afterDesiredLRP, nil)
+			})
+
+			It("updates the desired lrp", func() {
+				Expect(fakeDesiredLRPDB.UpdateDesiredLRPCallCount()).To(Equal(1))
+				_, _, actualProcessGuid, actualUpdate := fakeDesiredLRPDB.UpdateDesiredLRPArgsForCall(0)
+				Expect(actualProcessGuid).To(Equal(processGuid))
+				Expect(actualUpdate).To(Equal(update))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Error).To(BeNil())
+			})
+
+			It("emits a create event to the hub", func() {
+				done := make(chan interface{})
+				timeout := 5
+				go func() {
+					Eventually(desiredHub.EmitCallCount).Should(Equal(1))
+					event := desiredHub.EmitArgsForCall(0)
+					changeEvent, ok := event.(*models.DesiredLRPChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(changeEvent.Before).To(Equal(beforeDesiredLRP))
+					Expect(changeEvent.After).To(Equal(afterDesiredLRP))
+					close(done)
+				}()
+				Eventually(done, timeout).Should(BeClosed())
+			})
+
+			Context("when the number of instances changes", func() {
+				BeforeEach(func() {
+					update.SetInstances(3)
+
+					desiredLRP := &models.DesiredLRP{
+						ProcessGuid:   "some-guid",
+						Domain:        "some-domain",
+						RootFs:        "some-stack",
+						PlacementTags: []string{"taggggg"},
+						MemoryMb:      128,
+						DiskMb:        512,
+						Instances:     3,
+					}
+
+					fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
+					fakeServiceClient.CellByIdReturns(&models.CellPresence{
+						RepAddress: "some-address",
+						RepUrl:     "http://some-address",
+					}, nil)
+				})
+
+				Context("when the number of instances decreased", func() {
+					var actualLRPs []*models.ActualLRP
+
+					BeforeEach(func() {
+						actualLRPs = []*models.ActualLRP{}
+						for i := 4; i >= 0; i-- {
+							actualLRPs = append(actualLRPs, model_helpers.NewValidActualLRP("some-guid", int32(i)))
+						}
+
+						fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+					})
+
+					It("stops extra actual lrps", func() {
+						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+						_, _, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+						Expect(processGuid).To(Equal("some-guid"))
+
+						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
+						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
+						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+						Expect(repAddr).To(Equal("some-address"))
+						Expect(repURL).To(Equal("http://some-address"))
+						repAddr, repURL = fakeRepClientFactory.CreateClientArgsForCall(1)
+						Expect(repAddr).To(Equal("some-address"))
+						Expect(repURL).To(Equal("http://some-address"))
+
+						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
+						_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
+						Expect(key).To(Equal(actualLRPs[0].ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPs[0].ActualLRPInstanceKey))
+						_, key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
+						Expect(key).To(Equal(actualLRPs[1].ActualLRPKey))
+						Expect(instanceKey).To(Equal(actualLRPs[1].ActualLRPInstanceKey))
+					})
+
+					Context("when the rep announces a url", func() {
+						BeforeEach(func() {
+							cellPresence := models.CellPresence{CellId: "cell-id", RepAddress: "some-address", RepUrl: "http://some-address"}
+							fakeServiceClient.CellByIdReturns(&cellPresence, nil)
+						})
+
+						It("creates a rep client using the rep url", func() {
+							repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+							Expect(repAddr).To(Equal("some-address"))
+							Expect(repURL).To(Equal("http://some-address"))
+						})
+
+						Context("when creating a rep client fails", func() {
+							BeforeEach(func() {
+								err := errors.New("BOOM!!!")
+								fakeRepClientFactory.CreateClientReturns(nil, err)
+							})
+
+							It("should log the error", func() {
+								Expect(logger.Buffer()).To(gbytes.Say("BOOM!!!"))
+							})
+
+							It("should return the error", func() {
+								response := models.DesiredLRPLifecycleResponse{}
+								err := response.Unmarshal(responseRecorder.Body.Bytes())
+								Expect(err).NotTo(HaveOccurred())
+
+								Expect(response.Error).To(BeNil())
+							})
+						})
+					})
+
+					Context("when fetching cell presence fails", func() {
+						BeforeEach(func() {
+							fakeServiceClient.CellByIdStub = func(lager.Logger, string) (*models.CellPresence, error) {
+								if fakeRepClient.StopLRPInstanceCallCount() == 1 {
+									return nil, errors.New("ohhhhh nooooo, mr billlll")
+								} else {
+									return &models.CellPresence{RepAddress: "some-address"}, nil
+								}
+							}
+						})
+
+						It("continues stopping the rest of the lrps and logs", func() {
+							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
+							Expect(logger).To(gbytes.Say("failed-fetching-cell-presence"))
+						})
+					})
+
+					Context("when stopping the lrp fails", func() {
+						BeforeEach(func() {
+							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, models.ActualLRPKey, models.ActualLRPInstanceKey) error {
+								if fakeRepClient.StopLRPInstanceCallCount() == 1 {
+									return errors.New("ohhhhh nooooo, mr billlll")
+								} else {
+									return nil
+								}
+							}
+						})
+
+						It("continues stopping the rest of the lrps and logs", func() {
+							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
+							Expect(logger).To(gbytes.Say("failed-stopping-lrp-instance"))
+						})
+					})
+				})
+
+				Context("when the number of instances increases", func() {
+
+					BeforeEach(func() {
+						beforeDesiredLRP.Instances = 1
+						fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
+						actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+						fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+					})
+
+					It("creates missing actual lrps", func() {
+						Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
+						_, _, processGuid := fakeDesiredLRPDB.DesiredLRPByProcessGuidArgsForCall(0)
+						Expect(processGuid).To(Equal("some-guid"))
+
+						keys := make([]*models.ActualLRPKey, 2)
+
+						Expect(fakeActualLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(2))
+						_, _, keys[0] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
+						_, _, keys[1] = fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(1)
+
+						Expect(keys).To(ContainElement(&models.ActualLRPKey{
+							ProcessGuid: "some-guid",
+							Index:       2,
+							Domain:      "some-domain",
+						}))
+
+						Expect(keys).To(ContainElement(&models.ActualLRPKey{
+							ProcessGuid: "some-guid",
+							Index:       1,
+							Domain:      "some-domain",
+						}))
+
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						Expect(startRequests).To(HaveLen(1))
+						startReq := startRequests[0]
+						Expect(startReq.ProcessGuid).To(Equal("some-guid"))
+						Expect(startReq.Domain).To(Equal("some-domain"))
+						Expect(startReq.Resource).To(Equal(rep.Resource{MemoryMB: 128, DiskMB: 512}))
+						Expect(startReq.PlacementConstraint).To(Equal(rep.PlacementConstraint{
+							RootFs:        "some-stack",
+							VolumeDrivers: []string{},
+							PlacementTags: []string{"taggggg"},
+						}))
+						Expect(startReq.Indices).To(ContainElement(2))
+						Expect(startReq.Indices).To(ContainElement(1))
+					})
+				})
+
+				Context("when fetching the desired lrp fails", func() {
+					BeforeEach(func() {
+						fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(nil, errors.New("you lose."))
+					})
+
+					It("does not update the actual lrps", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						response := models.DesiredLRPLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+					})
+				})
+
+				Context("when fetching the actual lrps groups fails", func() {
+					BeforeEach(func() {
+						fakeActualLRPDB.ActualLRPsReturns(nil, errors.New("you lose."))
+					})
+
+					It("does not update the actual lrps", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						response := models.DesiredLRPLifecycleResponse{}
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+
+						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+					})
+				})
+			})
+
+			Context("when the routes were changed", func() {
+				var (
+					cfRouterContent, internalRouterContent []byte
+					actualLRPs                             []*models.ActualLRP
+				)
+
+				BeforeEach(func() {
+					cfRouterContent = []byte("[{\"hostname\":\"foo.cf-app.com\"}]")
+					internalRouterContent = []byte("[{\"hostname\":\"foo.apps.internal\"}]")
+					beforeDesiredLRP.Routes = &models.Routes{
+						"cf-router":       (*json.RawMessage)(&cfRouterContent),
+						"internal-router": (*json.RawMessage)(&internalRouterContent),
+					}
+					fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
+
+					fakeServiceClient.CellByIdReturns(&models.CellPresence{
+						RepAddress: "some-address",
+						RepUrl:     "http://some-address",
+					}, nil)
+				})
+
+				Context("when internal routes were changed", func() {
+					BeforeEach(func() {
+						newInternalRouterContent := []byte("[{\"hostname\":\"updated.apps.internal\"}]")
+						update.Routes = &models.Routes{
+							"cf-router":       (*json.RawMessage)(&cfRouterContent),
+							"internal-router": (*json.RawMessage)(&newInternalRouterContent),
+						}
+					})
+
+					Context("when LRPs are present and not unclaimed or crashed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("updates actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(2))
+						})
+					})
+
+					Context("when LRP is evacuating", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidEvacuatingActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidEvacuatingActualLRP("some-guid", int32(1))
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+
+					Context("when LRP is unclaimed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							lrp1.State = models.ActualLRPStateUnclaimed
+							lrp2.State = models.ActualLRPStateUnclaimed
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+
+					Context("when LRP is crashed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							lrp1.State = models.ActualLRPStateCrashed
+							lrp2.State = models.ActualLRPStateCrashed
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+				})
+
+				Context("when internal routes were not changed", func() {
+					BeforeEach(func() {
+						newCfRouterContent := []byte("[{\"hostname\":\"foo.cf-app.com\"},{\"hostname\":\"another.cf-app.com\"}]")
+						update.Routes = &models.Routes{
+							"cf-router":       (*json.RawMessage)(&newCfRouterContent),
+							"internal-router": (*json.RawMessage)(&internalRouterContent),
+						}
+					})
+
+					It("does not update actual LRPs", func() {
+						Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+					})
+				})
+			})
+			Context("when metric tags are provided", func() {
+				BeforeEach(func() {
+					update = &models.DesiredLRPUpdate{
+						MetricTags: map[string]*models.MetricTagValue{
+							"some-tag": {Static: "ignored"},
+						},
+					}
+					update.SetAnnotation("new-annotation")
+
+					requestBody = &models.UpdateDesiredLRPRequest{
+						ProcessGuid: processGuid,
+						Update:      update,
+					}
+				})
+				It("ignores them", func() {
+					Expect(fakeDesiredLRPDB.UpdateDesiredLRPCallCount()).To(Equal(1))
+					_, _, actualProcessGuid, actualUpdate := fakeDesiredLRPDB.UpdateDesiredLRPArgsForCall(0)
+					Expect(actualProcessGuid).To(Equal(processGuid))
+					Expect(actualUpdate.GetAnnotation()).To(Equal("new-annotation"))
+					Expect(actualUpdate.MetricTags).To(BeNil())
+
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPLifecycleResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(response.Error).To(BeNil())
+				})
+			})
 		})
 
 		Context("when the DB returns an unrecoverable error", func() {
