@@ -46,24 +46,36 @@ when submitting a DesiredLRP to a Client's `DesireLRP` method.
 
 Only a subset of the DesiredLRP's fields may be updated dynamically.  In particular, changes that require the process to be restarted are not allowed - instead, you should submit a new DesiredLRP and orchestrate the upgrade path from one LRP to the next.  This provides the consumer of Diego the flexibility to pick the most appropriate upgrade strategy (blue-green, etc...)
 
-It is possible, however, to dynamically modify the number of instances, and the routes associated with the LRP.  Diego's API makes this explicit -- when updating a DesiredLRP you provide a `DesiredLRPUpdateRequest`:
+It is possible however to dynamically modify the number of instances, as well as the routes and metric tags associated
+with the LRP.  Diego's API makes this explicit -- when updating a DesiredLRP you provide a `DesiredLRPUpdateRequest`:
 
-```
+```json
 {
-    "instances": 17,
-    "routes": {
-        "cf-router": [
-            {
-                "hostnames": ["a.example.com", "b.example.com"],
-                "port": 8080
-            }, {
-                "hostnames": ["c.example.com"],
-                "port": 5050
-            }
+  "instances": 17,
+  "routes": {
+    "cf-router": [
+      {
+        "hostnames": [
+          "a.example.com",
+          "b.example.com"
         ],
-        "some-other-router": "any opaque json payload"
-    },
-    "annotation": "arbitrary metadata"
+        "port": 8080
+      },
+      {
+        "hostnames": [
+          "c.example.com"
+        ],
+        "port": 5050
+      }
+    ],
+    "some-other-router": "any opaque json payload"
+  },
+  "annotation": "arbitrary metadata",
+  "metric_tags": {
+    "some-tag": {
+      "static": "some-value"
+    }
+  }
 }
 ```
 
@@ -98,7 +110,7 @@ When fetching ActualLRPs, one can fetch *all* ActualLRPs in Diego, all ActualLRP
 
 In all cases, the consumer is given an array of `ActualLRPResponse`:
 
-```
+```json
 [
     {
         "process_guid": "some-process-guid",
