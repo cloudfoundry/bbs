@@ -84,9 +84,6 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 					desiredLRPs[i].CachedDependencies = nil
 				}
 			}
-			if len(desiredLRPs[i].EgressRules) != 0 {
-				desiredLRPs[i].EgressRules = nil
-			}
 		}
 
 		response.DesiredLrps = desiredLRPs
