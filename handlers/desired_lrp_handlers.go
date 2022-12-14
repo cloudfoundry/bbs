@@ -71,8 +71,18 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 		desiredLRPs, err = h.desiredLRPDB.DesiredLRPs(req.Context(), logger, filter)
 		for i, d := range desiredLRPs {
 			desiredLRPs[i] = d.VersionDownTo(targetVersion).PopulateMetricsGuid()
-			if len(desiredLRPs[i].CachedDependencies) == 0 {
-				desiredLRPs[i].CachedDependencies = nil
+			switch request {
+			case request.route_emitter :
+				if len(desiredLRPs[i].CachedDependencies) == 0 {
+					desiredLRPs[i].CachedDependencies = nil
+				}
+				if len(desiredLRPs[i].EgressRules) == 0 {
+					desiredLRPs[i].EgressRules = nil
+				}
+			default:
+				if len(desiredLRPs[i].CachedDependencies) == 0 {
+					desiredLRPs[i].CachedDependencies = nil
+				}
 			}
 			if len(desiredLRPs[i].EgressRules) != 0 {
 				desiredLRPs[i].EgressRules = nil
