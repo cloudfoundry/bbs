@@ -172,63 +172,6 @@ var _ = Describe("Client", func() {
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})
-
-		Context("UpdateDesiredLRP", func() {
-			It("calls the current endpoint", func() {
-				bbsServer.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/v1/desired_lrp/update.r1"),
-						ghttp.RespondWithProto(200, &models.DesiredLRPLifecycleResponse{Error: nil}),
-					),
-				)
-				err := internalClient.UpdateDesiredLRP(logger, "some-process-guid", &models.DesiredLRPUpdate{})
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
-				bbsServer.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/v1/desired_lrp/update.r1"),
-						ghttp.RespondWith(http.StatusNotFound, nil),
-					),
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/v1/desired_lrp/update"),
-						ghttp.RespondWithProto(200, &models.DesiredLRPLifecycleResponse{Error: nil}),
-					),
-				)
-
-				err := internalClient.UpdateDesiredLRP(logger, "some-process-guid", &models.DesiredLRPUpdate{})
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns an error if the current call returns a non-successful non-404 status code", func() {
-				bbsServer.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/v1/desired_lrp/update.r1"),
-						ghttp.RespondWith(http.StatusForbidden, nil),
-					),
-				)
-
-				err := internalClient.UpdateDesiredLRP(logger, "some-process-guid", &models.DesiredLRPUpdate{})
-				Expect(err).To(MatchError("Invalid Response with status code: 403"))
-			})
-
-			It("still returns an error if the fallback call fails", func() {
-				bbsServer.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/v1/desired_lrp/update.r1"),
-						ghttp.RespondWith(http.StatusNotFound, nil),
-					),
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/v1/desired_lrp/update"),
-						ghttp.RespondWith(http.StatusForbidden, nil),
-					),
-				)
-
-				err := internalClient.UpdateDesiredLRP(logger, "some-process-guid", &models.DesiredLRPUpdate{})
-				Expect(err).To(MatchError("Invalid Response with status code: 403"))
-			})
-		})
 	})
 
 	Context("when the request timeout is explicitly set", func() {

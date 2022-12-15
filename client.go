@@ -616,13 +616,7 @@ func (c *client) UpdateDesiredLRP(logger lager.Logger, processGuid string, updat
 		ProcessGuid: processGuid,
 		Update:      update,
 	}
-
-	err := c.doDesiredLRPLifecycleRequest(logger, UpdateDesiredLRPRoute_r1, &request)
-	if err != nil && err == EndpointNotFoundErr {
-		err = c.doDesiredLRPLifecycleRequest(logger, UpdateDesiredLRPRoute_r0, &request)
-	}
-
-	return err
+	return c.doDesiredLRPLifecycleRequest(logger, UpdateDesiredLRPRoute_r0, &request)
 }
 
 func (c *client) RemoveDesiredLRP(logger lager.Logger, processGuid string) error {

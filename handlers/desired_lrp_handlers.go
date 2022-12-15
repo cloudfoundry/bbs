@@ -182,16 +182,6 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	h.commonUpdateDesiredLRP(logger, w, req, func(*models.UpdateDesiredLRPRequest) {})
-}
-
-func (h *DesiredLRPHandler) UpdateDesiredLRP_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	h.commonUpdateDesiredLRP(logger, w, req, func(r *models.UpdateDesiredLRPRequest) {
-		r.Update.MetricTags = nil
-	})
-}
-
-func (h *DesiredLRPHandler) commonUpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request, modifyRequest func(*models.UpdateDesiredLRPRequest)) {
 	logger = logger.Session("update-desired-lrp")
 
 	request := &models.UpdateDesiredLRPRequest{}
@@ -205,8 +195,6 @@ func (h *DesiredLRPHandler) commonUpdateDesiredLRP(logger lager.Logger, w http.R
 		response.Error = models.ConvertError(err)
 		return
 	}
-
-	modifyRequest(request)
 
 	logger = logger.WithData(lager.Data{"guid": request.ProcessGuid})
 
