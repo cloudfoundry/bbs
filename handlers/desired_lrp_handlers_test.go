@@ -1227,6 +1227,9 @@ var _ = Describe("DesiredLRP Handlers", func() {
 							"cf-router":       (*json.RawMessage)(&cfRouterContent),
 							"internal-router": (*json.RawMessage)(&newInternalRouterContent),
 						}
+						beforeDesiredLRP.MetricTags = map[string]*models.MetricTagValue{
+							"some-tag": {Static: "some-value"},
+						}
 					})
 
 					Context("when LRPs are present and not unclaimed or crashed", func() {
@@ -1239,6 +1242,32 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						It("updates actual LRPs", func() {
 							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(2))
+						})
+
+						Context("when metric tags are not provided", func() {
+							It("does not update actual LRPs with metric tags", func() {
+								_, lrp1Update := fakeRepClient.UpdateLRPInstanceArgsForCall(0)
+								Expect(lrp1Update.MetricTags).To(BeNil())
+
+								_, lrp2Update := fakeRepClient.UpdateLRPInstanceArgsForCall(1)
+								Expect(lrp2Update.MetricTags).To(BeNil())
+							})
+						})
+
+						Context("when metric tags are unchanged", func() {
+							BeforeEach(func() {
+								update.MetricTags = map[string]*models.MetricTagValue{
+									"some-tag": {Static: "some-value"},
+								}
+							})
+
+							It("does not update actual LRPs with metric tags", func() {
+								_, lrp1Update := fakeRepClient.UpdateLRPInstanceArgsForCall(0)
+								Expect(lrp1Update.MetricTags).To(BeNil())
+
+								_, lrp2Update := fakeRepClient.UpdateLRPInstanceArgsForCall(1)
+								Expect(lrp2Update.MetricTags).To(BeNil())
+							})
 						})
 					})
 
@@ -1329,6 +1358,126 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					err := response.Unmarshal(responseRecorder.Body.Bytes())
 					Expect(err).NotTo(HaveOccurred())
 					Expect(response.Error).To(BeNil())
+				})
+
+				Context("when the metric tags were changed", func() {
+					var actualLRPs []*models.ActualLRP
+
+					BeforeEach(func() {
+						beforeDesiredLRP.MetricTags = map[string]*models.MetricTagValue{
+							"some-tag": {Static: "some-earlier-value"},
+						}
+						fakeServiceClient.CellByIdReturns(&models.CellPresence{
+							RepAddress: "some-address",
+							RepUrl:     "http://some-address",
+						}, nil)
+					})
+
+					Context("when LRPs are present and not unclaimed or crashed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("updates actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(2))
+
+							_, lrp1Update := fakeRepClient.UpdateLRPInstanceArgsForCall(0)
+							Expect(lrp1Update.MetricTags).To(Equal(map[string]string{"some-tag": "some-value"}))
+
+							_, lrp2Update := fakeRepClient.UpdateLRPInstanceArgsForCall(1)
+							Expect(lrp2Update.MetricTags).To(Equal(map[string]string{"some-tag": "some-value"}))
+						})
+
+						Context("when internal routes are unchanged", func() {
+							BeforeEach(func() {
+								internalRoutes := []byte("[{\"hostname\":\"updated.apps.internal\"}]")
+								beforeDesiredLRP.Routes = &models.Routes{
+									"internal-router": (*json.RawMessage)(&internalRoutes),
+								}
+								update.Routes = &models.Routes{
+									"internal-router": (*json.RawMessage)(&internalRoutes),
+								}
+							})
+
+							It("does not update actual LRPs with internal routes", func() {
+								_, lrp1Update := fakeRepClient.UpdateLRPInstanceArgsForCall(0)
+								Expect(lrp1Update.InternalRoutes).To(BeNil())
+
+								_, lrp2Update := fakeRepClient.UpdateLRPInstanceArgsForCall(1)
+								Expect(lrp2Update.InternalRoutes).To(BeNil())
+							})
+						})
+
+					})
+
+					Context("when LRP is evacuating", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidEvacuatingActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidEvacuatingActualLRP("some-guid", int32(1))
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+
+					Context("when LRP is unclaimed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							lrp1.State = models.ActualLRPStateUnclaimed
+							lrp2.State = models.ActualLRPStateUnclaimed
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+
+					Context("when LRP is crashed", func() {
+						BeforeEach(func() {
+							lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+							lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+							lrp1.State = models.ActualLRPStateCrashed
+							lrp2.State = models.ActualLRPStateCrashed
+							actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+							fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+						})
+
+						It("does not update actual LRPs", func() {
+							Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+						})
+					})
+				})
+
+				Context("when neither the routes nor the metric tags were changed", func() {
+					var actualLRPs []*models.ActualLRP
+
+					BeforeEach(func() {
+						lrp1 := model_helpers.NewValidActualLRP("some-guid", int32(0))
+						lrp2 := model_helpers.NewValidActualLRP("some-guid", int32(1))
+						actualLRPs = []*models.ActualLRP{lrp1, lrp2}
+						fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
+
+						beforeDesiredLRP.MetricTags = map[string]*models.MetricTagValue{
+							"some-tag": {Static: "some-value"},
+						}
+						fakeServiceClient.CellByIdReturns(&models.CellPresence{
+							RepAddress: "some-address",
+							RepUrl:     "http://some-address",
+						}, nil)
+					})
+
+					It("does not update actual LRPs", func() {
+						Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+					})
 				})
 			})
 		})

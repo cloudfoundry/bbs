@@ -422,6 +422,25 @@ func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup
 	return true
 }
 
+func (desired DesiredLRPUpdate) IsMetricTagsUpdated(existingTags map[string]*MetricTagValue) bool {
+	if desired.MetricTags == nil {
+		return false
+	}
+	if len(desired.MetricTags) != len(existingTags) {
+		return true
+	}
+	for k, v := range existingTags {
+		updateTag, ok := desired.MetricTags[k]
+		if !ok {
+			return true
+		}
+		if updateTag.Static != v.Static || updateTag.Dynamic != v.Dynamic {
+			return true
+		}
+	}
+	return false
+}
+
 type internalDesiredLRPUpdate struct {
 	Instances  *int32                     `json:"instances,omitempty"`
 	Routes     *Routes                    `json:"routes,omitempty"`
