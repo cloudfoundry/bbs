@@ -1378,6 +1378,51 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			Expect(testV).To(Equal(desiredLRPUpdate))
 		})
 	})
+
+	Describe("IsMetricTagsUpdated", func() {
+		Context("when the update does not contain metric tags", func() {
+			It("returns false", func() {
+				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
+				update := &models.DesiredLRPUpdate{}
+				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeFalse())
+			})
+		})
+		Context("when the metric tags differ in a single static value", func() {
+			It("returns true", func() {
+				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
+				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-other-tag-value"}}}
+				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
+			})
+		})
+		Context("when the metric tags differ in a single dynamic value", func() {
+			It("returns true", func() {
+				existingTags := map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagDynamicValueIndex}}
+				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagDynamicValueInstanceGuid}}}
+				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
+			})
+		})
+		Context("when the metric tags have different keys", func() {
+			It("returns true", func() {
+				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
+				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-other-tag": {Static: "some-tag-value"}}}
+				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
+			})
+		})
+		Context("when the metric tags are different lengths", func() {
+			It("returns true", func() {
+				existingTags := map[string]*models.MetricTagValue{}
+				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}}
+				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
+			})
+		})
+		Context("when the metric tags are equal", func() {
+			It("returns false", func() {
+				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
+				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}}
+				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeFalse())
+			})
+		})
+	})
 })
 
 func randStringBytes(n int) string {

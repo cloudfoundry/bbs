@@ -307,7 +307,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 			for _, ir := range dereferencedLRPKey.DesiredInternalRoutes {
 				internalRoutes = append(internalRoutes, internalroutes.InternalRoute{Hostname: ir.Hostname})
 			}
-			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes)
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes, nil)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)
