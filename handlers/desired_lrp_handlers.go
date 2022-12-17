@@ -233,9 +233,11 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		}
 	}
 
-	if request.Update.IsRoutesGroupUpdated(beforeDesiredLRP.Routes, internalroutes.INTERNAL_ROUTER) {
-		logger.Debug("updating-lrp-routes")
-		h.updateInstances(req.Context(), logger, request.ProcessGuid, request.Update)
+	internalRoutesUpdated := request.Update.IsRoutesGroupUpdated(beforeDesiredLRP.Routes, internalroutes.INTERNAL_ROUTER)
+	metricTagsUpdated := request.Update.IsMetricTagsUpdated(beforeDesiredLRP.MetricTags)
+
+	if internalRoutesUpdated || metricTagsUpdated {
+		h.updateInstances(req.Context(), logger, request.ProcessGuid, request.Update, internalRoutesUpdated, metricTagsUpdated)
 	}
 
 	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
@@ -386,7 +388,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 	}
 }
 
-func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) {
+func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate, internalRoutesUpdated, metricTagsUpdated bool) {
 	logger = logger.Session("updating-instances", lager.Data{"process_guid": processGuid})
 	actualLRPs, err := h.actualLRPDB.ActualLRPs(ctx, logger.Session("fetch-actuals"), models.ActualLRPFilter{ProcessGuid: processGuid})
 	if err != nil {
@@ -409,12 +411,29 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				continue
 			}
 			logger.Debug("updating-lrp-instance")
-			internalRoutes, err := internalroutes.InternalRoutesFromRoutingInfo(*update.Routes)
-			if err != nil {
-				logger.Error("getting-internal-routes-failed", err)
-				continue
+
+			var internalRoutes internalroutes.InternalRoutes
+			if internalRoutesUpdated {
+				internalRoutes, err = internalroutes.InternalRoutesFromRoutingInfo(*update.Routes)
+				if err != nil {
+					logger.Error("getting-internal-routes-failed", err)
+					continue
+				}
 			}
-			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes)
+
+			var metricTags map[string]string
+			if metricTagsUpdated {
+				metricTags, err = models.ConvertMetricTags(update.MetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
+					models.MetricTagDynamicValueIndex:        lrp.Index,
+					models.MetricTagDynamicValueInstanceGuid: lrp.InstanceGuid,
+				})
+				if err != nil {
+					logger.Error("converting-metric-tags-failed", err)
+					continue
+				}
+			}
+
+			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes, metricTags)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)
