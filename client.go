@@ -35,8 +35,10 @@ const (
 
 var EndpointNotFoundErr = models.NewError(models.Error_InvalidResponse, fmt.Sprintf(InvalidResponseMessage, 404))
 
-//go:generate counterfeiter -o fake_bbs/fake_internal_client.go . InternalClient
-//go:generate counterfeiter -o fake_bbs/fake_client.go . Client
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate -o fake_bbs/fake_internal_client.go . InternalClient
+//counterfeiter:generate -o fake_bbs/fake_client.go . Client
 
 /*
 The InternalClient interface exposes all available endpoints of the BBS server,
@@ -154,7 +156,7 @@ type ExternalActualLRPClient interface {
 }
 
 /*
-The ExternalDesiredLRPClient is used to access and manipulate Disired LRPs.
+The ExternalDesiredLRPClient is used to access and manipulate Desired LRPs.
 */
 type ExternalDesiredLRPClient interface {
 	// Lists all DesiredLRPs that match the given DesiredLRPFilter

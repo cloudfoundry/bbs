@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter . EncryptionDB
+//counterfeiter:generate . EncryptionDB
 
 type EncryptionDB interface {
 	EncryptionKeyLabel(ctx context.Context, logger lager.Logger) (string, error)

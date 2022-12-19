@@ -336,6 +336,9 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			desiredLRPGuid := "desired-lrp-guid"
 			expectedDesiredLRP = model_helpers.NewValidDesiredLRP(desiredLRPGuid)
+		})
+
+		JustBeforeEach(func() {
 			Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 			update = &models.DesiredLRPUpdate{}
 			update.SetInstances(1)
@@ -397,6 +400,27 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			expectedDesiredLRP.ModificationTag.Increment()
 			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
+		})
+
+		Context("when updating the metric tags", func() {
+			BeforeEach(func() {
+				expectedDesiredLRP.MetricTags["tag-to-be-overwritten"] = &models.MetricTagValue{Static: "overwritten-value"}
+			})
+
+			It("overwrites the existing metric tags in the database", func() {
+				expectedMetricTags := map[string]*models.MetricTagValue{
+					"some-tag": &models.MetricTagValue{Static: "some-value"},
+				}
+				update = &models.DesiredLRPUpdate{MetricTags: expectedMetricTags}
+
+				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
+				Expect(err).NotTo(HaveOccurred())
+
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRP.MetricTags).ToNot(HaveKey("tag-to-be-overwritten"))
+				Expect(desiredLRP.MetricTags).To(Equal(expectedMetricTags))
+			})
 		})
 
 		Context("when routes param is invalid", func() {

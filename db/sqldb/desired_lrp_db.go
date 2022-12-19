@@ -242,6 +242,17 @@ func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, proc
 			updateAttributes["routes"] = encodedData
 		}
 
+		if update.MetricTags != nil {
+			runInfo := beforeDesiredLRP.DesiredLRPRunInfo(db.clock.Now())
+			runInfo.MetricTags = update.MetricTags
+			runInfoData, err := db.serializeModel(logger, &runInfo)
+			if err != nil {
+				logger.Error("failed-to-serialize-model", err)
+				return err
+			}
+			updateAttributes["run_info"] = runInfoData
+		}
+
 		_, err = db.update(ctx, logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
 		if err != nil {
 			logger.Error("failed-executing-query", err)

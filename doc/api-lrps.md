@@ -396,6 +396,7 @@ UpdateDesiredLRP(logger lager.Logger, processGuid string, update *models.Desired
 * `processGuid string`: The GUID for the [DesiredLRP](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) to update.
 * `update *models.DesiredLRPUpdate`: [DesiredLRPUpdate](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPUpdate) struct containing fields to update, if any.
   * `Instances *int32`: Optional. The number of instances.
+  * `MetricTags map[string]*MetricTagValue`: Optional. Map of metric tags.
   * `Routes *Routes`: Optional. Map of routing information.
   * `Annotation *string`: Optional. The annotation string on the DesiredLRP.
 
@@ -412,6 +413,7 @@ instances := 4
 annotation := "My annotation"
 err := client.UpdateDesiredLRP(logger, "some-process-guid", &models.DesiredLRPUpdate{
     Instances: &instances,
+    MetricTags: map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}},
     Routes: &models.Routes{},
     Annotation: &annotation,
 })

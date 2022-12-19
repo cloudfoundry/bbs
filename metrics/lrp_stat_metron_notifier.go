@@ -37,7 +37,7 @@ const (
 	SuspectCellsMetric = "SuspectCells"
 )
 
-//go:generate counterfeiter -o fakes/fake_lrp_stat_metron_notifier.go . LRPStatMetronNotifier
+//counterfeiter:generate -o fakes/fake_lrp_stat_metron_notifier.go . LRPStatMetronNotifier
 type LRPStatMetronNotifier interface {
 	ifrit.Runner
 

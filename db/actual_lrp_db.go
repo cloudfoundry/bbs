@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter . ActualLRPDB
+//counterfeiter:generate . ActualLRPDB
 
 type ActualLRPDB interface {
 	ActualLRPs(ctx context.Context, logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRP, error)

@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter . EvacuationDB
+//counterfeiter:generate . EvacuationDB
 
 type EvacuationDB interface {
 	RemoveEvacuatingActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error

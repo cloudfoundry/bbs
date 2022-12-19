@@ -24,7 +24,9 @@ const (
 	dbQueryDurationMaxMetric = "DBQueryDurationMax"
 )
 
-//go:generate counterfeiter . DBStats
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate . DBStats
 type DBStats interface {
 	OpenConnections() int
 	WaitDuration() time.Duration
