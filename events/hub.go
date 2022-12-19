@@ -18,7 +18,7 @@ var ErrSlowConsumer = errors.New("slow consumer")
 var ErrSubscribedToClosedHub = errors.New("subscribed to closed hub")
 var ErrHubAlreadyClosed = errors.New("hub already closed")
 
-//go:generate counterfeiter -o eventfakes/fake_hub.go . Hub
+//counterfeiter:generate -o eventfakes/fake_hub.go . Hub
 type Hub interface {
 	Subscribe() (EventSource, error)
 	Emit(models.Event)

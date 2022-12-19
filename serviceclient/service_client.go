@@ -14,7 +14,9 @@ import (
 
 const BBSLockSchemaKey = "bbs_lock"
 
-//go:generate counterfeiter . ServiceClient
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate . ServiceClient
 
 type ServiceClient interface {
 	CellById(logger lager.Logger, cellId string) (*models.CellPresence, error)

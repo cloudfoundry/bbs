@@ -1,6 +1,8 @@
 package db
 
-//go:generate counterfeiter . DB
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate . DB
 
 type DB interface {
 	DomainDB

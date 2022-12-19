@@ -331,19 +331,6 @@ var _ = Describe("DesiredLRP", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Describe("CreateComponents", func() {
-		It("decomposes the desired lrp into its component parts", func() {
-			schedInfo, runInfo := desiredLRP.CreateComponents(time.Unix(123, 456))
-			newDesired := models.NewDesiredLRP(schedInfo, runInfo)
-			Expect(newDesired).To(DeepEqual(desiredLRP))
-		})
-
-		It("saves the created at time on the run info", func() {
-			_, runInfo := desiredLRP.CreateComponents(time.Unix(123, 456))
-			Expect(runInfo.CreatedAt).To(BeEquivalentTo((time.Unix(123, 456).UnixNano())))
-		})
-	})
-
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
 			jsonSerialization, err := json.Marshal(desiredLRP)
@@ -1313,6 +1300,9 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
 		}
 		desiredLRPUpdate.SetAnnotation("some-text")
+		desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
+			"some-tag": {Static: "some-value"},
+		}
 	})
 
 	Describe("Validate", func() {
@@ -1340,6 +1330,27 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			desiredLRPUpdate.SetAnnotation(largeString)
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "annotation")
 		})
+
+		Context("when metric tags are specified", func() {
+			It("is invalid when both static and dynamic values are provided for the same key", func() {
+				desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
+					"some_metric": {Static: "some-value", Dynamic: models.MetricTagDynamicValueIndex},
+				}
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "metric_tags")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "static")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "dynamic")
+			})
+
+			It("is valid when metric tags is empty", func() {
+				desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{}
+				Expect(desiredLRPUpdate.Validate()).To(Succeed())
+			})
+
+			It("is valid when metric tags is nil", func() {
+				desiredLRPUpdate.MetricTags = nil
+				Expect(desiredLRPUpdate.Validate()).To(Succeed())
+			})
+		})
 	})
 
 	Describe("serialization", func() {
@@ -1350,7 +1361,12 @@ var _ = Describe("DesiredLRPUpdate", func() {
 				"routes": {
 					"foo": "bar"
 				},
-				"annotation": "some-text"
+				"annotation": "some-text",
+				"metric_tags": {
+				  "some-tag": {
+				    "static": "some-value"
+				  }
+				}
 			}`
 		})
 

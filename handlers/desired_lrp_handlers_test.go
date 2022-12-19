@@ -138,8 +138,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithMetricTags := []*models.DesiredLRP{
-						&models.DesiredLRP{MetricTags: map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}}},
-						&models.DesiredLRP{MetricsGuid: "some-metrics-guid"},
+						{MetricTags: map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}}},
+						{MetricsGuid: "some-metrics-guid"},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
 
@@ -272,8 +272,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithMetricTags := []*models.DesiredLRP{
-						&models.DesiredLRP{MetricTags: map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}}},
-						&models.DesiredLRP{MetricsGuid: "some-metrics-guid"},
+						{MetricTags: map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}}},
+						{MetricsGuid: "some-metrics-guid"},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
 
@@ -443,7 +443,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRPWithMetricTags := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					MetricTags:  map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}},
+					MetricTags:  map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
 				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
@@ -552,7 +552,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRPWithMetricTags := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					MetricTags:  map[string]*models.MetricTagValue{"source_id": &models.MetricTagValue{Static: "some-guid"}},
+					MetricTags:  map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
 				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
@@ -1298,6 +1298,37 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					It("does not update actual LRPs", func() {
 						Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
 					})
+				})
+			})
+
+			Context("when metric tags are provided", func() {
+				var expectedTags map[string]*models.MetricTagValue
+
+				BeforeEach(func() {
+					expectedTags = map[string]*models.MetricTagValue{
+						"some-tag": {Static: "some-value"},
+					}
+
+					update = &models.DesiredLRPUpdate{MetricTags: expectedTags}
+					update.SetAnnotation("new-annotation")
+
+					requestBody = &models.UpdateDesiredLRPRequest{
+						ProcessGuid: processGuid,
+						Update:      update,
+					}
+				})
+
+				It("updates the desired LRP with them", func() {
+					Expect(fakeDesiredLRPDB.UpdateDesiredLRPCallCount()).To(Equal(1))
+					_, _, actualProcessGuid, actualUpdate := fakeDesiredLRPDB.UpdateDesiredLRPArgsForCall(0)
+					Expect(actualProcessGuid).To(Equal(processGuid))
+					Expect(actualUpdate).To(Equal(update))
+
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					response := models.DesiredLRPLifecycleResponse{}
+					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(response.Error).To(BeNil())
 				})
 			})
 		})

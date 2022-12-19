@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter . DesiredLRPDB
+//counterfeiter:generate . DesiredLRPDB
 
 type DesiredLRPDB interface {
 	DesiredLRPs(ctx context.Context, logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)

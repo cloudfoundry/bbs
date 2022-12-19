@@ -286,10 +286,6 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 	return &newDesired
 }
 
-func (d *DesiredLRP) CreateComponents(createdAt time.Time) (DesiredLRPSchedulingInfo, DesiredLRPRunInfo) {
-	return d.DesiredLRPSchedulingInfo(), d.DesiredLRPRunInfo(createdAt)
-}
-
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
 
@@ -373,6 +369,12 @@ func (desired *DesiredLRPUpdate) Validate() error {
 		}
 	}
 
+	err := validateMetricTags(desired.MetricTags, "")
+	if err != nil {
+		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
+		validationError = validationError.Append(err)
+	}
+
 	return validationError.ToError()
 }
 
@@ -421,9 +423,10 @@ func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup
 }
 
 type internalDesiredLRPUpdate struct {
-	Instances  *int32  `json:"instances,omitempty"`
-	Routes     *Routes `json:"routes,omitempty"`
-	Annotation *string `json:"annotation,omitempty"`
+	Instances  *int32                     `json:"instances,omitempty"`
+	Routes     *Routes                    `json:"routes,omitempty"`
+	Annotation *string                    `json:"annotation,omitempty"`
+	MetricTags map[string]*MetricTagValue `json:"metric_tags,omitempty"`
 }
 
 func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
@@ -439,6 +442,7 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 	if update.Annotation != nil {
 		desired.SetAnnotation(*update.Annotation)
 	}
+	desired.MetricTags = update.MetricTags
 
 	return nil
 }
@@ -454,6 +458,7 @@ func (desired DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
 		a := desired.GetAnnotation()
 		update.Annotation = &a
 	}
+	update.MetricTags = desired.MetricTags
 	return json.Marshal(update)
 }
 

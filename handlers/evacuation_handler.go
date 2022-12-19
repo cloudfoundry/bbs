@@ -9,7 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-//go:generate counterfeiter -o fake_controllers/fake_evacuation_controller.go . EvacuationController
+//counterfeiter:generate -o fake_controllers/fake_evacuation_controller.go . EvacuationController
 type EvacuationController interface {
 	RemoveEvacuatingActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	EvacuateClaimedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)

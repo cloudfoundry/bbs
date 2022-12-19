@@ -8,7 +8,9 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o fake_controllers/fake_actual_lrp_lifecycle_controller.go . ActualLRPLifecycleController
+//go:generate counterfeiter -generate
+
+//counterfeiter:generate -o fake_controllers/fake_actual_lrp_lifecycle_controller.go . ActualLRPLifecycleController
 type ActualLRPLifecycleController interface {
 	ClaimActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error
 	StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo, actualLRPInternalRoutes []*models.ActualLRPInternalRoute) error

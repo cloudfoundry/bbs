@@ -31,7 +31,7 @@ const (
 	ConvergenceTasksKickedMetric = "ConvergenceTasksKicked"
 )
 
-//go:generate counterfeiter -o fakes/fake_task_stat_metron_notifier.go . TaskStatMetronNotifier
+//counterfeiter:generate -o fakes/fake_task_stat_metron_notifier.go . TaskStatMetronNotifier
 type TaskStatMetronNotifier interface {
 	ifrit.Runner
 

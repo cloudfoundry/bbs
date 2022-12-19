@@ -28,7 +28,7 @@ type TaskMetrics struct {
 	TasksKicked    uint64
 }
 
-//go:generate counterfeiter . TaskDB
+//counterfeiter:generate . TaskDB
 type TaskDB interface {
 	Tasks(ctx context.Context, logger lager.Logger, filter models.TaskFilter) ([]*models.Task, error)
 	TaskByGuid(ctx context.Context, logger lager.Logger, taskGuid string) (*models.Task, error)
