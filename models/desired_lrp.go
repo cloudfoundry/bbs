@@ -21,8 +21,9 @@ type DesiredLRPChange struct {
 }
 
 type DesiredLRPFilter struct {
-	Domain       string
-	ProcessGuids []string
+	Domain          string
+	ProcessGuids    []string
+	SkipEgressRules bool
 }
 
 func PreloadedRootFS(stack string) string {
