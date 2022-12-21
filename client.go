@@ -554,8 +554,9 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, key *models.Actu
 
 func (c *client) DesiredLRPs(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	request := models.DesiredLRPsRequest{
-		Domain:       filter.Domain,
-		ProcessGuids: filter.ProcessGuids,
+		Domain:          filter.Domain,
+		ProcessGuids:    filter.ProcessGuids,
+		SkipEgressRules: filter.SkipEgressRules,
 	}
 	response := models.DesiredLRPsResponse{}
 	err := c.doRequest(logger, DesiredLRPsRoute_r3, nil, nil, &request, &response)
