@@ -65,7 +65,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids}
+		filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids, SkipEgressRules: request.SkipEgressRules}
 
 		var desiredLRPs []*models.DesiredLRP
 		desiredLRPs, err = h.desiredLRPDB.DesiredLRPs(req.Context(), logger, filter)
@@ -74,7 +74,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 			if len(desiredLRPs[i].CachedDependencies) == 0 {
 				desiredLRPs[i].CachedDependencies = nil
 			}
-			if request.SkipEgressRules {
+			if filter.SkipEgressRules == true {
 				desiredLRPs[i].EgressRules = nil
 			}
 		}
