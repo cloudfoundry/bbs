@@ -9,6 +9,7 @@ import (
 
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/tlsconfig"
@@ -58,6 +59,26 @@ var _ = Describe("Client", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 		Context("StartActualLRP", func() {
+			It("populates the request", func() {
+				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.VerifyProtoRepresenting(&models.StartActualLRPRequest{
+							ActualLrpKey:            &actualLRP.ActualLRPKey,
+							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
+							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+							ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
+							MetricTags:              actualLRP.MetricTags,
+						}),
+						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
+					),
+				)
+
+				err := internalClient.StartActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
 			It("Calls the current endpoint", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
@@ -66,11 +87,12 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
+				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
@@ -78,11 +100,18 @@ var _ = Describe("Client", func() {
 					),
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start"),
+						ghttp.VerifyProtoRepresenting(&models.StartActualLRPRequest{
+							ActualLrpKey:            &actualLRP.ActualLRPKey,
+							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
+							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+							ActualLrpInternalRoutes: nil,
+							MetricTags:              nil,
+						}),
 						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				err := internalClient.StartActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -94,7 +123,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 
@@ -110,12 +139,31 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})
 
 		Context("evacuateRunningActualLrp", func() {
+			It("populates the request", func() {
+				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
+							ActualLrpKey:            &actualLRP.ActualLRPKey,
+							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
+							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+							ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
+							MetricTags:              actualLRP.MetricTags,
+						}),
+						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
+					),
+				)
+
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				Expect(err).NotTo(HaveOccurred())
+			})
 			It("Calls the current endpoint", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
@@ -124,11 +172,12 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
+				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
@@ -136,11 +185,18 @@ var _ = Describe("Client", func() {
 					),
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running"),
+						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
+							ActualLrpKey:            &actualLRP.ActualLRPKey,
+							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
+							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+							ActualLrpInternalRoutes: nil,
+							MetricTags:              nil,
+						}),
 						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -152,7 +208,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 
@@ -168,7 +224,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{})
+				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})

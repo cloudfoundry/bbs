@@ -241,7 +241,7 @@ var _ = Describe("LRPConvergence", func() {
 			// create the suspect lrp
 			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
 			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ChangeActualLRPPresence(ctx, logger, &lrpKey, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 			Expect(err).NotTo(HaveOccurred())
@@ -285,14 +285,14 @@ var _ = Describe("LRPConvergence", func() {
 			// create the suspect lrp
 			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
 			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ChangeActualLRPPresence(ctx, logger, &lrpKey, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 			Expect(err).NotTo(HaveOccurred())
 
 			// create the second suspect lrp
 			lrpKey2 = models.NewActualLRPKey(processGuid, 1, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ChangeActualLRPPresence(ctx, logger, &lrpKey2, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 			Expect(err).NotTo(HaveOccurred())
@@ -332,13 +332,13 @@ var _ = Describe("LRPConvergence", func() {
 			// create the suspect lrp
 			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
 			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 			_, err = db.ExecContext(ctx, fmt.Sprintf(`UPDATE actual_lrps SET presence = %d`, models.ActualLRP_Suspect))
 			Expect(err).NotTo(HaveOccurred())
 
 			// create the ordinary lrp
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 
 			// create the unrelated suspect lrp
@@ -348,7 +348,7 @@ var _ = Describe("LRPConvergence", func() {
 			err = sqlDB.DesireLRP(ctx, logger, desiredLRP2)
 			Expect(err).NotTo(HaveOccurred())
 			lrpKey2 = models.NewActualLRPKey(processGuid2, 1, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ChangeActualLRPPresence(ctx, logger, &lrpKey2, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 			Expect(err).NotTo(HaveOccurred())
@@ -406,12 +406,12 @@ var _ = Describe("LRPConvergence", func() {
 			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
 			processGuid := "orphaned-suspect-lrp-1"
 			lrpKey = models.NewActualLRPKey(processGuid, 0, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 
 			otherProcessGuid := "orphaned-suspect-lrp-2"
 			lrpKey2 = models.NewActualLRPKey(otherProcessGuid, 0, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = db.ExecContext(ctx, fmt.Sprintf(`UPDATE actual_lrps SET presence = %d`, models.ActualLRP_Suspect))
@@ -423,7 +423,7 @@ var _ = Describe("LRPConvergence", func() {
 			err = sqlDB.DesireLRP(ctx, logger, desiredLRP2)
 			Expect(err).NotTo(HaveOccurred())
 			lrpKey3 = models.NewActualLRPKey(notOrphanedProcessGuid, 0, domain)
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey3, &models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey3, &models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "suspect-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 			_, _, err = sqlDB.ChangeActualLRPPresence(ctx, logger, &lrpKey3, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
 			Expect(err).NotTo(HaveOccurred())
@@ -1034,7 +1034,7 @@ var _ = Describe("LRPConvergence", func() {
 				_, _, err = sqlDB.ClaimActualLRP(ctx, logger, processGuid, i, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"})
 				Expect(err).NotTo(HaveOccurred())
 				actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
-				_, _, err = sqlDB.StartActualLRP(ctx, logger, &crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+				_, _, err = sqlDB.StartActualLRP(ctx, logger, &crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 				Expect(err).NotTo(HaveOccurred())
 				_, _, _, err = sqlDB.CrashActualLRP(ctx, logger, &crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, "whatever")
 				Expect(err).NotTo(HaveOccurred())
@@ -1199,7 +1199,7 @@ var _ = Describe("LRPConvergence", func() {
 				_, _, err = sqlDB.ClaimActualLRP(ctx, logger, processGuid, i, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"})
 				Expect(err).NotTo(HaveOccurred())
 				actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
-				_, _, err = sqlDB.StartActualLRP(ctx, logger, &crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+				_, _, err = sqlDB.StartActualLRP(ctx, logger, &crashedActualLRPKey, &models.ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: "existing-cell"}, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 				Expect(err).NotTo(HaveOccurred())
 			}
 
@@ -1403,17 +1403,17 @@ var _ = Describe("LRPConvergence", func() {
 			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
 			lrpKey1 = models.NewActualLRPKey(processGuid, 0, domain)
 			lrpInstanceKey1 = models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey1, &lrpInstanceKey1, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey1, &lrpInstanceKey1, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 
 			lrpKey2 = models.NewActualLRPKey(processGuid, 1, domain)
 			lrpInstanceKey2 = models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &lrpInstanceKey2, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &lrpInstanceKey2, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 
 			lrpKey3 = models.NewActualLRPKey(processGuid, 2, domain)
 			lrpInstanceKey3 = models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "existing-cell"}
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey3, &lrpInstanceKey3, &actualLRPNetInfo, nil)
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey3, &lrpInstanceKey3, &actualLRPNetInfo, nil, nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			queryStr := "UPDATE actual_lrps SET internal_routes = ? WHERE process_guid = ? AND instance_index = ?;"
@@ -1429,7 +1429,7 @@ var _ = Describe("LRPConvergence", func() {
 				{Hostname: "some-internal-route.apps.internal"},
 				{Hostname: "some-other-internal-route.apps.internal"},
 			}
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey4, &lrpInstanceKey4, &actualLRPNetInfo, sameInternalRoutes)
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey4, &lrpInstanceKey4, &actualLRPNetInfo, sameInternalRoutes, model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 
 			lrpKey5 := models.NewActualLRPKey(processGuid, 4, domain)
@@ -1438,7 +1438,7 @@ var _ = Describe("LRPConvergence", func() {
 				{Hostname: "some-other-internal-route.apps.internal"},
 				{Hostname: "some-internal-route.apps.internal"},
 			}
-			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey5, &lrpInstanceKey5, &actualLRPNetInfo, internalRoutesInDifferentOrder)
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey5, &lrpInstanceKey5, &actualLRPNetInfo, internalRoutesInDifferentOrder, model_helpers.NewActualLRPMetricTags())
 			Expect(err).NotTo(HaveOccurred())
 
 			rawInternalRoutes := json.RawMessage(`[{"hostname":"some-internal-route.apps.internal"},{"hostname":"some-other-internal-route.apps.internal"}]`)

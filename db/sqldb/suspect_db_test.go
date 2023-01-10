@@ -30,7 +30,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
 		Expect(err).NotTo(HaveOccurred())
-		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes())
+		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

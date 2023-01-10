@@ -17,12 +17,12 @@ const (
 	Truncated = "(truncated)"
 )
 
-func (db *SQLDB) getActualLRPs(ctx context.Context, logger lager.Logger, wheres string, whereBindinngs ...interface{}) ([]*models.ActualLRP, error) {
+func (db *SQLDB) getActualLRPs(ctx context.Context, logger lager.Logger, wheres string, whereBindings ...interface{}) ([]*models.ActualLRP, error) {
 	var actualLRPs []*models.ActualLRP
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		rows, err := db.all(ctx, logger, tx, actualLRPsTable,
 			actualLRPColumns, helpers.NoLockRow,
-			wheres, whereBindinngs...,
+			wheres, whereBindings...,
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
@@ -125,6 +125,12 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 		return nil, err
 	}
 
+	metricTagsData, err := db.encodeMetricTagsData(logger, map[string]string{})
+	if err != nil {
+		logger.Error("failed-to-serialize-metric-tags", err)
+		return nil, err
+	}
+
 	now := db.clock.Now().UnixNano()
 	err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		_, err := db.insert(ctx, logger, tx, actualLRPsTable,
@@ -138,6 +144,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 				"modification_tag_epoch": guid,
 				"modification_tag_index": 0,
 				"internal_routes":        internalRoutesData,
+				"metric_tags":            metricTagsData,
 			},
 		)
 
@@ -154,6 +161,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 		Since:                   now,
 		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
 		ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
+		MetricTags:              map[string]string{},
 	}, nil
 }
 
@@ -285,6 +293,7 @@ func (db *SQLDB) StartActualLRP(
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	internalRoutes []*models.ActualLRPInternalRoute,
+	metricTags map[string]string,
 ) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.Session("db-start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo})
 	logger.Info("starting")
@@ -297,7 +306,7 @@ func (db *SQLDB) StartActualLRP(
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err == models.ErrResourceNotFound {
-			actualLRP, err = db.createRunningActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes, tx)
+			actualLRP, err = db.createRunningActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes, metricTags, tx)
 			return err
 		}
 
@@ -312,6 +321,7 @@ func (db *SQLDB) StartActualLRP(
 			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
 			actualLRP.ActualLRPNetInfo.Equal(netInfo) &&
 			reflect.DeepEqual(actualLRP.ActualLrpInternalRoutes, internalRoutes) &&
+			reflect.DeepEqual(actualLRP.MetricTags, metricTags) &&
 			actualLRP.State == models.ActualLRPStateRunning {
 			logger.Debug("nothing-to-change")
 			return nil
@@ -327,6 +337,7 @@ func (db *SQLDB) StartActualLRP(
 		actualLRP.ActualLRPInstanceKey = *instanceKey
 		actualLRP.ActualLRPNetInfo = *netInfo
 		actualLRP.ActualLrpInternalRoutes = internalRoutes
+		actualLRP.MetricTags = metricTags
 		actualLRP.State = models.ActualLRPStateRunning
 		actualLRP.Since = now
 		actualLRP.ModificationTag.Increment()
@@ -344,6 +355,12 @@ func (db *SQLDB) StartActualLRP(
 			return err
 		}
 
+		metricTagsData, err := db.encodeMetricTagsData(logger, metricTags)
+		if err != nil {
+			logger.Error("failed-to-serialize-metric-tags", err)
+			return err
+		}
+
 		_, err = db.update(ctx, logger, tx, actualLRPsTable,
 			helpers.SQLAttributes{
 				"state":                  actualLRP.State,
@@ -354,6 +371,7 @@ func (db *SQLDB) StartActualLRP(
 				"since":                  actualLRP.Since,
 				"net_info":               netInfoData,
 				"internal_routes":        internalRoutesData,
+				"metric_tags":            metricTagsData,
 			},
 			"process_guid = ? AND instance_index = ? AND presence = ?",
 			key.ProcessGuid, key.Index, models.ActualLRP_Ordinary,
@@ -541,7 +559,7 @@ func (db *SQLDB) RemoveActualLRP(ctx context.Context, logger lager.Logger, proce
 	})
 }
 
-func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, tx helpers.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, tx helpers.Tx) (*models.ActualLRP, error) {
 	now := db.clock.Now().UnixNano()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -554,6 +572,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 	actualLRP.ActualLRPInstanceKey = *instanceKey
 	actualLRP.ActualLRPNetInfo = *netInfo
 	actualLRP.ActualLrpInternalRoutes = internalRoutes
+	actualLRP.MetricTags = metricTags
 	actualLRP.State = models.ActualLRPStateRunning
 	actualLRP.Since = now
 
@@ -568,6 +587,12 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 		return nil, err
 	}
 
+	metricTagsData, err := db.encodeMetricTagsData(logger, metricTags)
+	if err != nil {
+		logger.Error("failed-to-serialize-metric-tags", err)
+		return nil, err
+	}
+
 	_, err = db.insert(ctx, logger, tx, actualLRPsTable,
 		helpers.SQLAttributes{
 			"process_guid":           actualLRP.ActualLRPKey.ProcessGuid,
@@ -578,6 +603,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 			"state":                  actualLRP.State,
 			"net_info":               netInfoData,
 			"internal_routes":        internalRoutesData,
+			"metric_tags":            metricTagsData,
 			"since":                  actualLRP.Since,
 			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 			"modification_tag_index": actualLRP.ModificationTag.Index,
@@ -593,6 +619,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*models.ActualLRP, error) {
 	var netInfoData []byte
 	var internalRoutesData []byte
+	var metricTagsData []byte
 	var actualLRP models.ActualLRP
 
 	err := row.Scan(
@@ -607,6 +634,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		&actualLRP.Since,
 		&netInfoData,
 		&internalRoutesData,
+		&metricTagsData,
 		&actualLRP.ModificationTag.Epoch,
 		&actualLRP.ModificationTag.Index,
 		&actualLRP.CrashCount,
@@ -639,6 +667,21 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		}
 	}
 	actualLRP.ActualLrpInternalRoutes = internalRoutes
+
+	metricTags := map[string]string{}
+	if len(metricTagsData) > 0 {
+		decodedData, err := db.encoder.Decode(metricTagsData)
+		if err != nil {
+			logger.Error("failed-decrypting-metric-tags", err)
+			return nil, err
+		}
+		err = json.Unmarshal(decodedData, &metricTags)
+		if err != nil {
+			logger.Error("failed-parsing-metric-tags", err)
+			return nil, err
+		}
+	}
+	actualLRP.MetricTags = metricTags
 
 	return &actualLRP, nil
 }
@@ -712,6 +755,20 @@ func (db *SQLDB) encodeInternalRouteData(logger lager.Logger, routes []*models.A
 	encodedData, err := db.encoder.Encode(routeData)
 	if err != nil {
 		logger.Error("failed-encrypting-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	return encodedData, nil
+}
+
+func (db *SQLDB) encodeMetricTagsData(logger lager.Logger, tags map[string]string) ([]byte, error) {
+	tagsData, err := json.Marshal(tags)
+	if err != nil {
+		logger.Error("failed-marshalling-metric-tags", err)
+		return nil, models.ErrBadRequest
+	}
+	encodedData, err := db.encoder.Encode(tagsData)
+	if err != nil {
+		logger.Error("failed-encrypting-metric-tags", err)
 		return nil, models.ErrBadRequest
 	}
 	return encodedData, nil

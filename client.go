@@ -50,13 +50,13 @@ type InternalClient interface {
 	Client
 
 	ClaimActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
-	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) error
+	StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) error
 	CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 
 	EvacuateClaimedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)
+	EvacuateRunningActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)
 	EvacuateStoppedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateCrashedActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
 	RemoveEvacuatingActualLRP(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
@@ -422,17 +422,21 @@ func (c *client) ClaimActualLRP(logger lager.Logger, key *models.ActualLRPKey, i
 	return response.Error.ToError()
 }
 
-func (c *client) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) error {
-	request := models.StartActualLRPRequest{
+func (c *client) StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) error {
+	response := models.ActualLRPLifecycleResponse{}
+	err := c.doRequest(logger, StartActualLRPRoute_r1, nil, nil, &models.StartActualLRPRequest{
 		ActualLrpKey:            key,
 		ActualLrpInstanceKey:    instanceKey,
 		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
-	}
-	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, StartActualLRPRoute_r1, nil, nil, &request, &response)
+		MetricTags:              metricTags,
+	}, &response)
 	if err != nil && err == EndpointNotFoundErr {
-		err = c.doRequest(logger, StartActualLRPRoute_r0, nil, nil, &request, &response)
+		err = c.doRequest(logger, StartActualLRPRoute_r0, nil, nil, &models.StartActualLRPRequest{
+			ActualLrpKey:         key,
+			ActualLrpInstanceKey: instanceKey,
+			ActualLrpNetInfo:     netInfo,
+		}, &response)
 	}
 
 	if err != nil {
@@ -520,19 +524,19 @@ func (c *client) EvacuateStoppedActualLRP(logger lager.Logger, key *models.Actua
 	})
 }
 
-func (c *client) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) (bool, error) {
+func (c *client) EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) (bool, error) {
 	keepContainer, err := c.doEvacRequest(logger, EvacuateRunningActualLRPRoute_r1, KeepContainer, &models.EvacuateRunningActualLRPRequest{
 		ActualLrpKey:            key,
 		ActualLrpInstanceKey:    instanceKey,
 		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
+		MetricTags:              metricTags,
 	})
 	if err != nil && err == EndpointNotFoundErr {
 		keepContainer, err = c.doEvacRequest(logger, EvacuateRunningActualLRPRoute_r0, KeepContainer, &models.EvacuateRunningActualLRPRequest{
-			ActualLrpKey:            key,
-			ActualLrpInstanceKey:    instanceKey,
-			ActualLrpNetInfo:        netInfo,
-			ActualLrpInternalRoutes: internalRoutes,
+			ActualLrpKey:         key,
+			ActualLrpInstanceKey: instanceKey,
+			ActualLrpNetInfo:     netInfo,
 		})
 	}
 

@@ -71,7 +71,7 @@ var _ = Describe("Convergence API", func() {
 					InstanceGuid: "ig-1",
 					CellId:       "missing-cell",
 				}
-				err := client.StartActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
+				err := client.StartActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -161,15 +161,19 @@ var _ = Describe("Convergence API", func() {
 						}).Should(BeTrue())
 
 						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
-						_, _, err := db.StartActualLRP(ctx, logger, &models.ActualLRPKey{
-							ProcessGuid: processGuid,
-							Index:       0,
-							Domain:      "some-domain",
-						}, &models.ActualLRPInstanceKey{
-							InstanceGuid: "ig-2",
-							CellId:       "some-cell",
-						}, &netInfo,
-							[]*models.ActualLRPInternalRoute{})
+						_, _, err := db.StartActualLRP(ctx, logger,
+							&models.ActualLRPKey{
+								ProcessGuid: processGuid,
+								Index:       0,
+								Domain:      "some-domain",
+							},
+							&models.ActualLRPInstanceKey{
+								InstanceGuid: "ig-2",
+								CellId:       "some-cell",
+							},
+							&netInfo,
+							[]*models.ActualLRPInternalRoute{},
+							map[string]string{})
 						Expect(err).NotTo(HaveOccurred())
 					})
 
@@ -334,7 +338,7 @@ var _ = Describe("Convergence API", func() {
 							}, &models.ActualLRPInstanceKey{
 								InstanceGuid: "ig-2",
 								CellId:       "some-cell",
-							}, &netInfo, []*models.ActualLRPInternalRoute{})
+							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 							Expect(err).NotTo(HaveOccurred())
 						})
 
@@ -373,7 +377,7 @@ var _ = Describe("Convergence API", func() {
 							}, &models.ActualLRPInstanceKey{
 								InstanceGuid: "ig-1",
 								CellId:       "missing-cell",
-							}, &netInfo, []*models.ActualLRPInternalRoute{})
+							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 							Expect(err).To(MatchError(models.ErrActualLRPCannotBeStarted))
 						})
 					})
@@ -388,7 +392,7 @@ var _ = Describe("Convergence API", func() {
 							}, &models.ActualLRPInstanceKey{
 								InstanceGuid: "ig-1",
 								CellId:       "missing-cell",
-							}, &netInfo, []*models.ActualLRPInternalRoute{})
+							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 							Expect(err).NotTo(HaveOccurred())
 						})
 
@@ -467,7 +471,7 @@ var _ = Describe("Convergence API", func() {
 						Context("when the suspect LRP is evacuated", func() {
 							BeforeEach(func() {
 								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
-								_, err := client.EvacuateRunningActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
+								_, err := client.EvacuateRunningActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 								Expect(err).NotTo(HaveOccurred())
 							})
 

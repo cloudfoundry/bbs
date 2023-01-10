@@ -11,5 +11,5 @@ import (
 
 type EvacuationDB interface {
 	RemoveEvacuatingActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
-	EvacuateActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (actualLRP *models.ActualLRP, err error)
+	EvacuateActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (actualLRP *models.ActualLRP, err error)
 }
