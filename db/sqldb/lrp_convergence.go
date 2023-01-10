@@ -195,12 +195,12 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 		var desiredRoutes models.Routes
 		decodedDesiredData, err := c.encoder.Decode(desiredRouteData)
 		if err != nil {
-			logger.Error("failed-decrypting-actual-routes", err)
+			logger.Error("failed-decrypting-desired-routes", err)
 			continue
 		}
 		err = json.Unmarshal(decodedDesiredData, &desiredRoutes)
 		if err != nil {
-			logger.Error("failed-parsing-actual-routes", err)
+			logger.Error("failed-parsing-desired-routes", err)
 			continue
 		}
 
@@ -208,12 +208,12 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 		if len(actualRouteData) > 0 {
 			decodedActualData, err := c.encoder.Decode(actualRouteData)
 			if err != nil {
-				logger.Error("failed-decrypting-desired-routes", err)
+				logger.Error("failed-decrypting-actual-routes", err)
 				continue
 			}
 			err = json.Unmarshal(decodedActualData, &actualInternalRoutes)
 			if err != nil {
-				logger.Error("failed-parsing-desired-routes", err)
+				logger.Error("failed-parsing-actual-routes", err)
 				continue
 			}
 		}
