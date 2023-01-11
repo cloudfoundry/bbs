@@ -74,7 +74,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 			if len(desiredLRPs[i].CachedDependencies) == 0 {
 				desiredLRPs[i].CachedDependencies = nil
 			}
-			if filter.SkipEgressRules == true {
+			if filter.SkipEgressRules {
 				desiredLRPs[i].EgressRules = nil
 			}
 		}
