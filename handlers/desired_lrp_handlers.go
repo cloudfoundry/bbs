@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
-
+	"fmt"
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
