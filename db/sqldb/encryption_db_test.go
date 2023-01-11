@@ -425,8 +425,8 @@ var _ = Describe("Encryption", func() {
 			encoder := format.NewEncoder(cryptor)
 
 			tablesWithRequiredKeys := map[string]map[string]interface{}{
-				"tasks": map[string]interface{}{"guid": "some-guid", "domain": "fake-domain"},
-				"desired_lrps": map[string]interface{}{
+				"tasks": {"guid": "some-guid", "domain": "fake-domain"},
+				"desired_lrps": {
 					"process_guid":           "some-guid",
 					"domain":                 "fake-domain",
 					"log_guid":               "some-log-guid",
@@ -436,7 +436,7 @@ var _ = Describe("Encryption", func() {
 					"rootfs":                 "some-root-fs",
 					"modification_tag_epoch": "10",
 				},
-				"actual_lrps": map[string]interface{}{
+				"actual_lrps": {
 					"process_guid":           "some-guid",
 					"instance_index":         0,
 					"domain":                 "fake-domain",
@@ -446,9 +446,9 @@ var _ = Describe("Encryption", func() {
 			}
 			dataTypesToEncrypt := map[string]bool{"text": true, "mediumtext": true, "longtext": true}
 			whiteListedFields := map[string]map[string]bool{
-				"tasks":        map[string]bool{"result": true},
-				"desired_lrps": map[string]bool{"annotation": true, "placement_tags": true},
-				"actual_lrps":  map[string]bool{},
+				"tasks":        {"result": true},
+				"desired_lrps": {"annotation": true, "placement_tags": true},
+				"actual_lrps":  {},
 			}
 			var columnName, dataType string
 			dataToStore, err := encoder.Encode([]byte("actual value"))
