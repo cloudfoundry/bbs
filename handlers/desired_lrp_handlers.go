@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
-	"fmt"
+	
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
@@ -58,7 +58,6 @@ func NewDesiredLRPHandler(
 
 func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
-	fmt.Println("TESTING-DESIRED")
 	logger = logger.Session("desired-lrps")
 
 	request := &models.DesiredLRPsRequest{}
@@ -76,7 +75,6 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 				desiredLRPs[i].CachedDependencies = nil
 			}
 			if filter.SkipEgressRules {
-				fmt.Println("SKIPINGEGRESSRULES")
 				desiredLRPs[i].EgressRules = nil
 			}
 		}
