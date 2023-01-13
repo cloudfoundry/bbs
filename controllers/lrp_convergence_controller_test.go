@@ -922,4 +922,145 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			})
 		})
 	})
+
+	Context("lrps with metric tags that need to be updated", func() {
+		var (
+			actualLRPKeyWithMetricTags1, actualLRPKeyWithMetricTags2, actualLRPKeyWithMetricTags3 db.ActualLRPKeyWithMetricTags
+			cell1Presence, cell2Presence, cell3Presence                                           models.CellPresence
+		)
+
+		BeforeEach(func() {
+			actualLRPKey1 := models.NewActualLRPKey("guid1", 1, "some-domain")
+			actualLRPInstanceKey1 := models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "cell-id-1"}
+			actualLRPKey2 := models.NewActualLRPKey("guid2", 1, "some-domain")
+			actualLRPInstanceKey2 := models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "cell-id-2"}
+			actualLRPKey3 := models.NewActualLRPKey("guid3", 1, "some-domain")
+			actualLRPInstanceKey3 := models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "cell-id-3"}
+
+			desiredMetricTags := map[string]*models.MetricTagValue{"app_name": {Static: "some-app-name"}}
+			actualLRPKeyWithMetricTags1 = db.ActualLRPKeyWithMetricTags{Key: &actualLRPKey1, InstanceKey: &actualLRPInstanceKey1, DesiredMetricTags: desiredMetricTags}
+			actualLRPKeyWithMetricTags2 = db.ActualLRPKeyWithMetricTags{Key: &actualLRPKey2, InstanceKey: &actualLRPInstanceKey2, DesiredMetricTags: desiredMetricTags}
+			actualLRPKeyWithMetricTags3 = db.ActualLRPKeyWithMetricTags{Key: &actualLRPKey3, InstanceKey: &actualLRPInstanceKey3, DesiredMetricTags: desiredMetricTags}
+
+			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
+				KeysWithMetricTagChanges: []*db.ActualLRPKeyWithMetricTags{&actualLRPKeyWithMetricTags1, &actualLRPKeyWithMetricTags2, &actualLRPKeyWithMetricTags3},
+			})
+			cell1Presence = models.NewCellPresence(actualLRPKeyWithMetricTags1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+			cell2Presence = models.NewCellPresence(actualLRPKeyWithMetricTags2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
+			cell3Presence = models.NewCellPresence(actualLRPKeyWithMetricTags3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
+			fakeServiceClient.CellByIdCalls(func(logger lager.Logger, cellId string) (*models.CellPresence, error) {
+				switch cellId {
+				case "cell-id-1":
+					return &cell1Presence, nil
+				case "cell-id-2":
+					return &cell2Presence, nil
+				case "cell-id-3":
+					return &cell3Presence, nil
+				}
+
+				return nil, errors.New("wat")
+			})
+		})
+
+		It("gets each actuallrp's cell presence", func() {
+			Eventually(fakeServiceClient.CellByIdCallCount()).Should(Equal(3))
+
+			cellIds := make([]string, 3)
+
+			for i := 0; i < 3; i++ {
+				_, id := fakeServiceClient.CellByIdArgsForCall(i)
+				cellIds[i] = id
+			}
+
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithMetricTags1.InstanceKey.CellId))
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithMetricTags2.InstanceKey.CellId))
+			Expect(cellIds).To(ContainElement(actualLRPKeyWithMetricTags3.InstanceKey.CellId))
+		})
+
+		It("creates a rep client for each actuallrp's cell", func() {
+			Eventually(fakeRepClientFactory.CreateClientCallCount()).Should(Equal(3))
+
+			repAddresses := make([]string, 3)
+			repURLs := make([]string, 3)
+
+			for i := 0; i < 3; i++ {
+				address, url := fakeRepClientFactory.CreateClientArgsForCall(i)
+				repAddresses[i] = address
+				repURLs[i] = url
+			}
+
+			Expect(repAddresses).To(ContainElement(cell1Presence.RepAddress))
+			Expect(repAddresses).To(ContainElement(cell2Presence.RepAddress))
+			Expect(repAddresses).To(ContainElement(cell3Presence.RepAddress))
+
+			Expect(repURLs).To(ContainElement(cell1Presence.RepUrl))
+			Expect(repURLs).To(ContainElement(cell2Presence.RepUrl))
+			Expect(repURLs).To(ContainElement(cell3Presence.RepUrl))
+		})
+
+		It("calls UpdateLRPInstance on the rep client", func() {
+			Eventually(fakeRepClient.UpdateLRPInstanceCallCount()).Should(Equal(3))
+
+			updates := make([]rep.LRPUpdate, 3)
+
+			for i := 0; i < 3; i++ {
+				_, update := fakeRepClient.UpdateLRPInstanceArgsForCall(i)
+				updates[i] = update
+			}
+
+			metricTags := map[string]string{"app_name": "some-app-name"}
+			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags1.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags1.Key, nil, metricTags)
+			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags2.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags2.Key, nil, metricTags)
+			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags3.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags3.Key, nil, metricTags)
+
+			Expect(updates).To(ContainElement(expectedLRP1Update))
+			Expect(updates).To(ContainElement(expectedLRP2Update))
+			Expect(updates).To(ContainElement(expectedLRP3Update))
+		})
+
+		Context("when fetching cell presence fails", func() {
+			BeforeEach(func() {
+				fakeServiceClient.CellByIdReturns(nil, errors.New("kaboom"))
+			})
+
+			It("does not call CreateClient", func() {
+				Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(0))
+			})
+
+			It("does not call UpdateLRPInstance", func() {
+				Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+			})
+
+			It("logs the error", func() {
+				Eventually(logger).Should(gbytes.Say("failed-fetching-cell-presence"))
+				Eventually(logger).Should(gbytes.Say("kaboom"))
+			})
+		})
+
+		Context("when creating rep client fails", func() {
+			BeforeEach(func() {
+				fakeRepClientFactory.CreateClientReturns(nil, errors.New("kaboom"))
+			})
+
+			It("does not call UpdateLRPInstance", func() {
+				Expect(fakeRepClient.UpdateLRPInstanceCallCount()).To(Equal(0))
+			})
+
+			It("logs the error", func() {
+				Eventually(logger).Should(gbytes.Say("create-rep-client-failed"))
+				Eventually(logger).Should(gbytes.Say("kaboom"))
+			})
+		})
+
+		Context("when NewLRPUpdate fails", func() {
+			BeforeEach(func() {
+				fakeRepClient.UpdateLRPInstanceReturns(errors.New("kaboom"))
+			})
+
+			It("logs the error", func() {
+				Eventually(logger).Should(gbytes.Say("updating-lrp-instance"))
+				Eventually(logger).Should(gbytes.Say("kaboom"))
+			})
+		})
+	})
 })

@@ -1396,7 +1396,7 @@ var _ = Describe("LRPConvergence", func() {
 			processGuid = "desired-with-different-internal-routes"
 			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
 			desiredLRP.Domain = domain
-			desiredLRP.Instances = 3
+			desiredLRP.Instances = 5
 			err := sqlDB.DesireLRP(ctx, logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -1460,6 +1460,68 @@ var _ = Describe("LRPConvergence", func() {
 			lrpKeyWithInternalRoutes3 := bbsdb.ActualLRPKeyWithInternalRoutes{Key: &lrpKey3, InstanceKey: &lrpInstanceKey3, DesiredInternalRoutes: desiredInternalRoutes}
 
 			Expect(result.KeysWithInternalRouteChanges).To(ConsistOf(&lrpKeyWithInternalRoutes1, &lrpKeyWithInternalRoutes2, &lrpKeyWithInternalRoutes3))
+		})
+	})
+
+	Context("when there are actual LRPs with metrics tags different from desired LRP metric tags", func() {
+		var (
+			processGuid, domain                               string
+			lrpKey1, lrpKey2, lrpKey3                         models.ActualLRPKey
+			lrpInstanceKey1, lrpInstanceKey2, lrpInstanceKey3 models.ActualLRPInstanceKey
+		)
+
+		BeforeEach(func() {
+			domain = "some-domain"
+			processGuid = "desired-with-different-metric-tags"
+			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
+			desiredLRP.Domain = domain
+			desiredLRP.Instances = 4
+			err := sqlDB.DesireLRP(ctx, logger, desiredLRP)
+			Expect(err).NotTo(HaveOccurred())
+
+			actualLRPNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
+			lrpKey1 = models.NewActualLRPKey(processGuid, 0, domain)
+			lrpInstanceKey1 = models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey1, &lrpInstanceKey1, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpKey2 = models.NewActualLRPKey(processGuid, 1, domain)
+			lrpInstanceKey2 = models.ActualLRPInstanceKey{InstanceGuid: "ig-2", CellId: "existing-cell"}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey2, &lrpInstanceKey2, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags())
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpKey3 = models.NewActualLRPKey(processGuid, 2, domain)
+			lrpInstanceKey3 = models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "existing-cell"}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey3, &lrpInstanceKey3, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			lrpKey4 := models.NewActualLRPKey(processGuid, 3, domain)
+			lrpInstanceKey4 := models.ActualLRPInstanceKey{InstanceGuid: "ig-4", CellId: "existing-cell"}
+			sameMetricTags := map[string]string{
+				"app_name": "some-app-renamed",
+			}
+			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey4, &lrpInstanceKey4, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), sameMetricTags)
+			Expect(err).NotTo(HaveOccurred())
+
+			update := models.DesiredLRPUpdate{
+				MetricTags: map[string]*models.MetricTagValue{
+					"app_name": {Static: "some-app-renamed"},
+				},
+			}
+			_, err = sqlDB.UpdateDesiredLRP(ctx, logger, processGuid, &update)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("returns the LRP keys with changed metric tags", func() {
+			result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
+			desiredMetricTags := map[string]*models.MetricTagValue{
+				"app_name": {Static: "some-app-renamed"},
+			}
+			lrpKeyWithMetricTags1 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey1, InstanceKey: &lrpInstanceKey1, DesiredMetricTags: desiredMetricTags}
+			lrpKeyWithMetricTags2 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey2, InstanceKey: &lrpInstanceKey2, DesiredMetricTags: desiredMetricTags}
+			lrpKeyWithMetricTags3 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey3, InstanceKey: &lrpInstanceKey3, DesiredMetricTags: desiredMetricTags}
+
+			Expect(result.KeysWithMetricTagChanges).To(ConsistOf(&lrpKeyWithMetricTags1, &lrpKeyWithMetricTags2, &lrpKeyWithMetricTags3))
 		})
 	})
 })

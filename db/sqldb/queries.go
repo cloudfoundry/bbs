@@ -284,6 +284,22 @@ func (db *SQLDB) selectLRPsWithRoutes(ctx context.Context, logger lager.Logger, 
 	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_Ordinary)
 }
 
+func (db *SQLDB) selectLRPsWithMetricTags(ctx context.Context, logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+	query := fmt.Sprintf(`
+		SELECT %s
+			FROM desired_lrps
+			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
+			WHERE actual_lrps.state = ? AND actual_lrps.presence = ?
+		`,
+		strings.Join(
+			append(actualLRPIDColumns, actualLRPsTable+".metric_tags", desiredLRPsTable+".run_info"),
+			", ",
+		),
+	)
+
+	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_Ordinary)
+}
+
 func (db *SQLDB) CountDesiredInstances(ctx context.Context, logger lager.Logger) int {
 	query := `
 		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances

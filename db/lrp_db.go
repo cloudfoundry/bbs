@@ -14,6 +14,12 @@ type ActualLRPKeyWithInternalRoutes struct {
 	DesiredInternalRoutes internalroutes.InternalRoutes
 }
 
+type ActualLRPKeyWithMetricTags struct {
+	Key               *models.ActualLRPKey
+	InstanceKey       *models.ActualLRPInstanceKey
+	DesiredMetricTags map[string]*models.MetricTagValue
+}
+
 //counterfeiter:generate . LRPDB
 
 type ConvergenceResult struct {
@@ -26,6 +32,7 @@ type ConvergenceResult struct {
 	KeysToRetire                 []*models.ActualLRPKey
 	KeysWithMissingCells         []*models.ActualLRPKeyWithSchedulingInfo
 	KeysWithInternalRouteChanges []*ActualLRPKeyWithInternalRoutes
+	KeysWithMetricTagChanges     []*ActualLRPKeyWithMetricTags
 	MissingCellIds               []string
 	Events                       []models.Event
 	InstanceEvents               []models.Event
