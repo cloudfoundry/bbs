@@ -59,6 +59,26 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 	run_info MEDIUMTEXT NOT NULL
 );`,
 			}
+
+			// Postgres only supports TEXT. Ensure the migration succeeds on it anyway.
+			if flavor == "postgres" {
+				createStatements = []string{
+					`CREATE TABLE actual_lrps(
+	net_info TEXT NOT NULL
+);`,
+					`CREATE TABLE tasks(
+	result TEXT,
+	task_definition TEXT NOT NULL
+);`,
+
+					`CREATE TABLE desired_lrps(
+	annotation TEXT,
+	routes TEXT NOT NULL,
+	volume_placement TEXT NOT NULL,
+	run_info TEXT NOT NULL
+);`,
+				}
+			}
 			for _, st := range createStatements {
 				_, err := rawSQLDB.Exec(st)
 				Expect(err).NotTo(HaveOccurred())
@@ -78,8 +98,12 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 		})
 	})
 
+	// only test this case on mysql. postgres doesn't support longtext, so no need to validate the no-op schema application
 	Describe("Up from LONGTEXT", func() {
 		BeforeEach(func() {
+			if flavor != "mysql" {
+				Skip("LONGTEXT doesn't exist on postgres, skipping")
+			}
 			// Can't do this in the Describe BeforeEach
 			// as the test on line 37 will cause ginkgo to panic
 			migration.SetRawSQLDB(rawSQLDB)
@@ -87,6 +111,9 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 		})
 
 		BeforeEach(func() {
+			if flavor != "mysql" {
+				Skip("LONGTEXT doesn't exist on postgres, skipping")
+			}
 			createStatements := []string{
 				`CREATE TABLE actual_lrps(
 	net_info LONGTEXT NOT NULL
@@ -115,6 +142,9 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 		})
 
 		It("should change the size of all text columns ", func() {
+			if flavor != "mysql" {
+				Skip("LONGTEXT doesn't exist on postgres, skipping")
+			}
 			Expect(migration.Up(logger)).To(Succeed())
 			value := strings.Repeat("x", 16777215*2)
 			rows, err := rawSQLDB.Query("select run_info from desired_lrps;")
@@ -127,6 +157,9 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 		})
 
 		It("is idempotent", func() {
+			if flavor != "mysql" {
+				Skip("LONGTEXT doesn't exist on postgres, skipping")
+			}
 			testIdempotency(rawSQLDB, migration, logger)
 		})
 	})
