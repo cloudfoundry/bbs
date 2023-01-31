@@ -658,12 +658,12 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		decodedData, err := db.encoder.Decode(internalRoutesData)
 		if err != nil {
 			logger.Error("failed-decrypting-internal-routes", err)
-			return nil, err
+			return &actualLRP, models.ErrDeserialize
 		}
 		err = json.Unmarshal(decodedData, &internalRoutes)
 		if err != nil {
 			logger.Error("failed-parsing-internal-routes", err)
-			return nil, err
+			return &actualLRP, models.ErrDeserialize
 		}
 	}
 	actualLRP.ActualLrpInternalRoutes = internalRoutes
@@ -673,12 +673,12 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		decodedData, err := db.encoder.Decode(metricTagsData)
 		if err != nil {
 			logger.Error("failed-decrypting-metric-tags", err)
-			return nil, err
+			return &actualLRP, models.ErrDeserialize
 		}
 		err = json.Unmarshal(decodedData, &metricTags)
 		if err != nil {
 			logger.Error("failed-parsing-metric-tags", err)
-			return nil, err
+			return &actualLRP, models.ErrDeserialize
 		}
 	}
 	actualLRP.MetricTags = metricTags

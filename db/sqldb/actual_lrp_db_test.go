@@ -399,29 +399,37 @@ var _ = Describe("ActualLRPDB", func() {
 			Expect(actualLRPs).To(ConsistOf(allActualLRPs))
 		})
 
-		It("prunes all actual lrps containing invalid net_info data", func() {
-			actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
-			internalRoutes := model_helpers.NewActualLRPInternalRoutes()
-			metricTags := model_helpers.NewActualLRPMetricTags()
-			_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRPWithInvalidData.ActualLRPKey,
-				&actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo, internalRoutes, metricTags)
-			Expect(err).NotTo(HaveOccurred())
-			queryStr := `UPDATE actual_lrps SET net_info = 'garbage' WHERE process_guid = 'invalid'`
-			if test_helpers.UsePostgres() {
-				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
-			}
-			_, err = db.ExecContext(ctx, queryStr)
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the net_info cannot be decoded", func() {
+			var actualLRPWithInvalidData *models.ActualLRP
 
-			actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
-			Expect(err).NotTo(HaveOccurred())
+			BeforeEach(func() {
+				actualLRPWithInvalidData = model_helpers.NewValidActualLRP("invalid", 0)
+				internalRoutes := model_helpers.NewActualLRPInternalRoutes()
+				metricTags := model_helpers.NewActualLRPMetricTags()
+				_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRPWithInvalidData.ActualLRPKey,
+					&actualLRPWithInvalidData.ActualLRPInstanceKey, &actualLRPWithInvalidData.ActualLRPNetInfo, internalRoutes, metricTags)
+				Expect(err).NotTo(HaveOccurred())
+				queryStr := `UPDATE actual_lrps SET net_info = 'garbage' WHERE process_guid = 'invalid'`
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				_, err = db.ExecContext(ctx, queryStr)
+				Expect(err).NotTo(HaveOccurred())
+			})
 
-			Expect(actualLRPs).NotTo(ContainElement(actualLRPWithInvalidData))
+			It("prunes the related actual lrp", func() {
+				actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).NotTo(ContainElement(actualLRPWithInvalidData))
+			})
 		})
 
 		Context("when the internal routes cannot be decoded", func() {
+			var actualLRPWithInvalidData *models.ActualLRP
+
 			BeforeEach(func() {
-				actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
+				actualLRPWithInvalidData = model_helpers.NewValidActualLRP("invalid", 0)
 				internalRoutes := model_helpers.NewActualLRPInternalRoutes()
 				metricTags := model_helpers.NewActualLRPMetricTags()
 				_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRPWithInvalidData.ActualLRPKey,
@@ -434,15 +442,19 @@ var _ = Describe("ActualLRPDB", func() {
 				_, err = db.ExecContext(ctx, queryStr)
 				Expect(err).NotTo(HaveOccurred())
 			})
-			It("returns an error", func() {
-				_, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
-				Expect(err).To(HaveOccurred())
+			It("prunes the related actual lrp", func() {
+				actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).NotTo(ContainElement(actualLRPWithInvalidData))
 			})
 		})
 
 		Context("when the metric tags cannot be decoded", func() {
+			var actualLRPWithInvalidData *models.ActualLRP
+
 			BeforeEach(func() {
-				actualLRPWithInvalidData := model_helpers.NewValidActualLRP("invalid", 0)
+				actualLRPWithInvalidData = model_helpers.NewValidActualLRP("invalid", 0)
 				internalRoutes := model_helpers.NewActualLRPInternalRoutes()
 				metricTags := model_helpers.NewActualLRPMetricTags()
 				_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRPWithInvalidData.ActualLRPKey,
@@ -455,9 +467,11 @@ var _ = Describe("ActualLRPDB", func() {
 				_, err = db.ExecContext(ctx, queryStr)
 				Expect(err).NotTo(HaveOccurred())
 			})
-			It("returns an error", func() {
-				_, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
-				Expect(err).To(HaveOccurred())
+			It("prunes the related actual lrp", func() {
+				actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(actualLRPs).NotTo(ContainElement(actualLRPWithInvalidData))
 			})
 		})
 
