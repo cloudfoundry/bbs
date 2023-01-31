@@ -1463,7 +1463,7 @@ var _ = Describe("LRPConvergence", func() {
 		})
 	})
 
-	Context("when there are actual LRPs with metrics tags different from desired LRP metric tags", func() {
+	Context("when there are actual LRPs with non-nil metrics tags different from desired LRP metric tags", func() {
 		var (
 			processGuid, domain                               string
 			lrpKey1, lrpKey2, lrpKey3                         models.ActualLRPKey
@@ -1500,6 +1500,7 @@ var _ = Describe("LRPConvergence", func() {
 			sameMetricTags := map[string]string{
 				"app_name": "some-app-renamed",
 			}
+
 			_, _, err = sqlDB.StartActualLRP(ctx, logger, &lrpKey4, &lrpInstanceKey4, &actualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), sameMetricTags)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -1519,9 +1520,8 @@ var _ = Describe("LRPConvergence", func() {
 			}
 			lrpKeyWithMetricTags1 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey1, InstanceKey: &lrpInstanceKey1, DesiredMetricTags: desiredMetricTags}
 			lrpKeyWithMetricTags2 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey2, InstanceKey: &lrpInstanceKey2, DesiredMetricTags: desiredMetricTags}
-			lrpKeyWithMetricTags3 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey3, InstanceKey: &lrpInstanceKey3, DesiredMetricTags: desiredMetricTags}
 
-			Expect(result.KeysWithMetricTagChanges).To(ConsistOf(&lrpKeyWithMetricTags1, &lrpKeyWithMetricTags2, &lrpKeyWithMetricTags3))
+			Expect(result.KeysWithMetricTagChanges).To(ConsistOf(&lrpKeyWithMetricTags1, &lrpKeyWithMetricTags2))
 		})
 	})
 })

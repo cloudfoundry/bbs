@@ -307,7 +307,7 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 			}
 		}
 
-		if !reflect.DeepEqual(desiredMetricTags, actualMetricTags) {
+		if actualMetricTags != nil && !reflect.DeepEqual(desiredMetricTags, actualMetricTags) {
 			c.keysWithMetricTagChanges = append(c.keysWithMetricTagChanges, &db.ActualLRPKeyWithMetricTags{
 				Key:               actualLRPKey,
 				InstanceKey:       actualLRPInstanceKey,
