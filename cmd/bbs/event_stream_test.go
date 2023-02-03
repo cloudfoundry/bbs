@@ -82,6 +82,7 @@ var _ = Describe("Events API", func() {
 						Path:      "true",
 						LogSource: "logs",
 					}),
+					MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-value"}},
 				}
 			})
 
@@ -148,6 +149,7 @@ var _ = Describe("Events API", func() {
 						Path: "true",
 						User: "me",
 					}),
+					MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-value"}},
 				}
 			})
 
