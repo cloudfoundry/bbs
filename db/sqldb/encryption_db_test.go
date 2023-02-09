@@ -220,6 +220,7 @@ var _ = Describe("Encryption", func() {
 				processGuid    = "uniqueprocessguid"
 				netInfo        string
 				internalRoutes string
+				metricTags     string
 				cryptor        encryption.Cryptor
 				encoder        format.Encoder
 			)
@@ -247,15 +248,19 @@ var _ = Describe("Encryption", func() {
 					Expect(err).NotTo(HaveOccurred())
 					internalRoutes = string(internalRoutesEncoded)
 
+					metricTagsEncoded, err := encoder.Encode([]byte("{}"))
+					Expect(err).NotTo(HaveOccurred())
+					metricTags = string(metricTagsEncoded)
+
 					queryStr := `
 						INSERT INTO actual_lrps
-							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes)
-						VALUES (?, ?, ?, ?, ?, ?, ?)`
+							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes, metric_tags)
+						VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo, 0, "10", "yo", internalRoutes)
+						processGuid, "fake-domain", netInfo, 0, "10", "yo", internalRoutes, metricTags)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -263,13 +268,13 @@ var _ = Describe("Encryption", func() {
 					cryptor := makeCryptor("new")
 					encoder := format.NewEncoder(cryptor)
 
-					var dbNetInfo, dbInternalRoutes []byte
-					queryStr := "SELECT net_info, internal_routes FROM actual_lrps WHERE process_guid = ?"
+					var dbNetInfo, dbInternalRoutes, dbMetricTags []byte
+					queryStr := "SELECT net_info, internal_routes, metric_tags FROM actual_lrps WHERE process_guid = ?"
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					row := db.QueryRowContext(ctx, queryStr, processGuid)
-					err := row.Scan(&dbNetInfo, &dbInternalRoutes)
+					err := row.Scan(&dbNetInfo, &dbInternalRoutes, &dbMetricTags)
 					Expect(err).NotTo(HaveOccurred())
 					decryptedNetInfo, err := encoder.Decode(dbNetInfo)
 					Expect(err).NotTo(HaveOccurred())
@@ -277,6 +282,9 @@ var _ = Describe("Encryption", func() {
 					decryptedInternalRoutes, err := encoder.Decode(dbInternalRoutes)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(string(decryptedInternalRoutes)).To(Equal("{}"))
+					decryptedMetricTags, err := encoder.Decode(dbMetricTags)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(string(decryptedMetricTags)).To(Equal("{}"))
 				})
 			})
 
@@ -288,15 +296,19 @@ var _ = Describe("Encryption", func() {
 					Expect(err).NotTo(HaveOccurred())
 					internalRoutes = string(internalRoutesEncoded)
 
+					metricTagsEncoded, err := encoder.Encode([]byte("{}"))
+					Expect(err).NotTo(HaveOccurred())
+					metricTags = string(metricTagsEncoded)
+
 					queryStr := `
 						INSERT INTO actual_lrps
-							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes)
-						VALUES (?, ?, ?, ?, ?, ?, ?)`
+							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes, metric_tags)
+						VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo, 0, "10", "yo", internalRoutes)
+						processGuid, "fake-domain", netInfo, 0, "10", "yo", internalRoutes, metricTags)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -323,15 +335,19 @@ var _ = Describe("Encryption", func() {
 					Expect(err).NotTo(HaveOccurred())
 					internalRoutes = string(internalRoutesEncoded)
 
+					metricTagsEncoded, err := encoder.Encode([]byte("{}"))
+					Expect(err).NotTo(HaveOccurred())
+					metricTags = string(metricTagsEncoded)
+
 					queryStr := `
 						INSERT INTO actual_lrps
-							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes)
-						VALUES (?, ?, ?, ?, ?, ?, ?)`
+							(process_guid, domain, net_info, instance_index, modification_tag_epoch, state, internal_routes, metric_tags)
+						VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 					if test_helpers.UsePostgres() {
 						queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 					}
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo1, 0, "10", "yo", internalRoutes)
+						processGuid, "fake-domain", netInfo1, 0, "10", "yo", internalRoutes, metricTags)
 					Expect(err).NotTo(HaveOccurred())
 
 					info, err = encoder.Encode([]byte("actual value 2"))
@@ -339,7 +355,7 @@ var _ = Describe("Encryption", func() {
 					netInfo2 := string(info)
 
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo2, 1, "10", "yo", internalRoutes)
+						processGuid, "fake-domain", netInfo2, 1, "10", "yo", internalRoutes, metricTags)
 					Expect(err).NotTo(HaveOccurred())
 
 					info, err = encoder.Encode([]byte("actual value 3"))
@@ -347,7 +363,7 @@ var _ = Describe("Encryption", func() {
 					netInfo3 := string(info)
 
 					_, err = db.ExecContext(ctx, queryStr,
-						processGuid, "fake-domain", netInfo3, 2, "10", "yo", internalRoutes)
+						processGuid, "fake-domain", netInfo3, 2, "10", "yo", internalRoutes, metricTags)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -409,8 +425,8 @@ var _ = Describe("Encryption", func() {
 			encoder := format.NewEncoder(cryptor)
 
 			tablesWithRequiredKeys := map[string]map[string]interface{}{
-				"tasks": map[string]interface{}{"guid": "some-guid", "domain": "fake-domain"},
-				"desired_lrps": map[string]interface{}{
+				"tasks": {"guid": "some-guid", "domain": "fake-domain"},
+				"desired_lrps": {
 					"process_guid":           "some-guid",
 					"domain":                 "fake-domain",
 					"log_guid":               "some-log-guid",
@@ -420,7 +436,7 @@ var _ = Describe("Encryption", func() {
 					"rootfs":                 "some-root-fs",
 					"modification_tag_epoch": "10",
 				},
-				"actual_lrps": map[string]interface{}{
+				"actual_lrps": {
 					"process_guid":           "some-guid",
 					"instance_index":         0,
 					"domain":                 "fake-domain",
@@ -430,9 +446,9 @@ var _ = Describe("Encryption", func() {
 			}
 			dataTypesToEncrypt := map[string]bool{"text": true, "mediumtext": true, "longtext": true}
 			whiteListedFields := map[string]map[string]bool{
-				"tasks":        map[string]bool{"result": true},
-				"desired_lrps": map[string]bool{"annotation": true, "placement_tags": true},
-				"actual_lrps":  map[string]bool{},
+				"tasks":        {"result": true},
+				"desired_lrps": {"annotation": true, "placement_tags": true},
+				"actual_lrps":  {},
 			}
 			var columnName, dataType string
 			dataToStore, err := encoder.Encode([]byte("actual value"))

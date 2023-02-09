@@ -70,7 +70,7 @@ and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.
 ### Golang Client API
 
 ```go
-StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) error
+StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) error
 ```
 
 #### Inputs
@@ -81,6 +81,7 @@ StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *model
   * `CellID string`: ID of the Cell starting the ActualLRP.
 * `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
 * `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
+* `metricTags map[string]string`: containing updated metric tags for the ActualLRP.
 
 #### Output
 
@@ -108,6 +109,7 @@ err := client.StartActualLRP(logger, &models.ActualLRPKey{
 	[]*models.ActualLRPInternalRoute{
 	    {Hostname: "some-internal-route.apps.internal"},
 	},
+	map[string]string{"app_name": "some-app-name"},
 )
 if err != nil {
     log.Printf("failed to start actual lrp: " + err.Error())
@@ -397,7 +399,7 @@ and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/
 ### Golang Client API
 
 ```go
-EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute) (bool, error)
+EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) (bool, error)
 ```
 
 #### Inputs
@@ -406,6 +408,7 @@ EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instance
 * `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the running ActualLRP to evacuate.
 * `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
 * `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
+* `metricTags map[string]string`: containing updated metric tags for the ActualLRP.
 
 #### Output
 
@@ -433,6 +436,7 @@ keepContainer, err := client.EvacuateRunningActualLRP(logger, &models.ActualLRPK
 	[]*models.ActualLRPInternalRoute{
 	    {Hostname: "some-internal-route.apps.internal"},
 	},
+	map[string]string{"app_name": "some-app-name"},
 )
 if err != nil {
     log.Printf("failed to evacuate running actual lrp: " + err.Error())

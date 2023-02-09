@@ -82,6 +82,7 @@ var _ = Describe("Events API", func() {
 						Path:      "true",
 						LogSource: "logs",
 					}),
+					MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-value"}},
 				}
 			})
 
@@ -148,6 +149,7 @@ var _ = Describe("Events API", func() {
 						Path: "true",
 						User: "me",
 					}),
+					MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-value"}},
 				}
 			})
 
@@ -198,7 +200,7 @@ var _ = Describe("Events API", func() {
 
 					By("evacuating the ActualLRP")
 					initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
-					_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
+					_, err = client.EvacuateRunningActualLRP(logger, &key, &instanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 					Expect(err).NotTo(HaveOccurred())
 					auctioneerRequests := auctioneerServer.ReceivedRequests()
 					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
@@ -226,7 +228,7 @@ var _ = Describe("Events API", func() {
 					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 					By("starting and then evacuating the ActualLRP on another cell")
-					err = client.StartActualLRP(logger, &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
+					err = client.StartActualLRP(logger, &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 
 					Expect(err).NotTo(HaveOccurred())
 
@@ -237,7 +239,7 @@ var _ = Describe("Events API", func() {
 					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 					initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
-					_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{})
+					_, err = client.EvacuateRunningActualLRP(logger, &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 					Expect(err).NotTo(HaveOccurred())
 					auctioneerRequests = auctioneerServer.ReceivedRequests()
 					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))

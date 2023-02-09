@@ -69,6 +69,7 @@ var (
 		actualLRPsTable + ".since",
 		actualLRPsTable + ".net_info",
 		actualLRPsTable + ".internal_routes",
+		actualLRPsTable + ".metric_tags",
 		actualLRPsTable + ".modification_tag_epoch",
 		actualLRPsTable + ".modification_tag_index",
 		actualLRPsTable + ".crash_count",
@@ -276,6 +277,22 @@ func (db *SQLDB) selectLRPsWithRoutes(ctx context.Context, logger lager.Logger, 
 		`,
 		strings.Join(
 			append(actualLRPIDColumns, actualLRPsTable+".internal_routes", desiredLRPsTable+".routes"),
+			", ",
+		),
+	)
+
+	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_Ordinary)
+}
+
+func (db *SQLDB) selectLRPsWithMetricTags(ctx context.Context, logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
+	query := fmt.Sprintf(`
+		SELECT %s
+			FROM desired_lrps
+			JOIN actual_lrps ON desired_lrps.process_guid = actual_lrps.process_guid
+			WHERE actual_lrps.state = ? AND actual_lrps.presence = ?
+		`,
+		strings.Join(
+			append(actualLRPIDColumns, actualLRPsTable+".metric_tags", desiredLRPsTable+".run_info"),
 			", ",
 		),
 	)

@@ -14,7 +14,7 @@ type EvacuationController interface {
 	RemoveEvacuatingActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	EvacuateClaimedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateCrashedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
-	EvacuateRunningActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute) (bool, error)
+	EvacuateRunningActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)
 	EvacuateStoppedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 }
 
@@ -122,7 +122,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.ActualLrpInternalRoutes)
+	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.ActualLrpInternalRoutes, request.MetricTags)
 	response.Error = models.ConvertError(err)
 	response.KeepContainer = keepContainer
 }
@@ -144,7 +144,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP_r0(logger lager.Logger, w h
 		return
 	}
 
-	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, []*models.ActualLRPInternalRoute{})
+	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 	response.Error = models.ConvertError(err)
 	response.KeepContainer = keepContainer
 }

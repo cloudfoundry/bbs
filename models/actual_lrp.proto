@@ -67,4 +67,5 @@ message ActualLRP {
   ModificationTag modification_tag = 9 [(gogoproto.nullable) = false,(gogoproto.jsontag) = "modification_tag"];
   Presence presence = 10 [(gogoproto.jsontag) = "presence"];
   repeated ActualLRPInternalRoute actual_lrp_internal_routes = 11;
+  map<string, string> metric_tags = 12;
 }

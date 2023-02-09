@@ -315,6 +315,38 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 		})
 	}
 
+	for _, lrpKey := range convergenceResult.KeysWithMetricTagChanges {
+		dereferencedLRPKey := *lrpKey
+		works = append(works, func() {
+			cellPresence, err := h.serviceClient.CellById(logger, dereferencedLRPKey.InstanceKey.CellId)
+			if err != nil {
+				logger.Error("failed-fetching-cell-presence", err)
+				return
+			}
+
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			if err != nil {
+				logger.Error("create-rep-client-failed", err)
+				return
+			}
+
+			metricTags, err := models.ConvertMetricTags(dereferencedLRPKey.DesiredMetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
+				models.MetricTagDynamicValueIndex:        dereferencedLRPKey.Key.Index,
+				models.MetricTagDynamicValueInstanceGuid: dereferencedLRPKey.InstanceKey.InstanceGuid,
+			})
+			if err != nil {
+				logger.Error("convert-metric-tags-failed", err)
+				return
+			}
+
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, nil, metricTags)
+			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
+			if err != nil {
+				logger.Error("updating-lrp-instance", err)
+			}
+		})
+	}
+
 	var throttler *workpool.Throttler
 	throttler, err = workpool.NewThrottler(h.convergenceWorkersSize, works)
 	if err != nil {

@@ -698,6 +698,10 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
+	if runInfo.MetricTags == nil {
+		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
+	}
+
 	err = validateMetricTags(runInfo.MetricTags, runInfo.GetMetricsGuid())
 	if err != nil {
 		validationError = validationError.Append(ErrInvalidField{"metric_tags"})

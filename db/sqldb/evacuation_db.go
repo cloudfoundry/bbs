@@ -16,6 +16,7 @@ func (db *SQLDB) EvacuateActualLRP(
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	internalRoutes []*models.ActualLRPInternalRoute,
+	metricTags map[string]string,
 ) (*models.ActualLRP, error) {
 	logger = logger.Session("db-evacuate-actual-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo})
 	logger.Debug("starting")
@@ -31,7 +32,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
-			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, internalRoutes, tx)
+			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, internalRoutes, metricTags, tx)
 			return err
 		}
 
@@ -54,6 +55,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.Since = now
 		actualLRP.ActualLRPNetInfo = *netInfo
 		actualLRP.ActualLrpInternalRoutes = internalRoutes
+		actualLRP.MetricTags = metricTags
 		actualLRP.Presence = models.ActualLRP_Evacuating
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
@@ -68,6 +70,12 @@ func (db *SQLDB) EvacuateActualLRP(
 			return err
 		}
 
+		metricTagsData, err := db.encodeMetricTagsData(logger, metricTags)
+		if err != nil {
+			logger.Error("failed-to-serialize-metric-tags", err)
+			return err
+		}
+
 		_, err = db.update(ctx, logger, tx, "actual_lrps",
 			helpers.SQLAttributes{
 				"domain":                 actualLRP.Domain,
@@ -75,6 +83,7 @@ func (db *SQLDB) EvacuateActualLRP(
 				"cell_id":                actualLRP.CellId,
 				"net_info":               netInfoData,
 				"internal_routes":        internalRoutesData,
+				"metric_tags":            metricTagsData,
 				"state":                  actualLRP.State,
 				"since":                  actualLRP.Since,
 				"modification_tag_index": actualLRP.ModificationTag.Index,
@@ -138,6 +147,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 	instanceKey *models.ActualLRPInstanceKey,
 	netInfo *models.ActualLRPNetInfo,
 	internalRoutes []*models.ActualLRPInternalRoute,
+	metricTags map[string]string,
 	tx helpers.Tx,
 ) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
@@ -152,6 +162,12 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		return nil, err
 	}
 
+	metricTagsData, err := db.encodeMetricTagsData(logger, metricTags)
+	if err != nil {
+		logger.Error("failed-to-serialize-metric-tags", err)
+		return nil, err
+	}
+
 	now := db.clock.Now()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -163,6 +179,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		ActualLRPInstanceKey:    *instanceKey,
 		ActualLRPNetInfo:        *netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
+		MetricTags:              metricTags,
 		State:                   models.ActualLRPStateRunning,
 		Since:                   now.UnixNano(),
 		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
@@ -179,6 +196,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		"state":                  actualLRP.State,
 		"net_info":               netInfoData,
 		"internal_routes":        internalRoutesData,
+		"metric_tags":            metricTagsData,
 		"since":                  actualLRP.Since,
 		"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 		"modification_tag_index": actualLRP.ModificationTag.Index,

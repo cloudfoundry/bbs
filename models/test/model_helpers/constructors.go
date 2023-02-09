@@ -14,6 +14,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 		ActualLRPInstanceKey:    models.NewActualLRPInstanceKey("some-guid", "some-cell"),
 		ActualLRPNetInfo:        models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444)),
 		ActualLrpInternalRoutes: NewActualLRPInternalRoutes(),
+		MetricTags:              NewActualLRPMetricTags(),
 		CrashCount:              33,
 		CrashReason:             "badness",
 		State:                   models.ActualLRPStateRunning,
@@ -32,6 +33,12 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 func NewActualLRPInternalRoutes() []*models.ActualLRPInternalRoute {
 	return []*models.ActualLRPInternalRoute{
 		{Hostname: "some-internal-route.apps.internal"},
+	}
+}
+
+func NewActualLRPMetricTags() map[string]string {
+	return map[string]string{
+		"app_name": "some-app",
 	}
 }
 
@@ -122,7 +129,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
 		},
 		MetricTags: map[string]*models.MetricTagValue{
-			"source_id": &models.MetricTagValue{Static: "some-metrics-guid"},
+			"source_id": {Static: "some-metrics-guid"},
 		},
 	}
 	err := desiredLRP.Validate()

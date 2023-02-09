@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -41,6 +42,7 @@ func (sqldb *SQLDB) ConvergeLRPs(ctx context.Context, logger lager.Logger, cellS
 	converge.suspectClaimedActualLRPs(ctx, logger)
 	converge.crashedActualLRPs(ctx, logger, now)
 	converge.lrpsWithInternalRouteChanges(ctx, logger)
+	converge.lrpsWithMetricTagChanges(ctx, logger)
 
 	return db.ConvergenceResult{
 		MissingLRPKeys:               converge.missingLRPKeys,
@@ -55,6 +57,7 @@ func (sqldb *SQLDB) ConvergeLRPs(ctx context.Context, logger lager.Logger, cellS
 		SuspectRunningKeys:           converge.suspectRunningKeys,
 		SuspectClaimedKeys:           converge.suspectClaimedKeys,
 		KeysWithInternalRouteChanges: converge.keysWithInternalRouteChanges,
+		KeysWithMetricTagChanges:     converge.keysWithMetricTagChanges,
 	}
 }
 
@@ -77,6 +80,7 @@ type convergence struct {
 	unstartedLRPKeys []*models.ActualLRPKeyWithSchedulingInfo
 
 	keysWithInternalRouteChanges []*db.ActualLRPKeyWithInternalRoutes
+	keysWithMetricTagChanges     []*db.ActualLRPKeyWithMetricTags
 }
 
 func newConvergence(db *SQLDB) *convergence {
@@ -195,12 +199,12 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 		var desiredRoutes models.Routes
 		decodedDesiredData, err := c.encoder.Decode(desiredRouteData)
 		if err != nil {
-			logger.Error("failed-decrypting-actual-routes", err)
+			logger.Error("failed-decrypting-desired-routes", err)
 			continue
 		}
 		err = json.Unmarshal(decodedDesiredData, &desiredRoutes)
 		if err != nil {
-			logger.Error("failed-parsing-actual-routes", err)
+			logger.Error("failed-parsing-desired-routes", err)
 			continue
 		}
 
@@ -208,12 +212,12 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 		if len(actualRouteData) > 0 {
 			decodedActualData, err := c.encoder.Decode(actualRouteData)
 			if err != nil {
-				logger.Error("failed-decrypting-desired-routes", err)
+				logger.Error("failed-decrypting-actual-routes", err)
 				continue
 			}
 			err = json.Unmarshal(decodedActualData, &actualInternalRoutes)
 			if err != nil {
-				logger.Error("failed-parsing-desired-routes", err)
+				logger.Error("failed-parsing-actual-routes", err)
 				continue
 			}
 		}
@@ -229,6 +233,85 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 				Key:                   actualLRPKey,
 				InstanceKey:           actualLRPInstanceKey,
 				DesiredInternalRoutes: desiredInternalRoutes,
+			})
+		}
+	}
+
+	if rows.Err() != nil {
+		logger.Error("failed-getting-next-row", rows.Err())
+	}
+
+	return
+}
+
+func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager.Logger) {
+	logger = logger.Session("lrps-with-metric-tag-changes")
+	rows, err := c.selectLRPsWithMetricTags(ctx, logger, c.db)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return
+	}
+
+	for rows.Next() {
+		actualLRPKey := &models.ActualLRPKey{}
+		actualLRPInstanceKey := &models.ActualLRPInstanceKey{}
+		var actualMetricTagData []byte
+		var runInfoData []byte
+
+		values := []interface{}{
+			&actualLRPKey.ProcessGuid,
+			&actualLRPKey.Index,
+			&actualLRPKey.Domain,
+			&actualLRPInstanceKey.InstanceGuid,
+			&actualLRPInstanceKey.CellId,
+			&actualMetricTagData,
+			&runInfoData,
+		}
+
+		err := rows.Scan(values...)
+		if err == sql.ErrNoRows {
+			continue
+		}
+
+		if err != nil {
+			logger.Error("failed-scanning", err)
+			continue
+		}
+
+		var runInfo models.DesiredLRPRunInfo
+		err = c.SQLDB.deserializeModel(logger, runInfoData, &runInfo)
+		if err != nil {
+			logger.Error("failed-deserializing-desired-metric-tags", err)
+			continue
+		}
+		desiredMetricTags, err := models.ConvertMetricTags(runInfo.MetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
+			models.MetricTagDynamicValueIndex:        actualLRPKey.Index,
+			models.MetricTagDynamicValueInstanceGuid: actualLRPInstanceKey.InstanceGuid,
+		})
+		if err != nil {
+			logger.Error("converting-metric-tags-failed", err)
+			continue
+		}
+
+		var actualMetricTags map[string]string
+		if len(actualMetricTagData) > 0 {
+			decodedActualData, err := c.encoder.Decode(actualMetricTagData)
+			if err != nil {
+				logger.Error("failed-decrypting-actual-metric-tags", err)
+				continue
+			}
+			err = json.Unmarshal(decodedActualData, &actualMetricTags)
+			if err != nil {
+				logger.Error("failed-parsing-actual-metric-tags", err)
+				continue
+			}
+		}
+
+		if actualMetricTags != nil && !reflect.DeepEqual(desiredMetricTags, actualMetricTags) {
+			c.keysWithMetricTagChanges = append(c.keysWithMetricTagChanges, &db.ActualLRPKeyWithMetricTags{
+				Key:               actualLRPKey,
+				InstanceKey:       actualLRPInstanceKey,
+				DesiredMetricTags: runInfo.GetMetricTags(),
 			})
 		}
 	}
