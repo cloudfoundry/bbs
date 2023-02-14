@@ -31,7 +31,7 @@ func (e *AddMetricTagsToActualLrp) String() string {
 }
 
 func (e *AddMetricTagsToActualLrp) Version() int64 {
-	return 1673396667
+	return 1676360874
 }
 
 func (e *AddMetricTagsToActualLrp) SetCryptor(cryptor encryption.Cryptor) {

@@ -26,7 +26,7 @@ var _ = Describe("AddMetricTagsToActualLrp", func() {
 
 	Describe("Version", func() {
 		It("returns the timestamp from which it was created", func() {
-			Expect(migration.Version()).To(BeEquivalentTo(1673396667))
+			Expect(migration.Version()).To(BeEquivalentTo(1676360874))
 		})
 	})
 
