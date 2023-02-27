@@ -11,6 +11,7 @@
 |                | placement_error        | character varying(1024) | No        | Most recent placement error that the Auctioneer encountered                                                                    |
 |                | since                  | bigint                  | No        | Time when the ActualLRP state was last updated                                                                                 |
 |                | net_info               | text                    | YES       | Information about the host ip, the internal interface ip address of the container as well as (host -> container) port mappings |
+|                | metric_tags            | text                    | YES       | Metadata used for tagging logs and metrics                                                                                     |
 |                | modification_tag_epoch | character varying(255)  | No        | GUID generated when the record is created                                                                                      |
 |                | modification_tag_index | integer                 | No        | Integer incremented everytime there is an update to the record                                                                 |
 |                | crash_count            | integer                 | No        | Number of crashes                                                                                                              |

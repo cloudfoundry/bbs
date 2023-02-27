@@ -114,7 +114,7 @@ In all cases, the consumer is given an array of `ActualLRPResponse`:
 [
     {
         "process_guid": "some-process-guid",
-        "instance_guid": "some-instnace-guid",
+        "instance_guid": "some-instance-guid",
         "cell_id": "some-cell-id",
         "domain": "some-domain",
         "index": 15,
@@ -128,7 +128,21 @@ In all cases, the consumer is given an array of `ActualLRPResponse`:
 
         "placement_error": "insufficient resources",
 
-        "since": 1234567
+        "since": 1234567,
+
+        "metric_tags": {
+            "app_id": "some-process-guid",
+            "app_name": "some-app-name",
+            "instance_id": "some-instance-id",
+            "organization_id": "some-organization-guid",
+            "organization_name": "some-organization-name",
+            "process_id": "some-process-guid",
+            "process_instance_id": "some-instance-guid",
+            "process_type": "web",
+            "source_id": "some-process-guid",
+            "space_id": "some-space-guid",
+            "space_name": "some-space-name"
+        }
     },
     ...
 ]
@@ -177,6 +191,10 @@ When an ActualLRP cannot be placed because there are no resources to place it, t
 #### `since`
 
 The last modified time of the ActualLRP represented as the number of nanoseconds elapsed since January 1, 1970 UTC.
+
+#### `metric_tags`
+
+A map of metadata values that are attached to emitted logs and metrics for the container.
 
 #### Networking
 
