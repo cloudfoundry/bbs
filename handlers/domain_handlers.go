@@ -28,7 +28,7 @@ func NewDomainHandler(db db.DomainDB, exitChan chan<- struct{}) *DomainHandler {
 
 func (h *DomainHandler) Domains(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("domains")
+	logger = logger.Session("domains").WithTraceInfo(req)
 	response := &models.DomainsResponse{}
 	response.Domains, err = h.db.FreshDomains(req.Context(), logger)
 	response.Error = models.ConvertError(err)
@@ -38,7 +38,7 @@ func (h *DomainHandler) Domains(logger lager.Logger, w http.ResponseWriter, req 
 
 func (h *DomainHandler) Upsert(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("upsert")
+	logger = logger.Session("upsert").WithTraceInfo(req)
 
 	request := &models.UpsertDomainRequest{}
 	response := &models.UpsertDomainResponse{}

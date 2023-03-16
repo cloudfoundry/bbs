@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -21,12 +22,14 @@ var _ = Describe("Domain Handlers", func() {
 		handler          *handlers.DomainHandler
 		requestBody      interface{}
 		exitCh           chan struct{}
+		requestIdHeader  string
 	)
 
 	BeforeEach(func() {
 		fakeDomainDB = new(dbfakes.FakeDomainDB)
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
+		requestIdHeader = "25f23d6a-f46d-460e-7135-7ddc0759a198"
 		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewDomainHandler(fakeDomainDB, exitCh)
 	})
@@ -49,6 +52,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.Upsert(logger, responseRecorder, request)
 		})
 
@@ -118,6 +122,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(`"trace-id":"25f23d6af46d460e71357ddc0759a198"`))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -148,7 +153,9 @@ var _ = Describe("Domain Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.Domains(logger, responseRecorder, newTestRequest(""))
+			request := newTestRequest("")
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.Domains(logger, responseRecorder, request)
 		})
 
 		Context("when reading domains from DB succeeds", func() {
@@ -196,6 +203,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(`"trace-id":"25f23d6af46d460e71357ddc0759a198"`))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
