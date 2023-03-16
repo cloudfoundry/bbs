@@ -9,7 +9,7 @@ import (
 )
 
 func (h *LRPGroupEventsHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
-	logger = logger.Session("subscribe-r0")
+	logger = logger.Session("subscribe-r0").WithTraceInfo(req)
 
 	request := &models.EventsByCellId{}
 	err := parseRequest(logger, req, request)
@@ -84,7 +84,7 @@ func (h *LRPGroupEventsHandler) Subscribe_r1(logger lager.Logger, w http.Respons
 }
 
 func (h *LRPInstanceEventHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
-	logger = logger.Session("subscribe-r0")
+	logger = logger.Session("subscribe-r0").WithTraceInfo(req)
 
 	request := &models.EventsByCellId{}
 	err := parseRequest(logger, req, request)
@@ -157,7 +157,7 @@ func (h *LRPInstanceEventHandler) Subscribe_r1(logger lager.Logger, w http.Respo
 }
 
 func (h *TaskEventHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
-	logger = logger.Session("tasks-subscribe-r0")
+	logger = logger.Session("tasks-subscribe-r0").WithTraceInfo(req)
 	logger.Info("subscribed-to-tasks-event-stream")
 
 	taskSource, err := h.taskHub.Subscribe()
