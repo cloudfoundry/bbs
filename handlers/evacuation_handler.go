@@ -41,7 +41,7 @@ type MessageValidator interface {
 
 func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("remove-evacuating-actual-lrp")
+	logger = logger.Session("remove-evacuating-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -62,7 +62,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-claimed-actual-lrp")
+	logger = logger.Session("evacuate-claimed-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -85,7 +85,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 }
 
 func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-crashed-actual-lrp")
+	logger = logger.Session("evacuate-crashed-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -146,7 +146,7 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP_r0(logger lager.Logger, w h
 }
 
 func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-stopped-actual-lrp")
+	logger = logger.Session("evacuate-stopped-actual-lrp").WithTraceInfo(req)
 
 	request := &models.EvacuateStoppedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
