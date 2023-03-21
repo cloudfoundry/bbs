@@ -2,13 +2,16 @@ package handlers_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo"
@@ -23,6 +26,9 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		handler          *handlers.ActualLRPLifecycleHandler
 		fakeController   *fake_controllers.FakeActualLRPLifecycleController
 		exitCh           chan struct{}
+
+		requestIdHeader   string
+		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
@@ -35,6 +41,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 
 		exitCh = make(chan struct{}, 1)
+		requestIdHeader = "b67c32c0-1666-49dc-97c1-274332e6b706"
+		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 		fakeController = &fake_controllers.FakeActualLRPLifecycleController{}
 		handler = handlers.NewActualLRPLifecycleHandler(fakeController, exitCh)
 	})
@@ -62,6 +70,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.ClaimActualLRP(logger, responseRecorder, request)
 		})
 
@@ -95,6 +104,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -153,6 +163,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.StartActualLRP(logger, responseRecorder, request)
 		})
 
@@ -188,6 +199,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -208,6 +220,100 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 	})
 
+	Describe("StartActualLRP_r0", func() {
+		var (
+			processGuid = "process-guid"
+			index       = int32(1)
+
+			key            models.ActualLRPKey
+			instanceKey    models.ActualLRPInstanceKey
+			netInfo        models.ActualLRPNetInfo
+			internalRoutes []*models.ActualLRPInternalRoute
+			metricTags     map[string]string
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			key = models.NewActualLRPKey(
+				processGuid,
+				index,
+				"domain-0",
+			)
+			instanceKey = models.NewActualLRPInstanceKey(
+				"instance-guid-0",
+				"cell-id-0",
+			)
+			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
+			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
+			metricTags = map[string]string{"app_name": "some-app-name"}
+			requestBody = &models.StartActualLRPRequest{
+				ActualLrpKey:            &key,
+				ActualLrpInstanceKey:    &instanceKey,
+				ActualLrpNetInfo:        &netInfo,
+				ActualLrpInternalRoutes: internalRoutes,
+				MetricTags:              metricTags,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.StartActualLRP_r0(logger, responseRecorder, request)
+		})
+
+		It("calls the controller", func() {
+			Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
+			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags := fakeController.StartActualLRPArgsForCall(0)
+			Expect(actualKey).To(Equal(&key))
+			Expect(actualInstanceKey).To(Equal(&instanceKey))
+			Expect(actualNetInfo).To(Equal(&netInfo))
+			Expect(len(actualInternalRoutes)).To(Equal(0))
+			Expect(actualMetricTags).To(BeNil())
+		})
+
+		Context("when starting the actual lrp in the DB succeeds", func() {
+			BeforeEach(func() {
+				fakeController.StartActualLRPReturns(nil)
+			})
+
+			It("responds with no error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+			})
+		})
+
+		Context("when an unrecoverable error is returned", func() {
+			BeforeEach(func() {
+				fakeController.StartActualLRPReturns(models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when a recoverable error is returned", func() {
+			BeforeEach(func() {
+				fakeController.StartActualLRPReturns(models.ErrUnknownError)
+			})
+
+			It("responds with an error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.ActualLRPLifecycleResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
 	Describe("CrashActualLRP", func() {
 		var (
 			processGuid  = "process-guid"
@@ -239,6 +345,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.CrashActualLRP(logger, responseRecorder, request)
 		})
 
@@ -272,6 +379,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -318,6 +426,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RetireActualLRP(logger, responseRecorder, request)
 
 			response = &models.ActualLRPLifecycleResponse{}
@@ -338,6 +447,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -380,6 +490,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.FailActualLRP(logger, responseRecorder, request)
 		})
 
@@ -413,6 +524,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -458,6 +570,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RemoveActualLRP(logger, responseRecorder, request)
 		})
 
@@ -491,6 +604,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
