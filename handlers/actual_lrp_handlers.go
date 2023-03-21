@@ -22,7 +22,7 @@ func NewActualLRPHandler(db db.ActualLRPDB, exitChan chan<- struct{}) *ActualLRP
 
 func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("actual-lrps")
+	logger = logger.Session("actual-lrps").WithTraceInfo(req)
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -49,7 +49,7 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 // DEPRECATED
 func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("actual-lrp-groups")
+	logger = logger.Session("actual-lrp-groups").WithTraceInfo(req)
 
 	request := &models.ActualLRPGroupsRequest{}
 	response := &models.ActualLRPGroupsResponse{}
@@ -74,7 +74,7 @@ func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseW
 // DEPRECATED
 func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("actual-lrp-groups-by-process-guid")
+	logger = logger.Session("actual-lrp-groups-by-process-guid").WithTraceInfo(req)
 
 	request := &models.ActualLRPGroupsByProcessGuidRequest{}
 	response := &models.ActualLRPGroupsResponse{}
@@ -98,7 +98,7 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w h
 // DEPRECATED
 func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("actual-lrp-group-by-process-guid-and-index")
+	logger = logger.Session("actual-lrp-group-by-process-guid-and-index").WithTraceInfo(req)
 
 	request := &models.ActualLRPGroupByProcessGuidAndIndexRequest{}
 	response := &models.ActualLRPGroupResponse{}
