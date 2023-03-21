@@ -1,8 +1,10 @@
 package handlers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/handlers"
@@ -22,14 +24,17 @@ var _ = Describe("Domain Handlers", func() {
 		handler          *handlers.DomainHandler
 		requestBody      interface{}
 		exitCh           chan struct{}
-		requestIdHeader  string
+
+		requestIdHeader   string
+		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
 		fakeDomainDB = new(dbfakes.FakeDomainDB)
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
-		requestIdHeader = "25f23d6a-f46d-460e-7135-7ddc0759a198"
+		requestIdHeader = "93f2374a-c0ad-455a-98bc-aafd4e4a1dc4"
+		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewDomainHandler(fakeDomainDB, exitCh)
 	})
@@ -122,7 +127,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
-				Eventually(logger).Should(gbytes.Say(`"trace-id":"25f23d6af46d460e71357ddc0759a198"`))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -203,7 +208,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
-				Eventually(logger).Should(gbytes.Say(`"trace-id":"25f23d6af46d460e71357ddc0759a198"`))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
