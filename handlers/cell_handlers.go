@@ -22,7 +22,7 @@ func NewCellHandler(serviceClient serviceclient.ServiceClient, exitChan chan<- s
 
 func (h *CellHandler) Cells(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("cells")
+	logger = logger.Session("cells").WithTraceInfo(req)
 	response := &models.CellsResponse{}
 	cellSet, err := h.serviceClient.Cells(logger)
 	cells := []*models.CellPresence{}
