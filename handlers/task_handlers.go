@@ -43,7 +43,7 @@ func NewTaskHandler(
 
 func (h *TaskHandler) commonTasks(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("tasks")
+	logger = logger.Session("tasks").WithTraceInfo(req)
 
 	request := &models.TasksRequest{}
 	response := &models.TasksResponse{}
@@ -78,7 +78,7 @@ func (h *TaskHandler) Tasks(logger lager.Logger, w http.ResponseWriter, req *htt
 
 func (h *TaskHandler) commonTaskByGuid(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("task-by-guid")
+	logger = logger.Session("task-by-guid").WithTraceInfo(req)
 
 	request := &models.TaskByGuidRequest{}
 	response := &models.TaskResponse{}
@@ -113,7 +113,7 @@ func (h *TaskHandler) TaskByGuid(logger lager.Logger, w http.ResponseWriter, req
 
 func (h *TaskHandler) DesireTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("desire-task")
+	logger = logger.Session("desire-task").WithTraceInfo(req)
 
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -134,7 +134,7 @@ func (h *TaskHandler) DesireTask(logger lager.Logger, w http.ResponseWriter, req
 
 func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("start-task")
+	logger = logger.Session("start-task").WithTraceInfo(req)
 
 	request := &models.StartTaskRequest{}
 	response := &models.StartTaskResponse{}
@@ -154,7 +154,7 @@ func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req 
 }
 
 func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("cancel-task")
+	logger = logger.Session("cancel-task").WithTraceInfo(req)
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -175,7 +175,7 @@ func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req
 
 func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("fail-task")
+	logger = logger.Session("fail-task").WithTraceInfo(req)
 
 	request := &models.FailTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -196,7 +196,7 @@ func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *
 
 func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("reject-task")
+	logger = logger.Session("reject-task").WithTraceInfo(req)
 
 	request := &models.RejectTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -217,7 +217,7 @@ func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req
 
 func (h *TaskHandler) CompleteTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("complete-task")
+	logger = logger.Session("complete-task").WithTraceInfo(req)
 
 	request := &models.CompleteTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -238,7 +238,7 @@ func (h *TaskHandler) CompleteTask(logger lager.Logger, w http.ResponseWriter, r
 
 func (h *TaskHandler) ResolvingTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("resolving-task")
+	logger = logger.Session("resolving-task").WithTraceInfo(req)
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
@@ -259,7 +259,7 @@ func (h *TaskHandler) ResolvingTask(logger lager.Logger, w http.ResponseWriter, 
 
 func (h *TaskHandler) DeleteTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("delete-task")
+	logger = logger.Session("delete-task").WithTraceInfo(req)
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}

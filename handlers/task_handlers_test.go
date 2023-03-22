@@ -2,8 +2,10 @@ package handlers_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/handlers"
@@ -11,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,13 +26,14 @@ var _ = Describe("Task Handlers", func() {
 		controller *fake_controllers.FakeTaskController
 
 		responseRecorder *httptest.ResponseRecorder
-
-		handler *handlers.TaskHandler
-		exitCh  chan struct{}
+		handler          *handlers.TaskHandler
+		exitCh           chan struct{}
 
 		requestBody interface{}
+		request     *http.Request
 
-		request *http.Request
+		requestIdHeader   string
+		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
@@ -38,6 +42,9 @@ var _ = Describe("Task Handlers", func() {
 		exitCh = make(chan struct{}, 1)
 		controller = &fake_controllers.FakeTaskController{}
 		handler = handlers.NewTaskHandler(controller, exitCh)
+
+		requestIdHeader = "e52a3684-8d05-4905-bfeb-f1d59d92eb1d"
+		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 	})
 
 	Describe("Tasks_r2", func() {
@@ -65,6 +72,7 @@ var _ = Describe("Task Handlers", func() {
 				CellId: cellId,
 			}
 			request = newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.Tasks_r2(logger, responseRecorder, request)
 		})
 
@@ -156,6 +164,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -196,6 +205,7 @@ var _ = Describe("Task Handlers", func() {
 				CellId: cellId,
 			}
 			request = newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.Tasks(logger, responseRecorder, request)
 		})
 
@@ -260,6 +270,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -291,6 +302,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.TaskByGuid_r2(logger, responseRecorder, request)
 		})
 
@@ -374,6 +386,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -405,6 +418,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.TaskByGuid(logger, responseRecorder, request)
 		})
 
@@ -463,6 +477,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -501,6 +516,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesireTask(logger, responseRecorder, request)
 		})
 
@@ -528,6 +544,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -561,6 +578,7 @@ var _ = Describe("Task Handlers", func() {
 
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				ctx = request.Context()
 				handler.StartTask(logger, responseRecorder, request)
 			})
@@ -613,6 +631,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("logs and writes to the exit channel", func() {
 					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 					Eventually(exitCh).Should(Receive())
 				})
 			})
@@ -650,6 +669,7 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.CancelTask(logger, responseRecorder, request)
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		})
@@ -696,6 +716,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("logs and writes to the exit channel", func() {
 					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 					Eventually(exitCh).Should(Receive())
 				})
 			})
@@ -736,6 +757,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.FailTask(logger, responseRecorder, request)
 		})
 
@@ -761,6 +783,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -795,6 +818,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request = newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RejectTask(logger, responseRecorder, request)
 		})
 
@@ -819,6 +843,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -867,6 +892,7 @@ var _ = Describe("Task Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.CompleteTask(logger, responseRecorder, request)
 		})
 
@@ -896,6 +922,7 @@ var _ = Describe("Task Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -926,6 +953,7 @@ var _ = Describe("Task Handlers", func() {
 
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.ResolvingTask(logger, responseRecorder, request)
 			})
 
@@ -951,6 +979,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("logs and writes to the exit channel", func() {
 					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 					Eventually(exitCh).Should(Receive())
 				})
 			})
@@ -981,6 +1010,7 @@ var _ = Describe("Task Handlers", func() {
 			})
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.DeleteTask(logger, responseRecorder, request)
 			})
 
@@ -1006,6 +1036,7 @@ var _ = Describe("Task Handlers", func() {
 
 				It("logs and writes to the exit channel", func() {
 					Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+					Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 					Eventually(exitCh).Should(Receive())
 				})
 			})
