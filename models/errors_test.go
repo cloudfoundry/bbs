@@ -6,28 +6,27 @@ import (
 
 	. "code.cloudfoundry.org/bbs/models"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
+	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Errors", func() {
-	Describe("ConvertError", func() {
-		It("maintains nils", func() {
+var _ = ginkgo.Describe("Errors", func() {
+	ginkgo.Describe("ConvertError", func() {
+		ginkgo.It("maintains nils", func() {
 			var err error = nil
 			bbsError := ConvertError(err)
 			Expect(bbsError).To(BeNil())
 			Expect(bbsError == nil).To(BeTrue())
 		})
 
-		It("can convert a *Error back to *Error", func() {
+		ginkgo.It("can convert a *Error back to *Error", func() {
 			var err error = NewError(Error_ResourceConflict, "some message")
 			bbsError := ConvertError(err)
 			Expect(bbsError.Type).To(Equal(Error_ResourceConflict))
 			Expect(bbsError.Message).To(Equal("some message"))
 		})
 
-		It("can convert a regular error to a *Error with unknown type", func() {
+		ginkgo.It("can convert a regular error to a *Error with unknown type", func() {
 			var err error = errors.New("fail")
 			bbsError := ConvertError(err)
 			Expect(bbsError.Type).To(Equal(Error_UnknownError))
@@ -35,66 +34,66 @@ var _ = Describe("Errors", func() {
 		})
 	})
 
-	Describe("Equal", func() {
-		It("is true when the types are the same", func() {
+	ginkgo.Describe("Equal", func() {
+		ginkgo.It("is true when the types are the same", func() {
 			err1 := &Error{Type: 0, Message: "some-message"}
 			err2 := &Error{Type: 0, Message: "some-other-message"}
 			Expect(err1.Equal(err2)).To(BeTrue())
 		})
 
-		It("is false when the types are different", func() {
+		ginkgo.It("is false when the types are different", func() {
 			err1 := &Error{Type: 0, Message: "some-message"}
 			err2 := &Error{Type: 1, Message: "some-other-message"}
 			Expect(err1.Equal(err2)).To(BeFalse())
 		})
 
-		It("is false when one is nil", func() {
+		ginkgo.It("is false when one is nil", func() {
 			var err1 *Error = nil
 			err2 := &Error{Type: 0, Message: "some-other-message"}
 			Expect(err1.Equal(err2)).To(BeFalse())
 		})
 
-		It("is true when both errors are nil", func() {
+		ginkgo.It("is true when both errors are nil", func() {
 			var err1 *Error = nil
 			var err2 *Error = nil
 			Expect(err1.Equal(err2)).To(BeTrue())
 		})
 	})
 
-	Describe("Type", func() {
-		Describe("serialization", func() {
-			DescribeTable("marshals and unmarshals between the value and the expected JSON output",
+	ginkgo.Describe("Type", func() {
+		ginkgo.Describe("serialization", func() {
+			ginkgo.DescribeTable("marshals and unmarshals between the value and the expected JSON output",
 				func(v Error_Type, expectedJSON string) {
 					Expect(json.Marshal(v)).To(MatchJSON(expectedJSON))
 					var testV Error_Type
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("UnknownError", Error_UnknownError, `"UnknownError"`),
-				Entry("InvalidRecord", Error_InvalidRecord, `"InvalidRecord"`),
-				Entry("InvalidRequest", Error_InvalidRequest, `"InvalidRequest"`),
-				Entry("InvalidResponse", Error_InvalidResponse, `"InvalidResponse"`),
-				Entry("InvalidProtobufMessage", Error_InvalidProtobufMessage, `"InvalidProtobufMessage"`),
-				Entry("InvalidJSON", Error_InvalidJSON, `"InvalidJSON"`),
-				Entry("FailedToOpenEnvelope", Error_FailedToOpenEnvelope, `"FailedToOpenEnvelope"`),
-				Entry("InvalidStateTransition", Error_InvalidStateTransition, `"InvalidStateTransition"`),
-				Entry("ResourceConflict", Error_ResourceConflict, `"ResourceConflict"`),
-				Entry("ResourceExists", Error_ResourceExists, `"ResourceExists"`),
-				Entry("ResourceNotFound", Error_ResourceNotFound, `"ResourceNotFound"`),
-				Entry("RouterError", Error_RouterError, `"RouterError"`),
-				Entry("ActualLRPCannotBeClaimed", Error_ActualLRPCannotBeClaimed, `"ActualLRPCannotBeClaimed"`),
-				Entry("ActualLRPCannotBeStarted", Error_ActualLRPCannotBeStarted, `"ActualLRPCannotBeStarted"`),
-				Entry("ActualLRPCannotBeCrashed", Error_ActualLRPCannotBeCrashed, `"ActualLRPCannotBeCrashed"`),
-				Entry("ActualLRPCannotBeFailed", Error_ActualLRPCannotBeFailed, `"ActualLRPCannotBeFailed"`),
-				Entry("ActualLRPCannotBeRemoved", Error_ActualLRPCannotBeRemoved, `"ActualLRPCannotBeRemoved"`),
-				Entry("ActualLRPCannotBeUnclaimed", Error_ActualLRPCannotBeUnclaimed, `"ActualLRPCannotBeUnclaimed"`),
-				Entry("RunningOnDifferentCell", Error_RunningOnDifferentCell, `"RunningOnDifferentCell"`),
-				Entry("GUIDGeneration", Error_GUIDGeneration, `"GUIDGeneration"`),
-				Entry("Deserialize", Error_Deserialize, `"Deserialize"`),
-				Entry("Deadlock", Error_Deadlock, `"Deadlock"`),
-				Entry("Unrecoverable", Error_Unrecoverable, `"Unrecoverable"`),
-				Entry("LockCollision", Error_LockCollision, `"LockCollision"`),
-				Entry("Timeout", Error_Timeout, `"Timeout"`),
+				ginkgo.Entry("UnknownError", Error_UnknownError, `"UnknownError"`),
+				ginkgo.Entry("InvalidRecord", Error_InvalidRecord, `"InvalidRecord"`),
+				ginkgo.Entry("InvalidRequest", Error_InvalidRequest, `"InvalidRequest"`),
+				ginkgo.Entry("InvalidResponse", Error_InvalidResponse, `"InvalidResponse"`),
+				ginkgo.Entry("InvalidProtobufMessage", Error_InvalidProtobufMessage, `"InvalidProtobufMessage"`),
+				ginkgo.Entry("InvalidJSON", Error_InvalidJSON, `"InvalidJSON"`),
+				ginkgo.Entry("FailedToOpenEnvelope", Error_FailedToOpenEnvelope, `"FailedToOpenEnvelope"`),
+				ginkgo.Entry("InvalidStateTransition", Error_InvalidStateTransition, `"InvalidStateTransition"`),
+				ginkgo.Entry("ResourceConflict", Error_ResourceConflict, `"ResourceConflict"`),
+				ginkgo.Entry("ResourceExists", Error_ResourceExists, `"ResourceExists"`),
+				ginkgo.Entry("ResourceNotFound", Error_ResourceNotFound, `"ResourceNotFound"`),
+				ginkgo.Entry("RouterError", Error_RouterError, `"RouterError"`),
+				ginkgo.Entry("ActualLRPCannotBeClaimed", Error_ActualLRPCannotBeClaimed, `"ActualLRPCannotBeClaimed"`),
+				ginkgo.Entry("ActualLRPCannotBeStarted", Error_ActualLRPCannotBeStarted, `"ActualLRPCannotBeStarted"`),
+				ginkgo.Entry("ActualLRPCannotBeCrashed", Error_ActualLRPCannotBeCrashed, `"ActualLRPCannotBeCrashed"`),
+				ginkgo.Entry("ActualLRPCannotBeFailed", Error_ActualLRPCannotBeFailed, `"ActualLRPCannotBeFailed"`),
+				ginkgo.Entry("ActualLRPCannotBeRemoved", Error_ActualLRPCannotBeRemoved, `"ActualLRPCannotBeRemoved"`),
+				ginkgo.Entry("ActualLRPCannotBeUnclaimed", Error_ActualLRPCannotBeUnclaimed, `"ActualLRPCannotBeUnclaimed"`),
+				ginkgo.Entry("RunningOnDifferentCell", Error_RunningOnDifferentCell, `"RunningOnDifferentCell"`),
+				ginkgo.Entry("GUIDGeneration", Error_GUIDGeneration, `"GUIDGeneration"`),
+				ginkgo.Entry("Deserialize", Error_Deserialize, `"Deserialize"`),
+				ginkgo.Entry("Deadlock", Error_Deadlock, `"Deadlock"`),
+				ginkgo.Entry("Unrecoverable", Error_Unrecoverable, `"Unrecoverable"`),
+				ginkgo.Entry("LockCollision", Error_LockCollision, `"LockCollision"`),
+				ginkgo.Entry("Timeout", Error_Timeout, `"Timeout"`),
 			)
 		})
 	})

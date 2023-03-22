@@ -4,7 +4,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jackc/pgx"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

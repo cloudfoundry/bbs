@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/durationjson"
 
 	. "github.com/onsi/gomega"
-	"github.com/tedsuo/ifrit/ginkgomon"
+	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 )
 
 func New(binPath string, bbsConfig config.BBSConfig) *ginkgomon.Runner {

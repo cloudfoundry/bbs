@@ -10,7 +10,7 @@ import (
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/locket/models/modelsfakes"
 	uuid "github.com/nu7hatch/gouuid"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

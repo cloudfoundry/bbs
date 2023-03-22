@@ -16,7 +16,7 @@ import (
 	"code.cloudfoundry.org/bbs/taskworkpool/taskworkpoolfakes"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/rep"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 )
@@ -661,8 +661,6 @@ var _ = Describe("Task Controller", func() {
 			BeforeEach(func() {
 				maxPlacementRetries = 0
 			})
-
-			By("immediately failing the task")
 			AssertTaskFailing(taskGuid, rejectionReason)
 
 			It("rejects the task", func() {
@@ -708,8 +706,6 @@ var _ = Describe("Task Controller", func() {
 				BeforeEach(func() {
 					fakeTaskDB.TaskByGuidReturns(&models.Task{RejectionCount: 1}, nil)
 				})
-
-				By("failing the task")
 				AssertTaskFailing(taskGuid, rejectionReason)
 
 				It("rejects the task", func() {
@@ -727,9 +723,8 @@ var _ = Describe("Task Controller", func() {
 					BeforeEach(func() {
 						fakeTaskDB.RejectTaskReturns(nil, nil, errors.New("o noes!"))
 					})
-
-					By("it still calls FailTask regardless")
 					AssertTaskFailing(taskGuid, rejectionReason)
+
 				})
 			})
 		})
