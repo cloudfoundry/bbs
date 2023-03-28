@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/jackc/pgx"
 	_ "github.com/jackc/pgx/stdlib"
 	. "github.com/onsi/ginkgo"

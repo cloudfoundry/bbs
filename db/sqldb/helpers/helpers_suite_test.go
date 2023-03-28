@@ -8,7 +8,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
