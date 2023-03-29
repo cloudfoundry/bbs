@@ -7,7 +7,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	lager "code.cloudfoundry.org/lager/v3"
 )
 
 type FakeRetirer struct {

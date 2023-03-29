@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 //counterfeiter:generate . VersionDB
