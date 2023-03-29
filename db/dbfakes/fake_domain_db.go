@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/bbs/db"
-	"code.cloudfoundry.org/lager"
+	lager "code.cloudfoundry.org/lager/v3"
 )
 
 type FakeDomainDB struct {

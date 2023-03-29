@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 const configurationsTable = "configurations"

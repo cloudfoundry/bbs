@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 const VersionID = "version"

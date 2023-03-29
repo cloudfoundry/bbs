@@ -6,7 +6,7 @@ import (
 	"github.com/tedsuo/ifrit"
 
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 const bbsMasterElectedMetric = "BBSMasterElected"

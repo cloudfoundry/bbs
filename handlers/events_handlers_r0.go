@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 func (h *LRPGroupEventsHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {

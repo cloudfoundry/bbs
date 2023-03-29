@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 const MAX_PENDING_SUBSCRIBER_EVENTS = 1024

@@ -6,7 +6,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task) func()

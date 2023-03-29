@@ -19,7 +19,7 @@ import (
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/tedsuo/ifrit"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 

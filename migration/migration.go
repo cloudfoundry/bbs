@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 //go:generate counterfeiter -generate

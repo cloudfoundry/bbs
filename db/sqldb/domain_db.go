@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 func (db *SQLDB) FreshDomains(ctx context.Context, logger lager.Logger) ([]string, error) {

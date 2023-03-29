@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)

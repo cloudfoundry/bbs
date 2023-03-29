@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/converger"
-	"code.cloudfoundry.org/lager"
+	lager "code.cloudfoundry.org/lager/v3"
 )
 
 type FakeTaskController struct {

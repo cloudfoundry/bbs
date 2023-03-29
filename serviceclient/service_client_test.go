@@ -6,7 +6,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/locket/models/modelsfakes"
 	uuid "github.com/nu7hatch/gouuid"

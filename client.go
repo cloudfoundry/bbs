@@ -15,7 +15,7 @@ import (
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/models"
 	cfhttp "code.cloudfoundry.org/cfhttp/v2"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/tlsconfig"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"

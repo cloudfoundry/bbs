@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 
 	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"golang.org/x/net/context"
 )
