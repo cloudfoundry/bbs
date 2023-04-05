@@ -72,7 +72,11 @@ var _ = Describe("CellPresence", func() {
 				RepAddress: "cell-locket-address",
 				RepUrl:     "https://cell-locket-url",
 				Zone:       "locket-zone",
-				Capacity:   &models.CellCapacity{4, 5, 6},
+				Capacity: &models.CellCapacity{
+					MemoryMb:   4,
+					DiskMb:     5,
+					Containers: 6,
+				},
 			}
 
 			data, err := json.Marshal(presenceLocket)
