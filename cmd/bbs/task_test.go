@@ -94,8 +94,6 @@ var _ = Describe("Task API", func() {
 			err := client.DesireTask(logger, expectedTask.TaskGuid, expectedTask.Domain, expectedTask.TaskDefinition)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedTask = expectedTask
-
 			task, err := client.TaskByGuid(logger, expectedTask.TaskGuid)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(task).To(MatchTask(expectedTask))

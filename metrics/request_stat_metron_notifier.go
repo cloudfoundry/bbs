@@ -78,7 +78,4 @@ func (notifier *RequestStatMetronNotifier) Run(signals <-chan os.Signal, ready c
 			return nil
 		}
 	}
-
-	<-signals
-	return nil
 }

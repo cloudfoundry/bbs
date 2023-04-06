@@ -41,8 +41,8 @@ var _ = Describe("Cell Handlers", func() {
 					Containers: 50,
 				},
 				RootfsProviders: []*models.Provider{
-					&models.Provider{"preloaded", []string{"provider-1", "provider-2"}},
-					&models.Provider{"provider-3", nil},
+					&models.Provider{Name: "preloaded", Properties: []string{"provider-1", "provider-2"}},
+					&models.Provider{Name: "provider-3", Properties: nil},
 				},
 				PlacementTags: []string{"test1", "test2"},
 			},
@@ -56,7 +56,7 @@ var _ = Describe("Cell Handlers", func() {
 					Containers: 20,
 				},
 				RootfsProviders: []*models.Provider{
-					&models.Provider{"preloaded", []string{"provider-1"}},
+					&models.Provider{Name: "preloaded", Properties: []string{"provider-1"}},
 				},
 				PlacementTags: []string{"test3", "test4"},
 			},

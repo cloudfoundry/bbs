@@ -224,7 +224,7 @@ func main() {
 		Type:     locketmodels.LockType,
 	}
 
-	locks = append(locks, grouper.Member{"sql-lock", lock.NewLockRunner(
+	locks = append(locks, grouper.Member{Name: "sql-lock", Runner: lock.NewLockRunner(
 		logger,
 		locketClient,
 		lockIdentifier,
@@ -343,27 +343,27 @@ func main() {
 	healthcheckServer := http_server.New(bbsConfig.HealthAddress, http.HandlerFunc(healthCheckHandler))
 
 	members := grouper.Members{
-		{"healthcheck", healthcheckServer},
-		{"periodic-filedescriptor-metrics", fileDescriptorMetronNotifier},
-		{"lock-held-metrics", lockHeldMetronNotifier},
-		{"lock", lock},
-		{"set-lock-held-metrics", lockheldmetrics.SetLockHeldRunner(logger, *lockHeldMetronNotifier)},
-		{"workpool", cbWorkPool},
-		{"server", server},
-		{"migration-manager", migrationManager},
-		{"encryptor", encryptor},
-		{"hub-maintainer", hubMaintainer(logger, desiredHub, actualHub, taskHub)},
-		{"bbs-election-metrics", bbsElectionMetronNotifier},
-		{"periodic-metrics", requestStatMetronNotifier},
-		{"converger", convergerProcess},
-		{"lrp-stat-metron-notifier", lrpStatMetronNotifier},
-		{"task-stat-metron-notifier", taskStatMetronNotifier},
-		{"db-stat-metron-notifier", dbStatMetronNotifier},
+		{Name: "healthcheck", Runner: healthcheckServer},
+		{Name: "periodic-filedescriptor-metrics", Runner: fileDescriptorMetronNotifier},
+		{Name: "lock-held-metrics", Runner: lockHeldMetronNotifier},
+		{Name: "lock", Runner: lock},
+		{Name: "set-lock-held-metrics", Runner: lockheldmetrics.SetLockHeldRunner(logger, *lockHeldMetronNotifier)},
+		{Name: "workpool", Runner: cbWorkPool},
+		{Name: "server", Runner: server},
+		{Name: "migration-manager", Runner: migrationManager},
+		{Name: "encryptor", Runner: encryptor},
+		{Name: "hub-maintainer", Runner: hubMaintainer(logger, desiredHub, actualHub, taskHub)},
+		{Name: "bbs-election-metrics", Runner: bbsElectionMetronNotifier},
+		{Name: "periodic-metrics", Runner: requestStatMetronNotifier},
+		{Name: "converger", Runner: convergerProcess},
+		{Name: "lrp-stat-metron-notifier", Runner: lrpStatMetronNotifier},
+		{Name: "task-stat-metron-notifier", Runner: taskStatMetronNotifier},
+		{Name: "db-stat-metron-notifier", Runner: dbStatMetronNotifier},
 	}
 
 	if bbsConfig.DebugAddress != "" {
 		members = append(grouper.Members{
-			{"debug-server", debugserver.Runner(bbsConfig.DebugAddress, reconfigurableSink)},
+			{Name: "debug-server", Runner: debugserver.Runner(bbsConfig.DebugAddress, reconfigurableSink)},
 		}, members...)
 	}
 
