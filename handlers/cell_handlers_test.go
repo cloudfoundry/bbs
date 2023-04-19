@@ -1,12 +1,15 @@
 package handlers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,6 +25,9 @@ var _ = Describe("Cell Handlers", func() {
 		exitCh            chan struct{}
 		cells             []*models.CellPresence
 		cellSet           models.CellSet
+
+		requestIdHeader   string
+		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
@@ -29,6 +35,8 @@ var _ = Describe("Cell Handlers", func() {
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
+		requestIdHeader = "0bc29108-c522-4360-93dd-30ca38cce13d"
+		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 		handler = handlers.NewCellHandler(fakeServiceClient, exitCh)
 		cells = []*models.CellPresence{
 			{
@@ -68,7 +76,9 @@ var _ = Describe("Cell Handlers", func() {
 
 	Describe("Cells", func() {
 		JustBeforeEach(func() {
-			handler.Cells(logger, responseRecorder, newTestRequest(""))
+			request := newTestRequest("")
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.Cells(logger, responseRecorder, request)
 		})
 
 		Context("when reading cells succeeds", func() {
@@ -112,6 +122,7 @@ var _ = Describe("Cell Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})

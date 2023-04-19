@@ -41,7 +41,7 @@ type MessageValidator interface {
 
 func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("remove-evacuating-actual-lrp")
+	logger = logger.Session("remove-evacuating-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -62,7 +62,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-claimed-actual-lrp")
+	logger = logger.Session("evacuate-claimed-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -85,7 +85,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 }
 
 func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-crashed-actual-lrp")
+	logger = logger.Session("evacuate-crashed-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
@@ -105,8 +105,8 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http
 	response.Error = models.ConvertError(err)
 }
 
-func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-running-actual-lrp")
+func (h *EvacuationHandler) commonEvacuateRunningActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request, useInternalRoutesAndTags bool) {
+	logger = logger.Session("evacuate-running-actual-lrp").WithTraceInfo(req)
 	logger.Info("starting")
 	defer logger.Info("completed")
 
@@ -122,35 +122,31 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http
 		return
 	}
 
-	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.ActualLrpInternalRoutes, request.MetricTags)
+	var keepContainer bool
+	var actualLrpInternalRoutes []*models.ActualLRPInternalRoute
+	var metricTags map[string]string
+	if useInternalRoutesAndTags {
+		actualLrpInternalRoutes = request.ActualLrpInternalRoutes
+		metricTags = request.MetricTags
+	}
+
+	keepContainer, err = h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, actualLrpInternalRoutes, metricTags)
 	response.Error = models.ConvertError(err)
 	response.KeepContainer = keepContainer
+}
+
+func (h *EvacuationHandler) EvacuateRunningActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	useInternalRoutesAndTags := true
+	h.commonEvacuateRunningActualLRP(logger, w, req, useInternalRoutesAndTags)
 }
 
 func (h *EvacuationHandler) EvacuateRunningActualLRP_r0(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-running-actual-lrp")
-	logger.Info("starting")
-	defer logger.Info("completed")
-
-	response := &models.EvacuationResponse{}
-	response.KeepContainer = true
-	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
-
-	request := &models.EvacuateRunningActualLRPRequest{}
-	err := parseRequest(logger, req, request)
-	if err != nil {
-		response.Error = models.ConvertError(err)
-		return
-	}
-
-	keepContainer, err := h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
-	response.Error = models.ConvertError(err)
-	response.KeepContainer = keepContainer
+	useInternalRoutesAndTags := false
+	h.commonEvacuateRunningActualLRP(logger, w, req, useInternalRoutesAndTags)
 }
 
 func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("evacuate-stopped-actual-lrp")
+	logger = logger.Session("evacuate-stopped-actual-lrp").WithTraceInfo(req)
 
 	request := &models.EvacuateStoppedActualLRPRequest{}
 	response := &models.EvacuationResponse{}

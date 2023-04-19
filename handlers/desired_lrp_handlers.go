@@ -58,7 +58,7 @@ func NewDesiredLRPHandler(
 
 func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("desired-lrps")
+	logger = logger.Session("desired-lrps").WithTraceInfo(req)
 
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
@@ -95,7 +95,7 @@ func (h *DesiredLRPHandler) DesiredLRPs_r2(logger lager.Logger, w http.ResponseW
 
 func (h *DesiredLRPHandler) commonDesiredLRPByProcessGuid(logger lager.Logger, targetVersion format.Version, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("desired-lrp-by-process-guid")
+	logger = logger.Session("desired-lrp-by-process-guid").WithTraceInfo(req)
 
 	request := &models.DesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPResponse{}
@@ -126,7 +126,7 @@ func (h *DesiredLRPHandler) DesiredLRPByProcessGuid_r2(logger lager.Logger, w ht
 
 func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
-	logger = logger.Session("desired-lrp-scheduling-infos")
+	logger = logger.Session("desired-lrp-scheduling-infos").WithTraceInfo(req)
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
@@ -148,7 +148,7 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 }
 
 func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("desire-lrp")
+	logger = logger.Session("desire-lrp").WithTraceInfo(req)
 
 	request := &models.DesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
@@ -182,7 +182,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("update-desired-lrp")
+	logger = logger.Session("update-desired-lrp").WithTraceInfo(req)
 
 	request := &models.UpdateDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
@@ -244,7 +244,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 }
 
 func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
-	logger = logger.Session("remove-desired-lrp")
+	logger = logger.Session("remove-desired-lrp").WithTraceInfo(req)
 
 	request := &models.RemoveDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
