@@ -1,12 +1,15 @@
 package handlers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -21,12 +24,17 @@ var _ = Describe("Domain Handlers", func() {
 		handler          *handlers.DomainHandler
 		requestBody      interface{}
 		exitCh           chan struct{}
+
+		requestIdHeader   string
+		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
 		fakeDomainDB = new(dbfakes.FakeDomainDB)
 		logger = lagertest.NewTestLogger("test")
 		responseRecorder = httptest.NewRecorder()
+		requestIdHeader = "93f2374a-c0ad-455a-98bc-aafd4e4a1dc4"
+		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 		exitCh = make(chan struct{}, 1)
 		handler = handlers.NewDomainHandler(fakeDomainDB, exitCh)
 	})
@@ -49,6 +57,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.Upsert(logger, responseRecorder, request)
 		})
 
@@ -118,6 +127,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -148,7 +158,9 @@ var _ = Describe("Domain Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			handler.Domains(logger, responseRecorder, newTestRequest(""))
+			request := newTestRequest("")
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.Domains(logger, responseRecorder, request)
 		})
 
 		Context("when reading domains from DB succeeds", func() {
@@ -196,6 +208,7 @@ var _ = Describe("Domain Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})

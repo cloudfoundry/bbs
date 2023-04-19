@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
@@ -40,6 +42,9 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		desiredLRP1 models.DesiredLRP
 		desiredLRP2 models.DesiredLRP
+
+		requestIdHeader   string
+		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
@@ -55,6 +60,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		actualLRPInstanceHub = new(eventfakes.FakeHub)
 		Expect(err).NotTo(HaveOccurred())
 		exitCh = make(chan struct{}, 1)
+		requestIdHeader = "25f23d6a-f46d-460e-7135-7ddc0759a198"
+		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 		handler = handlers.NewDesiredLRPHandler(
 			5,
 			fakeDesiredLRPDB,
@@ -80,6 +87,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPs_r2(logger, responseRecorder, request)
 		})
 
@@ -216,6 +224,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -247,6 +256,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPs(logger, responseRecorder, request)
 		})
 
@@ -350,6 +360,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -385,6 +396,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPByProcessGuid_r2(logger, responseRecorder, request)
 		})
 
@@ -482,6 +494,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -517,6 +530,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPByProcessGuid(logger, responseRecorder, request)
 		})
 
@@ -591,6 +605,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -626,6 +641,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPSchedulingInfos(logger, responseRecorder, request)
 		})
 
@@ -703,6 +719,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -852,6 +869,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesireDesiredLRP(logger, responseRecorder, request)
 		})
 
@@ -1014,6 +1032,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -1067,6 +1086,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.UpdateDesiredLRP(logger, responseRecorder, request)
 		})
 
@@ -1206,6 +1226,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						It("continues stopping the rest of the lrps and logs", func() {
 							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(1))
 							Expect(logger).To(gbytes.Say("failed-fetching-cell-presence"))
+							Expect(logger).Should(gbytes.Say(b3RequestIdHeader))
 						})
 					})
 
@@ -1223,6 +1244,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						It("continues stopping the rest of the lrps and logs", func() {
 							Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 							Expect(logger).To(gbytes.Say("failed-stopping-lrp-instance"))
+							Expect(logger).Should(gbytes.Say(b3RequestIdHeader))
 						})
 					})
 				})
@@ -1601,6 +1623,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})
@@ -1638,6 +1661,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RemoveDesiredLRP(logger, responseRecorder, request)
 		})
 
@@ -1803,6 +1827,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Expect(response.Error).To(BeNil())
 						Expect(logger).To(gbytes.Say("failed-fetching-actual-lrps"))
+						Expect(logger).Should(gbytes.Say(b3RequestIdHeader))
 					})
 				})
 			})
@@ -1815,6 +1840,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("logs and writes to the exit channel", func() {
 				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				Eventually(exitCh).Should(Receive())
 			})
 		})

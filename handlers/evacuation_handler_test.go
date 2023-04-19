@@ -1,8 +1,10 @@
 package handlers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
@@ -25,6 +27,9 @@ var _ = Describe("Evacuation Handlers", func() {
 		key         models.ActualLRPKey
 		instanceKey models.ActualLRPInstanceKey
 		controller  *fake_controllers.FakeEvacuationController
+
+		requestIdHeader   string
+		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
@@ -32,6 +37,8 @@ var _ = Describe("Evacuation Handlers", func() {
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
+		requestIdHeader = "85cf67e3-3ded-4d17-8dbb-fa3234bab1fa"
+		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 
 		controller = &fake_controllers.FakeEvacuationController{}
 		handler = handlers.NewEvacuationHandler(controller, exitCh)
@@ -62,6 +69,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RemoveEvacuatingActualLRP(logger, responseRecorder, request)
 		})
 
@@ -99,6 +107,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("logs and writes to the exit channel", func() {
 						Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+						Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 						Eventually(exitCh).Should(Receive())
 					})
 				})
@@ -156,6 +165,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
 				}
 				request = newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateClaimedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -232,6 +242,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("logs and writes to the exit channel", func() {
 						Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+						Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 						Eventually(exitCh).Should(Receive())
 					})
 				})
@@ -241,6 +252,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
 				request = newTestRequest("{{")
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateClaimedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -272,6 +284,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ErrorMessage:         "i failed",
 				}
 				request = newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateCrashedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -315,6 +328,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("logs and writes to the exit channel", func() {
 						Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+						Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 						Eventually(exitCh).Should(Receive())
 					})
 				})
@@ -324,6 +338,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
 				request = newTestRequest("{{")
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateCrashedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -332,6 +347,125 @@ var _ = Describe("Evacuation Handlers", func() {
 				response := models.EvacuationResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error).To(Equal(models.ErrBadRequest))
+			})
+		})
+	})
+
+	Describe("EvacuateRunningActualLRP_r0", func() {
+		var (
+			request     *http.Request
+			requestBody *models.EvacuateRunningActualLRPRequest
+			actual      *models.ActualLRP
+		)
+
+		Context("when request is valid", func() {
+			JustBeforeEach(func() {
+				actual = model_helpers.NewValidActualLRP("process-guid", 1)
+				requestBody = &models.EvacuateRunningActualLRPRequest{
+					ActualLrpKey:         &actual.ActualLRPKey,
+					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+					ActualLrpNetInfo:     &actual.ActualLRPNetInfo,
+				}
+				request = newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+				handler.EvacuateRunningActualLRP_r0(logger, responseRecorder, request)
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			Context("when the controller succeeds in evacuating the actual lrp", func() {
+				Context("when keepContainer is false", func() {
+					BeforeEach(func() {
+						controller.EvacuateRunningActualLRPReturns(false, nil)
+					})
+
+					It("should return no error and keep the container", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						var response models.EvacuationResponse
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+						Expect(response.KeepContainer).To(BeFalse())
+					})
+				})
+
+				Context("when keepContainer is true", func() {
+					BeforeEach(func() {
+						controller.EvacuateRunningActualLRPReturns(true, nil)
+					})
+
+					It("should return no error and keep the container", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						var response models.EvacuationResponse
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).To(BeNil())
+						Expect(response.KeepContainer).To(BeTrue())
+					})
+				})
+			})
+
+			Context("when the controller returns an error", func() {
+				Context("if the error is recoverable and keepContainer is false", func() {
+					BeforeEach(func() {
+						controller.EvacuateRunningActualLRPReturns(false, models.ErrUnknownError)
+					})
+
+					It("should return the error in the response", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						var response models.EvacuationResponse
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).NotTo(BeNil())
+						Expect(response.Error).To(Equal(models.ErrUnknownError))
+						Expect(response.KeepContainer).To(BeFalse())
+					})
+				})
+
+				Context("if the error is recoverable and keepContainer is true", func() {
+					BeforeEach(func() {
+						controller.EvacuateRunningActualLRPReturns(true, models.ErrUnknownError)
+					})
+
+					It("should return the error in the response", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+						var response models.EvacuationResponse
+						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+						Expect(response.Error).NotTo(BeNil())
+						Expect(response.Error).To(Equal(models.ErrUnknownError))
+						Expect(response.KeepContainer).To(BeTrue())
+					})
+				})
+
+				Context("if the error is unrecoverable", func() {
+					BeforeEach(func() {
+						controller.EvacuateRunningActualLRPReturns(false, models.NewUnrecoverableError(nil))
+					})
+
+					It("logs and writes to the exit channel", func() {
+						Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+						Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
+						Eventually(exitCh).Should(Receive())
+					})
+				})
+			})
+		})
+
+		Context("when the request is invalid", func() {
+			BeforeEach(func() {
+				request = newTestRequest("{{")
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+				handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			It("returns an error and keeps the container", func() {
+				response := models.EvacuationResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.KeepContainer).To(BeTrue())
 				Expect(response.Error).NotTo(BeNil())
 				Expect(response.Error).To(Equal(models.ErrBadRequest))
 			})
@@ -354,6 +488,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ActualLrpNetInfo:     &actual.ActualLRPNetInfo,
 				}
 				request = newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -430,6 +565,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("logs and writes to the exit channel", func() {
 						Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+						Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 						Eventually(exitCh).Should(Receive())
 					})
 				})
@@ -439,6 +575,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
 				request = newTestRequest("{{")
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -469,6 +606,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
 				}
 				request = newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateStoppedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})
@@ -512,6 +650,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("logs and writes to the exit channel", func() {
 						Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+						Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 						Eventually(exitCh).Should(Receive())
 					})
 				})
@@ -521,6 +660,7 @@ var _ = Describe("Evacuation Handlers", func() {
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
 				request = newTestRequest("{{")
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateStoppedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 			})

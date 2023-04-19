@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -78,14 +79,20 @@ var _ = Describe("Event Handlers", func() {
 				response *http.Response
 				server   *httptest.Server
 				err      error
+
+				requestIdHeader   string
+				b3RequestIdHeader string
 			)
 
 			BeforeEach(func() {
 				hub = *hubRef
+				requestIdHeader = "7ef88b33-d927-4b08-b4c5-cb45f78a999c"
+				b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 			})
 
 			JustBeforeEach(func() {
 				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					r.Header.Set(lager.RequestIdHeader, requestIdHeader)
 					handler.Subscribe_r0(logger, w, r)
 				}))
 				response, err = http.Get(server.URL)
@@ -149,6 +156,7 @@ var _ = Describe("Event Handlers", func() {
 					reader.Close()
 
 					Eventually(logger).Should(gbytes.Say("received-close-notify"))
+					Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
 				})
 
 				Context("when the source provides an unmarshalable event", func() {
