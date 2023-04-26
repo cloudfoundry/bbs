@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 )
 
@@ -169,7 +170,7 @@ func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req
 		return
 	}
 
-	err = h.controller.CancelTask(req.Context(), logger, request.TaskGuid)
+	err = h.controller.CancelTask(trace.ContextWithRequestId(req), logger, request.TaskGuid)
 	response.Error = models.ConvertError(err)
 }
 

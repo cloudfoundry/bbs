@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 
@@ -12,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
 
@@ -1480,11 +1482,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						})
 
 						It("passes the url when creating a rep client", func() {
-							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
+							err = controller.RetireActualLRP(context.WithValue(ctx, trace.RequestIdHeader, "some-request-id"), logger, &actualLRPKey)
 							Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
-							repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+							repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
 							Expect(repAddr).To(Equal(cellPresence.RepAddress))
 							Expect(repURL).To(Equal(cellPresence.RepUrl))
+							Expect(traceID).To(Equal("some-request-id"))
 						})
 					})
 

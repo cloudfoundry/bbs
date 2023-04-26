@@ -1052,12 +1052,14 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
 						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+						repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
 						Expect(repAddr).To(Equal("some-address"))
 						Expect(repURL).To(Equal("http://some-address"))
-						repAddr, repURL = fakeRepClientFactory.CreateClientArgsForCall(1)
+						Expect(traceID).To(Equal(requestIdHeader))
+						repAddr, repURL, traceID = fakeRepClientFactory.CreateClientArgsForCall(1)
 						Expect(repAddr).To(Equal("some-address"))
 						Expect(repURL).To(Equal("http://some-address"))
+						Expect(traceID).To(Equal(requestIdHeader))
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
@@ -1075,9 +1077,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						})
 
 						It("creates a rep client using the rep url", func() {
-							repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+							repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
 							Expect(repAddr).To(Equal("some-address"))
 							Expect(repURL).To(Equal("http://some-address"))
+							Expect(traceID).To(Equal(requestIdHeader))
 						})
 
 						Context("when creating a rep client fails", func() {

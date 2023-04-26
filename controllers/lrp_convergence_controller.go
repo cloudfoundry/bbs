@@ -297,7 +297,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 				return
 			}
 
-			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, "")
 			if err != nil {
 				logger.Error("create-rep-client-failed", err)
 				return
@@ -324,7 +324,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 				return
 			}
 
-			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, "")
 			if err != nil {
 				logger.Error("create-rep-client-failed", err)
 				return

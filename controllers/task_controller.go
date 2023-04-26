@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 )
@@ -124,7 +125,7 @@ func (c *TaskController) CancelTask(ctx context.Context, logger lager.Logger, ta
 	}
 	logger.Info("finished-check-cell-presence", lager.Data{"cell_id": cellID})
 
-	repClient, err := c.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+	repClient, err := c.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, trace.RequestIdFromContext(ctx))
 	if err != nil {
 		logger.Error("create-rep-client-failed", err)
 		return err

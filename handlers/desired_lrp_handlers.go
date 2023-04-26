@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/routing-info/internalroutes"
@@ -223,13 +224,13 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		if requestedInstances > 0 {
 			logger.Debug("increasing-the-instances")
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			h.startInstanceRange(req.Context(), logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
+			h.startInstanceRange(trace.ContextWithRequestId(req), logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
 		}
 
 		if requestedInstances < 0 {
 			logger.Debug("decreasing-the-instances")
 			numExtraActualLRP := previousInstanceCount + requestedInstances
-			h.stopInstancesFrom(req.Context(), logger, request.ProcessGuid, int(numExtraActualLRP))
+			h.stopInstancesFrom(trace.ContextWithRequestId(req), logger, request.ProcessGuid, int(numExtraActualLRP))
 		}
 	}
 
@@ -237,7 +238,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 	metricTagsUpdated := request.Update.IsMetricTagsUpdated(beforeDesiredLRP.MetricTags)
 
 	if internalRoutesUpdated || metricTagsUpdated {
-		h.updateInstances(req.Context(), logger, request.ProcessGuid, request.Update, internalRoutesUpdated, metricTagsUpdated)
+		h.updateInstances(trace.ContextWithRequestId(req), logger, request.ProcessGuid, request.Update, internalRoutesUpdated, metricTagsUpdated)
 	}
 
 	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
@@ -372,7 +373,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						logger.Error("failed-fetching-cell-presence", err)
 						continue
 					}
-					repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+					repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, trace.RequestIdFromContext(ctx))
 					if err != nil {
 						logger.Error("create-rep-client-failed", err)
 						continue
@@ -405,7 +406,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				logger.Error("failed-fetching-cell-presence", err)
 				continue
 			}
-			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, trace.RequestIdFromContext(ctx))
 			if err != nil {
 				logger.Error("create-rep-client-failed", err)
 				continue

@@ -841,11 +841,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			repAddresses := make([]string, 3)
 			repURLs := make([]string, 3)
+			traceIDs := make([]string, 3)
 
 			for i := 0; i < 3; i++ {
-				address, url := fakeRepClientFactory.CreateClientArgsForCall(i)
+				address, url, traceID := fakeRepClientFactory.CreateClientArgsForCall(i)
 				repAddresses[i] = address
 				repURLs[i] = url
+				traceIDs[i] = traceID
 			}
 
 			Expect(repAddresses).To(ContainElement(cell1Presence.RepAddress))
@@ -855,6 +857,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(repURLs).To(ContainElement(cell1Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell2Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell3Presence.RepUrl))
+
+			Expect(traceIDs[0]).To(BeEmpty())
+			Expect(traceIDs[1]).To(BeEmpty())
+			Expect(traceIDs[2]).To(BeEmpty())
 		})
 
 		It("calls UpdateLRPInstance on the rep client", func() {
@@ -982,11 +988,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			repAddresses := make([]string, 3)
 			repURLs := make([]string, 3)
+			traceIDs := make([]string, 3)
 
 			for i := 0; i < 3; i++ {
-				address, url := fakeRepClientFactory.CreateClientArgsForCall(i)
+				address, url, traceID := fakeRepClientFactory.CreateClientArgsForCall(i)
 				repAddresses[i] = address
 				repURLs[i] = url
+				traceIDs[i] = traceID
 			}
 
 			Expect(repAddresses).To(ContainElement(cell1Presence.RepAddress))
@@ -996,6 +1004,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(repURLs).To(ContainElement(cell1Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell2Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell3Presence.RepUrl))
+
+			Expect(traceIDs[0]).To(BeEmpty())
+			Expect(traceIDs[1]).To(BeEmpty())
+			Expect(traceIDs[2]).To(BeEmpty())
 		})
 
 		It("calls UpdateLRPInstance on the rep client", func() {

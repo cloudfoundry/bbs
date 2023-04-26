@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/events/calculator"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 )
@@ -310,7 +311,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 			}
 
 			var client rep.Client
-			client, err = h.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl)
+			client, err = h.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl, trace.RequestIdFromContext(ctx))
 			if err != nil {
 				return err
 			}
