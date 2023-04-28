@@ -10,6 +10,7 @@ import (
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
@@ -124,7 +125,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 		startLogger := logger.WithData(lager.Data{"start_requests_count": len(startRequests)})
 		if len(startRequests) > 0 {
 			startLogger.Debug("requesting-start-auctions")
-			err = h.auctioneerClient.RequestLRPAuctions(logger, startRequests)
+			err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), startRequests)
 			if err != nil {
 				startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp_start_auctions": startRequests})
 			}

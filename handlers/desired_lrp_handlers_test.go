@@ -880,12 +880,13 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					}
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-					_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+					_, traceID, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 					Expect(startAuctions).To(HaveLen(1))
 					Expect(startAuctions[0].ProcessGuid).To(Equal(expectedStartRequest.ProcessGuid))
 					Expect(startAuctions[0].Domain).To(Equal(expectedStartRequest.Domain))
 					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
 					Expect(startAuctions[0].Resource).To(Equal(expectedStartRequest.Resource))
+					Expect(traceID).To(Equal(requestIdHeader))
 				})
 			})
 
@@ -1173,7 +1174,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						}))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						_, traceID, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						Expect(traceID).To(Equal(requestIdHeader))
 						Expect(startRequests).To(HaveLen(1))
 						startReq := startRequests[0]
 						Expect(startReq.ProcessGuid).To(Equal("some-guid"))

@@ -635,7 +635,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		Describe("restarting the instance", func() {
 			Context("when the actual LRP should be restarted", func() {
 				It("request an auction", func() {
-					err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(context.WithValue(ctx, trace.RequestIdHeader, "some-request-id"), logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
@@ -643,8 +643,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Expect(processGuid).To(Equal("process-guid"))
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-					_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+					_, traceID, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 					Expect(startRequests).To(HaveLen(1))
+					Expect(traceID).To(Equal("some-request-id"))
 					schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, 1)
 					Expect(startRequests[0]).To(BeEquivalentTo(&expectedStartRequest))

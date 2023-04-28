@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"context"
 	"errors"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -11,6 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo/v2"
@@ -243,7 +245,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			keepContainer, err = controller.EvacuateClaimedActualLRP(ctx, logger, lrpKey, lrpInstanceKey)
+			keepContainer, err = controller.EvacuateClaimedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, "some-request-id"), logger, lrpKey, lrpInstanceKey)
 		})
 
 		It("does not return an error and tells the caller not to keep the lrp container", func() {
@@ -262,8 +264,9 @@ var _ = Describe("Evacuation Controller", func() {
 
 			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.Index))
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-			_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, traceID, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+			Expect(traceID).To(Equal("some-request-id"))
 		})
 
 		It("emits an LRPChanged event", func() {
@@ -747,7 +750,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		JustBeforeEach(func() {
 			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
-			keepContainer, err = controller.EvacuateRunningActualLRP(ctx, logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags)
+			keepContainer, err = controller.EvacuateRunningActualLRP(context.WithValue(ctx, trace.RequestIdHeader, "some-request-id"), logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags)
 			modelErr = models.ConvertError(err)
 		})
 
@@ -1015,8 +1018,9 @@ var _ = Describe("Evacuation Controller", func() {
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						_, traceID, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+						Expect(traceID).To(Equal("some-request-id"))
 					})
 
 					It("emits events to the hub", func() {
@@ -1105,8 +1109,9 @@ var _ = Describe("Evacuation Controller", func() {
 					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-					_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+					_, traceID, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 					Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+					Expect(traceID).To(Equal("some-request-id"))
 				})
 
 				Context("when the instance is suspect", func() {

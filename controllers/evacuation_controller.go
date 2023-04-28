@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/events/calculator"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 )
 
@@ -388,7 +389,7 @@ func (h *EvacuationController) requestAuction(ctx context.Context, logger lager.
 
 	schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
 	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedInfo, int(lrpKey.Index))
-	err = h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&startRequest})
+	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&startRequest})
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
 	}

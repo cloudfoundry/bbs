@@ -233,7 +233,8 @@ var _ = Describe("Task Controller", func() {
 					},
 				}
 
-				_, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+				_, traceId, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+				Expect(traceId).NotTo(BeNil())
 				Expect(requestedTasks).To(HaveLen(1))
 				Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
 			})
@@ -1091,7 +1092,8 @@ var _ = Describe("Task Controller", func() {
 				It("requests an auction", func() {
 					Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
 
-					_, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					_, traceId, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					Expect(traceId).NotTo(BeNil())
 					Expect(requestedTasks).To(HaveLen(2))
 					Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
 				})

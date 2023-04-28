@@ -16,6 +16,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
@@ -92,7 +93,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			2,
 			fakeLRPStatMetronNotifier,
 		)
-		controller.ConvergeLRPs(ctx, logger)
+		controller.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, "some-request-id"), logger)
 	})
 
 	It("calls ConvergeLRPs", func() {
@@ -250,8 +251,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("auctions off the returned keys", func() {
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-			_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, traceID, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(1))
+			Expect(traceID).To(Equal("some-request-id"))
 			request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 			Expect(startAuctions).To(ContainElement(&request))
 		})
@@ -300,8 +302,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			It("auctions off the returned keys", func() {
 				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				_, traceID, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
+				Expect(traceID).To(Equal("some-request-id"))
 				request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 				Expect(startAuctions).To(ContainElement(&request))
 			})
@@ -347,8 +350,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("auctions off the returned keys", func() {
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-			_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, traceID, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(1))
+			Expect(traceID).To(Equal("some-request-id"))
 			request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 			Expect(startAuctions).To(ContainElement(&request))
 		})
@@ -459,8 +463,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 				keysToAuction := []*auctioneer.LRPStartRequest{&unclaimedStartRequest}
 
-				_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				_, traceID, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(ConsistOf(keysToAuction))
+				Expect(traceID).To(Equal("some-request-id"))
 			})
 
 			It("emits no group events", func() {

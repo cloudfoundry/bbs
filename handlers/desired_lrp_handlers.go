@@ -178,7 +178,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
 	if schedulingInfo.Instances > 0 {
-		h.startInstanceRange(req.Context(), logger, 0, schedulingInfo.Instances, &schedulingInfo)
+		h.startInstanceRange(trace.ContextWithRequestId(req), logger, 0, schedulingInfo.Instances, &schedulingInfo)
 	}
 }
 
@@ -291,7 +291,7 @@ func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager
 	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
 
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
-	err := h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&start})
+	err := h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&start})
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
