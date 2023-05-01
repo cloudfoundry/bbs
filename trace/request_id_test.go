@@ -12,14 +12,14 @@ import (
 )
 
 var _ = Describe("RequestId", func() {
-	Describe("ContextWithRequestId", func() {
-		var req *http.Request
-		BeforeEach(func() {
-			var err error
-			req, err = http.NewRequest("GET", "/info", bytes.NewReader([]byte("hello")))
-			Expect(err).NotTo(HaveOccurred())
-		})
+	var req *http.Request
+	BeforeEach(func() {
+		var err error
+		req, err = http.NewRequest("GET", "/info", bytes.NewReader([]byte("hello")))
+		Expect(err).NotTo(HaveOccurred())
+	})
 
+	Describe("ContextWithRequestId", func() {
 		It("returns context with no request id header", func() {
 			ctx := trace.ContextWithRequestId(req)
 			Expect(ctx.Value(trace.RequestIdHeader)).To(Equal(""))
@@ -42,6 +42,16 @@ var _ = Describe("RequestId", func() {
 			ctx := context.WithValue(context.Background(), trace.RequestIdHeader, "some-request-id")
 			Expect(trace.RequestIdFromContext(ctx)).To(Equal("some-request-id"))
 		})
+	})
 
+	Describe("RequestIdFromRequest", func() {
+		It("returns empty request id from request", func() {
+			Expect(trace.RequestIdFromRequest(req)).To(Equal(""))
+		})
+
+		It("returns request id from context", func() {
+			req.Header.Add(trace.RequestIdHeader, "some-request-id")
+			Expect(trace.RequestIdFromRequest(req)).To(Equal("some-request-id"))
+		})
 	})
 })

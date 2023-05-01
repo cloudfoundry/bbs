@@ -10,7 +10,7 @@ const (
 )
 
 func ContextWithRequestId(req *http.Request) context.Context {
-	return context.WithValue(req.Context(), RequestIdHeader, req.Header.Get(RequestIdHeader))
+	return context.WithValue(req.Context(), RequestIdHeader, RequestIdFromRequest(req))
 }
 
 func RequestIdFromContext(ctx context.Context) string {
@@ -19,4 +19,8 @@ func RequestIdFromContext(ctx context.Context) string {
 	}
 
 	return ""
+}
+
+func RequestIdFromRequest(req *http.Request) string {
+	return req.Header.Get(RequestIdHeader)
 }
