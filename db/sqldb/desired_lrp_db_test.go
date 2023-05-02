@@ -329,6 +329,77 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 	})
 
+	FDescribe("DesiredLRPRoutingInfos", func() {
+		var expectedDesiredLRPRoutingInfos []*models.DesiredLRP
+		var expectedDesiredLRPs []*models.DesiredLRP
+
+		BeforeEach(func() {
+			expectedDesiredLRPs = []*models.DesiredLRP{}
+			expectedDesiredLRPRoutingInfos = []*models.DesiredLRP{}
+			desiredLRP1 := model_helpers.NewValidDesiredLRP("d-1")
+			desiredLRP2 := model_helpers.NewValidDesiredLRP("d-2")
+			desiredLRP3 := model_helpers.NewValidDesiredLRP("d-3")
+
+			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP1)
+			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP2)
+			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP3)
+			for i, expectedDesiredLRP := range expectedDesiredLRPs {
+				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
+				expectedDesiredLRP.Instances = 0
+				Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
+				routingInfo := expectedDesiredLRP.DesiredLRPRoutingInfo()
+				expectedDesiredLRPRoutingInfos = append(expectedDesiredLRPRoutingInfos, &routingInfo)
+			}
+		})
+
+		It("returns all desired lrps routing infos", func() {
+			desiredLRPRoutingInfos, err := sqlDB.DesiredLRPRoutingInfos(ctx, logger, models.DesiredLRPFilter{})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(desiredLRPRoutingInfos).To(HaveLen(3))
+			Expect(desiredLRPRoutingInfos).To(ConsistOf(expectedDesiredLRPRoutingInfos))
+		})
+
+		Context("when filtering by domain", func() {
+			It("returns the filtered routing infos", func() {
+				desiredLRPRoutingInfos, err := sqlDB.DesiredLRPRoutingInfos(ctx, logger, models.DesiredLRPFilter{Domain: "domain-1"})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRPRoutingInfos).To(HaveLen(1))
+				Expect(desiredLRPRoutingInfos[0]).To(BeEquivalentTo(expectedDesiredLRPRoutingInfos[0]))
+			})
+		})
+
+		Context("when filtering by process guids", func() {
+			It("returns the filtered routing infos", func() {
+				filter := models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}}
+				desiredLRPRoutingInfos, err := sqlDB.DesiredLRPRoutingInfos(ctx, logger, filter)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRPRoutingInfos).To(HaveLen(2))
+				Expect(desiredLRPRoutingInfos).To(ContainElement(expectedDesiredLRPRoutingInfos[0]))
+				Expect(desiredLRPRoutingInfos).To(ContainElement(expectedDesiredLRPRoutingInfos[2]))
+			})
+		})
+
+		Context("when the routes are invalid", func() {
+			BeforeEach(func() {
+				queryStr := "UPDATE desired_lrps SET routes = ? WHERE process_guid = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPs[0].ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+				rowsAffected, err := result.RowsAffected()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rowsAffected).To(BeEquivalentTo(1))
+			})
+
+			It("excludes the invalid desired LRP from the response", func() {
+				desiredLRPRoutingInfos, err := sqlDB.DesiredLRPRoutingInfos(ctx, logger, models.DesiredLRPFilter{})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRPRoutingInfos).To(HaveLen(2))
+			})
+		})
+	})
+
 	Describe("UpdateDesiredLRP", func() {
 		var expectedDesiredLRP *models.DesiredLRP
 		var update *models.DesiredLRPUpdate

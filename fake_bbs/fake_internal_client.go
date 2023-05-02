@@ -189,6 +189,20 @@ type FakeInternalClient struct {
 		result1 *models.DesiredLRP
 		result2 error
 	}
+	DesiredLRPRoutingInfosStub        func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+	desiredLRPRoutingInfosMutex       sync.RWMutex
+	desiredLRPRoutingInfosArgsForCall []struct {
+		arg1 lager.Logger
+		arg2 models.DesiredLRPFilter
+	}
+	desiredLRPRoutingInfosReturns struct {
+		result1 []*models.DesiredLRP
+		result2 error
+	}
+	desiredLRPRoutingInfosReturnsOnCall map[int]struct {
+		result1 []*models.DesiredLRP
+		result2 error
+	}
 	DesiredLRPSchedulingInfosStub        func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 	desiredLRPSchedulingInfosMutex       sync.RWMutex
 	desiredLRPSchedulingInfosArgsForCall []struct {
@@ -1432,6 +1446,71 @@ func (fake *FakeInternalClient) DesiredLRPByProcessGuidReturnsOnCall(i int, resu
 	}
 	fake.desiredLRPByProcessGuidReturnsOnCall[i] = struct {
 		result1 *models.DesiredLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeInternalClient) DesiredLRPRoutingInfos(arg1 lager.Logger, arg2 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	ret, specificReturn := fake.desiredLRPRoutingInfosReturnsOnCall[len(fake.desiredLRPRoutingInfosArgsForCall)]
+	fake.desiredLRPRoutingInfosArgsForCall = append(fake.desiredLRPRoutingInfosArgsForCall, struct {
+		arg1 lager.Logger
+		arg2 models.DesiredLRPFilter
+	}{arg1, arg2})
+	stub := fake.DesiredLRPRoutingInfosStub
+	fakeReturns := fake.desiredLRPRoutingInfosReturns
+	fake.recordInvocation("DesiredLRPRoutingInfos", []interface{}{arg1, arg2})
+	fake.desiredLRPRoutingInfosMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeInternalClient) DesiredLRPRoutingInfosCallCount() int {
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
+	return len(fake.desiredLRPRoutingInfosArgsForCall)
+}
+
+func (fake *FakeInternalClient) DesiredLRPRoutingInfosCalls(stub func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	defer fake.desiredLRPRoutingInfosMutex.Unlock()
+	fake.DesiredLRPRoutingInfosStub = stub
+}
+
+func (fake *FakeInternalClient) DesiredLRPRoutingInfosArgsForCall(i int) (lager.Logger, models.DesiredLRPFilter) {
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
+	argsForCall := fake.desiredLRPRoutingInfosArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeInternalClient) DesiredLRPRoutingInfosReturns(result1 []*models.DesiredLRP, result2 error) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	defer fake.desiredLRPRoutingInfosMutex.Unlock()
+	fake.DesiredLRPRoutingInfosStub = nil
+	fake.desiredLRPRoutingInfosReturns = struct {
+		result1 []*models.DesiredLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeInternalClient) DesiredLRPRoutingInfosReturnsOnCall(i int, result1 []*models.DesiredLRP, result2 error) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	defer fake.desiredLRPRoutingInfosMutex.Unlock()
+	fake.DesiredLRPRoutingInfosStub = nil
+	if fake.desiredLRPRoutingInfosReturnsOnCall == nil {
+		fake.desiredLRPRoutingInfosReturnsOnCall = make(map[int]struct {
+			result1 []*models.DesiredLRP
+			result2 error
+		})
+	}
+	fake.desiredLRPRoutingInfosReturnsOnCall[i] = struct {
+		result1 []*models.DesiredLRP
 		result2 error
 	}{result1, result2}
 }
@@ -3403,6 +3482,8 @@ func (fake *FakeInternalClient) Invocations() map[string][][]interface{} {
 	defer fake.desireTaskMutex.RUnlock()
 	fake.desiredLRPByProcessGuidMutex.RLock()
 	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
 	fake.desiredLRPSchedulingInfosMutex.RLock()
 	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
 	fake.desiredLRPsMutex.RLock()
