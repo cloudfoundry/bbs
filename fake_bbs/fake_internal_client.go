@@ -94,12 +94,13 @@ type FakeInternalClient struct {
 		result1 []*models.CellPresence
 		result2 error
 	}
-	ClaimActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	ClaimActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	claimActualLRPMutex       sync.RWMutex
 	claimActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
 	}
 	claimActualLRPReturns struct {
 		result1 error
@@ -990,20 +991,21 @@ func (fake *FakeInternalClient) CellsReturnsOnCall(i int, result1 []*models.Cell
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) ClaimActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) error {
+func (fake *FakeInternalClient) ClaimActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey) error {
 	fake.claimActualLRPMutex.Lock()
 	ret, specificReturn := fake.claimActualLRPReturnsOnCall[len(fake.claimActualLRPArgsForCall)]
 	fake.claimActualLRPArgsForCall = append(fake.claimActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-	}{arg1, arg2, arg3})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.ClaimActualLRPStub
 	fakeReturns := fake.claimActualLRPReturns
-	fake.recordInvocation("ClaimActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("ClaimActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.claimActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1017,17 +1019,17 @@ func (fake *FakeInternalClient) ClaimActualLRPCallCount() int {
 	return len(fake.claimActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) ClaimActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error) {
+func (fake *FakeInternalClient) ClaimActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error) {
 	fake.claimActualLRPMutex.Lock()
 	defer fake.claimActualLRPMutex.Unlock()
 	fake.ClaimActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) ClaimActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) ClaimActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.claimActualLRPMutex.RLock()
 	defer fake.claimActualLRPMutex.RUnlock()
 	argsForCall := fake.claimActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) ClaimActualLRPReturns(result1 error) {
