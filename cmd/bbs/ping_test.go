@@ -19,7 +19,7 @@ var _ = Describe("Ping API", func() {
 	Describe("Protobuf Ping", func() {
 		It("returns true when the bbs is running", func() {
 			By("having the bbs down", func() {
-				Expect(client.Ping(logger)).To(BeFalse())
+				Expect(client.Ping(logger, "some-trace-id")).To(BeFalse())
 			})
 
 			By("starting the bbs without a lock", func() {
@@ -50,12 +50,12 @@ var _ = Describe("Ping API", func() {
 				bbsRunner.StartCheck = "bbs.locket-lock.started"
 				bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-				Expect(client.Ping(logger)).To(BeFalse())
+				Expect(client.Ping(logger, "some-trace-id")).To(BeFalse())
 			})
 
 			By("finally acquiring the lock", func() {
 				Eventually(func() bool {
-					return client.Ping(logger)
+					return client.Ping(logger, "some-trace-id")
 				}).Should(BeTrue())
 			})
 		})

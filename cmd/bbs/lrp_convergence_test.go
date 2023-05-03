@@ -49,7 +49,7 @@ var _ = Describe("Convergence API", func() {
 			locketHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
 			desiredLRP := model_helpers.NewValidDesiredLRP(processGuid)
-			err := client.DesireLRP(logger, desiredLRP)
+			err := client.DesireLRP(logger, "some-trace-id", desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -71,14 +71,14 @@ var _ = Describe("Convergence API", func() {
 					InstanceGuid: "ig-1",
 					CellId:       "missing-cell",
 				}
-				err := client.StartActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := client.StartActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("makes the LRP suspect", func() {
 				Eventually(func() models.ActualLRP_Presence {
-					group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+					group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 					Expect(err).NotTo(HaveOccurred())
 					return group.Instance.Presence
 				}).Should(Equal(models.ActualLRP_Suspect))
@@ -114,7 +114,7 @@ var _ = Describe("Convergence API", func() {
 					)
 
 					Eventually(func() models.ActualLRP_Presence {
-						group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+						group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 						Expect(err).NotTo(HaveOccurred())
 						return group.Instance.Presence
 					}).Should(Equal(models.ActualLRP_Suspect))
@@ -150,7 +150,7 @@ var _ = Describe("Convergence API", func() {
 					BeforeEach(func() {
 						Eventually(func() bool {
 							index := int32(0)
-							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{Index: &index, ProcessGuid: processGuid})
+							lrps, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{Index: &index, ProcessGuid: processGuid})
 							Expect(err).NotTo(HaveOccurred())
 							for _, lrp := range lrps {
 								if lrp.State == models.ActualLRPStateUnclaimed {
@@ -180,7 +180,7 @@ var _ = Describe("Convergence API", func() {
 					It("removes the suspect LRP", func() {
 						var lrp *models.ActualLRP
 						Eventually(func() string {
-							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							lrp = group.Instance
 							return lrp.InstanceGuid
@@ -203,7 +203,7 @@ var _ = Describe("Convergence API", func() {
 					BeforeEach(func() {
 						Eventually(func() bool {
 							index := int32(0)
-							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{Index: &index, ProcessGuid: "some-process-guid"})
+							lrps, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{Index: &index, ProcessGuid: "some-process-guid"})
 							Expect(err).NotTo(HaveOccurred())
 							for _, lrp := range lrps {
 								if lrp.State == models.ActualLRPStateUnclaimed {
@@ -217,7 +217,7 @@ var _ = Describe("Convergence API", func() {
 						events, err = client.SubscribeToEvents(logger)
 						Expect(err).NotTo(HaveOccurred())
 
-						err = client.ClaimActualLRP(logger, lrpKey, &models.ActualLRPInstanceKey{
+						err = client.ClaimActualLRP(logger, "some-trace-id", lrpKey, &models.ActualLRPInstanceKey{
 							InstanceGuid: "ig-2",
 							CellId:       "another-missing-cell",
 						})
@@ -226,7 +226,7 @@ var _ = Describe("Convergence API", func() {
 
 					It("keeps the suspect LRP untouched", func() {
 						Consistently(func() models.ActualLRP_Presence {
-							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							return group.Instance.Presence
 						}).Should(Equal(models.ActualLRP_Suspect))
@@ -235,7 +235,7 @@ var _ = Describe("Convergence API", func() {
 					It("unclaims the replacement", func() {
 						Eventually(func() string {
 							index := int32(0)
-							lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
+							lrps, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
 							Expect(err).NotTo(HaveOccurred())
 							for _, lrp := range lrps {
 								if lrp.Presence == models.ActualLRP_Ordinary {
@@ -255,7 +255,7 @@ var _ = Describe("Convergence API", func() {
 
 				Context("when the Auctioneer calls FailActualLRP", func() {
 					BeforeEach(func() {
-						err := client.FailActualLRP(logger, &models.ActualLRPKey{
+						err := client.FailActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 							ProcessGuid: "some-process-guid",
 							Index:       0,
 							Domain:      "some-domain",
@@ -265,7 +265,7 @@ var _ = Describe("Convergence API", func() {
 
 					It("keeps the suspect LRP untouched", func() {
 						Consistently(func() models.ActualLRP_Presence {
-							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							return group.Instance.Presence
 						}).Should(Equal(models.ActualLRP_Suspect))
@@ -295,7 +295,7 @@ var _ = Describe("Convergence API", func() {
 
 					Context("when the auctioneer fails to place the replacement instance", func() {
 						BeforeEach(func() {
-							err := client.FailActualLRP(logger, &models.ActualLRPKey{
+							err := client.FailActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
 								Domain:      "some-domain",
@@ -311,7 +311,7 @@ var _ = Describe("Convergence API", func() {
 
 					Context("when the replacement LRP is claimed", func() {
 						BeforeEach(func() {
-							err := client.ClaimActualLRP(logger, &models.ActualLRPKey{
+							err := client.ClaimActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
 								Domain:      "some-domain",
@@ -331,7 +331,7 @@ var _ = Describe("Convergence API", func() {
 					Context("when the replacement LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
 							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
-							err := client.StartActualLRP(logger, &models.ActualLRPKey{
+							err := client.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
 								Domain:      "some-domain",
@@ -343,7 +343,7 @@ var _ = Describe("Convergence API", func() {
 						})
 
 						It("replaces the Running LRP instance with the ordinary one", func() {
-							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
 						})
@@ -370,7 +370,7 @@ var _ = Describe("Convergence API", func() {
 
 						It("returns ErrActualLRPCannotBeStarted when the Suspect LRP is started", func() {
 							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
-							err := client.StartActualLRP(logger, &models.ActualLRPKey{
+							err := client.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
 								Domain:      "some-domain",
@@ -385,7 +385,7 @@ var _ = Describe("Convergence API", func() {
 					Context("when the suspect LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
 							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
-							err := client.StartActualLRP(logger, &models.ActualLRPKey{
+							err := client.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
 								Domain:      "some-domain",
@@ -397,7 +397,7 @@ var _ = Describe("Convergence API", func() {
 						})
 
 						It("does not change the ActualLRPGroups returned from the API", func() {
-							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
 						})
@@ -418,13 +418,13 @@ var _ = Describe("Convergence API", func() {
 								InstanceGuid: "ig-2",
 								CellId:       "some-cell",
 							}
-							err := client.ClaimActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+							err := client.ClaimActualLRP(logger, "some-trace-id", lrpKey, replacementLRPInstanceKey)
 							Expect(err).NotTo(HaveOccurred())
 						})
 
 						Context("when the suspect LRP crashes", func() {
 							BeforeEach(func() {
-								err := client.CrashActualLRP(logger, lrpKey, suspectLRPInstanceKey, "boooom!")
+								err := client.CrashActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, "boooom!")
 								Expect(err).NotTo(HaveOccurred())
 							})
 
@@ -439,7 +439,7 @@ var _ = Describe("Convergence API", func() {
 							})
 
 							It("removes the Suspect instance from the database", func() {
-								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
 							})
@@ -447,12 +447,12 @@ var _ = Describe("Convergence API", func() {
 
 						Context("when the replacement crashes", func() {
 							BeforeEach(func() {
-								err := client.CrashActualLRP(logger, lrpKey, replacementLRPInstanceKey, "boooom!")
+								err := client.CrashActualLRP(logger, "some-trace-id", lrpKey, replacementLRPInstanceKey, "boooom!")
 								Expect(err).NotTo(HaveOccurred())
 							})
 
 							It("is unclaimed", func() {
-								lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{
+								lrps, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{
 									ProcessGuid: lrpKey.ProcessGuid,
 									Index:       &lrpKey.Index,
 								})
@@ -471,19 +471,19 @@ var _ = Describe("Convergence API", func() {
 						Context("when the suspect LRP is evacuated", func() {
 							BeforeEach(func() {
 								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
-								_, err := client.EvacuateRunningActualLRP(logger, lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+								_, err := client.EvacuateRunningActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
 								Expect(err).NotTo(HaveOccurred())
 							})
 
 							It("creates an evacuating LRP", func() {
-								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 								Expect(group.Evacuating.Presence).To(Equal(models.ActualLRP_Evacuating))
 								Expect(group.Evacuating.ActualLRPInstanceKey).To(Equal(*suspectLRPInstanceKey))
 							})
 
 							It("removes the suspect LRP", func() {
-								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
 							})
@@ -513,12 +513,12 @@ var _ = Describe("Convergence API", func() {
 
 						Context("when the replacement is evacuated", func() {
 							BeforeEach(func() {
-								_, err := client.EvacuateClaimedActualLRP(logger, lrpKey, replacementLRPInstanceKey)
+								_, err := client.EvacuateClaimedActualLRP(logger, "some-trace-id", lrpKey, replacementLRPInstanceKey)
 								Expect(err).NotTo(HaveOccurred())
 							})
 
 							It("is unclaimed", func() {
-								lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{
+								lrps, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{
 									ProcessGuid: lrpKey.ProcessGuid,
 									Index:       &lrpKey.Index,
 								})
@@ -536,7 +536,7 @@ var _ = Describe("Convergence API", func() {
 							It("does not remove the suspect LRP", func() {
 								eventCh := streamEvents(events)
 
-								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 
 								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
@@ -546,12 +546,12 @@ var _ = Describe("Convergence API", func() {
 
 						Context("when the suspect LRP is evacuating after crashing", func() {
 							BeforeEach(func() {
-								_, err := client.EvacuateCrashedActualLRP(logger, lrpKey, suspectLRPInstanceKey, "boom!")
+								_, err := client.EvacuateCrashedActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, "boom!")
 								Expect(err).NotTo(HaveOccurred())
 							})
 
 							It("removes the suspect LRP", func() {
-								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
 							})
@@ -569,12 +569,12 @@ var _ = Describe("Convergence API", func() {
 
 						Context("when the suspect LRP is evacuating after stopping", func() {
 							BeforeEach(func() {
-								_, err := client.EvacuateStoppedActualLRP(logger, lrpKey, suspectLRPInstanceKey)
+								_, err := client.EvacuateStoppedActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey)
 								Expect(err).NotTo(HaveOccurred())
 							})
 
 							It("removes the suspect LRP", func() {
-								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
+								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
 							})
@@ -596,7 +596,7 @@ var _ = Describe("Convergence API", func() {
 
 		Context("when the lrp goes missing", func() {
 			BeforeEach(func() {
-				err := client.RemoveActualLRP(logger, &models.ActualLRPKey{
+				err := client.RemoveActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 					ProcessGuid: processGuid,
 					Index:       0,
 					Domain:      "some-domain",
@@ -606,7 +606,7 @@ var _ = Describe("Convergence API", func() {
 
 			It("converges the lrps", func() {
 				Eventually(func() []*models.ActualLRPGroup {
-					groups, err := client.ActualLRPGroupsByProcessGuid(logger, processGuid)
+					groups, err := client.ActualLRPGroupsByProcessGuid(logger, "some-trace-id", processGuid)
 					Expect(err).NotTo(HaveOccurred())
 					return groups
 				}).Should(HaveLen(1))
@@ -617,10 +617,10 @@ var _ = Describe("Convergence API", func() {
 			BeforeEach(func() {
 				task := model_helpers.NewValidTask("task-guid")
 
-				err := client.DesireTask(logger, task.TaskGuid, task.Domain, task.TaskDefinition)
+				err := client.DesireTask(logger, "some-trace-id", task.TaskGuid, task.Domain, task.TaskDefinition)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = client.StartTask(logger, task.TaskGuid, "dead-cell")
+				_, err = client.StartTask(logger, "some-trace-id", task.TaskGuid, "dead-cell")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -640,7 +640,7 @@ var _ = Describe("Convergence API", func() {
 				manyInstanceProcessGuid = "some-process-guid-with-many-instances"
 				desiredLRP := model_helpers.NewValidDesiredLRP(manyInstanceProcessGuid)
 				desiredLRP.Instances = 300
-				err := client.DesireLRP(logger, desiredLRP)
+				err := client.DesireLRP(logger, "some-trace-id", desiredLRP)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -651,7 +651,7 @@ var _ = Describe("Convergence API", func() {
 				)
 
 				BeforeEach(func() {
-					Expect(client.UpsertDomain(logger, "some-domain", 0)).To(Succeed())
+					Expect(client.UpsertDomain(logger, "some-trace-id", "some-domain", 0)).To(Succeed())
 					sqlConn, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -664,7 +664,7 @@ var _ = Describe("Convergence API", func() {
 
 				It("removes extra lrps", func() {
 					Eventually(func() int {
-						lrps, err := client.ActualLRPs(logger, models.ActualLRPFilter{ProcessGuid: manyInstanceProcessGuid})
+						lrps, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: manyInstanceProcessGuid})
 						Expect(err).NotTo(HaveOccurred())
 						return len(lrps)
 					}).Should(Equal(290))
@@ -675,7 +675,7 @@ var _ = Describe("Convergence API", func() {
 })
 
 func getTasksByState(client bbs.InternalClient, state models.Task_State) []*models.Task {
-	tasks, err := client.Tasks(logger)
+	tasks, err := client.Tasks(logger, "some-trace-id")
 	Expect(err).NotTo(HaveOccurred())
 
 	filteredTasks := make([]*models.Task, 0)

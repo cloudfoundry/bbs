@@ -12,12 +12,13 @@ import (
 )
 
 type FakeInternalClient struct {
-	ActualLRPGroupByProcessGuidAndIndexStub        func(lager.Logger, string, int) (*models.ActualLRPGroup, error)
+	ActualLRPGroupByProcessGuidAndIndexStub        func(lager.Logger, string, string, int) (*models.ActualLRPGroup, error)
 	actualLRPGroupByProcessGuidAndIndexMutex       sync.RWMutex
 	actualLRPGroupByProcessGuidAndIndexArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
-		arg3 int
+		arg3 string
+		arg4 int
 	}
 	actualLRPGroupByProcessGuidAndIndexReturns struct {
 		result1 *models.ActualLRPGroup
@@ -27,11 +28,12 @@ type FakeInternalClient struct {
 		result1 *models.ActualLRPGroup
 		result2 error
 	}
-	ActualLRPGroupsStub        func(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroupsStub        func(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 	actualLRPGroupsMutex       sync.RWMutex
 	actualLRPGroupsArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 models.ActualLRPFilter
+		arg2 string
+		arg3 models.ActualLRPFilter
 	}
 	actualLRPGroupsReturns struct {
 		result1 []*models.ActualLRPGroup
@@ -41,11 +43,12 @@ type FakeInternalClient struct {
 		result1 []*models.ActualLRPGroup
 		result2 error
 	}
-	ActualLRPGroupsByProcessGuidStub        func(lager.Logger, string) ([]*models.ActualLRPGroup, error)
+	ActualLRPGroupsByProcessGuidStub        func(lager.Logger, string, string) ([]*models.ActualLRPGroup, error)
 	actualLRPGroupsByProcessGuidMutex       sync.RWMutex
 	actualLRPGroupsByProcessGuidArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	actualLRPGroupsByProcessGuidReturns struct {
 		result1 []*models.ActualLRPGroup
@@ -55,11 +58,12 @@ type FakeInternalClient struct {
 		result1 []*models.ActualLRPGroup
 		result2 error
 	}
-	ActualLRPsStub        func(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRP, error)
+	ActualLRPsStub        func(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRP, error)
 	actualLRPsMutex       sync.RWMutex
 	actualLRPsArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 models.ActualLRPFilter
+		arg2 string
+		arg3 models.ActualLRPFilter
 	}
 	actualLRPsReturns struct {
 		result1 []*models.ActualLRP
@@ -69,11 +73,12 @@ type FakeInternalClient struct {
 		result1 []*models.ActualLRP
 		result2 error
 	}
-	CancelTaskStub        func(lager.Logger, string) error
+	CancelTaskStub        func(lager.Logger, string, string) error
 	cancelTaskMutex       sync.RWMutex
 	cancelTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	cancelTaskReturns struct {
 		result1 error
@@ -81,10 +86,11 @@ type FakeInternalClient struct {
 	cancelTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CellsStub        func(lager.Logger) ([]*models.CellPresence, error)
+	CellsStub        func(lager.Logger, string) ([]*models.CellPresence, error)
 	cellsMutex       sync.RWMutex
 	cellsArgsForCall []struct {
 		arg1 lager.Logger
+		arg2 string
 	}
 	cellsReturns struct {
 		result1 []*models.CellPresence
@@ -108,15 +114,16 @@ type FakeInternalClient struct {
 	claimActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CompleteTaskStub        func(lager.Logger, string, string, bool, string, string) error
+	CompleteTaskStub        func(lager.Logger, string, string, string, bool, string, string) error
 	completeTaskMutex       sync.RWMutex
 	completeTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
-		arg4 bool
-		arg5 string
+		arg4 string
+		arg5 bool
 		arg6 string
+		arg7 string
 	}
 	completeTaskReturns struct {
 		result1 error
@@ -124,13 +131,14 @@ type FakeInternalClient struct {
 	completeTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CrashActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
+	CrashActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
 	crashActualLRPMutex       sync.RWMutex
 	crashActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 string
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 string
 	}
 	crashActualLRPReturns struct {
 		result1 error
@@ -138,11 +146,12 @@ type FakeInternalClient struct {
 	crashActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteTaskStub        func(lager.Logger, string) error
+	DeleteTaskStub        func(lager.Logger, string, string) error
 	deleteTaskMutex       sync.RWMutex
 	deleteTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	deleteTaskReturns struct {
 		result1 error
@@ -150,11 +159,12 @@ type FakeInternalClient struct {
 	deleteTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DesireLRPStub        func(lager.Logger, *models.DesiredLRP) error
+	DesireLRPStub        func(lager.Logger, string, *models.DesiredLRP) error
 	desireLRPMutex       sync.RWMutex
 	desireLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.DesiredLRP
+		arg2 string
+		arg3 *models.DesiredLRP
 	}
 	desireLRPReturns struct {
 		result1 error
@@ -162,13 +172,14 @@ type FakeInternalClient struct {
 	desireLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DesireTaskStub        func(lager.Logger, string, string, *models.TaskDefinition) error
+	DesireTaskStub        func(lager.Logger, string, string, string, *models.TaskDefinition) error
 	desireTaskMutex       sync.RWMutex
 	desireTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
-		arg4 *models.TaskDefinition
+		arg4 string
+		arg5 *models.TaskDefinition
 	}
 	desireTaskReturns struct {
 		result1 error
@@ -176,11 +187,12 @@ type FakeInternalClient struct {
 	desireTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DesiredLRPByProcessGuidStub        func(lager.Logger, string) (*models.DesiredLRP, error)
+	DesiredLRPByProcessGuidStub        func(lager.Logger, string, string) (*models.DesiredLRP, error)
 	desiredLRPByProcessGuidMutex       sync.RWMutex
 	desiredLRPByProcessGuidArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	desiredLRPByProcessGuidReturns struct {
 		result1 *models.DesiredLRP
@@ -190,11 +202,12 @@ type FakeInternalClient struct {
 		result1 *models.DesiredLRP
 		result2 error
 	}
-	DesiredLRPSchedulingInfosStub        func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
+	DesiredLRPSchedulingInfosStub        func(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 	desiredLRPSchedulingInfosMutex       sync.RWMutex
 	desiredLRPSchedulingInfosArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 models.DesiredLRPFilter
+		arg2 string
+		arg3 models.DesiredLRPFilter
 	}
 	desiredLRPSchedulingInfosReturns struct {
 		result1 []*models.DesiredLRPSchedulingInfo
@@ -204,11 +217,12 @@ type FakeInternalClient struct {
 		result1 []*models.DesiredLRPSchedulingInfo
 		result2 error
 	}
-	DesiredLRPsStub        func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+	DesiredLRPsStub        func(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
 	desiredLRPsArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 models.DesiredLRPFilter
+		arg2 string
+		arg3 models.DesiredLRPFilter
 	}
 	desiredLRPsReturns struct {
 		result1 []*models.DesiredLRP
@@ -218,10 +232,11 @@ type FakeInternalClient struct {
 		result1 []*models.DesiredLRP
 		result2 error
 	}
-	DomainsStub        func(lager.Logger) ([]string, error)
+	DomainsStub        func(lager.Logger, string) ([]string, error)
 	domainsMutex       sync.RWMutex
 	domainsArgsForCall []struct {
 		arg1 lager.Logger
+		arg2 string
 	}
 	domainsReturns struct {
 		result1 []string
@@ -231,12 +246,13 @@ type FakeInternalClient struct {
 		result1 []string
 		result2 error
 	}
-	EvacuateClaimedActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateClaimedActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	evacuateClaimedActualLRPMutex       sync.RWMutex
 	evacuateClaimedActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
 	}
 	evacuateClaimedActualLRPReturns struct {
 		result1 bool
@@ -246,13 +262,14 @@ type FakeInternalClient struct {
 		result1 bool
 		result2 error
 	}
-	EvacuateCrashedActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
+	EvacuateCrashedActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
 	evacuateCrashedActualLRPMutex       sync.RWMutex
 	evacuateCrashedActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 string
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 string
 	}
 	evacuateCrashedActualLRPReturns struct {
 		result1 bool
@@ -262,15 +279,16 @@ type FakeInternalClient struct {
 		result1 bool
 		result2 error
 	}
-	EvacuateRunningActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)
+	EvacuateRunningActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)
 	evacuateRunningActualLRPMutex       sync.RWMutex
 	evacuateRunningActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 *models.ActualLRPNetInfo
-		arg5 []*models.ActualLRPInternalRoute
-		arg6 map[string]string
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 *models.ActualLRPNetInfo
+		arg6 []*models.ActualLRPInternalRoute
+		arg7 map[string]string
 	}
 	evacuateRunningActualLRPReturns struct {
 		result1 bool
@@ -280,12 +298,13 @@ type FakeInternalClient struct {
 		result1 bool
 		result2 error
 	}
-	EvacuateStoppedActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateStoppedActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	evacuateStoppedActualLRPMutex       sync.RWMutex
 	evacuateStoppedActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
 	}
 	evacuateStoppedActualLRPReturns struct {
 		result1 bool
@@ -295,12 +314,13 @@ type FakeInternalClient struct {
 		result1 bool
 		result2 error
 	}
-	FailActualLRPStub        func(lager.Logger, *models.ActualLRPKey, string) error
+	FailActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, string) error
 	failActualLRPMutex       sync.RWMutex
 	failActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 string
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 string
 	}
 	failActualLRPReturns struct {
 		result1 error
@@ -308,12 +328,13 @@ type FakeInternalClient struct {
 	failActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	FailTaskStub        func(lager.Logger, string, string) error
+	FailTaskStub        func(lager.Logger, string, string, string) error
 	failTaskMutex       sync.RWMutex
 	failTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
+		arg4 string
 	}
 	failTaskReturns struct {
 		result1 error
@@ -321,10 +342,11 @@ type FakeInternalClient struct {
 	failTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	PingStub        func(lager.Logger) bool
+	PingStub        func(lager.Logger, string) bool
 	pingMutex       sync.RWMutex
 	pingArgsForCall []struct {
 		arg1 lager.Logger
+		arg2 string
 	}
 	pingReturns struct {
 		result1 bool
@@ -332,12 +354,13 @@ type FakeInternalClient struct {
 	pingReturnsOnCall map[int]struct {
 		result1 bool
 	}
-	RejectTaskStub        func(lager.Logger, string, string) error
+	RejectTaskStub        func(lager.Logger, string, string, string) error
 	rejectTaskMutex       sync.RWMutex
 	rejectTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
+		arg4 string
 	}
 	rejectTaskReturns struct {
 		result1 error
@@ -345,12 +368,13 @@ type FakeInternalClient struct {
 	rejectTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	RemoveActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	removeActualLRPMutex       sync.RWMutex
 	removeActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
 	}
 	removeActualLRPReturns struct {
 		result1 error
@@ -358,11 +382,12 @@ type FakeInternalClient struct {
 	removeActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveDesiredLRPStub        func(lager.Logger, string) error
+	RemoveDesiredLRPStub        func(lager.Logger, string, string) error
 	removeDesiredLRPMutex       sync.RWMutex
 	removeDesiredLRPArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	removeDesiredLRPReturns struct {
 		result1 error
@@ -370,12 +395,13 @@ type FakeInternalClient struct {
 	removeDesiredLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveEvacuatingActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	RemoveEvacuatingActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	removeEvacuatingActualLRPMutex       sync.RWMutex
 	removeEvacuatingActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
 	}
 	removeEvacuatingActualLRPReturns struct {
 		result1 error
@@ -383,11 +409,12 @@ type FakeInternalClient struct {
 	removeEvacuatingActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ResolvingTaskStub        func(lager.Logger, string) error
+	ResolvingTaskStub        func(lager.Logger, string, string) error
 	resolvingTaskMutex       sync.RWMutex
 	resolvingTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	resolvingTaskReturns struct {
 		result1 error
@@ -395,11 +422,12 @@ type FakeInternalClient struct {
 	resolvingTaskReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RetireActualLRPStub        func(lager.Logger, *models.ActualLRPKey) error
+	RetireActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey) error
 	retireActualLRPMutex       sync.RWMutex
 	retireActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
+		arg2 string
+		arg3 *models.ActualLRPKey
 	}
 	retireActualLRPReturns struct {
 		result1 error
@@ -407,15 +435,16 @@ type FakeInternalClient struct {
 	retireActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	StartActualLRPStub        func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) error
+	StartActualLRPStub        func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) error
 	startActualLRPMutex       sync.RWMutex
 	startActualLRPArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 *models.ActualLRPNetInfo
-		arg5 []*models.ActualLRPInternalRoute
-		arg6 map[string]string
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 *models.ActualLRPNetInfo
+		arg6 []*models.ActualLRPInternalRoute
+		arg7 map[string]string
 	}
 	startActualLRPReturns struct {
 		result1 error
@@ -423,12 +452,13 @@ type FakeInternalClient struct {
 	startActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	StartTaskStub        func(lager.Logger, string, string) (bool, error)
+	StartTaskStub        func(lager.Logger, string, string, string) (bool, error)
 	startTaskMutex       sync.RWMutex
 	startTaskArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
+		arg4 string
 	}
 	startTaskReturns struct {
 		result1 bool
@@ -505,11 +535,12 @@ type FakeInternalClient struct {
 		result1 events.EventSource
 		result2 error
 	}
-	TaskByGuidStub        func(lager.Logger, string) (*models.Task, error)
+	TaskByGuidStub        func(lager.Logger, string, string) (*models.Task, error)
 	taskByGuidMutex       sync.RWMutex
 	taskByGuidArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	taskByGuidReturns struct {
 		result1 *models.Task
@@ -519,10 +550,11 @@ type FakeInternalClient struct {
 		result1 *models.Task
 		result2 error
 	}
-	TasksStub        func(lager.Logger) ([]*models.Task, error)
+	TasksStub        func(lager.Logger, string) ([]*models.Task, error)
 	tasksMutex       sync.RWMutex
 	tasksArgsForCall []struct {
 		arg1 lager.Logger
+		arg2 string
 	}
 	tasksReturns struct {
 		result1 []*models.Task
@@ -532,11 +564,12 @@ type FakeInternalClient struct {
 		result1 []*models.Task
 		result2 error
 	}
-	TasksByCellIDStub        func(lager.Logger, string) ([]*models.Task, error)
+	TasksByCellIDStub        func(lager.Logger, string, string) ([]*models.Task, error)
 	tasksByCellIDMutex       sync.RWMutex
 	tasksByCellIDArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	tasksByCellIDReturns struct {
 		result1 []*models.Task
@@ -546,11 +579,12 @@ type FakeInternalClient struct {
 		result1 []*models.Task
 		result2 error
 	}
-	TasksByDomainStub        func(lager.Logger, string) ([]*models.Task, error)
+	TasksByDomainStub        func(lager.Logger, string, string) ([]*models.Task, error)
 	tasksByDomainMutex       sync.RWMutex
 	tasksByDomainArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
+		arg3 string
 	}
 	tasksByDomainReturns struct {
 		result1 []*models.Task
@@ -560,11 +594,12 @@ type FakeInternalClient struct {
 		result1 []*models.Task
 		result2 error
 	}
-	TasksWithFilterStub        func(lager.Logger, models.TaskFilter) ([]*models.Task, error)
+	TasksWithFilterStub        func(lager.Logger, string, models.TaskFilter) ([]*models.Task, error)
 	tasksWithFilterMutex       sync.RWMutex
 	tasksWithFilterArgsForCall []struct {
 		arg1 lager.Logger
-		arg2 models.TaskFilter
+		arg2 string
+		arg3 models.TaskFilter
 	}
 	tasksWithFilterReturns struct {
 		result1 []*models.Task
@@ -574,12 +609,13 @@ type FakeInternalClient struct {
 		result1 []*models.Task
 		result2 error
 	}
-	UpdateDesiredLRPStub        func(lager.Logger, string, *models.DesiredLRPUpdate) error
+	UpdateDesiredLRPStub        func(lager.Logger, string, string, *models.DesiredLRPUpdate) error
 	updateDesiredLRPMutex       sync.RWMutex
 	updateDesiredLRPArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
-		arg3 *models.DesiredLRPUpdate
+		arg3 string
+		arg4 *models.DesiredLRPUpdate
 	}
 	updateDesiredLRPReturns struct {
 		result1 error
@@ -587,12 +623,13 @@ type FakeInternalClient struct {
 	updateDesiredLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UpsertDomainStub        func(lager.Logger, string, time.Duration) error
+	UpsertDomainStub        func(lager.Logger, string, string, time.Duration) error
 	upsertDomainMutex       sync.RWMutex
 	upsertDomainArgsForCall []struct {
 		arg1 lager.Logger
 		arg2 string
-		arg3 time.Duration
+		arg3 string
+		arg4 time.Duration
 	}
 	upsertDomainReturns struct {
 		result1 error
@@ -604,20 +641,21 @@ type FakeInternalClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndex(arg1 lager.Logger, arg2 string, arg3 int) (*models.ActualLRPGroup, error) {
+func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndex(arg1 lager.Logger, arg2 string, arg3 string, arg4 int) (*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.Lock()
 	ret, specificReturn := fake.actualLRPGroupByProcessGuidAndIndexReturnsOnCall[len(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall)]
 	fake.actualLRPGroupByProcessGuidAndIndexArgsForCall = append(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-		arg3 int
-	}{arg1, arg2, arg3})
+		arg3 string
+		arg4 int
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.ActualLRPGroupByProcessGuidAndIndexStub
 	fakeReturns := fake.actualLRPGroupByProcessGuidAndIndexReturns
-	fake.recordInvocation("ActualLRPGroupByProcessGuidAndIndex", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("ActualLRPGroupByProcessGuidAndIndex", []interface{}{arg1, arg2, arg3, arg4})
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -631,17 +669,17 @@ func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexCallCount() i
 	return len(fake.actualLRPGroupByProcessGuidAndIndexArgsForCall)
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexCalls(stub func(lager.Logger, string, int) (*models.ActualLRPGroup, error)) {
+func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexCalls(stub func(lager.Logger, string, string, int) (*models.ActualLRPGroup, error)) {
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.Lock()
 	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.Unlock()
 	fake.ActualLRPGroupByProcessGuidAndIndexStub = stub
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexArgsForCall(i int) (lager.Logger, string, int) {
+func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexArgsForCall(i int) (lager.Logger, string, string, int) {
 	fake.actualLRPGroupByProcessGuidAndIndexMutex.RLock()
 	defer fake.actualLRPGroupByProcessGuidAndIndexMutex.RUnlock()
 	argsForCall := fake.actualLRPGroupByProcessGuidAndIndexArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexReturns(result1 *models.ActualLRPGroup, result2 error) {
@@ -670,19 +708,20 @@ func (fake *FakeInternalClient) ActualLRPGroupByProcessGuidAndIndexReturnsOnCall
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) ActualLRPGroups(arg1 lager.Logger, arg2 models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
+func (fake *FakeInternalClient) ActualLRPGroups(arg1 lager.Logger, arg2 string, arg3 models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupsMutex.Lock()
 	ret, specificReturn := fake.actualLRPGroupsReturnsOnCall[len(fake.actualLRPGroupsArgsForCall)]
 	fake.actualLRPGroupsArgsForCall = append(fake.actualLRPGroupsArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 models.ActualLRPFilter
-	}{arg1, arg2})
+		arg2 string
+		arg3 models.ActualLRPFilter
+	}{arg1, arg2, arg3})
 	stub := fake.ActualLRPGroupsStub
 	fakeReturns := fake.actualLRPGroupsReturns
-	fake.recordInvocation("ActualLRPGroups", []interface{}{arg1, arg2})
+	fake.recordInvocation("ActualLRPGroups", []interface{}{arg1, arg2, arg3})
 	fake.actualLRPGroupsMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -696,17 +735,17 @@ func (fake *FakeInternalClient) ActualLRPGroupsCallCount() int {
 	return len(fake.actualLRPGroupsArgsForCall)
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupsCalls(stub func(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)) {
+func (fake *FakeInternalClient) ActualLRPGroupsCalls(stub func(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)) {
 	fake.actualLRPGroupsMutex.Lock()
 	defer fake.actualLRPGroupsMutex.Unlock()
 	fake.ActualLRPGroupsStub = stub
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupsArgsForCall(i int) (lager.Logger, models.ActualLRPFilter) {
+func (fake *FakeInternalClient) ActualLRPGroupsArgsForCall(i int) (lager.Logger, string, models.ActualLRPFilter) {
 	fake.actualLRPGroupsMutex.RLock()
 	defer fake.actualLRPGroupsMutex.RUnlock()
 	argsForCall := fake.actualLRPGroupsArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) ActualLRPGroupsReturns(result1 []*models.ActualLRPGroup, result2 error) {
@@ -735,19 +774,20 @@ func (fake *FakeInternalClient) ActualLRPGroupsReturnsOnCall(i int, result1 []*m
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuid(arg1 lager.Logger, arg2 string) ([]*models.ActualLRPGroup, error) {
+func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuid(arg1 lager.Logger, arg2 string, arg3 string) ([]*models.ActualLRPGroup, error) {
 	fake.actualLRPGroupsByProcessGuidMutex.Lock()
 	ret, specificReturn := fake.actualLRPGroupsByProcessGuidReturnsOnCall[len(fake.actualLRPGroupsByProcessGuidArgsForCall)]
 	fake.actualLRPGroupsByProcessGuidArgsForCall = append(fake.actualLRPGroupsByProcessGuidArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.ActualLRPGroupsByProcessGuidStub
 	fakeReturns := fake.actualLRPGroupsByProcessGuidReturns
-	fake.recordInvocation("ActualLRPGroupsByProcessGuid", []interface{}{arg1, arg2})
+	fake.recordInvocation("ActualLRPGroupsByProcessGuid", []interface{}{arg1, arg2, arg3})
 	fake.actualLRPGroupsByProcessGuidMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -761,17 +801,17 @@ func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidCallCount() int {
 	return len(fake.actualLRPGroupsByProcessGuidArgsForCall)
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidCalls(stub func(lager.Logger, string) ([]*models.ActualLRPGroup, error)) {
+func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidCalls(stub func(lager.Logger, string, string) ([]*models.ActualLRPGroup, error)) {
 	fake.actualLRPGroupsByProcessGuidMutex.Lock()
 	defer fake.actualLRPGroupsByProcessGuidMutex.Unlock()
 	fake.ActualLRPGroupsByProcessGuidStub = stub
 }
 
-func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidArgsForCall(i int) (lager.Logger, string, string) {
 	fake.actualLRPGroupsByProcessGuidMutex.RLock()
 	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
 	argsForCall := fake.actualLRPGroupsByProcessGuidArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidReturns(result1 []*models.ActualLRPGroup, result2 error) {
@@ -800,19 +840,20 @@ func (fake *FakeInternalClient) ActualLRPGroupsByProcessGuidReturnsOnCall(i int,
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) ActualLRPs(arg1 lager.Logger, arg2 models.ActualLRPFilter) ([]*models.ActualLRP, error) {
+func (fake *FakeInternalClient) ActualLRPs(arg1 lager.Logger, arg2 string, arg3 models.ActualLRPFilter) ([]*models.ActualLRP, error) {
 	fake.actualLRPsMutex.Lock()
 	ret, specificReturn := fake.actualLRPsReturnsOnCall[len(fake.actualLRPsArgsForCall)]
 	fake.actualLRPsArgsForCall = append(fake.actualLRPsArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 models.ActualLRPFilter
-	}{arg1, arg2})
+		arg2 string
+		arg3 models.ActualLRPFilter
+	}{arg1, arg2, arg3})
 	stub := fake.ActualLRPsStub
 	fakeReturns := fake.actualLRPsReturns
-	fake.recordInvocation("ActualLRPs", []interface{}{arg1, arg2})
+	fake.recordInvocation("ActualLRPs", []interface{}{arg1, arg2, arg3})
 	fake.actualLRPsMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -826,17 +867,17 @@ func (fake *FakeInternalClient) ActualLRPsCallCount() int {
 	return len(fake.actualLRPsArgsForCall)
 }
 
-func (fake *FakeInternalClient) ActualLRPsCalls(stub func(lager.Logger, models.ActualLRPFilter) ([]*models.ActualLRP, error)) {
+func (fake *FakeInternalClient) ActualLRPsCalls(stub func(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRP, error)) {
 	fake.actualLRPsMutex.Lock()
 	defer fake.actualLRPsMutex.Unlock()
 	fake.ActualLRPsStub = stub
 }
 
-func (fake *FakeInternalClient) ActualLRPsArgsForCall(i int) (lager.Logger, models.ActualLRPFilter) {
+func (fake *FakeInternalClient) ActualLRPsArgsForCall(i int) (lager.Logger, string, models.ActualLRPFilter) {
 	fake.actualLRPsMutex.RLock()
 	defer fake.actualLRPsMutex.RUnlock()
 	argsForCall := fake.actualLRPsArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) ActualLRPsReturns(result1 []*models.ActualLRP, result2 error) {
@@ -865,19 +906,20 @@ func (fake *FakeInternalClient) ActualLRPsReturnsOnCall(i int, result1 []*models
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) CancelTask(arg1 lager.Logger, arg2 string) error {
+func (fake *FakeInternalClient) CancelTask(arg1 lager.Logger, arg2 string, arg3 string) error {
 	fake.cancelTaskMutex.Lock()
 	ret, specificReturn := fake.cancelTaskReturnsOnCall[len(fake.cancelTaskArgsForCall)]
 	fake.cancelTaskArgsForCall = append(fake.cancelTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.CancelTaskStub
 	fakeReturns := fake.cancelTaskReturns
-	fake.recordInvocation("CancelTask", []interface{}{arg1, arg2})
+	fake.recordInvocation("CancelTask", []interface{}{arg1, arg2, arg3})
 	fake.cancelTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -891,17 +933,17 @@ func (fake *FakeInternalClient) CancelTaskCallCount() int {
 	return len(fake.cancelTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) CancelTaskCalls(stub func(lager.Logger, string) error) {
+func (fake *FakeInternalClient) CancelTaskCalls(stub func(lager.Logger, string, string) error) {
 	fake.cancelTaskMutex.Lock()
 	defer fake.cancelTaskMutex.Unlock()
 	fake.CancelTaskStub = stub
 }
 
-func (fake *FakeInternalClient) CancelTaskArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) CancelTaskArgsForCall(i int) (lager.Logger, string, string) {
 	fake.cancelTaskMutex.RLock()
 	defer fake.cancelTaskMutex.RUnlock()
 	argsForCall := fake.cancelTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) CancelTaskReturns(result1 error) {
@@ -927,18 +969,19 @@ func (fake *FakeInternalClient) CancelTaskReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeInternalClient) Cells(arg1 lager.Logger) ([]*models.CellPresence, error) {
+func (fake *FakeInternalClient) Cells(arg1 lager.Logger, arg2 string) ([]*models.CellPresence, error) {
 	fake.cellsMutex.Lock()
 	ret, specificReturn := fake.cellsReturnsOnCall[len(fake.cellsArgsForCall)]
 	fake.cellsArgsForCall = append(fake.cellsArgsForCall, struct {
 		arg1 lager.Logger
-	}{arg1})
+		arg2 string
+	}{arg1, arg2})
 	stub := fake.CellsStub
 	fakeReturns := fake.cellsReturns
-	fake.recordInvocation("Cells", []interface{}{arg1})
+	fake.recordInvocation("Cells", []interface{}{arg1, arg2})
 	fake.cellsMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -952,17 +995,17 @@ func (fake *FakeInternalClient) CellsCallCount() int {
 	return len(fake.cellsArgsForCall)
 }
 
-func (fake *FakeInternalClient) CellsCalls(stub func(lager.Logger) ([]*models.CellPresence, error)) {
+func (fake *FakeInternalClient) CellsCalls(stub func(lager.Logger, string) ([]*models.CellPresence, error)) {
 	fake.cellsMutex.Lock()
 	defer fake.cellsMutex.Unlock()
 	fake.CellsStub = stub
 }
 
-func (fake *FakeInternalClient) CellsArgsForCall(i int) lager.Logger {
+func (fake *FakeInternalClient) CellsArgsForCall(i int) (lager.Logger, string) {
 	fake.cellsMutex.RLock()
 	defer fake.cellsMutex.RUnlock()
 	argsForCall := fake.cellsArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeInternalClient) CellsReturns(result1 []*models.CellPresence, result2 error) {
@@ -1055,23 +1098,24 @@ func (fake *FakeInternalClient) ClaimActualLRPReturnsOnCall(i int, result1 error
 	}{result1}
 }
 
-func (fake *FakeInternalClient) CompleteTask(arg1 lager.Logger, arg2 string, arg3 string, arg4 bool, arg5 string, arg6 string) error {
+func (fake *FakeInternalClient) CompleteTask(arg1 lager.Logger, arg2 string, arg3 string, arg4 string, arg5 bool, arg6 string, arg7 string) error {
 	fake.completeTaskMutex.Lock()
 	ret, specificReturn := fake.completeTaskReturnsOnCall[len(fake.completeTaskArgsForCall)]
 	fake.completeTaskArgsForCall = append(fake.completeTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
-		arg4 bool
-		arg5 string
+		arg4 string
+		arg5 bool
 		arg6 string
-	}{arg1, arg2, arg3, arg4, arg5, arg6})
+		arg7 string
+	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	stub := fake.CompleteTaskStub
 	fakeReturns := fake.completeTaskReturns
-	fake.recordInvocation("CompleteTask", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6})
+	fake.recordInvocation("CompleteTask", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	fake.completeTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1085,17 +1129,17 @@ func (fake *FakeInternalClient) CompleteTaskCallCount() int {
 	return len(fake.completeTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) CompleteTaskCalls(stub func(lager.Logger, string, string, bool, string, string) error) {
+func (fake *FakeInternalClient) CompleteTaskCalls(stub func(lager.Logger, string, string, string, bool, string, string) error) {
 	fake.completeTaskMutex.Lock()
 	defer fake.completeTaskMutex.Unlock()
 	fake.CompleteTaskStub = stub
 }
 
-func (fake *FakeInternalClient) CompleteTaskArgsForCall(i int) (lager.Logger, string, string, bool, string, string) {
+func (fake *FakeInternalClient) CompleteTaskArgsForCall(i int) (lager.Logger, string, string, string, bool, string, string) {
 	fake.completeTaskMutex.RLock()
 	defer fake.completeTaskMutex.RUnlock()
 	argsForCall := fake.completeTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7
 }
 
 func (fake *FakeInternalClient) CompleteTaskReturns(result1 error) {
@@ -1121,21 +1165,22 @@ func (fake *FakeInternalClient) CompleteTaskReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeInternalClient) CrashActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 string) error {
+func (fake *FakeInternalClient) CrashActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 string) error {
 	fake.crashActualLRPMutex.Lock()
 	ret, specificReturn := fake.crashActualLRPReturnsOnCall[len(fake.crashActualLRPArgsForCall)]
 	fake.crashActualLRPArgsForCall = append(fake.crashActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 string
-	}{arg1, arg2, arg3, arg4})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 string
+	}{arg1, arg2, arg3, arg4, arg5})
 	stub := fake.CrashActualLRPStub
 	fakeReturns := fake.crashActualLRPReturns
-	fake.recordInvocation("CrashActualLRP", []interface{}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("CrashActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.crashActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4)
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1149,17 +1194,17 @@ func (fake *FakeInternalClient) CrashActualLRPCallCount() int {
 	return len(fake.crashActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) CrashActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error) {
+func (fake *FakeInternalClient) CrashActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error) {
 	fake.crashActualLRPMutex.Lock()
 	defer fake.crashActualLRPMutex.Unlock()
 	fake.CrashActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) CrashActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
+func (fake *FakeInternalClient) CrashActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
 	fake.crashActualLRPMutex.RLock()
 	defer fake.crashActualLRPMutex.RUnlock()
 	argsForCall := fake.crashActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeInternalClient) CrashActualLRPReturns(result1 error) {
@@ -1185,19 +1230,20 @@ func (fake *FakeInternalClient) CrashActualLRPReturnsOnCall(i int, result1 error
 	}{result1}
 }
 
-func (fake *FakeInternalClient) DeleteTask(arg1 lager.Logger, arg2 string) error {
+func (fake *FakeInternalClient) DeleteTask(arg1 lager.Logger, arg2 string, arg3 string) error {
 	fake.deleteTaskMutex.Lock()
 	ret, specificReturn := fake.deleteTaskReturnsOnCall[len(fake.deleteTaskArgsForCall)]
 	fake.deleteTaskArgsForCall = append(fake.deleteTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.DeleteTaskStub
 	fakeReturns := fake.deleteTaskReturns
-	fake.recordInvocation("DeleteTask", []interface{}{arg1, arg2})
+	fake.recordInvocation("DeleteTask", []interface{}{arg1, arg2, arg3})
 	fake.deleteTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1211,17 +1257,17 @@ func (fake *FakeInternalClient) DeleteTaskCallCount() int {
 	return len(fake.deleteTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) DeleteTaskCalls(stub func(lager.Logger, string) error) {
+func (fake *FakeInternalClient) DeleteTaskCalls(stub func(lager.Logger, string, string) error) {
 	fake.deleteTaskMutex.Lock()
 	defer fake.deleteTaskMutex.Unlock()
 	fake.DeleteTaskStub = stub
 }
 
-func (fake *FakeInternalClient) DeleteTaskArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) DeleteTaskArgsForCall(i int) (lager.Logger, string, string) {
 	fake.deleteTaskMutex.RLock()
 	defer fake.deleteTaskMutex.RUnlock()
 	argsForCall := fake.deleteTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) DeleteTaskReturns(result1 error) {
@@ -1247,19 +1293,20 @@ func (fake *FakeInternalClient) DeleteTaskReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeInternalClient) DesireLRP(arg1 lager.Logger, arg2 *models.DesiredLRP) error {
+func (fake *FakeInternalClient) DesireLRP(arg1 lager.Logger, arg2 string, arg3 *models.DesiredLRP) error {
 	fake.desireLRPMutex.Lock()
 	ret, specificReturn := fake.desireLRPReturnsOnCall[len(fake.desireLRPArgsForCall)]
 	fake.desireLRPArgsForCall = append(fake.desireLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.DesiredLRP
-	}{arg1, arg2})
+		arg2 string
+		arg3 *models.DesiredLRP
+	}{arg1, arg2, arg3})
 	stub := fake.DesireLRPStub
 	fakeReturns := fake.desireLRPReturns
-	fake.recordInvocation("DesireLRP", []interface{}{arg1, arg2})
+	fake.recordInvocation("DesireLRP", []interface{}{arg1, arg2, arg3})
 	fake.desireLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1273,17 +1320,17 @@ func (fake *FakeInternalClient) DesireLRPCallCount() int {
 	return len(fake.desireLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) DesireLRPCalls(stub func(lager.Logger, *models.DesiredLRP) error) {
+func (fake *FakeInternalClient) DesireLRPCalls(stub func(lager.Logger, string, *models.DesiredLRP) error) {
 	fake.desireLRPMutex.Lock()
 	defer fake.desireLRPMutex.Unlock()
 	fake.DesireLRPStub = stub
 }
 
-func (fake *FakeInternalClient) DesireLRPArgsForCall(i int) (lager.Logger, *models.DesiredLRP) {
+func (fake *FakeInternalClient) DesireLRPArgsForCall(i int) (lager.Logger, string, *models.DesiredLRP) {
 	fake.desireLRPMutex.RLock()
 	defer fake.desireLRPMutex.RUnlock()
 	argsForCall := fake.desireLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) DesireLRPReturns(result1 error) {
@@ -1309,21 +1356,22 @@ func (fake *FakeInternalClient) DesireLRPReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeInternalClient) DesireTask(arg1 lager.Logger, arg2 string, arg3 string, arg4 *models.TaskDefinition) error {
+func (fake *FakeInternalClient) DesireTask(arg1 lager.Logger, arg2 string, arg3 string, arg4 string, arg5 *models.TaskDefinition) error {
 	fake.desireTaskMutex.Lock()
 	ret, specificReturn := fake.desireTaskReturnsOnCall[len(fake.desireTaskArgsForCall)]
 	fake.desireTaskArgsForCall = append(fake.desireTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
-		arg4 *models.TaskDefinition
-	}{arg1, arg2, arg3, arg4})
+		arg4 string
+		arg5 *models.TaskDefinition
+	}{arg1, arg2, arg3, arg4, arg5})
 	stub := fake.DesireTaskStub
 	fakeReturns := fake.desireTaskReturns
-	fake.recordInvocation("DesireTask", []interface{}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("DesireTask", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.desireTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4)
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1337,17 +1385,17 @@ func (fake *FakeInternalClient) DesireTaskCallCount() int {
 	return len(fake.desireTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) DesireTaskCalls(stub func(lager.Logger, string, string, *models.TaskDefinition) error) {
+func (fake *FakeInternalClient) DesireTaskCalls(stub func(lager.Logger, string, string, string, *models.TaskDefinition) error) {
 	fake.desireTaskMutex.Lock()
 	defer fake.desireTaskMutex.Unlock()
 	fake.DesireTaskStub = stub
 }
 
-func (fake *FakeInternalClient) DesireTaskArgsForCall(i int) (lager.Logger, string, string, *models.TaskDefinition) {
+func (fake *FakeInternalClient) DesireTaskArgsForCall(i int) (lager.Logger, string, string, string, *models.TaskDefinition) {
 	fake.desireTaskMutex.RLock()
 	defer fake.desireTaskMutex.RUnlock()
 	argsForCall := fake.desireTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeInternalClient) DesireTaskReturns(result1 error) {
@@ -1373,19 +1421,20 @@ func (fake *FakeInternalClient) DesireTaskReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeInternalClient) DesiredLRPByProcessGuid(arg1 lager.Logger, arg2 string) (*models.DesiredLRP, error) {
+func (fake *FakeInternalClient) DesiredLRPByProcessGuid(arg1 lager.Logger, arg2 string, arg3 string) (*models.DesiredLRP, error) {
 	fake.desiredLRPByProcessGuidMutex.Lock()
 	ret, specificReturn := fake.desiredLRPByProcessGuidReturnsOnCall[len(fake.desiredLRPByProcessGuidArgsForCall)]
 	fake.desiredLRPByProcessGuidArgsForCall = append(fake.desiredLRPByProcessGuidArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.DesiredLRPByProcessGuidStub
 	fakeReturns := fake.desiredLRPByProcessGuidReturns
-	fake.recordInvocation("DesiredLRPByProcessGuid", []interface{}{arg1, arg2})
+	fake.recordInvocation("DesiredLRPByProcessGuid", []interface{}{arg1, arg2, arg3})
 	fake.desiredLRPByProcessGuidMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1399,17 +1448,17 @@ func (fake *FakeInternalClient) DesiredLRPByProcessGuidCallCount() int {
 	return len(fake.desiredLRPByProcessGuidArgsForCall)
 }
 
-func (fake *FakeInternalClient) DesiredLRPByProcessGuidCalls(stub func(lager.Logger, string) (*models.DesiredLRP, error)) {
+func (fake *FakeInternalClient) DesiredLRPByProcessGuidCalls(stub func(lager.Logger, string, string) (*models.DesiredLRP, error)) {
 	fake.desiredLRPByProcessGuidMutex.Lock()
 	defer fake.desiredLRPByProcessGuidMutex.Unlock()
 	fake.DesiredLRPByProcessGuidStub = stub
 }
 
-func (fake *FakeInternalClient) DesiredLRPByProcessGuidArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) DesiredLRPByProcessGuidArgsForCall(i int) (lager.Logger, string, string) {
 	fake.desiredLRPByProcessGuidMutex.RLock()
 	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
 	argsForCall := fake.desiredLRPByProcessGuidArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) DesiredLRPByProcessGuidReturns(result1 *models.DesiredLRP, result2 error) {
@@ -1438,19 +1487,20 @@ func (fake *FakeInternalClient) DesiredLRPByProcessGuidReturnsOnCall(i int, resu
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) DesiredLRPSchedulingInfos(arg1 lager.Logger, arg2 models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
+func (fake *FakeInternalClient) DesiredLRPSchedulingInfos(arg1 lager.Logger, arg2 string, arg3 models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
 	fake.desiredLRPSchedulingInfosMutex.Lock()
 	ret, specificReturn := fake.desiredLRPSchedulingInfosReturnsOnCall[len(fake.desiredLRPSchedulingInfosArgsForCall)]
 	fake.desiredLRPSchedulingInfosArgsForCall = append(fake.desiredLRPSchedulingInfosArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 models.DesiredLRPFilter
-	}{arg1, arg2})
+		arg2 string
+		arg3 models.DesiredLRPFilter
+	}{arg1, arg2, arg3})
 	stub := fake.DesiredLRPSchedulingInfosStub
 	fakeReturns := fake.desiredLRPSchedulingInfosReturns
-	fake.recordInvocation("DesiredLRPSchedulingInfos", []interface{}{arg1, arg2})
+	fake.recordInvocation("DesiredLRPSchedulingInfos", []interface{}{arg1, arg2, arg3})
 	fake.desiredLRPSchedulingInfosMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1464,17 +1514,17 @@ func (fake *FakeInternalClient) DesiredLRPSchedulingInfosCallCount() int {
 	return len(fake.desiredLRPSchedulingInfosArgsForCall)
 }
 
-func (fake *FakeInternalClient) DesiredLRPSchedulingInfosCalls(stub func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)) {
+func (fake *FakeInternalClient) DesiredLRPSchedulingInfosCalls(stub func(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)) {
 	fake.desiredLRPSchedulingInfosMutex.Lock()
 	defer fake.desiredLRPSchedulingInfosMutex.Unlock()
 	fake.DesiredLRPSchedulingInfosStub = stub
 }
 
-func (fake *FakeInternalClient) DesiredLRPSchedulingInfosArgsForCall(i int) (lager.Logger, models.DesiredLRPFilter) {
+func (fake *FakeInternalClient) DesiredLRPSchedulingInfosArgsForCall(i int) (lager.Logger, string, models.DesiredLRPFilter) {
 	fake.desiredLRPSchedulingInfosMutex.RLock()
 	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
 	argsForCall := fake.desiredLRPSchedulingInfosArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) DesiredLRPSchedulingInfosReturns(result1 []*models.DesiredLRPSchedulingInfo, result2 error) {
@@ -1503,19 +1553,20 @@ func (fake *FakeInternalClient) DesiredLRPSchedulingInfosReturnsOnCall(i int, re
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) DesiredLRPs(arg1 lager.Logger, arg2 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+func (fake *FakeInternalClient) DesiredLRPs(arg1 lager.Logger, arg2 string, arg3 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	fake.desiredLRPsMutex.Lock()
 	ret, specificReturn := fake.desiredLRPsReturnsOnCall[len(fake.desiredLRPsArgsForCall)]
 	fake.desiredLRPsArgsForCall = append(fake.desiredLRPsArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 models.DesiredLRPFilter
-	}{arg1, arg2})
+		arg2 string
+		arg3 models.DesiredLRPFilter
+	}{arg1, arg2, arg3})
 	stub := fake.DesiredLRPsStub
 	fakeReturns := fake.desiredLRPsReturns
-	fake.recordInvocation("DesiredLRPs", []interface{}{arg1, arg2})
+	fake.recordInvocation("DesiredLRPs", []interface{}{arg1, arg2, arg3})
 	fake.desiredLRPsMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1529,17 +1580,17 @@ func (fake *FakeInternalClient) DesiredLRPsCallCount() int {
 	return len(fake.desiredLRPsArgsForCall)
 }
 
-func (fake *FakeInternalClient) DesiredLRPsCalls(stub func(lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)) {
+func (fake *FakeInternalClient) DesiredLRPsCalls(stub func(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)) {
 	fake.desiredLRPsMutex.Lock()
 	defer fake.desiredLRPsMutex.Unlock()
 	fake.DesiredLRPsStub = stub
 }
 
-func (fake *FakeInternalClient) DesiredLRPsArgsForCall(i int) (lager.Logger, models.DesiredLRPFilter) {
+func (fake *FakeInternalClient) DesiredLRPsArgsForCall(i int) (lager.Logger, string, models.DesiredLRPFilter) {
 	fake.desiredLRPsMutex.RLock()
 	defer fake.desiredLRPsMutex.RUnlock()
 	argsForCall := fake.desiredLRPsArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) DesiredLRPsReturns(result1 []*models.DesiredLRP, result2 error) {
@@ -1568,18 +1619,19 @@ func (fake *FakeInternalClient) DesiredLRPsReturnsOnCall(i int, result1 []*model
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) Domains(arg1 lager.Logger) ([]string, error) {
+func (fake *FakeInternalClient) Domains(arg1 lager.Logger, arg2 string) ([]string, error) {
 	fake.domainsMutex.Lock()
 	ret, specificReturn := fake.domainsReturnsOnCall[len(fake.domainsArgsForCall)]
 	fake.domainsArgsForCall = append(fake.domainsArgsForCall, struct {
 		arg1 lager.Logger
-	}{arg1})
+		arg2 string
+	}{arg1, arg2})
 	stub := fake.DomainsStub
 	fakeReturns := fake.domainsReturns
-	fake.recordInvocation("Domains", []interface{}{arg1})
+	fake.recordInvocation("Domains", []interface{}{arg1, arg2})
 	fake.domainsMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1593,17 +1645,17 @@ func (fake *FakeInternalClient) DomainsCallCount() int {
 	return len(fake.domainsArgsForCall)
 }
 
-func (fake *FakeInternalClient) DomainsCalls(stub func(lager.Logger) ([]string, error)) {
+func (fake *FakeInternalClient) DomainsCalls(stub func(lager.Logger, string) ([]string, error)) {
 	fake.domainsMutex.Lock()
 	defer fake.domainsMutex.Unlock()
 	fake.DomainsStub = stub
 }
 
-func (fake *FakeInternalClient) DomainsArgsForCall(i int) lager.Logger {
+func (fake *FakeInternalClient) DomainsArgsForCall(i int) (lager.Logger, string) {
 	fake.domainsMutex.RLock()
 	defer fake.domainsMutex.RUnlock()
 	argsForCall := fake.domainsArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeInternalClient) DomainsReturns(result1 []string, result2 error) {
@@ -1632,20 +1684,21 @@ func (fake *FakeInternalClient) DomainsReturnsOnCall(i int, result1 []string, re
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) EvacuateClaimedActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) (bool, error) {
+func (fake *FakeInternalClient) EvacuateClaimedActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey) (bool, error) {
 	fake.evacuateClaimedActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateClaimedActualLRPReturnsOnCall[len(fake.evacuateClaimedActualLRPArgsForCall)]
 	fake.evacuateClaimedActualLRPArgsForCall = append(fake.evacuateClaimedActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-	}{arg1, arg2, arg3})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.EvacuateClaimedActualLRPStub
 	fakeReturns := fake.evacuateClaimedActualLRPReturns
-	fake.recordInvocation("EvacuateClaimedActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("EvacuateClaimedActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.evacuateClaimedActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1659,17 +1712,17 @@ func (fake *FakeInternalClient) EvacuateClaimedActualLRPCallCount() int {
 	return len(fake.evacuateClaimedActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) EvacuateClaimedActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)) {
+func (fake *FakeInternalClient) EvacuateClaimedActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)) {
 	fake.evacuateClaimedActualLRPMutex.Lock()
 	defer fake.evacuateClaimedActualLRPMutex.Unlock()
 	fake.EvacuateClaimedActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) EvacuateClaimedActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) EvacuateClaimedActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.evacuateClaimedActualLRPMutex.RLock()
 	defer fake.evacuateClaimedActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateClaimedActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) EvacuateClaimedActualLRPReturns(result1 bool, result2 error) {
@@ -1698,21 +1751,22 @@ func (fake *FakeInternalClient) EvacuateClaimedActualLRPReturnsOnCall(i int, res
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) EvacuateCrashedActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 string) (bool, error) {
+func (fake *FakeInternalClient) EvacuateCrashedActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 string) (bool, error) {
 	fake.evacuateCrashedActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateCrashedActualLRPReturnsOnCall[len(fake.evacuateCrashedActualLRPArgsForCall)]
 	fake.evacuateCrashedActualLRPArgsForCall = append(fake.evacuateCrashedActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 string
-	}{arg1, arg2, arg3, arg4})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 string
+	}{arg1, arg2, arg3, arg4, arg5})
 	stub := fake.EvacuateCrashedActualLRPStub
 	fakeReturns := fake.evacuateCrashedActualLRPReturns
-	fake.recordInvocation("EvacuateCrashedActualLRP", []interface{}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("EvacuateCrashedActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.evacuateCrashedActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4)
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1726,17 +1780,17 @@ func (fake *FakeInternalClient) EvacuateCrashedActualLRPCallCount() int {
 	return len(fake.evacuateCrashedActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) EvacuateCrashedActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)) {
+func (fake *FakeInternalClient) EvacuateCrashedActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)) {
 	fake.evacuateCrashedActualLRPMutex.Lock()
 	defer fake.evacuateCrashedActualLRPMutex.Unlock()
 	fake.EvacuateCrashedActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) EvacuateCrashedActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
+func (fake *FakeInternalClient) EvacuateCrashedActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) {
 	fake.evacuateCrashedActualLRPMutex.RLock()
 	defer fake.evacuateCrashedActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateCrashedActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeInternalClient) EvacuateCrashedActualLRPReturns(result1 bool, result2 error) {
@@ -1765,28 +1819,29 @@ func (fake *FakeInternalClient) EvacuateCrashedActualLRPReturnsOnCall(i int, res
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) EvacuateRunningActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo, arg5 []*models.ActualLRPInternalRoute, arg6 map[string]string) (bool, error) {
-	var arg5Copy []*models.ActualLRPInternalRoute
-	if arg5 != nil {
-		arg5Copy = make([]*models.ActualLRPInternalRoute, len(arg5))
-		copy(arg5Copy, arg5)
+func (fake *FakeInternalClient) EvacuateRunningActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute, arg7 map[string]string) (bool, error) {
+	var arg6Copy []*models.ActualLRPInternalRoute
+	if arg6 != nil {
+		arg6Copy = make([]*models.ActualLRPInternalRoute, len(arg6))
+		copy(arg6Copy, arg6)
 	}
 	fake.evacuateRunningActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateRunningActualLRPReturnsOnCall[len(fake.evacuateRunningActualLRPArgsForCall)]
 	fake.evacuateRunningActualLRPArgsForCall = append(fake.evacuateRunningActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 *models.ActualLRPNetInfo
-		arg5 []*models.ActualLRPInternalRoute
-		arg6 map[string]string
-	}{arg1, arg2, arg3, arg4, arg5Copy, arg6})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 *models.ActualLRPNetInfo
+		arg6 []*models.ActualLRPInternalRoute
+		arg7 map[string]string
+	}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7})
 	stub := fake.EvacuateRunningActualLRPStub
 	fakeReturns := fake.evacuateRunningActualLRPReturns
-	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5Copy, arg6})
+	fake.recordInvocation("EvacuateRunningActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7})
 	fake.evacuateRunningActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1800,17 +1855,17 @@ func (fake *FakeInternalClient) EvacuateRunningActualLRPCallCount() int {
 	return len(fake.evacuateRunningActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) EvacuateRunningActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)) {
 	fake.evacuateRunningActualLRPMutex.Lock()
 	defer fake.evacuateRunningActualLRPMutex.Unlock()
 	fake.EvacuateRunningActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) EvacuateRunningActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) {
+func (fake *FakeInternalClient) EvacuateRunningActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) {
 	fake.evacuateRunningActualLRPMutex.RLock()
 	defer fake.evacuateRunningActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateRunningActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7
 }
 
 func (fake *FakeInternalClient) EvacuateRunningActualLRPReturns(result1 bool, result2 error) {
@@ -1839,20 +1894,21 @@ func (fake *FakeInternalClient) EvacuateRunningActualLRPReturnsOnCall(i int, res
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) EvacuateStoppedActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) (bool, error) {
+func (fake *FakeInternalClient) EvacuateStoppedActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey) (bool, error) {
 	fake.evacuateStoppedActualLRPMutex.Lock()
 	ret, specificReturn := fake.evacuateStoppedActualLRPReturnsOnCall[len(fake.evacuateStoppedActualLRPArgsForCall)]
 	fake.evacuateStoppedActualLRPArgsForCall = append(fake.evacuateStoppedActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-	}{arg1, arg2, arg3})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.EvacuateStoppedActualLRPStub
 	fakeReturns := fake.evacuateStoppedActualLRPReturns
-	fake.recordInvocation("EvacuateStoppedActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("EvacuateStoppedActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.evacuateStoppedActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -1866,17 +1922,17 @@ func (fake *FakeInternalClient) EvacuateStoppedActualLRPCallCount() int {
 	return len(fake.evacuateStoppedActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) EvacuateStoppedActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)) {
+func (fake *FakeInternalClient) EvacuateStoppedActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)) {
 	fake.evacuateStoppedActualLRPMutex.Lock()
 	defer fake.evacuateStoppedActualLRPMutex.Unlock()
 	fake.EvacuateStoppedActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) EvacuateStoppedActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) EvacuateStoppedActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.evacuateStoppedActualLRPMutex.RLock()
 	defer fake.evacuateStoppedActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateStoppedActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) EvacuateStoppedActualLRPReturns(result1 bool, result2 error) {
@@ -1905,20 +1961,21 @@ func (fake *FakeInternalClient) EvacuateStoppedActualLRPReturnsOnCall(i int, res
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) FailActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 string) error {
+func (fake *FakeInternalClient) FailActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 string) error {
 	fake.failActualLRPMutex.Lock()
 	ret, specificReturn := fake.failActualLRPReturnsOnCall[len(fake.failActualLRPArgsForCall)]
 	fake.failActualLRPArgsForCall = append(fake.failActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 string
-	}{arg1, arg2, arg3})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.FailActualLRPStub
 	fakeReturns := fake.failActualLRPReturns
-	fake.recordInvocation("FailActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("FailActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.failActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1932,17 +1989,17 @@ func (fake *FakeInternalClient) FailActualLRPCallCount() int {
 	return len(fake.failActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) FailActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, string) error) {
+func (fake *FakeInternalClient) FailActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, string) error) {
 	fake.failActualLRPMutex.Lock()
 	defer fake.failActualLRPMutex.Unlock()
 	fake.FailActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) FailActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, string) {
+func (fake *FakeInternalClient) FailActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, string) {
 	fake.failActualLRPMutex.RLock()
 	defer fake.failActualLRPMutex.RUnlock()
 	argsForCall := fake.failActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) FailActualLRPReturns(result1 error) {
@@ -1968,20 +2025,21 @@ func (fake *FakeInternalClient) FailActualLRPReturnsOnCall(i int, result1 error)
 	}{result1}
 }
 
-func (fake *FakeInternalClient) FailTask(arg1 lager.Logger, arg2 string, arg3 string) error {
+func (fake *FakeInternalClient) FailTask(arg1 lager.Logger, arg2 string, arg3 string, arg4 string) error {
 	fake.failTaskMutex.Lock()
 	ret, specificReturn := fake.failTaskReturnsOnCall[len(fake.failTaskArgsForCall)]
 	fake.failTaskArgsForCall = append(fake.failTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
-	}{arg1, arg2, arg3})
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.FailTaskStub
 	fakeReturns := fake.failTaskReturns
-	fake.recordInvocation("FailTask", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("FailTask", []interface{}{arg1, arg2, arg3, arg4})
 	fake.failTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -1995,17 +2053,17 @@ func (fake *FakeInternalClient) FailTaskCallCount() int {
 	return len(fake.failTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) FailTaskCalls(stub func(lager.Logger, string, string) error) {
+func (fake *FakeInternalClient) FailTaskCalls(stub func(lager.Logger, string, string, string) error) {
 	fake.failTaskMutex.Lock()
 	defer fake.failTaskMutex.Unlock()
 	fake.FailTaskStub = stub
 }
 
-func (fake *FakeInternalClient) FailTaskArgsForCall(i int) (lager.Logger, string, string) {
+func (fake *FakeInternalClient) FailTaskArgsForCall(i int) (lager.Logger, string, string, string) {
 	fake.failTaskMutex.RLock()
 	defer fake.failTaskMutex.RUnlock()
 	argsForCall := fake.failTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) FailTaskReturns(result1 error) {
@@ -2031,18 +2089,19 @@ func (fake *FakeInternalClient) FailTaskReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeInternalClient) Ping(arg1 lager.Logger) bool {
+func (fake *FakeInternalClient) Ping(arg1 lager.Logger, arg2 string) bool {
 	fake.pingMutex.Lock()
 	ret, specificReturn := fake.pingReturnsOnCall[len(fake.pingArgsForCall)]
 	fake.pingArgsForCall = append(fake.pingArgsForCall, struct {
 		arg1 lager.Logger
-	}{arg1})
+		arg2 string
+	}{arg1, arg2})
 	stub := fake.PingStub
 	fakeReturns := fake.pingReturns
-	fake.recordInvocation("Ping", []interface{}{arg1})
+	fake.recordInvocation("Ping", []interface{}{arg1, arg2})
 	fake.pingMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2056,17 +2115,17 @@ func (fake *FakeInternalClient) PingCallCount() int {
 	return len(fake.pingArgsForCall)
 }
 
-func (fake *FakeInternalClient) PingCalls(stub func(lager.Logger) bool) {
+func (fake *FakeInternalClient) PingCalls(stub func(lager.Logger, string) bool) {
 	fake.pingMutex.Lock()
 	defer fake.pingMutex.Unlock()
 	fake.PingStub = stub
 }
 
-func (fake *FakeInternalClient) PingArgsForCall(i int) lager.Logger {
+func (fake *FakeInternalClient) PingArgsForCall(i int) (lager.Logger, string) {
 	fake.pingMutex.RLock()
 	defer fake.pingMutex.RUnlock()
 	argsForCall := fake.pingArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeInternalClient) PingReturns(result1 bool) {
@@ -2092,20 +2151,21 @@ func (fake *FakeInternalClient) PingReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
-func (fake *FakeInternalClient) RejectTask(arg1 lager.Logger, arg2 string, arg3 string) error {
+func (fake *FakeInternalClient) RejectTask(arg1 lager.Logger, arg2 string, arg3 string, arg4 string) error {
 	fake.rejectTaskMutex.Lock()
 	ret, specificReturn := fake.rejectTaskReturnsOnCall[len(fake.rejectTaskArgsForCall)]
 	fake.rejectTaskArgsForCall = append(fake.rejectTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
-	}{arg1, arg2, arg3})
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.RejectTaskStub
 	fakeReturns := fake.rejectTaskReturns
-	fake.recordInvocation("RejectTask", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("RejectTask", []interface{}{arg1, arg2, arg3, arg4})
 	fake.rejectTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2119,17 +2179,17 @@ func (fake *FakeInternalClient) RejectTaskCallCount() int {
 	return len(fake.rejectTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) RejectTaskCalls(stub func(lager.Logger, string, string) error) {
+func (fake *FakeInternalClient) RejectTaskCalls(stub func(lager.Logger, string, string, string) error) {
 	fake.rejectTaskMutex.Lock()
 	defer fake.rejectTaskMutex.Unlock()
 	fake.RejectTaskStub = stub
 }
 
-func (fake *FakeInternalClient) RejectTaskArgsForCall(i int) (lager.Logger, string, string) {
+func (fake *FakeInternalClient) RejectTaskArgsForCall(i int) (lager.Logger, string, string, string) {
 	fake.rejectTaskMutex.RLock()
 	defer fake.rejectTaskMutex.RUnlock()
 	argsForCall := fake.rejectTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) RejectTaskReturns(result1 error) {
@@ -2155,20 +2215,21 @@ func (fake *FakeInternalClient) RejectTaskReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeInternalClient) RemoveActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) error {
+func (fake *FakeInternalClient) RemoveActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey) error {
 	fake.removeActualLRPMutex.Lock()
 	ret, specificReturn := fake.removeActualLRPReturnsOnCall[len(fake.removeActualLRPArgsForCall)]
 	fake.removeActualLRPArgsForCall = append(fake.removeActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-	}{arg1, arg2, arg3})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.RemoveActualLRPStub
 	fakeReturns := fake.removeActualLRPReturns
-	fake.recordInvocation("RemoveActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("RemoveActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.removeActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2182,17 +2243,17 @@ func (fake *FakeInternalClient) RemoveActualLRPCallCount() int {
 	return len(fake.removeActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) RemoveActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error) {
+func (fake *FakeInternalClient) RemoveActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error) {
 	fake.removeActualLRPMutex.Lock()
 	defer fake.removeActualLRPMutex.Unlock()
 	fake.RemoveActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) RemoveActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) RemoveActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.removeActualLRPMutex.RLock()
 	defer fake.removeActualLRPMutex.RUnlock()
 	argsForCall := fake.removeActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) RemoveActualLRPReturns(result1 error) {
@@ -2218,19 +2279,20 @@ func (fake *FakeInternalClient) RemoveActualLRPReturnsOnCall(i int, result1 erro
 	}{result1}
 }
 
-func (fake *FakeInternalClient) RemoveDesiredLRP(arg1 lager.Logger, arg2 string) error {
+func (fake *FakeInternalClient) RemoveDesiredLRP(arg1 lager.Logger, arg2 string, arg3 string) error {
 	fake.removeDesiredLRPMutex.Lock()
 	ret, specificReturn := fake.removeDesiredLRPReturnsOnCall[len(fake.removeDesiredLRPArgsForCall)]
 	fake.removeDesiredLRPArgsForCall = append(fake.removeDesiredLRPArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.RemoveDesiredLRPStub
 	fakeReturns := fake.removeDesiredLRPReturns
-	fake.recordInvocation("RemoveDesiredLRP", []interface{}{arg1, arg2})
+	fake.recordInvocation("RemoveDesiredLRP", []interface{}{arg1, arg2, arg3})
 	fake.removeDesiredLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2244,17 +2306,17 @@ func (fake *FakeInternalClient) RemoveDesiredLRPCallCount() int {
 	return len(fake.removeDesiredLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) RemoveDesiredLRPCalls(stub func(lager.Logger, string) error) {
+func (fake *FakeInternalClient) RemoveDesiredLRPCalls(stub func(lager.Logger, string, string) error) {
 	fake.removeDesiredLRPMutex.Lock()
 	defer fake.removeDesiredLRPMutex.Unlock()
 	fake.RemoveDesiredLRPStub = stub
 }
 
-func (fake *FakeInternalClient) RemoveDesiredLRPArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) RemoveDesiredLRPArgsForCall(i int) (lager.Logger, string, string) {
 	fake.removeDesiredLRPMutex.RLock()
 	defer fake.removeDesiredLRPMutex.RUnlock()
 	argsForCall := fake.removeDesiredLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) RemoveDesiredLRPReturns(result1 error) {
@@ -2280,20 +2342,21 @@ func (fake *FakeInternalClient) RemoveDesiredLRPReturnsOnCall(i int, result1 err
 	}{result1}
 }
 
-func (fake *FakeInternalClient) RemoveEvacuatingActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey) error {
+func (fake *FakeInternalClient) RemoveEvacuatingActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey) error {
 	fake.removeEvacuatingActualLRPMutex.Lock()
 	ret, specificReturn := fake.removeEvacuatingActualLRPReturnsOnCall[len(fake.removeEvacuatingActualLRPArgsForCall)]
 	fake.removeEvacuatingActualLRPArgsForCall = append(fake.removeEvacuatingActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-	}{arg1, arg2, arg3})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.RemoveEvacuatingActualLRPStub
 	fakeReturns := fake.removeEvacuatingActualLRPReturns
-	fake.recordInvocation("RemoveEvacuatingActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("RemoveEvacuatingActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.removeEvacuatingActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2307,17 +2370,17 @@ func (fake *FakeInternalClient) RemoveEvacuatingActualLRPCallCount() int {
 	return len(fake.removeEvacuatingActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) RemoveEvacuatingActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error) {
+func (fake *FakeInternalClient) RemoveEvacuatingActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error) {
 	fake.removeEvacuatingActualLRPMutex.Lock()
 	defer fake.removeEvacuatingActualLRPMutex.Unlock()
 	fake.RemoveEvacuatingActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) RemoveEvacuatingActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
+func (fake *FakeInternalClient) RemoveEvacuatingActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) {
 	fake.removeEvacuatingActualLRPMutex.RLock()
 	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
 	argsForCall := fake.removeEvacuatingActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) RemoveEvacuatingActualLRPReturns(result1 error) {
@@ -2343,19 +2406,20 @@ func (fake *FakeInternalClient) RemoveEvacuatingActualLRPReturnsOnCall(i int, re
 	}{result1}
 }
 
-func (fake *FakeInternalClient) ResolvingTask(arg1 lager.Logger, arg2 string) error {
+func (fake *FakeInternalClient) ResolvingTask(arg1 lager.Logger, arg2 string, arg3 string) error {
 	fake.resolvingTaskMutex.Lock()
 	ret, specificReturn := fake.resolvingTaskReturnsOnCall[len(fake.resolvingTaskArgsForCall)]
 	fake.resolvingTaskArgsForCall = append(fake.resolvingTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.ResolvingTaskStub
 	fakeReturns := fake.resolvingTaskReturns
-	fake.recordInvocation("ResolvingTask", []interface{}{arg1, arg2})
+	fake.recordInvocation("ResolvingTask", []interface{}{arg1, arg2, arg3})
 	fake.resolvingTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2369,17 +2433,17 @@ func (fake *FakeInternalClient) ResolvingTaskCallCount() int {
 	return len(fake.resolvingTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) ResolvingTaskCalls(stub func(lager.Logger, string) error) {
+func (fake *FakeInternalClient) ResolvingTaskCalls(stub func(lager.Logger, string, string) error) {
 	fake.resolvingTaskMutex.Lock()
 	defer fake.resolvingTaskMutex.Unlock()
 	fake.ResolvingTaskStub = stub
 }
 
-func (fake *FakeInternalClient) ResolvingTaskArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) ResolvingTaskArgsForCall(i int) (lager.Logger, string, string) {
 	fake.resolvingTaskMutex.RLock()
 	defer fake.resolvingTaskMutex.RUnlock()
 	argsForCall := fake.resolvingTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) ResolvingTaskReturns(result1 error) {
@@ -2405,19 +2469,20 @@ func (fake *FakeInternalClient) ResolvingTaskReturnsOnCall(i int, result1 error)
 	}{result1}
 }
 
-func (fake *FakeInternalClient) RetireActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey) error {
+func (fake *FakeInternalClient) RetireActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey) error {
 	fake.retireActualLRPMutex.Lock()
 	ret, specificReturn := fake.retireActualLRPReturnsOnCall[len(fake.retireActualLRPArgsForCall)]
 	fake.retireActualLRPArgsForCall = append(fake.retireActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-	}{arg1, arg2})
+		arg2 string
+		arg3 *models.ActualLRPKey
+	}{arg1, arg2, arg3})
 	stub := fake.RetireActualLRPStub
 	fakeReturns := fake.retireActualLRPReturns
-	fake.recordInvocation("RetireActualLRP", []interface{}{arg1, arg2})
+	fake.recordInvocation("RetireActualLRP", []interface{}{arg1, arg2, arg3})
 	fake.retireActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2431,17 +2496,17 @@ func (fake *FakeInternalClient) RetireActualLRPCallCount() int {
 	return len(fake.retireActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) RetireActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey) error) {
+func (fake *FakeInternalClient) RetireActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey) error) {
 	fake.retireActualLRPMutex.Lock()
 	defer fake.retireActualLRPMutex.Unlock()
 	fake.RetireActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) RetireActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey) {
+func (fake *FakeInternalClient) RetireActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey) {
 	fake.retireActualLRPMutex.RLock()
 	defer fake.retireActualLRPMutex.RUnlock()
 	argsForCall := fake.retireActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) RetireActualLRPReturns(result1 error) {
@@ -2467,28 +2532,29 @@ func (fake *FakeInternalClient) RetireActualLRPReturnsOnCall(i int, result1 erro
 	}{result1}
 }
 
-func (fake *FakeInternalClient) StartActualLRP(arg1 lager.Logger, arg2 *models.ActualLRPKey, arg3 *models.ActualLRPInstanceKey, arg4 *models.ActualLRPNetInfo, arg5 []*models.ActualLRPInternalRoute, arg6 map[string]string) error {
-	var arg5Copy []*models.ActualLRPInternalRoute
-	if arg5 != nil {
-		arg5Copy = make([]*models.ActualLRPInternalRoute, len(arg5))
-		copy(arg5Copy, arg5)
+func (fake *FakeInternalClient) StartActualLRP(arg1 lager.Logger, arg2 string, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute, arg7 map[string]string) error {
+	var arg6Copy []*models.ActualLRPInternalRoute
+	if arg6 != nil {
+		arg6Copy = make([]*models.ActualLRPInternalRoute, len(arg6))
+		copy(arg6Copy, arg6)
 	}
 	fake.startActualLRPMutex.Lock()
 	ret, specificReturn := fake.startActualLRPReturnsOnCall[len(fake.startActualLRPArgsForCall)]
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 *models.ActualLRPKey
-		arg3 *models.ActualLRPInstanceKey
-		arg4 *models.ActualLRPNetInfo
-		arg5 []*models.ActualLRPInternalRoute
-		arg6 map[string]string
-	}{arg1, arg2, arg3, arg4, arg5Copy, arg6})
+		arg2 string
+		arg3 *models.ActualLRPKey
+		arg4 *models.ActualLRPInstanceKey
+		arg5 *models.ActualLRPNetInfo
+		arg6 []*models.ActualLRPInternalRoute
+		arg7 map[string]string
+	}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7})
 	stub := fake.StartActualLRPStub
 	fakeReturns := fake.startActualLRPReturns
-	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5Copy, arg6})
+	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7})
 	fake.startActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5, arg6)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	}
 	if specificReturn {
 		return ret.result1
@@ -2502,17 +2568,17 @@ func (fake *FakeInternalClient) StartActualLRPCallCount() int {
 	return len(fake.startActualLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) StartActualLRPCalls(stub func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) error) {
+func (fake *FakeInternalClient) StartActualLRPCalls(stub func(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) error) {
 	fake.startActualLRPMutex.Lock()
 	defer fake.startActualLRPMutex.Unlock()
 	fake.StartActualLRPStub = stub
 }
 
-func (fake *FakeInternalClient) StartActualLRPArgsForCall(i int) (lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) {
+func (fake *FakeInternalClient) StartActualLRPArgsForCall(i int) (lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) {
 	fake.startActualLRPMutex.RLock()
 	defer fake.startActualLRPMutex.RUnlock()
 	argsForCall := fake.startActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7
 }
 
 func (fake *FakeInternalClient) StartActualLRPReturns(result1 error) {
@@ -2538,20 +2604,21 @@ func (fake *FakeInternalClient) StartActualLRPReturnsOnCall(i int, result1 error
 	}{result1}
 }
 
-func (fake *FakeInternalClient) StartTask(arg1 lager.Logger, arg2 string, arg3 string) (bool, error) {
+func (fake *FakeInternalClient) StartTask(arg1 lager.Logger, arg2 string, arg3 string, arg4 string) (bool, error) {
 	fake.startTaskMutex.Lock()
 	ret, specificReturn := fake.startTaskReturnsOnCall[len(fake.startTaskArgsForCall)]
 	fake.startTaskArgsForCall = append(fake.startTaskArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
 		arg3 string
-	}{arg1, arg2, arg3})
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.StartTaskStub
 	fakeReturns := fake.startTaskReturns
-	fake.recordInvocation("StartTask", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("StartTask", []interface{}{arg1, arg2, arg3, arg4})
 	fake.startTaskMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -2565,17 +2632,17 @@ func (fake *FakeInternalClient) StartTaskCallCount() int {
 	return len(fake.startTaskArgsForCall)
 }
 
-func (fake *FakeInternalClient) StartTaskCalls(stub func(lager.Logger, string, string) (bool, error)) {
+func (fake *FakeInternalClient) StartTaskCalls(stub func(lager.Logger, string, string, string) (bool, error)) {
 	fake.startTaskMutex.Lock()
 	defer fake.startTaskMutex.Unlock()
 	fake.StartTaskStub = stub
 }
 
-func (fake *FakeInternalClient) StartTaskArgsForCall(i int) (lager.Logger, string, string) {
+func (fake *FakeInternalClient) StartTaskArgsForCall(i int) (lager.Logger, string, string, string) {
 	fake.startTaskMutex.RLock()
 	defer fake.startTaskMutex.RUnlock()
 	argsForCall := fake.startTaskArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) StartTaskReturns(result1 bool, result2 error) {
@@ -2926,19 +2993,20 @@ func (fake *FakeInternalClient) SubscribeToTaskEventsReturnsOnCall(i int, result
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) TaskByGuid(arg1 lager.Logger, arg2 string) (*models.Task, error) {
+func (fake *FakeInternalClient) TaskByGuid(arg1 lager.Logger, arg2 string, arg3 string) (*models.Task, error) {
 	fake.taskByGuidMutex.Lock()
 	ret, specificReturn := fake.taskByGuidReturnsOnCall[len(fake.taskByGuidArgsForCall)]
 	fake.taskByGuidArgsForCall = append(fake.taskByGuidArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.TaskByGuidStub
 	fakeReturns := fake.taskByGuidReturns
-	fake.recordInvocation("TaskByGuid", []interface{}{arg1, arg2})
+	fake.recordInvocation("TaskByGuid", []interface{}{arg1, arg2, arg3})
 	fake.taskByGuidMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -2952,17 +3020,17 @@ func (fake *FakeInternalClient) TaskByGuidCallCount() int {
 	return len(fake.taskByGuidArgsForCall)
 }
 
-func (fake *FakeInternalClient) TaskByGuidCalls(stub func(lager.Logger, string) (*models.Task, error)) {
+func (fake *FakeInternalClient) TaskByGuidCalls(stub func(lager.Logger, string, string) (*models.Task, error)) {
 	fake.taskByGuidMutex.Lock()
 	defer fake.taskByGuidMutex.Unlock()
 	fake.TaskByGuidStub = stub
 }
 
-func (fake *FakeInternalClient) TaskByGuidArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) TaskByGuidArgsForCall(i int) (lager.Logger, string, string) {
 	fake.taskByGuidMutex.RLock()
 	defer fake.taskByGuidMutex.RUnlock()
 	argsForCall := fake.taskByGuidArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) TaskByGuidReturns(result1 *models.Task, result2 error) {
@@ -2991,18 +3059,19 @@ func (fake *FakeInternalClient) TaskByGuidReturnsOnCall(i int, result1 *models.T
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) Tasks(arg1 lager.Logger) ([]*models.Task, error) {
+func (fake *FakeInternalClient) Tasks(arg1 lager.Logger, arg2 string) ([]*models.Task, error) {
 	fake.tasksMutex.Lock()
 	ret, specificReturn := fake.tasksReturnsOnCall[len(fake.tasksArgsForCall)]
 	fake.tasksArgsForCall = append(fake.tasksArgsForCall, struct {
 		arg1 lager.Logger
-	}{arg1})
+		arg2 string
+	}{arg1, arg2})
 	stub := fake.TasksStub
 	fakeReturns := fake.tasksReturns
-	fake.recordInvocation("Tasks", []interface{}{arg1})
+	fake.recordInvocation("Tasks", []interface{}{arg1, arg2})
 	fake.tasksMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -3016,17 +3085,17 @@ func (fake *FakeInternalClient) TasksCallCount() int {
 	return len(fake.tasksArgsForCall)
 }
 
-func (fake *FakeInternalClient) TasksCalls(stub func(lager.Logger) ([]*models.Task, error)) {
+func (fake *FakeInternalClient) TasksCalls(stub func(lager.Logger, string) ([]*models.Task, error)) {
 	fake.tasksMutex.Lock()
 	defer fake.tasksMutex.Unlock()
 	fake.TasksStub = stub
 }
 
-func (fake *FakeInternalClient) TasksArgsForCall(i int) lager.Logger {
+func (fake *FakeInternalClient) TasksArgsForCall(i int) (lager.Logger, string) {
 	fake.tasksMutex.RLock()
 	defer fake.tasksMutex.RUnlock()
 	argsForCall := fake.tasksArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeInternalClient) TasksReturns(result1 []*models.Task, result2 error) {
@@ -3055,19 +3124,20 @@ func (fake *FakeInternalClient) TasksReturnsOnCall(i int, result1 []*models.Task
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) TasksByCellID(arg1 lager.Logger, arg2 string) ([]*models.Task, error) {
+func (fake *FakeInternalClient) TasksByCellID(arg1 lager.Logger, arg2 string, arg3 string) ([]*models.Task, error) {
 	fake.tasksByCellIDMutex.Lock()
 	ret, specificReturn := fake.tasksByCellIDReturnsOnCall[len(fake.tasksByCellIDArgsForCall)]
 	fake.tasksByCellIDArgsForCall = append(fake.tasksByCellIDArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.TasksByCellIDStub
 	fakeReturns := fake.tasksByCellIDReturns
-	fake.recordInvocation("TasksByCellID", []interface{}{arg1, arg2})
+	fake.recordInvocation("TasksByCellID", []interface{}{arg1, arg2, arg3})
 	fake.tasksByCellIDMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -3081,17 +3151,17 @@ func (fake *FakeInternalClient) TasksByCellIDCallCount() int {
 	return len(fake.tasksByCellIDArgsForCall)
 }
 
-func (fake *FakeInternalClient) TasksByCellIDCalls(stub func(lager.Logger, string) ([]*models.Task, error)) {
+func (fake *FakeInternalClient) TasksByCellIDCalls(stub func(lager.Logger, string, string) ([]*models.Task, error)) {
 	fake.tasksByCellIDMutex.Lock()
 	defer fake.tasksByCellIDMutex.Unlock()
 	fake.TasksByCellIDStub = stub
 }
 
-func (fake *FakeInternalClient) TasksByCellIDArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) TasksByCellIDArgsForCall(i int) (lager.Logger, string, string) {
 	fake.tasksByCellIDMutex.RLock()
 	defer fake.tasksByCellIDMutex.RUnlock()
 	argsForCall := fake.tasksByCellIDArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) TasksByCellIDReturns(result1 []*models.Task, result2 error) {
@@ -3120,19 +3190,20 @@ func (fake *FakeInternalClient) TasksByCellIDReturnsOnCall(i int, result1 []*mod
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) TasksByDomain(arg1 lager.Logger, arg2 string) ([]*models.Task, error) {
+func (fake *FakeInternalClient) TasksByDomain(arg1 lager.Logger, arg2 string, arg3 string) ([]*models.Task, error) {
 	fake.tasksByDomainMutex.Lock()
 	ret, specificReturn := fake.tasksByDomainReturnsOnCall[len(fake.tasksByDomainArgsForCall)]
 	fake.tasksByDomainArgsForCall = append(fake.tasksByDomainArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-	}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
 	stub := fake.TasksByDomainStub
 	fakeReturns := fake.tasksByDomainReturns
-	fake.recordInvocation("TasksByDomain", []interface{}{arg1, arg2})
+	fake.recordInvocation("TasksByDomain", []interface{}{arg1, arg2, arg3})
 	fake.tasksByDomainMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -3146,17 +3217,17 @@ func (fake *FakeInternalClient) TasksByDomainCallCount() int {
 	return len(fake.tasksByDomainArgsForCall)
 }
 
-func (fake *FakeInternalClient) TasksByDomainCalls(stub func(lager.Logger, string) ([]*models.Task, error)) {
+func (fake *FakeInternalClient) TasksByDomainCalls(stub func(lager.Logger, string, string) ([]*models.Task, error)) {
 	fake.tasksByDomainMutex.Lock()
 	defer fake.tasksByDomainMutex.Unlock()
 	fake.TasksByDomainStub = stub
 }
 
-func (fake *FakeInternalClient) TasksByDomainArgsForCall(i int) (lager.Logger, string) {
+func (fake *FakeInternalClient) TasksByDomainArgsForCall(i int) (lager.Logger, string, string) {
 	fake.tasksByDomainMutex.RLock()
 	defer fake.tasksByDomainMutex.RUnlock()
 	argsForCall := fake.tasksByDomainArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) TasksByDomainReturns(result1 []*models.Task, result2 error) {
@@ -3185,19 +3256,20 @@ func (fake *FakeInternalClient) TasksByDomainReturnsOnCall(i int, result1 []*mod
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) TasksWithFilter(arg1 lager.Logger, arg2 models.TaskFilter) ([]*models.Task, error) {
+func (fake *FakeInternalClient) TasksWithFilter(arg1 lager.Logger, arg2 string, arg3 models.TaskFilter) ([]*models.Task, error) {
 	fake.tasksWithFilterMutex.Lock()
 	ret, specificReturn := fake.tasksWithFilterReturnsOnCall[len(fake.tasksWithFilterArgsForCall)]
 	fake.tasksWithFilterArgsForCall = append(fake.tasksWithFilterArgsForCall, struct {
 		arg1 lager.Logger
-		arg2 models.TaskFilter
-	}{arg1, arg2})
+		arg2 string
+		arg3 models.TaskFilter
+	}{arg1, arg2, arg3})
 	stub := fake.TasksWithFilterStub
 	fakeReturns := fake.tasksWithFilterReturns
-	fake.recordInvocation("TasksWithFilter", []interface{}{arg1, arg2})
+	fake.recordInvocation("TasksWithFilter", []interface{}{arg1, arg2, arg3})
 	fake.tasksWithFilterMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -3211,17 +3283,17 @@ func (fake *FakeInternalClient) TasksWithFilterCallCount() int {
 	return len(fake.tasksWithFilterArgsForCall)
 }
 
-func (fake *FakeInternalClient) TasksWithFilterCalls(stub func(lager.Logger, models.TaskFilter) ([]*models.Task, error)) {
+func (fake *FakeInternalClient) TasksWithFilterCalls(stub func(lager.Logger, string, models.TaskFilter) ([]*models.Task, error)) {
 	fake.tasksWithFilterMutex.Lock()
 	defer fake.tasksWithFilterMutex.Unlock()
 	fake.TasksWithFilterStub = stub
 }
 
-func (fake *FakeInternalClient) TasksWithFilterArgsForCall(i int) (lager.Logger, models.TaskFilter) {
+func (fake *FakeInternalClient) TasksWithFilterArgsForCall(i int) (lager.Logger, string, models.TaskFilter) {
 	fake.tasksWithFilterMutex.RLock()
 	defer fake.tasksWithFilterMutex.RUnlock()
 	argsForCall := fake.tasksWithFilterArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInternalClient) TasksWithFilterReturns(result1 []*models.Task, result2 error) {
@@ -3250,20 +3322,21 @@ func (fake *FakeInternalClient) TasksWithFilterReturnsOnCall(i int, result1 []*m
 	}{result1, result2}
 }
 
-func (fake *FakeInternalClient) UpdateDesiredLRP(arg1 lager.Logger, arg2 string, arg3 *models.DesiredLRPUpdate) error {
+func (fake *FakeInternalClient) UpdateDesiredLRP(arg1 lager.Logger, arg2 string, arg3 string, arg4 *models.DesiredLRPUpdate) error {
 	fake.updateDesiredLRPMutex.Lock()
 	ret, specificReturn := fake.updateDesiredLRPReturnsOnCall[len(fake.updateDesiredLRPArgsForCall)]
 	fake.updateDesiredLRPArgsForCall = append(fake.updateDesiredLRPArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-		arg3 *models.DesiredLRPUpdate
-	}{arg1, arg2, arg3})
+		arg3 string
+		arg4 *models.DesiredLRPUpdate
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.UpdateDesiredLRPStub
 	fakeReturns := fake.updateDesiredLRPReturns
-	fake.recordInvocation("UpdateDesiredLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("UpdateDesiredLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.updateDesiredLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -3277,17 +3350,17 @@ func (fake *FakeInternalClient) UpdateDesiredLRPCallCount() int {
 	return len(fake.updateDesiredLRPArgsForCall)
 }
 
-func (fake *FakeInternalClient) UpdateDesiredLRPCalls(stub func(lager.Logger, string, *models.DesiredLRPUpdate) error) {
+func (fake *FakeInternalClient) UpdateDesiredLRPCalls(stub func(lager.Logger, string, string, *models.DesiredLRPUpdate) error) {
 	fake.updateDesiredLRPMutex.Lock()
 	defer fake.updateDesiredLRPMutex.Unlock()
 	fake.UpdateDesiredLRPStub = stub
 }
 
-func (fake *FakeInternalClient) UpdateDesiredLRPArgsForCall(i int) (lager.Logger, string, *models.DesiredLRPUpdate) {
+func (fake *FakeInternalClient) UpdateDesiredLRPArgsForCall(i int) (lager.Logger, string, string, *models.DesiredLRPUpdate) {
 	fake.updateDesiredLRPMutex.RLock()
 	defer fake.updateDesiredLRPMutex.RUnlock()
 	argsForCall := fake.updateDesiredLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) UpdateDesiredLRPReturns(result1 error) {
@@ -3313,20 +3386,21 @@ func (fake *FakeInternalClient) UpdateDesiredLRPReturnsOnCall(i int, result1 err
 	}{result1}
 }
 
-func (fake *FakeInternalClient) UpsertDomain(arg1 lager.Logger, arg2 string, arg3 time.Duration) error {
+func (fake *FakeInternalClient) UpsertDomain(arg1 lager.Logger, arg2 string, arg3 string, arg4 time.Duration) error {
 	fake.upsertDomainMutex.Lock()
 	ret, specificReturn := fake.upsertDomainReturnsOnCall[len(fake.upsertDomainArgsForCall)]
 	fake.upsertDomainArgsForCall = append(fake.upsertDomainArgsForCall, struct {
 		arg1 lager.Logger
 		arg2 string
-		arg3 time.Duration
-	}{arg1, arg2, arg3})
+		arg3 string
+		arg4 time.Duration
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.UpsertDomainStub
 	fakeReturns := fake.upsertDomainReturns
-	fake.recordInvocation("UpsertDomain", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("UpsertDomain", []interface{}{arg1, arg2, arg3, arg4})
 	fake.upsertDomainMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -3340,17 +3414,17 @@ func (fake *FakeInternalClient) UpsertDomainCallCount() int {
 	return len(fake.upsertDomainArgsForCall)
 }
 
-func (fake *FakeInternalClient) UpsertDomainCalls(stub func(lager.Logger, string, time.Duration) error) {
+func (fake *FakeInternalClient) UpsertDomainCalls(stub func(lager.Logger, string, string, time.Duration) error) {
 	fake.upsertDomainMutex.Lock()
 	defer fake.upsertDomainMutex.Unlock()
 	fake.UpsertDomainStub = stub
 }
 
-func (fake *FakeInternalClient) UpsertDomainArgsForCall(i int) (lager.Logger, string, time.Duration) {
+func (fake *FakeInternalClient) UpsertDomainArgsForCall(i int) (lager.Logger, string, string, time.Duration) {
 	fake.upsertDomainMutex.RLock()
 	defer fake.upsertDomainMutex.RUnlock()
 	argsForCall := fake.upsertDomainArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeInternalClient) UpsertDomainReturns(result1 error) {
