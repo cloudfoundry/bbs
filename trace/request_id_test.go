@@ -9,6 +9,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"code.cloudfoundry.org/bbs/trace"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 )
 
 var _ = Describe("RequestId", func() {
@@ -52,6 +54,53 @@ var _ = Describe("RequestId", func() {
 		It("returns request id from context", func() {
 			req.Header.Add(trace.RequestIdHeader, "some-request-id")
 			Expect(trace.RequestIdFromRequest(req)).To(Equal("some-request-id"))
+		})
+	})
+
+	Describe("LoggerWithTraceInfo", func() {
+		var logger lager.Logger
+		var testSink *lagertest.TestSink
+
+		BeforeEach(func() {
+			logger = lager.NewLogger("test-logger")
+			testSink = lagertest.NewTestSink()
+			logger.RegisterSink(testSink)
+		})
+
+		Context("when trace id is empty", func() {
+			It("does not set trace and span id", func() {
+				logger = trace.LoggerWithTraceInfo(logger, "")
+				logger.Info("test-log")
+
+				log := testSink.Logs()[0]
+
+				Expect(log.Data).To(BeEmpty())
+				Expect(log.Data).To(BeEmpty())
+			})
+		})
+
+		Context("when trace id is not empty", func() {
+			It("sets trace and span id", func() {
+				logger = trace.LoggerWithTraceInfo(logger, "7f461654-74d1-1ee5-8367-77d85df2cdab")
+				logger.Info("test-log")
+
+				log := testSink.Logs()[0]
+
+				Expect(log.Data["trace-id"]).To(Equal("7f46165474d11ee5836777d85df2cdab"))
+				Expect(log.Data["span-id"]).NotTo(BeEmpty())
+			})
+		})
+
+		Context("when trace id is invalid", func() {
+			It("does not set trace and span id", func() {
+				logger = trace.LoggerWithTraceInfo(logger, "invalid-request-id")
+				logger.Info("test-log")
+
+				log := testSink.Logs()[0]
+
+				Expect(log.Data).To(BeEmpty())
+				Expect(log.Data).To(BeEmpty())
+			})
 		})
 	})
 })
