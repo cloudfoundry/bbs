@@ -75,6 +75,7 @@ func NewLRPConvergenceController(
 
 func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lager.Logger) {
 	logger = h.logger.Session("converge-lrps")
+	traceId := trace.RequestIdFromContext(ctx)
 
 	start := h.clock.Now()
 
@@ -125,7 +126,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 		startLogger := logger.WithData(lager.Data{"start_requests_count": len(startRequests)})
 		if len(startRequests) > 0 {
 			startLogger.Debug("requesting-start-auctions")
-			err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), startRequests)
+			err = h.auctioneerClient.RequestLRPAuctions(logger, traceId, startRequests)
 			if err != nil {
 				startLogger.Error("failed-to-request-starts", err, lager.Data{"lrp_start_auctions": startRequests})
 			}
@@ -165,7 +166,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 			}
 
 			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrp.ToActualLRPGroup()))
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(lrp))
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(lrp, traceId))
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
 			startRequestLock.Lock()
@@ -185,8 +186,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 				go func() {
-					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
-					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after, traceId))
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before, traceId))
 				}()
 			}
 
@@ -223,8 +224,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 
 				//emit instance events for removing suspect and creating unclaimed
 				go func() {
-					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after))
-					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before))
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after, traceId))
+					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(before, traceId))
 				}()
 
 				return
@@ -235,14 +236,14 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
 				return
 			}
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after, traceId))
 
 			unclaimed, err := h.lrpDB.CreateUnclaimedActualLRP(ctx, logger.Session("create-unclaimed-actual"), dereferencedKey.Key)
 			if err != nil {
 				logger.Error("cannot-unclaim-lrp", err)
 				return
 			}
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed))
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed, traceId))
 
 			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
 			startRequestLock.Lock()
@@ -270,7 +271,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 				return
 			}
 
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after))
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after, traceId))
 		})
 	}
 
@@ -285,7 +286,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 			}
 
 			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP))
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP, traceId))
 		})
 	}
 

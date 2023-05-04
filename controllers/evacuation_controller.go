@@ -56,7 +56,7 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(ctx context.Context, lo
 	newLRPs := make([]*models.ActualLRP, len(actualLRPs))
 	copy(newLRPs, actualLRPs)
 	defer func() {
-		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), actualLRPs, newLRPs)
 	}()
 
 	lrp := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
@@ -154,7 +154,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(ctx context.Context, log
 	copy(newLRPs, actualLRPs)
 
 	defer func() {
-		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), actualLRPs, newLRPs)
 	}()
 
 	removed, newLRPs, err := h.removeEvacuatingOrSuspect(ctx, logger, eventCalculator, newLRPs, actualLRPKey, actualLRPInstanceKey)
@@ -202,7 +202,7 @@ func (h *EvacuationController) EvacuateCrashedActualLRP(ctx context.Context, log
 	copy(newLRPs, actualLRPs)
 
 	defer func() {
-		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), actualLRPs, newLRPs)
 	}()
 
 	removed, newLRPs, err := h.removeEvacuatingOrSuspect(ctx, logger, eventCalculator, newLRPs, actualLRPKey, actualLRPInstanceKey)
@@ -267,7 +267,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 	copy(newLRPs, actualLRPs)
 
 	defer func() {
-		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), actualLRPs, newLRPs)
 	}()
 
 	// the ActualLRP whose InstanceGuid, and CellId match the method
@@ -356,7 +356,7 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(ctx context.Context, log
 	copy(newLRPs, actualLRPs)
 
 	defer func() {
-		go eventCalculator.EmitEvents(actualLRPs, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), actualLRPs, newLRPs)
 	}()
 
 	removed, newLRPs, err := h.removeEvacuatingOrSuspect(ctx, logger, eventCalculator, newLRPs, actualLRPKey, actualLRPInstanceKey)
@@ -415,7 +415,7 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 	newLRPs := eventCalculator.RecordChange(actualLRP, evacuating, allLRPs)
 
 	defer func() {
-		go eventCalculator.EmitEvents(allLRPs, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), allLRPs, newLRPs)
 	}()
 
 	if actualLRP.Presence == models.ActualLRP_Suspect {

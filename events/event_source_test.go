@@ -44,7 +44,7 @@ var _ = Describe("EventSource", func() {
 				var expectedEvent *models.DesiredLRPCreatedEvent
 
 				BeforeEach(func() {
-					expectedEvent = models.NewDesiredLRPCreatedEvent(desiredLRP)
+					expectedEvent = models.NewDesiredLRPCreatedEvent(desiredLRP, "some-trace-id")
 					payload, err := proto.Marshal(expectedEvent)
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
@@ -73,7 +73,7 @@ var _ = Describe("EventSource", func() {
 				var expectedEvent *models.DesiredLRPChangedEvent
 
 				BeforeEach(func() {
-					expectedEvent = models.NewDesiredLRPChangedEvent(desiredLRP, desiredLRP)
+					expectedEvent = models.NewDesiredLRPChangedEvent(desiredLRP, desiredLRP, "some-trace-id")
 					payload, err := proto.Marshal(expectedEvent)
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
@@ -102,7 +102,7 @@ var _ = Describe("EventSource", func() {
 				var expectedEvent *models.DesiredLRPRemovedEvent
 
 				BeforeEach(func() {
-					expectedEvent = models.NewDesiredLRPRemovedEvent(desiredLRP)
+					expectedEvent = models.NewDesiredLRPRemovedEvent(desiredLRP, "some-trace-id")
 					payload, err := proto.Marshal(expectedEvent)
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))

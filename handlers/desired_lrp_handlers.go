@@ -174,7 +174,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
+	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP, trace.RequestIdFromRequest(req)))
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
 	if schedulingInfo.Instances > 0 {
@@ -241,7 +241,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		h.updateInstances(trace.ContextWithRequestId(req), logger, request.ProcessGuid, request.Update, internalRoutesUpdated, metricTagsUpdated)
 	}
 
-	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
+	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP, trace.RequestIdFromRequest(req)))
 }
 
 func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -271,7 +271,7 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP))
+	go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP, trace.RequestIdFromRequest(req)))
 
 	h.stopInstancesFrom(req.Context(), logger, request.ProcessGuid, 0)
 }
@@ -320,7 +320,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(ctx context.Context, logge
 			}
 
 			lrps := eventCalculator.RecordChange(nil, actualLRP, nil)
-			go eventCalculator.EmitEvents(nil, lrps)
+			go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), nil, lrps)
 			createdIndicesChan <- int(key.Index)
 		}
 	}
@@ -365,7 +365,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						logger.Error("failed-removing-lrp-instance", err)
 					} else {
 						go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
-						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp))
+						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp, trace.RequestIdFromContext(ctx)))
 					}
 				default:
 					cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)

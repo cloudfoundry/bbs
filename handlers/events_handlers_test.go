@@ -216,13 +216,13 @@ var _ = Describe("Event Handlers", func() {
 				reader := sse.NewReadCloser(response.Body)
 
 				desiredLRP := model_helpers.NewValidDesiredLRP("guid")
-				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
+				event := models.NewDesiredLRPCreatedEvent(desiredLRP, "some-trace-id")
 
 				migratedLRP := desiredLRP.VersionDownTo(format.V0)
 				migratedLRP.ImageLayers = nil
 
 				Expect(migratedLRP).NotTo(Equal(desiredLRP))
-				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
+				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP, "some-trace-id")
 
 				desiredHub.Emit(event)
 
@@ -575,13 +575,13 @@ var _ = Describe("Event Handlers", func() {
 				reader := sse.NewReadCloser(response.Body)
 
 				desiredLRP := model_helpers.NewValidDesiredLRP("guid")
-				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
+				event := models.NewDesiredLRPCreatedEvent(desiredLRP, "some-trace-id")
 
 				migratedLRP := desiredLRP.VersionDownTo(format.V3)
 				Expect(migratedLRP).To(Equal(desiredLRP))
 				Expect(migratedLRP.ImageLayers).NotTo(BeEmpty())
 
-				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
+				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP, "some-trace-id")
 
 				desiredHub.Emit(event)
 
@@ -627,12 +627,12 @@ var _ = Describe("Event Handlers", func() {
 			readerV1 := sse.NewReadCloser(responseV1.Body)
 
 			desiredLRPV3 := model_helpers.NewValidDesiredLRP("guid")
-			eventV1 := models.NewDesiredLRPCreatedEvent(desiredLRPV3)
+			eventV1 := models.NewDesiredLRPCreatedEvent(desiredLRPV3, "some-trace-id")
 
 			desiredLRPV0 := model_helpers.NewValidDesiredLRP("guid").VersionDownTo(format.V0)
-			eventV0 := models.NewDesiredLRPCreatedEvent(desiredLRPV0)
+			eventV0 := models.NewDesiredLRPCreatedEvent(desiredLRPV0, "some-trace-id")
 
-			desiredHub.Emit(models.NewDesiredLRPCreatedEvent(model_helpers.NewValidDesiredLRP("guid")))
+			desiredHub.Emit(models.NewDesiredLRPCreatedEvent(model_helpers.NewValidDesiredLRP("guid"), "some-trace-id"))
 
 			eventsV0 := events.NewEventSource(readerV0)
 			eventsV1 := events.NewEventSource(readerV1)
@@ -680,11 +680,11 @@ var _ = Describe("Event Handlers", func() {
 				reader := sse.NewReadCloser(response.Body)
 
 				desiredLRP := model_helpers.NewValidDesiredLRP("guid")
-				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
+				event := models.NewDesiredLRPCreatedEvent(desiredLRP, "some-trace-id")
 
 				migratedLRP := desiredLRP.VersionDownTo(format.V0)
 				Expect(migratedLRP).NotTo(Equal(desiredLRP))
-				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
+				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP, "some-trace-id")
 
 				desiredHub.Emit(event)
 
@@ -726,13 +726,13 @@ var _ = Describe("Event Handlers", func() {
 				reader := sse.NewReadCloser(response.Body)
 
 				desiredLRP := model_helpers.NewValidDesiredLRP("guid")
-				event := models.NewDesiredLRPCreatedEvent(desiredLRP)
+				event := models.NewDesiredLRPCreatedEvent(desiredLRP, "some-trace-id")
 
 				migratedLRP := desiredLRP.VersionDownTo(format.V3)
 				Expect(migratedLRP).To(Equal(desiredLRP))
 				Expect(migratedLRP.ImageLayers).NotTo(BeEmpty())
 
-				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP)
+				migratedEvent := models.NewDesiredLRPCreatedEvent(migratedLRP, "some-trace-id")
 
 				desiredHub.Emit(event)
 

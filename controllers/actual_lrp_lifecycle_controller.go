@@ -96,7 +96,7 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(ctx context.Context, logge
 	}
 
 	newLRPs := eventCalculator.RecordChange(before, after, lrps)
-	go eventCalculator.EmitEvents(lrps, newLRPs)
+	go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 
 	return nil
 }
@@ -132,7 +132,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logge
 	newLRPs := eventCalculator.RecordChange(before, after, lrps)
 
 	defer func() {
-		go eventCalculator.EmitEvents(lrps, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 	}()
 
 	evacuating := findWithPresence(lrps, models.ActualLRP_Evacuating)
@@ -169,6 +169,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 	}
 
 	lrp := lookupLRPInSlice(lrps, actualLRPInstanceKey)
+	traceId := trace.RequestIdFromContext(ctx)
 	if lrp != nil && lrp.Presence == models.ActualLRP_Suspect {
 		suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(ctx, logger, actualLRPKey)
 		if err != nil {
@@ -177,7 +178,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 
 		afterLRPs := eventCalculator.RecordChange(suspectLRP, nil, lrps)
 		logger.Info("removing-suspect-lrp", lager.Data{"ig": suspectLRP.InstanceGuid})
-		go eventCalculator.EmitEvents(lrps, afterLRPs)
+		go eventCalculator.EmitEvents(traceId, lrps, afterLRPs)
 
 		return nil
 	}
@@ -188,7 +189,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 	}
 
 	afterLRPs := eventCalculator.RecordChange(before, after, lrps)
-	go eventCalculator.EmitCrashEvents(lrps, afterLRPs)
+	go eventCalculator.EmitCrashEvents(traceId, lrps, afterLRPs)
 
 	if !shouldRestart {
 		return nil
@@ -228,7 +229,7 @@ func (h *ActualLRPLifecycleController) FailActualLRP(ctx context.Context, logger
 	}
 
 	newLRPs := eventCalculator.RecordChange(before, after, lrps)
-	go eventCalculator.EmitEvents(lrps, newLRPs)
+	go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 
 	return nil
 }
@@ -255,7 +256,7 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(ctx context.Context, logg
 	}
 
 	newLRPs := eventCalculator.RecordChange(lrp, nil, beforeLRPs)
-	go eventCalculator.EmitEvents(beforeLRPs, newLRPs)
+	go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), beforeLRPs, newLRPs)
 
 	return nil
 }
@@ -285,7 +286,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 	copy(newLRPs, lrps)
 
 	defer func() {
-		go eventCalculator.EmitEvents(lrps, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 	}()
 
 	removeLRP := func() error {
