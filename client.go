@@ -604,7 +604,6 @@ func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, filter models.De
 
 func (c *client) DesiredLRPRoutingInfos(logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	request := models.DesiredLRPsRequest{
-		Domain:       filter.Domain,
 		ProcessGuids: filter.ProcessGuids,
 	}
 	response := models.DesiredLRPsResponse{}

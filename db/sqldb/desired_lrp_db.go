@@ -213,11 +213,6 @@ func (db *SQLDB) DesiredLRPRoutingInfos(ctx context.Context, logger lager.Logger
 	var wheres []string
 	var values []interface{}
 
-	if filter.Domain != "" {
-		wheres = append(wheres, "domain = ?")
-		values = append(values, filter.Domain)
-	}
-
 	if len(filter.ProcessGuids) > 0 {
 		wheres = append(wheres, whereClauseForProcessGuids(filter.ProcessGuids))
 

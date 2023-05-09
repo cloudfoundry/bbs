@@ -329,7 +329,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 	})
 
-	FDescribe("DesiredLRPRoutingInfos", func() {
+	Describe("DesiredLRPRoutingInfos", func() {
 		var expectedDesiredLRPRoutingInfos []*models.DesiredLRP
 		var expectedDesiredLRPs []*models.DesiredLRP
 
@@ -357,15 +357,6 @@ var _ = Describe("DesiredLRPDB", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(desiredLRPRoutingInfos).To(HaveLen(3))
 			Expect(desiredLRPRoutingInfos).To(ConsistOf(expectedDesiredLRPRoutingInfos))
-		})
-
-		Context("when filtering by domain", func() {
-			It("returns the filtered routing infos", func() {
-				desiredLRPRoutingInfos, err := sqlDB.DesiredLRPRoutingInfos(ctx, logger, models.DesiredLRPFilter{Domain: "domain-1"})
-				Expect(err).NotTo(HaveOccurred())
-				Expect(desiredLRPRoutingInfos).To(HaveLen(1))
-				Expect(desiredLRPRoutingInfos[0]).To(BeEquivalentTo(expectedDesiredLRPRoutingInfos[0]))
-			})
 		})
 
 		Context("when filtering by process guids", func() {
