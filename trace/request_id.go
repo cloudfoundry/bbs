@@ -43,3 +43,7 @@ func LoggerWithTraceInfo(logger lager.Logger, traceIDStr string) lager.Logger {
 	spanID := idgenerator.NewRandom128().SpanID(traceID)
 	return logger.WithData(lager.Data{"trace-id": traceID.String(), "span-id": spanID.String()})
 }
+
+func GenerateTraceID() string {
+	return idgenerator.NewRandom128().TraceID().String()
+}
