@@ -1549,7 +1549,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			requestBody = &models.RemoveDesiredLRPRequest{
 				ProcessGuid: processGuid,
 			}
-			fakeServiceClient.CellByIdReturns(&models.CellPresence{RepAddress: "some-address"}, nil)
+			fakeServiceClient.CellByIdReturns(&models.CellPresence{RepAddress: "some-address", RepUrl: "http://some-address"}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -1641,8 +1641,14 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(filter.ProcessGuid).To(Equal("some-guid"))
 
 					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal("some-address"))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal("some-address"))
+					repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
+					Expect(repAddr).To(Equal("some-address"))
+					Expect(repURL).To(Equal("http://some-address"))
+					Expect(traceID).To(Equal(requestIdHeader))
+					repAddr, repURL, traceID = fakeRepClientFactory.CreateClientArgsForCall(1)
+					Expect(repAddr).To(Equal("some-address"))
+					Expect(repURL).To(Equal("http://some-address"))
+					Expect(traceID).To(Equal(requestIdHeader))
 
 					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 					_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)

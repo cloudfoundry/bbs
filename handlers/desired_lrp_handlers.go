@@ -273,7 +273,7 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 
 	go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP, trace.RequestIdFromRequest(req)))
 
-	h.stopInstancesFrom(req.Context(), logger, request.ProcessGuid, 0)
+	h.stopInstancesFrom(trace.ContextWithRequestId(req), logger, request.ProcessGuid, 0)
 }
 
 func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
