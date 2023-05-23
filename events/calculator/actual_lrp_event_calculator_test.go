@@ -37,7 +37,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits no events", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 				Expect(actualHub.EmitCallCount()).To(Equal(0))
 				Expect(actualInstanceHub.EmitCallCount()).To(Equal(0))
 			})
@@ -54,7 +54,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits a ActualLRPCreatedEvent", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 				Expect(actualHub.EmitCallCount()).To(Equal(1))
 				lrpGroupEvent := actualHub.EmitArgsForCall(0)
@@ -62,11 +62,11 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits a ActualLRPInstanceCreatedEvent", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 				Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 				lrpInstanceEvent := actualInstanceHub.EmitArgsForCall(0)
-				Expect(lrpInstanceEvent).To(Equal(&models.ActualLRPInstanceCreatedEvent{ActualLrp: newLRP}))
+				Expect(lrpInstanceEvent).To(Equal(&models.ActualLRPInstanceCreatedEvent{ActualLrp: newLRP, TraceId: "some-trace-id"}))
 			})
 		})
 
@@ -81,7 +81,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits an ActualLRPRemovedEvent", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 				Expect(actualHub.EmitCallCount()).To(Equal(1))
 				lrpGroupEvent := actualHub.EmitArgsForCall(0)
@@ -89,11 +89,11 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits an ActualLRPInstanceRemovedEvent", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 				Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 				lrpInstanceEvent := actualInstanceHub.EmitArgsForCall(0)
-				Expect(lrpInstanceEvent).To(Equal(&models.ActualLRPInstanceRemovedEvent{ActualLrp: deletedLRP}))
+				Expect(lrpInstanceEvent).To(Equal(&models.ActualLRPInstanceRemovedEvent{ActualLrp: deletedLRP, TraceId: "some-trace-id"}))
 			})
 		})
 
@@ -124,16 +124,16 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 						})
 
 						It("emits an ActualLRPChangedEvent", func() {
-							eventCalculator.EmitEvents(beforeSet, afterSet)
+							eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 							Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 
 							changedEvent := actualInstanceHub.EmitArgsForCall(0)
 
-							Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+							Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP, "some-trace-id")))
 						})
 
 						It("emits no ActualLRPGroup events", func() {
-							eventCalculator.EmitEvents(beforeSet, afterSet)
+							eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 							Expect(actualHub.EmitCallCount()).To(Equal(1))
 
 							changedEvent := actualHub.EmitArgsForCall(0)
@@ -148,7 +148,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits a ActualLRPChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(1))
 
 						changedEvent := actualHub.EmitArgsForCall(0)
@@ -156,14 +156,14 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPInstanceCreatedEvent and a ActualLRPInstanceRemovedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(2))
 
 						createdEvent := actualInstanceHub.EmitArgsForCall(0)
 						removedEvent := actualInstanceHub.EmitArgsForCall(1)
 
-						Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP)))
-						Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
+						Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP, "some-trace-id")))
+						Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP, "some-trace-id")))
 					})
 				})
 
@@ -173,7 +173,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits a ActualLRPChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(1))
 
 						changedEvent := actualHub.EmitArgsForCall(0)
@@ -181,14 +181,14 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPInstanceCreatedEvent and a ActualLRPInstanceRemovedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(2))
 
 						createdEvent := actualInstanceHub.EmitArgsForCall(0)
 						removedEvent := actualInstanceHub.EmitArgsForCall(1)
 
-						Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP)))
-						Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
+						Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP, "some-trace-id")))
+						Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP, "some-trace-id")))
 					})
 				})
 
@@ -198,7 +198,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits a ActualLRPChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(1))
 
 						changedEvent := actualHub.EmitArgsForCall(0)
@@ -206,14 +206,14 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPInstanceCreatedEvent and a ActualLRPInstanceRemovedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(2))
 
 						createdEvent := actualInstanceHub.EmitArgsForCall(0)
 						removedEvent := actualInstanceHub.EmitArgsForCall(1)
 
-						Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP)))
-						Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
+						Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP, "some-trace-id")))
+						Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP, "some-trace-id")))
 					})
 				})
 			})
@@ -230,7 +230,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPChanged event", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 						Expect(actualHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualHub.EmitArgsForCall(0)
@@ -238,11 +238,11 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPInstanceChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualInstanceHub.EmitArgsForCall(0)
-						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP, "some-trace-id")))
 					})
 				})
 
@@ -252,7 +252,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPChanged event", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 						Expect(actualHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualHub.EmitArgsForCall(0)
@@ -263,13 +263,14 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPInstanceChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualInstanceHub.EmitArgsForCall(0)
 						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(
 							originalLRP,
 							updatedLRP,
+							"some-trace-id",
 						)))
 					})
 				})
@@ -286,17 +287,17 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualHub.EmitArgsForCall(0)
 						Expect(changedEvent).To(Equal(models.NewActualLRPChangedEvent(originalLRP.ToActualLRPGroup(), updatedLRP.ToActualLRPGroup())))
 					})
 
 					It("emits an ActualLRPInstanceChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualInstanceHub.EmitArgsForCall(0)
-						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP, "some-trace-id")))
 					})
 				})
 
@@ -306,17 +307,17 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits an ActualLRPChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualHub.EmitArgsForCall(0)
 						Expect(changedEvent).To(Equal(models.NewActualLRPChangedEvent(originalLRP.ToActualLRPGroup(), updatedLRP.ToActualLRPGroup())))
 					})
 
 					It("emits an ActualLRPInstanceChangedEvent", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 						changedEvent := actualInstanceHub.EmitArgsForCall(0)
-						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP, "some-trace-id")))
 					})
 				})
 			})
@@ -332,7 +333,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits Crashed and Changed events for the ActualLRPGroup", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(2))
 
 						crashedEvent := actualHub.EmitArgsForCall(0)
@@ -343,14 +344,14 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits Crashed and Changed events for the ActualLRP instances", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(2))
 
 						crashedEvent := actualInstanceHub.EmitArgsForCall(0)
 						changedEvent := actualInstanceHub.EmitArgsForCall(1)
 
 						Expect(crashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
-						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP, "some-trace-id")))
 					})
 				})
 
@@ -360,7 +361,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits Crashed and Changed events for the ActualLRPGroup", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(2))
 
 						crashedEvent := actualHub.EmitArgsForCall(0)
@@ -371,14 +372,14 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits Crashed and Changed events for the ActualLRP instances", func() {
-						eventCalculator.EmitEvents(beforeSet, afterSet)
+						eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualInstanceHub.EmitCallCount()).To(Equal(2))
 
 						crashedEvent := actualInstanceHub.EmitArgsForCall(0)
 						changedEvent := actualInstanceHub.EmitArgsForCall(1)
 
 						Expect(crashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
-						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+						Expect(changedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP, "some-trace-id")))
 					})
 				})
 			})
@@ -404,11 +405,11 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits an ActualLrpInstanceCreatedEvent", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 				Expect(actualInstanceHub.EmitCallCount()).To(Equal(1))
 
 				lrpInstanceEvent := actualInstanceHub.EmitArgsForCall(0)
-				Expect(lrpInstanceEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(replacementLRP)))
+				Expect(lrpInstanceEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(replacementLRP, "some-trace-id")))
 			})
 
 			Context("and the ordinary LRP is in non-RUNNING state", func() {
@@ -417,7 +418,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				})
 
 				It("emits no ActualLRPGroup events", func() {
-					eventCalculator.EmitEvents(beforeSet, afterSet)
+					eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 					Expect(actualHub.EmitCallCount()).To(Equal(0))
 				})
@@ -429,7 +430,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				})
 
 				It("emits ActualLRPGroupCreatedEvent for the replacement LRP,", func() {
-					eventCalculator.EmitEvents(beforeSet, afterSet)
+					eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 					Expect(actualHub.EmitCallCount()).To(Equal(2))
 
@@ -440,7 +441,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				})
 
 				It("emits a ActualLRPGroupRemovedEvent for the suspect LRP", func() {
-					eventCalculator.EmitEvents(beforeSet, afterSet)
+					eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 					Expect(actualHub.EmitCallCount()).To(Equal(2))
 
@@ -474,7 +475,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits ActualLRPCreatedEvent for the evacuating instance", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 				// this also emit a changed event but that is covered by the `to
 				// UNCLAIMED` context above
@@ -490,7 +491,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits ActualLrpInstanceChangedEvent", func() {
-				eventCalculator.EmitEvents(beforeSet, afterSet)
+				eventCalculator.EmitEvents("some-trace-id", beforeSet, afterSet)
 
 				// this also emit a changed event but that is covered by the `to
 				// UNCLAIMED` context above
@@ -504,6 +505,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				Expect(events).To(ContainElement(test_helpers.DeepEqual(models.NewActualLRPInstanceChangedEvent(
 					originalLRP,
 					evacuatingLRP,
+					"some-trace-id",
 				))))
 			})
 		})
@@ -534,7 +536,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				})
 
 				It("emits crashed and changed events to group hub and crashed, created and removed to instance hub", func() {
-					eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+					eventCalculator.EmitCrashEvents("some-trace-id", beforeSet, afterSet)
 					Expect(actualHub.EmitCallCount()).To(Equal(2))
 					Expect(actualInstanceHub.EmitCallCount()).To(Equal(3))
 
@@ -548,10 +550,10 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					Expect(instanceCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
 
 					createdEvent := actualInstanceHub.EmitArgsForCall(1)
-					Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP)))
+					Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP, "some-trace-id")))
 
 					removedEvent := actualInstanceHub.EmitArgsForCall(2)
-					Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
+					Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP, "some-trace-id")))
 				})
 			})
 
@@ -561,7 +563,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				})
 
 				It("emits crashed and changed events to group hub and crashed, created and removed to instance hub", func() {
-					eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+					eventCalculator.EmitCrashEvents("some-trace-id", beforeSet, afterSet)
 					Expect(actualHub.EmitCallCount()).To(Equal(2))
 					Expect(actualInstanceHub.EmitCallCount()).To(Equal(3))
 
@@ -575,10 +577,10 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					Expect(instanceCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
 
 					createdEvent := actualInstanceHub.EmitArgsForCall(1)
-					Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP)))
+					Expect(createdEvent).To(Equal(models.NewActualLRPInstanceCreatedEvent(updatedLRP, "some-trace-id")))
 
 					removedEvent := actualInstanceHub.EmitArgsForCall(2)
-					Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP)))
+					Expect(removedEvent).To(Equal(models.NewActualLRPInstanceRemovedEvent(originalLRP, "some-trace-id")))
 				})
 			})
 		})
@@ -589,7 +591,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 			})
 
 			It("emits crashed and changed events to both the group hub and the instance hub", func() {
-				eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+				eventCalculator.EmitCrashEvents("some-trace-id", beforeSet, afterSet)
 				Expect(actualHub.EmitCallCount()).To(Equal(2))
 				Expect(actualInstanceHub.EmitCallCount()).To(Equal(2))
 
@@ -603,7 +605,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				Expect(instanceCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
 
 				instanceChangedEvent := actualInstanceHub.EmitArgsForCall(1)
-				Expect(instanceChangedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP)))
+				Expect(instanceChangedEvent).To(Equal(models.NewActualLRPInstanceChangedEvent(originalLRP, updatedLRP, "some-trace-id")))
 			})
 		})
 
@@ -624,7 +626,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 					})
 
 					It("emits crashed and changed events to group hub", func() {
-						eventCalculator.EmitCrashEvents(beforeSet, afterSet)
+						eventCalculator.EmitCrashEvents("some-trace-id", beforeSet, afterSet)
 						Expect(actualHub.EmitCallCount()).To(Equal(2))
 						groupCrashedEvent := actualHub.EmitArgsForCall(0)
 						Expect(groupCrashedEvent).To(Equal(models.NewActualLRPCrashedEvent(originalLRP, updatedLRP)))
@@ -782,7 +784,7 @@ var _ = Describe("EventScore", func() {
 
 	Context("for ActualLRPInstanceCreatedEvent", func() {
 		JustBeforeEach(func() {
-			event = models.NewActualLRPInstanceCreatedEvent(actualLRP)
+			event = models.NewActualLRPInstanceCreatedEvent(actualLRP, "some-trace-id")
 		})
 
 		itReturnsTheCorrectScore(1)
@@ -803,7 +805,7 @@ var _ = Describe("EventScore", func() {
 		})
 
 		JustBeforeEach(func() {
-			event = models.NewActualLRPInstanceChangedEvent(beforeActualLRP, actualLRP)
+			event = models.NewActualLRPInstanceChangedEvent(beforeActualLRP, actualLRP, "some-trace-id")
 		})
 
 		itReturnsTheCorrectScore(1)
@@ -819,7 +821,7 @@ var _ = Describe("EventScore", func() {
 
 	Context("for ActualLRPInstanceRemovedEvent", func() {
 		JustBeforeEach(func() {
-			event = models.NewActualLRPInstanceRemovedEvent(actualLRP)
+			event = models.NewActualLRPInstanceRemovedEvent(actualLRP, "some-trace-id")
 		})
 
 		itReturnsTheCorrectScore(0)

@@ -880,12 +880,13 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					}
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-					_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+					_, traceID, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 					Expect(startAuctions).To(HaveLen(1))
 					Expect(startAuctions[0].ProcessGuid).To(Equal(expectedStartRequest.ProcessGuid))
 					Expect(startAuctions[0].Domain).To(Equal(expectedStartRequest.Domain))
 					Expect(startAuctions[0].Indices).To(ConsistOf(expectedStartRequest.Indices))
 					Expect(startAuctions[0].Resource).To(Equal(expectedStartRequest.Resource))
+					Expect(traceID).To(Equal(requestIdHeader))
 				})
 			})
 
@@ -1052,12 +1053,14 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Expect(fakeServiceClient.CellByIdCallCount()).To(Equal(2))
 						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+						repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
 						Expect(repAddr).To(Equal("some-address"))
 						Expect(repURL).To(Equal("http://some-address"))
-						repAddr, repURL = fakeRepClientFactory.CreateClientArgsForCall(1)
+						Expect(traceID).To(Equal(requestIdHeader))
+						repAddr, repURL, traceID = fakeRepClientFactory.CreateClientArgsForCall(1)
 						Expect(repAddr).To(Equal("some-address"))
 						Expect(repURL).To(Equal("http://some-address"))
+						Expect(traceID).To(Equal(requestIdHeader))
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
@@ -1075,9 +1078,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						})
 
 						It("creates a rep client using the rep url", func() {
-							repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+							repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
 							Expect(repAddr).To(Equal("some-address"))
 							Expect(repURL).To(Equal("http://some-address"))
+							Expect(traceID).To(Equal(requestIdHeader))
 						})
 
 						Context("when creating a rep client fails", func() {
@@ -1170,7 +1174,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						}))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						_, traceID, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						Expect(traceID).To(Equal(requestIdHeader))
 						Expect(startRequests).To(HaveLen(1))
 						startReq := startRequests[0]
 						Expect(startReq.ProcessGuid).To(Equal("some-guid"))
@@ -1544,7 +1549,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			requestBody = &models.RemoveDesiredLRPRequest{
 				ProcessGuid: processGuid,
 			}
-			fakeServiceClient.CellByIdReturns(&models.CellPresence{RepAddress: "some-address"}, nil)
+			fakeServiceClient.CellByIdReturns(&models.CellPresence{RepAddress: "some-address", RepUrl: "http://some-address"}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -1636,8 +1641,14 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(filter.ProcessGuid).To(Equal("some-guid"))
 
 					Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(2))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(0)).To(Equal("some-address"))
-					Expect(fakeRepClientFactory.CreateClientArgsForCall(1)).To(Equal("some-address"))
+					repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
+					Expect(repAddr).To(Equal("some-address"))
+					Expect(repURL).To(Equal("http://some-address"))
+					Expect(traceID).To(Equal(requestIdHeader))
+					repAddr, repURL, traceID = fakeRepClientFactory.CreateClientArgsForCall(1)
+					Expect(repAddr).To(Equal("some-address"))
+					Expect(repURL).To(Equal("http://some-address"))
+					Expect(traceID).To(Equal(requestIdHeader))
 
 					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 					_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)

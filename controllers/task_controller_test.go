@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool/taskworkpoolfakes"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/rep"
 	. "github.com/onsi/ginkgo/v2"
@@ -231,7 +233,8 @@ var _ = Describe("Task Controller", func() {
 					},
 				}
 
-				_, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+				_, traceId, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+				Expect(traceId).NotTo(BeNil())
 				Expect(requestedTasks).To(HaveLen(1))
 				Expect(*requestedTasks[0]).To(Equal(expectedStartRequest))
 			})
@@ -392,6 +395,7 @@ var _ = Describe("Task Controller", func() {
 		var (
 			taskGuid, cellID string
 			before, after    *models.Task
+			ctxWithTrace     context.Context
 		)
 
 		BeforeEach(func() {
@@ -399,10 +403,11 @@ var _ = Describe("Task Controller", func() {
 			cellID = "the-cell"
 			after = model_helpers.NewValidTask("hi-bob")
 			fakeTaskDB.CancelTaskReturns(before, after, cellID, nil)
+			ctxWithTrace = context.WithValue(ctx, trace.RequestIdHeader, "some-trace-id")
 		})
 
 		JustBeforeEach(func() {
-			err = controller.CancelTask(ctx, logger, taskGuid)
+			err = controller.CancelTask(ctxWithTrace, logger, taskGuid)
 		})
 
 		Context("when the cancel request is normal", func() {
@@ -415,7 +420,7 @@ var _ = Describe("Task Controller", func() {
 				It("returns no error", func() {
 					Expect(fakeTaskDB.CancelTaskCallCount()).To(Equal(1))
 					taskContext, taskLogger, taskGuid := fakeTaskDB.CancelTaskArgsForCall(0)
-					Expect(taskContext).To(Equal(ctx))
+					Expect(taskContext).To(Equal(ctxWithTrace))
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 					Expect(err).NotTo(HaveOccurred())
@@ -471,9 +476,10 @@ var _ = Describe("Task Controller", func() {
 					})
 
 					It("creates a rep client using the rep url", func() {
-						repAddr, repURL := fakeRepClientFactory.CreateClientArgsForCall(0)
+						repAddr, repURL, traceID := fakeRepClientFactory.CreateClientArgsForCall(0)
 						Expect(repAddr).To(Equal("some-address"))
 						Expect(repURL).To(Equal("http://some-address"))
+						Expect(traceID).To(Equal("some-trace-id"))
 					})
 
 					Context("when creating a rep client fails", func() {
@@ -1086,7 +1092,8 @@ var _ = Describe("Task Controller", func() {
 				It("requests an auction", func() {
 					Expect(fakeAuctioneerClient.RequestTaskAuctionsCallCount()).To(Equal(1))
 
-					_, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					_, traceId, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
+					Expect(traceId).NotTo(BeNil())
 					Expect(requestedTasks).To(HaveLen(2))
 					Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
 				})

@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/events/calculator"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 )
@@ -95,7 +96,7 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(ctx context.Context, logge
 	}
 
 	newLRPs := eventCalculator.RecordChange(before, after, lrps)
-	go eventCalculator.EmitEvents(lrps, newLRPs)
+	go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 
 	return nil
 }
@@ -131,7 +132,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logge
 	newLRPs := eventCalculator.RecordChange(before, after, lrps)
 
 	defer func() {
-		go eventCalculator.EmitEvents(lrps, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 	}()
 
 	evacuating := findWithPresence(lrps, models.ActualLRP_Evacuating)
@@ -168,6 +169,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 	}
 
 	lrp := lookupLRPInSlice(lrps, actualLRPInstanceKey)
+	traceId := trace.RequestIdFromContext(ctx)
 	if lrp != nil && lrp.Presence == models.ActualLRP_Suspect {
 		suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(ctx, logger, actualLRPKey)
 		if err != nil {
@@ -176,7 +178,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 
 		afterLRPs := eventCalculator.RecordChange(suspectLRP, nil, lrps)
 		logger.Info("removing-suspect-lrp", lager.Data{"ig": suspectLRP.InstanceGuid})
-		go eventCalculator.EmitEvents(lrps, afterLRPs)
+		go eventCalculator.EmitEvents(traceId, lrps, afterLRPs)
 
 		return nil
 	}
@@ -187,7 +189,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 	}
 
 	afterLRPs := eventCalculator.RecordChange(before, after, lrps)
-	go eventCalculator.EmitCrashEvents(lrps, afterLRPs)
+	go eventCalculator.EmitCrashEvents(traceId, lrps, afterLRPs)
 
 	if !shouldRestart {
 		return nil
@@ -202,7 +204,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 	schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
 	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedInfo, int(actualLRPKey.Index))
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
-	err = h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&startRequest})
+	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&startRequest})
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
@@ -227,7 +229,7 @@ func (h *ActualLRPLifecycleController) FailActualLRP(ctx context.Context, logger
 	}
 
 	newLRPs := eventCalculator.RecordChange(before, after, lrps)
-	go eventCalculator.EmitEvents(lrps, newLRPs)
+	go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 
 	return nil
 }
@@ -254,7 +256,7 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(ctx context.Context, logg
 	}
 
 	newLRPs := eventCalculator.RecordChange(lrp, nil, beforeLRPs)
-	go eventCalculator.EmitEvents(beforeLRPs, newLRPs)
+	go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), beforeLRPs, newLRPs)
 
 	return nil
 }
@@ -284,7 +286,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 	copy(newLRPs, lrps)
 
 	defer func() {
-		go eventCalculator.EmitEvents(lrps, newLRPs)
+		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 	}()
 
 	removeLRP := func() error {
@@ -310,7 +312,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 			}
 
 			var client rep.Client
-			client, err = h.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl)
+			client, err = h.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl, trace.RequestIdFromContext(ctx))
 			if err != nil {
 				return err
 			}

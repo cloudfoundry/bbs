@@ -115,7 +115,7 @@ var _ = Describe("CellPresence", func() {
 		})
 		It("returns cell presence", func() {
 			Eventually(bbsProcess.Ready()).Should(BeClosed())
-			presences, err := client.Cells(logger)
+			presences, err := client.Cells(logger, "some-trace-id")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(presences).To(ConsistOf(presenceLocket))
 		})

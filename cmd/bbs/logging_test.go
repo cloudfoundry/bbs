@@ -17,7 +17,7 @@ var _ = Describe("enhanced BBS client debug logging", func() {
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-			_, err := client.Tasks(logger)
+			_, err := client.Tasks(logger, "some-trace-id")
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(logger).Should(gbytes.Say("request_name"))
@@ -30,7 +30,7 @@ var _ = Describe("enhanced BBS client debug logging", func() {
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-			_, err := client.Tasks(logger)
+			_, err := client.Tasks(logger, "some-trace-id")
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(logger).Should(gbytes.Say("request_path"))
@@ -43,7 +43,7 @@ var _ = Describe("enhanced BBS client debug logging", func() {
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-			_, err := client.Tasks(logger)
+			_, err := client.Tasks(logger, "some-trace-id")
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(logger).Should(gbytes.Say("request_path"))

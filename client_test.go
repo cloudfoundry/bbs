@@ -64,6 +64,7 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.VerifyProtoRepresenting(&models.StartActualLRPRequest{
 							ActualLrpKey:            &actualLRP.ActualLRPKey,
 							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
@@ -75,7 +76,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -83,11 +84,12 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -96,10 +98,12 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusNotFound, nil),
 					),
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.VerifyProtoRepresenting(&models.StartActualLRPRequest{
 							ActualLrpKey:            &actualLRP.ActualLRPKey,
 							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
@@ -111,7 +115,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -119,11 +123,12 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusForbidden, nil),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 
@@ -131,15 +136,17 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusNotFound, nil),
 					),
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusForbidden, nil),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})
@@ -150,6 +157,7 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
 							ActualLrpKey:            &actualLRP.ActualLRPKey,
 							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
@@ -161,18 +169,19 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
 				Expect(err).NotTo(HaveOccurred())
 			})
 			It("Calls the current endpoint", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -181,10 +190,12 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusNotFound, nil),
 					),
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
 							ActualLrpKey:            &actualLRP.ActualLRPKey,
 							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
@@ -196,7 +207,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -204,11 +215,12 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusForbidden, nil),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 
@@ -216,15 +228,17 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusNotFound, nil),
 					),
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.RespondWith(http.StatusForbidden, nil),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})
@@ -238,6 +252,7 @@ var _ = Describe("Client", func() {
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrp_groups/list"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						func(w http.ResponseWriter, req *http.Request) {
 							time.Sleep(cfg.RequestTimeout * 2)
 						},
@@ -247,7 +262,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("respects the request timeout", func() {
-				_, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
+				_, err := client.ActualLRPGroups(logger, "some-trace-id", models.ActualLRPFilter{})
 				Expect(err.Error()).To(ContainSubstring(context.DeadlineExceeded.Error()))
 			})
 		})
@@ -283,6 +298,7 @@ var _ = Describe("Client", func() {
 				tlsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrp_groups/list"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						func(w http.ResponseWriter, req *http.Request) {
 							time.Sleep(cfg.RequestTimeout * 2)
 						},
@@ -297,7 +313,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("respects the request timeout", func() {
-				_, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
+				_, err := client.ActualLRPGroups(logger, "some-trace-id", models.ActualLRPFilter{})
 				Expect(err.Error()).To(ContainSubstring(context.DeadlineExceeded.Error()))
 			})
 		})
@@ -322,6 +338,7 @@ var _ = Describe("Client", func() {
 			bbsServer.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", "/v1/actual_lrp_groups/list"),
+					ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 					func(w http.ResponseWriter, req *http.Request) {
 						<-blockCh
 					},
@@ -346,7 +363,7 @@ var _ = Describe("Client", func() {
 				Eventually(blockCh).Should(BeSent(struct{}{}))
 			}()
 
-			lrps, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
+			lrps, err := client.ActualLRPGroups(logger, "some-trace-id", models.ActualLRPFilter{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(lrps).To(ConsistOf(&models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
@@ -361,7 +378,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("fails the request with a timeout error", func() {
-				_, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
+				_, err := client.ActualLRPGroups(logger, "some-trace-id", models.ActualLRPFilter{})
 				var apiError *models.Error
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(BeAssignableToTypeOf(apiError))
@@ -376,13 +393,14 @@ var _ = Describe("Client", func() {
 			bbsServer.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", "/v1/actual_lrp_groups/list"),
+					ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 					ghttp.RespondWith(500, nil),
 				),
 			)
 		})
 
 		It("returns the error", func() {
-			_, err := client.ActualLRPGroups(logger, models.ActualLRPFilter{})
+			_, err := client.ActualLRPGroups(logger, "some-trace-id", models.ActualLRPFilter{})
 			Expect(err).To(HaveOccurred())
 			responseError := err.(*models.Error)
 			Expect(responseError.Type).To(Equal(models.Error_InvalidResponse))

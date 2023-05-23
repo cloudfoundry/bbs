@@ -16,6 +16,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
@@ -27,6 +28,8 @@ import (
 )
 
 var _ = Describe("LRP Convergence Controllers", func() {
+	const traceId = "some-trace-id"
+
 	var (
 		logger                    *lagertest.TestLogger
 		fakeClock                 *fakeclock.FakeClock
@@ -92,7 +95,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			2,
 			fakeLRPStatMetronNotifier,
 		)
-		controller.ConvergeLRPs(ctx, logger)
+		controller.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger)
 	})
 
 	It("calls ConvergeLRPs", func() {
@@ -250,8 +253,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("auctions off the returned keys", func() {
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-			_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(1))
+			Expect(actualTraceId).To(Equal(traceId))
 			request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 			Expect(startAuctions).To(ContainElement(&request))
 		})
@@ -271,9 +275,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("emits an LRPInstanceCreate event followed by an LRPInstanceRemoved event", func() {
 			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 			event := actualLRPInstanceHub.EmitArgsForCall(0)
-			Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(after)))
+			Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(after, traceId)))
 			event = actualLRPInstanceHub.EmitArgsForCall(1)
-			Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(before)))
+			Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(before, traceId)))
 		})
 
 		Context("and the LRP isn't changed", func() {
@@ -300,8 +304,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			It("auctions off the returned keys", func() {
 				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
+				Expect(actualTraceId).To(Equal(traceId))
 				request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 				Expect(startAuctions).To(ContainElement(&request))
 			})
@@ -347,8 +352,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("auctions off the returned keys", func() {
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-			_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(1))
+			Expect(actualTraceId).To(Equal(traceId))
 			request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 			Expect(startAuctions).To(ContainElement(&request))
 		})
@@ -368,7 +374,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("emits a LPRInstanceCreated event", func() {
 			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 			event := actualLRPInstanceHub.EmitArgsForCall(0)
-			Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(after)))
+			Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(after, traceId)))
 		})
 	})
 
@@ -459,8 +465,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 				keysToAuction := []*auctioneer.LRPStartRequest{&unclaimedStartRequest}
 
-				_, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(ConsistOf(keysToAuction))
+				Expect(actualTraceId).To(Equal(traceId))
 			})
 
 			It("emits no group events", func() {
@@ -479,8 +486,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 				Expect(events).To(
 					ConsistOf(
-						models.NewActualLRPInstanceChangedEvent(before, after),
-						models.NewActualLRPInstanceCreatedEvent(unclaimed),
+						models.NewActualLRPInstanceChangedEvent(before, after, traceId),
+						models.NewActualLRPInstanceCreatedEvent(unclaimed, traceId),
 					),
 				)
 			})
@@ -596,7 +603,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
 			Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
-				models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP),
+				models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP, traceId),
 			))
 		})
 
@@ -686,7 +693,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			It("emits an ActualLRPInstanceRemovedEvent containing the suspect LRP", func() {
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
-				Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(suspectLRP)))
+				Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(suspectLRP, traceId)))
 			})
 		})
 
@@ -753,7 +760,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			expectedRemovedEvent = models.NewActualLRPRemovedEvent(group1)
 
 			lrp := model_helpers.NewValidActualLRP("evacuating-lrp", 0)
-			expectedInstanceRemovedEvent = models.NewActualLRPInstanceRemovedEvent(lrp)
+			expectedInstanceRemovedEvent = models.NewActualLRPInstanceRemovedEvent(lrp, traceId)
 
 			events := []models.Event{expectedRemovedEvent}
 			instanceEvents := []models.Event{expectedInstanceRemovedEvent}
@@ -841,11 +848,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			repAddresses := make([]string, 3)
 			repURLs := make([]string, 3)
+			traceIDs := make([]string, 3)
 
 			for i := 0; i < 3; i++ {
-				address, url := fakeRepClientFactory.CreateClientArgsForCall(i)
+				address, url, traceID := fakeRepClientFactory.CreateClientArgsForCall(i)
 				repAddresses[i] = address
 				repURLs[i] = url
+				traceIDs[i] = traceID
 			}
 
 			Expect(repAddresses).To(ContainElement(cell1Presence.RepAddress))
@@ -855,6 +864,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(repURLs).To(ContainElement(cell1Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell2Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell3Presence.RepUrl))
+
+			Expect(traceIDs[0]).To(BeEmpty())
+			Expect(traceIDs[1]).To(BeEmpty())
+			Expect(traceIDs[2]).To(BeEmpty())
 		})
 
 		It("calls UpdateLRPInstance on the rep client", func() {
@@ -982,11 +995,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			repAddresses := make([]string, 3)
 			repURLs := make([]string, 3)
+			traceIDs := make([]string, 3)
 
 			for i := 0; i < 3; i++ {
-				address, url := fakeRepClientFactory.CreateClientArgsForCall(i)
+				address, url, traceID := fakeRepClientFactory.CreateClientArgsForCall(i)
 				repAddresses[i] = address
 				repURLs[i] = url
+				traceIDs[i] = traceID
 			}
 
 			Expect(repAddresses).To(ContainElement(cell1Presence.RepAddress))
@@ -996,6 +1011,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			Expect(repURLs).To(ContainElement(cell1Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell2Presence.RepUrl))
 			Expect(repURLs).To(ContainElement(cell3Presence.RepUrl))
+
+			Expect(traceIDs[0]).To(BeEmpty())
+			Expect(traceIDs[1]).To(BeEmpty())
+			Expect(traceIDs[2]).To(BeEmpty())
 		})
 
 		It("calls UpdateLRPInstance on the rep client", func() {

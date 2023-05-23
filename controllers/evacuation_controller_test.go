@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"context"
 	"errors"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -11,6 +12,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo/v2"
@@ -19,6 +21,8 @@ import (
 )
 
 var _ = Describe("Evacuation Controller", func() {
+	const traceId = "some-trace-id"
+
 	var (
 		logger               *lagertest.TestLogger
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
@@ -243,7 +247,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			keepContainer, err = controller.EvacuateClaimedActualLRP(ctx, logger, lrpKey, lrpInstanceKey)
+			keepContainer, err = controller.EvacuateClaimedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, lrpKey, lrpInstanceKey)
 		})
 
 		It("does not return an error and tells the caller not to keep the lrp container", func() {
@@ -262,8 +266,9 @@ var _ = Describe("Evacuation Controller", func() {
 
 			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.Index))
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-			_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+			_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+			Expect(actualTraceId).To(Equal(traceId))
 		})
 
 		It("emits an LRPChanged event", func() {
@@ -285,8 +290,8 @@ var _ = Describe("Evacuation Controller", func() {
 			}
 
 			Expect(events).To(ConsistOf(
-				models.NewActualLRPInstanceRemovedEvent(actualLRP),
-				models.NewActualLRPInstanceCreatedEvent(afterActualLRP),
+				models.NewActualLRPInstanceRemovedEvent(actualLRP, traceId),
+				models.NewActualLRPInstanceCreatedEvent(afterActualLRP, traceId),
 			))
 		})
 
@@ -541,7 +546,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.EvacuateCrashedActualLRP(ctx, logger, &key, &instanceKey, errMessage)
+			err = controller.EvacuateCrashedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &key, &instanceKey, errMessage)
 		})
 
 		It("does not return an error", func() {
@@ -681,7 +686,7 @@ var _ = Describe("Evacuation Controller", func() {
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				events := []models.Event{}
 				events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
-				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRP)))
+				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRP, traceId)))
 			})
 
 			Context("when removing the suspect actual lrp fails", func() {
@@ -747,7 +752,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		JustBeforeEach(func() {
 			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
-			keepContainer, err = controller.EvacuateRunningActualLRP(ctx, logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags)
+			keepContainer, err = controller.EvacuateRunningActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags)
 			modelErr = models.ConvertError(err)
 		})
 
@@ -1015,8 +1020,9 @@ var _ = Describe("Evacuation Controller", func() {
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+						Expect(actualTraceId).To(Equal(traceId))
 					})
 
 					It("emits events to the hub", func() {
@@ -1038,10 +1044,10 @@ var _ = Describe("Evacuation Controller", func() {
 						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 						event := actualLRPInstanceHub.EmitArgsForCall(0)
-						Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual)))
+						Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId)))
 
 						event = actualLRPInstanceHub.EmitArgsForCall(1)
-						Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP)))
+						Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
 					})
 
 					Context("when evacuating fails", func() {
@@ -1105,8 +1111,9 @@ var _ = Describe("Evacuation Controller", func() {
 					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-					_, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+					_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 					Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+					Expect(actualTraceId).To(Equal(traceId))
 				})
 
 				Context("when the instance is suspect", func() {
@@ -1158,7 +1165,7 @@ var _ = Describe("Evacuation Controller", func() {
 						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
 						Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
-							models.NewActualLRPInstanceChangedEvent(actual, afterActual),
+							models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId),
 						))
 					})
 
@@ -1197,7 +1204,7 @@ var _ = Describe("Evacuation Controller", func() {
 							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
-							Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual)))
+							Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId)))
 						})
 					})
 
@@ -1241,10 +1248,10 @@ var _ = Describe("Evacuation Controller", func() {
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 					event := actualLRPInstanceHub.EmitArgsForCall(0)
-					Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual)))
+					Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId)))
 
 					event = actualLRPInstanceHub.EmitArgsForCall(1)
-					Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP)))
+					Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
 				})
 
 				Context("when evacuating fails", func() {
@@ -1429,7 +1436,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.EvacuateStoppedActualLRP(ctx, logger, &targetKey, &targetInstanceKey)
+			err = controller.EvacuateStoppedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &targetKey, &targetInstanceKey)
 			modelErr = models.ConvertError(err)
 		})
 
@@ -1451,7 +1458,7 @@ var _ = Describe("Evacuation Controller", func() {
 			events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
 
 			Expect(events).To(ConsistOf(
-				models.NewActualLRPInstanceRemovedEvent(actual),
+				models.NewActualLRPInstanceRemovedEvent(actual, traceId),
 			))
 		})
 
@@ -1507,7 +1514,7 @@ var _ = Describe("Evacuation Controller", func() {
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				events := []models.Event{}
 				events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
-				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actual)))
+				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
 			})
 
 			Context("when the DB returns an unrecoverable error", func() {
@@ -1565,7 +1572,7 @@ var _ = Describe("Evacuation Controller", func() {
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				events := []models.Event{}
 				events = append(events, actualLRPInstanceHub.EmitArgsForCall(0))
-				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(evacuating)))
+				Expect(events).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(evacuating, traceId)))
 
 			})
 		})

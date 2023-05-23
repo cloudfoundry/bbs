@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	. "github.com/onsi/ginkgo/v2"
@@ -684,7 +685,7 @@ var _ = Describe("Task Handlers", func() {
 				It("returns no error", func() {
 					Expect(controller.CancelTaskCallCount()).To(Equal(1))
 					taskContext, taskLogger, taskGuid := controller.CancelTaskArgsForCall(0)
-					Expect(taskContext).To(Equal(request.Context()))
+					Expect(taskContext).To(Equal(context.WithValue(request.Context(), trace.RequestIdHeader, requestIdHeader)))
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 

@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 )
@@ -76,7 +77,7 @@ func (c *TaskController) DesireTask(ctx context.Context, logger lager.Logger, ta
 
 	logger.Debug("start-task-auction-request")
 	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGUID, domain, taskDefinition)
-	err = c.auctioneerClient.RequestTaskAuctions(logger, []*auctioneer.TaskStartRequest{&taskStartRequest})
+	err = c.auctioneerClient.RequestTaskAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.TaskStartRequest{&taskStartRequest})
 	if err != nil {
 		logger.Error("failed-requesting-task-auction", err)
 		// The creation succeeded, the auction request error can be dropped
@@ -124,7 +125,7 @@ func (c *TaskController) CancelTask(ctx context.Context, logger lager.Logger, ta
 	}
 	logger.Info("finished-check-cell-presence", lager.Data{"cell_id": cellID})
 
-	repClient, err := c.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+	repClient, err := c.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, trace.RequestIdFromContext(ctx))
 	if err != nil {
 		logger.Error("create-rep-client-failed", err)
 		return err
@@ -289,7 +290,7 @@ func (c *TaskController) ConvergeTasks(
 
 	if len(taskConvergenceResult.TasksToAuction) > 0 {
 		logger.Debug("requesting-task-auctions", lager.Data{"num_tasks_to_auction": len(taskConvergenceResult.TasksToAuction)})
-		err = c.auctioneerClient.RequestTaskAuctions(logger, taskConvergenceResult.TasksToAuction)
+		err = c.auctioneerClient.RequestTaskAuctions(logger, trace.RequestIdFromContext(ctx), taskConvergenceResult.TasksToAuction)
 		if err != nil {
 			taskGuids := make([]string, len(taskConvergenceResult.TasksToAuction))
 			for i, task := range taskConvergenceResult.TasksToAuction {
