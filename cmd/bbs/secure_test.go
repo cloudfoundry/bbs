@@ -42,7 +42,7 @@ var _ = Describe("Secure", func() {
 			keyFile := path.Join(basePath, "blue-certs", "client.key")
 			client, err = bbs.NewClient(bbsURL.String(), caFile, certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(client.Ping(logger)).To(BeFalse())
+			Expect(client.Ping(logger, "some-trace-id")).To(BeFalse())
 		})
 
 		It("fails for a client configured with a different ca certificate", func() {
@@ -51,7 +51,7 @@ var _ = Describe("Secure", func() {
 			keyFile := path.Join(basePath, "green-certs", "client.key")
 			client, err = bbs.NewClient(bbsURL.String(), caFile, certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(client.Ping(logger)).To(BeFalse())
+			Expect(client.Ping(logger, "some-trace-id")).To(BeFalse())
 		})
 
 		It("fails to create the client if certs are not valid", func() {
@@ -108,10 +108,10 @@ var _ = Describe("Secure", func() {
 				taskDef := model_helpers.NewValidTaskDefinition()
 				taskDef.CompletionCallbackUrl = tlsServer.URL() + "/test"
 
-				err := client.DesireTask(logger, "task-guid", "domain", taskDef)
+				err := client.DesireTask(logger, "some-trace-id", "task-guid", "domain", taskDef)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = client.CancelTask(logger, "task-guid")
+				err = client.CancelTask(logger, "some-trace-id", "task-guid")
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(doneChan).Should(BeClosed())
@@ -124,10 +124,10 @@ var _ = Describe("Secure", func() {
 				taskDef := model_helpers.NewValidTaskDefinition()
 				taskDef.CompletionCallbackUrl = insecureServer.URL() + "/test"
 
-				err := client.DesireTask(logger, "task-guid", "domain", taskDef)
+				err := client.DesireTask(logger, "some-trace-id", "task-guid", "domain", taskDef)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = client.CancelTask(logger, "task-guid")
+				err = client.CancelTask(logger, "some-trace-id", "task-guid")
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(doneChan).Should(BeClosed())
@@ -158,7 +158,7 @@ var _ = Describe("Secure", func() {
 			keyFile := path.Join(basePath, "blue-certs", "client.key")
 			client, err = bbs.NewSecureSkipVerifyClient(bbsURL.String(), certFile, keyFile, 0, 0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(client.Ping(logger)).To(BeFalse())
+			Expect(client.Ping(logger, "some-trace-id")).To(BeFalse())
 		})
 	})
 

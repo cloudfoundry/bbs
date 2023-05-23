@@ -86,7 +86,7 @@ type ActualLRPEventCalculator struct {
 //
 // This function was added to work around a bug in the existing logic for EmitEvents, where CrashedEvents
 // were not being emitted due to the CrashResetTimeout
-func (e ActualLRPEventCalculator) EmitCrashEvents(beforeSet, afterSet []*models.ActualLRP) {
+func (e ActualLRPEventCalculator) EmitCrashEvents(traceId string, beforeSet, afterSet []*models.ActualLRP) {
 	beforeGroup := models.ResolveActualLRPGroup(beforeSet)
 	afterGroup := models.ResolveActualLRPGroup(removeNilLRPs(afterSet))
 
@@ -136,22 +136,22 @@ func (e ActualLRPEventCalculator) EmitCrashEvents(beforeSet, afterSet []*models.
 
 		if after == nil {
 			instanceEvents = append(instanceEvents,
-				models.NewActualLRPInstanceRemovedEvent(before),
+				models.NewActualLRPInstanceRemovedEvent(before, traceId),
 			)
 		} else if before == nil {
 			instanceEvents = append(instanceEvents,
-				models.NewActualLRPInstanceCreatedEvent(after),
+				models.NewActualLRPInstanceCreatedEvent(after, traceId),
 			)
 		} else if after.State == models.ActualLRPStateCrashed {
 			instanceEvents = append(instanceEvents,
 				models.NewActualLRPCrashedEvent(before, after),
-				models.NewActualLRPInstanceChangedEvent(before, after),
+				models.NewActualLRPInstanceChangedEvent(before, after, traceId),
 			)
 		} else {
 			instanceEvents = append(instanceEvents,
 				models.NewActualLRPCrashedEvent(before, after),
-				models.NewActualLRPInstanceCreatedEvent(after),
-				models.NewActualLRPInstanceRemovedEvent(before),
+				models.NewActualLRPInstanceCreatedEvent(after, traceId),
+				models.NewActualLRPInstanceRemovedEvent(before, traceId),
 			)
 		}
 	}
@@ -169,7 +169,7 @@ func (e ActualLRPEventCalculator) EmitCrashEvents(beforeSet, afterSet []*models.
 // events are applied to the beforeSet the resulting state is equal to
 // afterSet.  The beforeSet and afterSet are assumed to have the same process
 // guid and index.
-func (e ActualLRPEventCalculator) EmitEvents(beforeSet, afterSet []*models.ActualLRP) {
+func (e ActualLRPEventCalculator) EmitEvents(traceId string, beforeSet, afterSet []*models.ActualLRP) {
 	events := []models.Event{}
 
 	beforeGroup := models.ResolveActualLRPGroup(beforeSet)
@@ -185,7 +185,7 @@ func (e ActualLRPEventCalculator) EmitEvents(beforeSet, afterSet []*models.Actua
 	stretchSlice(&beforeSet, &afterSet)
 
 	for i := range afterSet {
-		events = append(events, generateLRPInstanceEvents(beforeSet[i], afterSet[i])...)
+		events = append(events, generateLRPInstanceEvents(beforeSet[i], afterSet[i], traceId)...)
 	}
 
 	sort.Slice(events, func(i, j int) bool {
@@ -225,57 +225,57 @@ func (e ActualLRPEventCalculator) RecordChange(before, after *models.ActualLRP, 
 	return newLRPs
 }
 
-func generateCrashedInstanceEvents(before, after *models.ActualLRP) []models.Event {
+func generateCrashedInstanceEvents(before, after *models.ActualLRP, traceId string) []models.Event {
 	return wrapEvent(
 		models.NewActualLRPCrashedEvent(before, after),
-		models.NewActualLRPInstanceChangedEvent(before, after),
+		models.NewActualLRPInstanceChangedEvent(before, after, traceId),
 	)
 }
 
-func generateUpdateInstanceEvents(before, after *models.ActualLRP) []models.Event {
+func generateUpdateInstanceEvents(before, after *models.ActualLRP, traceId string) []models.Event {
 	return wrapEvent(
-		models.NewActualLRPInstanceChangedEvent(before, after),
+		models.NewActualLRPInstanceChangedEvent(before, after, traceId),
 	)
 }
 
-func generateUnclaimedInstanceEvents(before, after *models.ActualLRP) []models.Event {
+func generateUnclaimedInstanceEvents(before, after *models.ActualLRP, traceId string) []models.Event {
 	events := []models.Event{}
 
 	// we can get here if auctioneer calls FailActualLRP
 	if before.State == models.ActualLRPStateUnclaimed {
-		return append(events, models.NewActualLRPInstanceChangedEvent(before, after))
+		return append(events, models.NewActualLRPInstanceChangedEvent(before, after, traceId))
 	}
 
 	return append(
 		events,
-		models.NewActualLRPInstanceCreatedEvent(after),
-		models.NewActualLRPInstanceRemovedEvent(before),
+		models.NewActualLRPInstanceCreatedEvent(after, traceId),
+		models.NewActualLRPInstanceRemovedEvent(before, traceId),
 	)
 }
 
-func generateLRPInstanceEvents(before, after *models.ActualLRP) []models.Event {
+func generateLRPInstanceEvents(before, after *models.ActualLRP, traceId string) []models.Event {
 	if before.Equal(after) {
 		// nothing changed
 		return nil
 	}
 
 	if after == nil {
-		return wrapEvent(models.NewActualLRPInstanceRemovedEvent(before))
+		return wrapEvent(models.NewActualLRPInstanceRemovedEvent(before, traceId))
 	}
 
 	if before == nil {
-		return wrapEvent(models.NewActualLRPInstanceCreatedEvent(after))
+		return wrapEvent(models.NewActualLRPInstanceCreatedEvent(after, traceId))
 	}
 
 	switch after.State {
 	case models.ActualLRPStateUnclaimed:
-		return generateUnclaimedInstanceEvents(before, after)
+		return generateUnclaimedInstanceEvents(before, after, traceId)
 	case models.ActualLRPStateClaimed:
-		return generateUpdateInstanceEvents(before, after)
+		return generateUpdateInstanceEvents(before, after, traceId)
 	case models.ActualLRPStateRunning:
-		return generateUpdateInstanceEvents(before, after)
+		return generateUpdateInstanceEvents(before, after, traceId)
 	case models.ActualLRPStateCrashed:
-		return generateCrashedInstanceEvents(before, after)
+		return generateCrashedInstanceEvents(before, after, traceId)
 	default:
 		return nil
 	}

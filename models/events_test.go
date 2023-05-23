@@ -42,7 +42,7 @@ var _ = Describe("Events", func() {
 				})
 
 				It("returns the after's actual lrp key and instance key", func() {
-					event := models.NewActualLRPInstanceChangedEvent(before, after)
+					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
 					Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
 					Expect(event.ActualLRPInstanceKey).To(Equal(after.ActualLRPInstanceKey))
 				})
@@ -61,7 +61,7 @@ var _ = Describe("Events", func() {
 				})
 
 				It("returns after's actual lrp key and before's instance key", func() {
-					event := models.NewActualLRPInstanceChangedEvent(before, after)
+					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
 					Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
 					Expect(event.ActualLRPInstanceKey).To(Equal(before.ActualLRPInstanceKey))
 				})
@@ -73,7 +73,7 @@ var _ = Describe("Events", func() {
 				})
 
 				It("returns the before's actual lrp key and instance key", func() {
-					event := models.NewActualLRPInstanceChangedEvent(before, after)
+					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
 					Expect(event.ActualLRPKey).To(Equal(before.ActualLRPKey))
 					Expect(event.ActualLRPInstanceKey).To(Equal(before.ActualLRPInstanceKey))
 				})
@@ -101,7 +101,7 @@ var _ = Describe("Events", func() {
 				})
 
 				It("returns the after's actual lrp key and instance key", func() {
-					event := models.NewActualLRPInstanceChangedEvent(before, after)
+					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
 					Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
 					Expect(event.ActualLRPInstanceKey).To(Equal(after.ActualLRPInstanceKey))
 				})
@@ -119,7 +119,7 @@ var _ = Describe("Events", func() {
 					})
 
 					It("returns after's actual lrp key and after's instance key", func() {
-						event := models.NewActualLRPInstanceChangedEvent(before, after)
+						event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
 						Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
 						Expect(event.ActualLRPInstanceKey).To(Equal(after.ActualLRPInstanceKey))
 					})
@@ -132,7 +132,7 @@ var _ = Describe("Events", func() {
 				})
 
 				It("returns the empty actual lrp key and instance key", func() {
-					event := models.NewActualLRPInstanceChangedEvent(before, after)
+					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
 					Expect(event.ActualLRPKey).To(Equal(models.ActualLRPKey{}))
 					Expect(event.ActualLRPInstanceKey).To(Equal(models.ActualLRPInstanceKey{}))
 				})

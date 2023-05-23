@@ -1,6 +1,7 @@
 package sqldb_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/routing-info/internalroutes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -16,6 +18,8 @@ import (
 )
 
 var _ = Describe("LRPConvergence", func() {
+	const traceId = "some-trace-id"
+
 	actualLRPKeyWithSchedulingInfo := func(desiredLRP *models.DesiredLRP, index int) *models.ActualLRPKeyWithSchedulingInfo {
 		schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 		lrpKey := models.NewActualLRPKey(desiredLRP.ProcessGuid, int32(index), desiredLRP.Domain)
@@ -50,9 +54,9 @@ var _ = Describe("LRPConvergence", func() {
 			desiredLRP.Instances = 2
 			err := sqlDB.DesireLRP(ctx, logger, desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
-			_, err = sqlDB.CreateUnclaimedActualLRP(ctx, logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
+			_, err = sqlDB.CreateUnclaimedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &models.ActualLRPKey{ProcessGuid: processGuid, Index: 0, Domain: domain})
 			Expect(err).NotTo(HaveOccurred())
-			_, _, err = sqlDB.ClaimActualLRP(ctx, logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"})
+			_, _, err = sqlDB.ClaimActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, processGuid, 0, &models.ActualLRPInstanceKey{InstanceGuid: "ig-1", CellId: "existing-cell"})
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = db.ExecContext(ctx, fmt.Sprintf(`UPDATE actual_lrps SET presence = %d`, models.ActualLRP_Evacuating))
@@ -89,9 +93,9 @@ var _ = Describe("LRPConvergence", func() {
 
 				Expect(actualLRPs).To(HaveLen(1))
 
-				result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
+				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, cellSet)
 				Expect(result.Events).To(ContainElement(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
-				Expect(result.InstanceEvents).To(ContainElement(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0])))
+				Expect(result.InstanceEvents).To(ContainElement(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId)))
 			})
 		})
 	})
@@ -211,14 +215,14 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("return ActualLRPRemoveEvent", func() {
-				actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: processGuid})
+				actualLRPs, err := sqlDB.ActualLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(actualLRPs).To(HaveLen(1))
 
-				result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
+				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, cellSet)
 				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
-				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0])))
+				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId)))
 			})
 		})
 	})
@@ -640,18 +644,18 @@ var _ = Describe("LRPConvergence", func() {
 			})
 
 			It("return ActualLRPRemovedEvent for the removed evacuating LRPs", func() {
-				actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: processGuid})
+				actualLRPs, err := sqlDB.ActualLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, models.ActualLRPFilter{ProcessGuid: processGuid})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPs).To(HaveLen(2))
 
-				result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
+				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, cellSet)
 				Expect(result.Events).To(ConsistOf(
 					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
 					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
 				))
 				Expect(result.InstanceEvents).To(ConsistOf(
-					models.NewActualLRPInstanceRemovedEvent(actualLRPs[0]),
-					models.NewActualLRPInstanceRemovedEvent(actualLRPs[1]),
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId),
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[1], traceId),
 				))
 			})
 		})
@@ -1164,14 +1168,14 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualLRPs).To(HaveLen(2))
 
-				result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
+				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, cellSet)
 				Expect(result.Events).To(ConsistOf(
 					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
 					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
 				))
 				Expect(result.InstanceEvents).To(ConsistOf(
-					models.NewActualLRPInstanceRemovedEvent(actualLRPs[0]),
-					models.NewActualLRPInstanceRemovedEvent(actualLRPs[1]),
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId),
+					models.NewActualLRPInstanceRemovedEvent(actualLRPs[1], traceId),
 				))
 			})
 		})
@@ -1372,9 +1376,9 @@ var _ = Describe("LRPConvergence", func() {
 
 				Expect(actualLRPs).To(HaveLen(1))
 
-				result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
+				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, cellSet)
 				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
-				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0])))
+				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId)))
 			})
 
 			It("should not have any extra LRP instances", func() {

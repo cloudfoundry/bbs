@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/routing-info/internalroutes"
@@ -196,11 +197,11 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP))
+	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP, trace.RequestIdFromRequest(req)))
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
 	if schedulingInfo.Instances > 0 {
-		h.startInstanceRange(req.Context(), logger, 0, schedulingInfo.Instances, &schedulingInfo)
+		h.startInstanceRange(trace.ContextWithRequestId(req), logger, 0, schedulingInfo.Instances, &schedulingInfo)
 	}
 }
 
@@ -246,13 +247,13 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		if requestedInstances > 0 {
 			logger.Debug("increasing-the-instances")
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			h.startInstanceRange(req.Context(), logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
+			h.startInstanceRange(trace.ContextWithRequestId(req), logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
 		}
 
 		if requestedInstances < 0 {
 			logger.Debug("decreasing-the-instances")
 			numExtraActualLRP := previousInstanceCount + requestedInstances
-			h.stopInstancesFrom(req.Context(), logger, request.ProcessGuid, int(numExtraActualLRP))
+			h.stopInstancesFrom(trace.ContextWithRequestId(req), logger, request.ProcessGuid, int(numExtraActualLRP))
 		}
 	}
 
@@ -260,10 +261,10 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 	metricTagsUpdated := request.Update.IsMetricTagsUpdated(beforeDesiredLRP.MetricTags)
 
 	if internalRoutesUpdated || metricTagsUpdated {
-		h.updateInstances(req.Context(), logger, request.ProcessGuid, request.Update, internalRoutesUpdated, metricTagsUpdated)
+		h.updateInstances(trace.ContextWithRequestId(req), logger, request.ProcessGuid, request.Update, internalRoutesUpdated, metricTagsUpdated)
 	}
 
-	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP))
+	go h.desiredHub.Emit(models.NewDesiredLRPChangedEvent(beforeDesiredLRP, desiredLRP, trace.RequestIdFromRequest(req)))
 }
 
 func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -293,9 +294,9 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP))
+	go h.desiredHub.Emit(models.NewDesiredLRPRemovedEvent(desiredLRP, trace.RequestIdFromRequest(req)))
 
-	h.stopInstancesFrom(req.Context(), logger, request.ProcessGuid, 0)
+	h.stopInstancesFrom(trace.ContextWithRequestId(req), logger, request.ProcessGuid, 0)
 }
 
 func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
@@ -313,7 +314,7 @@ func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager
 	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
 
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
-	err := h.auctioneerClient.RequestLRPAuctions(logger, []*auctioneer.LRPStartRequest{&start})
+	err := h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&start})
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
@@ -342,7 +343,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(ctx context.Context, logge
 			}
 
 			lrps := eventCalculator.RecordChange(nil, actualLRP, nil)
-			go eventCalculator.EmitEvents(nil, lrps)
+			go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), nil, lrps)
 			createdIndicesChan <- int(key.Index)
 		}
 	}
@@ -387,7 +388,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						logger.Error("failed-removing-lrp-instance", err)
 					} else {
 						go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
-						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp))
+						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp, trace.RequestIdFromContext(ctx)))
 					}
 				default:
 					cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
@@ -395,7 +396,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						logger.Error("failed-fetching-cell-presence", err)
 						continue
 					}
-					repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+					repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, trace.RequestIdFromContext(ctx))
 					if err != nil {
 						logger.Error("create-rep-client-failed", err)
 						continue
@@ -428,7 +429,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				logger.Error("failed-fetching-cell-presence", err)
 				continue
 			}
-			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl)
+			repClient, err := h.repClientFactory.CreateClient(cellPresence.RepAddress, cellPresence.RepUrl, trace.RequestIdFromContext(ctx))
 			if err != nil {
 				logger.Error("create-rep-client-failed", err)
 				continue

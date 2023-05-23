@@ -91,7 +91,7 @@ var _ = Describe("SqlLock", func() {
 
 		It("acquires the lock in locket and becomes active", func() {
 			Eventually(func() bool {
-				return client.Ping(logger)
+				return client.Ping(logger, "some-trace-id")
 			}).Should(BeTrue())
 		})
 
@@ -100,7 +100,7 @@ var _ = Describe("SqlLock", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
-				return client.Ping(logger)
+				return client.Ping(logger, "some-trace-id")
 			}).Should(BeTrue())
 
 			lock, err := locketClient.Fetch(context.Background(), &locketmodels.FetchRequest{
@@ -113,7 +113,7 @@ var _ = Describe("SqlLock", func() {
 
 		It("emits metric about holding lock", func() {
 			Eventually(func() bool {
-				return client.Ping(logger)
+				return client.Ping(logger, "some-trace-id")
 			}).Should(BeTrue())
 
 			Eventually(testMetricsChan).Should(Receive(
@@ -126,7 +126,7 @@ var _ = Describe("SqlLock", func() {
 		Context("and the locking server becomes unreachable after grabbing the lock", func() {
 			JustBeforeEach(func() {
 				Eventually(func() bool {
-					return client.Ping(logger)
+					return client.Ping(logger, "some-trace-id")
 				}).Should(BeTrue())
 
 				ginkgomon.Interrupt(locketProcess)
@@ -171,14 +171,14 @@ var _ = Describe("SqlLock", func() {
 
 			It("blocks on waiting for the lock", func() {
 				Consistently(func() bool {
-					return client.Ping(logger)
+					return client.Ping(logger, "some-trace-id")
 				}).Should(BeFalse())
 			})
 
 			Context("and the lock becomes available", func() {
 				JustBeforeEach(func() {
 					Consistently(func() bool {
-						return client.Ping(logger)
+						return client.Ping(logger, "some-trace-id")
 					}).Should(BeFalse())
 
 					ginkgomon.Interrupt(competingProcess)
@@ -186,7 +186,7 @@ var _ = Describe("SqlLock", func() {
 
 				It("grabs the lock", func() {
 					Eventually(func() bool {
-						return client.Ping(logger)
+						return client.Ping(logger, "some-trace-id")
 					}, 5*locket.RetryInterval).Should(BeTrue())
 				})
 			})
@@ -225,7 +225,7 @@ var _ = Describe("SqlLock", func() {
 
 		It("does not become active", func() {
 			Consistently(func() bool {
-				return client.Ping(logger)
+				return client.Ping(logger, "some-trace-id")
 			}).Should(BeFalse())
 		})
 
@@ -246,7 +246,7 @@ var _ = Describe("SqlLock", func() {
 		Context("and the lock becomes available", func() {
 			JustBeforeEach(func() {
 				Consistently(func() bool {
-					return client.Ping(logger)
+					return client.Ping(logger, "some-trace-id")
 				}).Should(BeFalse())
 
 				ginkgomon.Interrupt(competingProcess)
@@ -254,7 +254,7 @@ var _ = Describe("SqlLock", func() {
 
 			It("grabs the lock and becomes active", func() {
 				Eventually(func() bool {
-					return client.Ping(logger)
+					return client.Ping(logger, "some-trace-id")
 				}, 5*locket.RetryInterval).Should(BeTrue())
 			})
 		})

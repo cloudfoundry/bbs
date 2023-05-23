@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/routing-info/internalroutes"
 )
@@ -608,7 +609,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(ctx context.Context, logger lager.Log
 	var instanceEvents []models.Event
 	for _, lrp := range lrpsToDelete {
 		events = append(events, models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
-		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(lrp))
+		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(lrp, trace.RequestIdFromContext(ctx)))
 	}
 	return events, instanceEvents
 }

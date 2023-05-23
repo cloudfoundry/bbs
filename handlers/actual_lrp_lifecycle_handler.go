@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
 )
 
@@ -182,6 +183,6 @@ func (h *ActualLRPLifecycleHandler) RetireActualLRP(logger lager.Logger, w http.
 		return
 	}
 
-	err = h.controller.RetireActualLRP(req.Context(), logger, request.ActualLrpKey)
+	err = h.controller.RetireActualLRP(trace.ContextWithRequestId(req), logger, request.ActualLrpKey)
 	response.Error = models.ConvertError(err)
 }
