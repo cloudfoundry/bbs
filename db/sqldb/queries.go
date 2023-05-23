@@ -20,6 +20,17 @@ const (
 )
 
 var (
+	routingInfoColumns = helpers.ColumnList{
+		desiredLRPsTable + ".process_guid",
+		desiredLRPsTable + ".domain",
+		desiredLRPsTable + ".log_guid",
+		desiredLRPsTable + ".instances",
+		desiredLRPsTable + ".routes",
+		desiredLRPsTable + ".modification_tag_epoch",
+		desiredLRPsTable + ".modification_tag_index",
+		desiredLRPsTable + ".run_info",
+	}
+
 	schedulingInfoColumns = helpers.ColumnList{
 		desiredLRPsTable + ".process_guid",
 		desiredLRPsTable + ".domain",

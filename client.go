@@ -169,6 +169,9 @@ type ExternalDesiredLRPClient interface {
 	// Returns all DesiredLRPSchedulingInfos that match the given DesiredLRPFilter
 	DesiredLRPSchedulingInfos(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 
+	// Returns all DesiredLRPRoutingInfos that match the given DesiredLRPFilter
+	DesiredLRPRoutingInfos(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+
 	// Creates the given DesiredLRP and its corresponding ActualLRPs
 	DesireLRP(lager.Logger, string, *models.DesiredLRP) error
 
@@ -598,6 +601,19 @@ func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, traceID string, 
 	}
 
 	return response.DesiredLrpSchedulingInfos, response.Error.ToError()
+}
+
+func (c *client) DesiredLRPRoutingInfos(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+	request := models.DesiredLRPsRequest{
+		ProcessGuids: filter.ProcessGuids,
+	}
+	response := models.DesiredLRPsResponse{}
+	err := c.doRequest(logger, traceID, DesiredLRPRoutingInfosRoute_r0, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.DesiredLrps, response.Error.ToError()
 }
 
 func (c *client) doDesiredLRPLifecycleRequest(logger lager.Logger, traceID string, route string, request proto.Message) error {

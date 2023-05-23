@@ -156,6 +156,21 @@ type FakeClient struct {
 		result1 *models.DesiredLRP
 		result2 error
 	}
+	DesiredLRPRoutingInfosStub        func(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+	desiredLRPRoutingInfosMutex       sync.RWMutex
+	desiredLRPRoutingInfosArgsForCall []struct {
+		arg1 lager.Logger
+		arg2 string
+		arg3 models.DesiredLRPFilter
+	}
+	desiredLRPRoutingInfosReturns struct {
+		result1 []*models.DesiredLRP
+		result2 error
+	}
+	desiredLRPRoutingInfosReturnsOnCall map[int]struct {
+		result1 []*models.DesiredLRP
+		result2 error
+	}
 	DesiredLRPSchedulingInfosStub        func(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 	desiredLRPSchedulingInfosMutex       sync.RWMutex
 	desiredLRPSchedulingInfosArgsForCall []struct {
@@ -1070,6 +1085,72 @@ func (fake *FakeClient) DesiredLRPByProcessGuidReturnsOnCall(i int, result1 *mod
 	}
 	fake.desiredLRPByProcessGuidReturnsOnCall[i] = struct {
 		result1 *models.DesiredLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) DesiredLRPRoutingInfos(arg1 lager.Logger, arg2 string, arg3 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	ret, specificReturn := fake.desiredLRPRoutingInfosReturnsOnCall[len(fake.desiredLRPRoutingInfosArgsForCall)]
+	fake.desiredLRPRoutingInfosArgsForCall = append(fake.desiredLRPRoutingInfosArgsForCall, struct {
+		arg1 lager.Logger
+		arg2 string
+		arg3 models.DesiredLRPFilter
+	}{arg1, arg2, arg3})
+	stub := fake.DesiredLRPRoutingInfosStub
+	fakeReturns := fake.desiredLRPRoutingInfosReturns
+	fake.recordInvocation("DesiredLRPRoutingInfos", []interface{}{arg1, arg2, arg3})
+	fake.desiredLRPRoutingInfosMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeClient) DesiredLRPRoutingInfosCallCount() int {
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
+	return len(fake.desiredLRPRoutingInfosArgsForCall)
+}
+
+func (fake *FakeClient) DesiredLRPRoutingInfosCalls(stub func(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	defer fake.desiredLRPRoutingInfosMutex.Unlock()
+	fake.DesiredLRPRoutingInfosStub = stub
+}
+
+func (fake *FakeClient) DesiredLRPRoutingInfosArgsForCall(i int) (lager.Logger, string, models.DesiredLRPFilter) {
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
+	argsForCall := fake.desiredLRPRoutingInfosArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeClient) DesiredLRPRoutingInfosReturns(result1 []*models.DesiredLRP, result2 error) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	defer fake.desiredLRPRoutingInfosMutex.Unlock()
+	fake.DesiredLRPRoutingInfosStub = nil
+	fake.desiredLRPRoutingInfosReturns = struct {
+		result1 []*models.DesiredLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) DesiredLRPRoutingInfosReturnsOnCall(i int, result1 []*models.DesiredLRP, result2 error) {
+	fake.desiredLRPRoutingInfosMutex.Lock()
+	defer fake.desiredLRPRoutingInfosMutex.Unlock()
+	fake.DesiredLRPRoutingInfosStub = nil
+	if fake.desiredLRPRoutingInfosReturnsOnCall == nil {
+		fake.desiredLRPRoutingInfosReturnsOnCall = make(map[int]struct {
+			result1 []*models.DesiredLRP
+			result2 error
+		})
+	}
+	fake.desiredLRPRoutingInfosReturnsOnCall[i] = struct {
+		result1 []*models.DesiredLRP
 		result2 error
 	}{result1, result2}
 }
@@ -2324,6 +2405,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.desireTaskMutex.RUnlock()
 	fake.desiredLRPByProcessGuidMutex.RLock()
 	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
 	fake.desiredLRPSchedulingInfosMutex.RLock()
 	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
 	fake.desiredLRPsMutex.RLock()

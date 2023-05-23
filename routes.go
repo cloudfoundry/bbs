@@ -36,6 +36,7 @@ const (
 	// Desired LRPs
 	DesiredLRPsRoute_r3               = "DesiredLRPs"
 	DesiredLRPSchedulingInfosRoute_r0 = "DesiredLRPSchedulingInfos"
+	DesiredLRPRoutingInfosRoute_r0    = "DesiredLRPRoutingInfos"
 	DesiredLRPByProcessGuidRoute_r3   = "DesiredLRPByProcessGuid"
 	DesiredLRPsRoute_r2               = "DesiredLRPs_r2"             // DEPRECATED
 	DesiredLRPByProcessGuidRoute_r2   = "DesiredLRPByProcessGuid_r2" // DEPRECATED
@@ -104,6 +105,7 @@ var Routes = rata.Routes{
 
 	// Desired LRPs
 	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute_r0},
+	{Path: "/v1/desired_lrp_routing_infos/list", Method: "POST", Name: DesiredLRPRoutingInfosRoute_r0},
 
 	{Path: "/v1/desired_lrps/list.r3", Method: "POST", Name: DesiredLRPsRoute_r3},
 	{Path: "/v1/desired_lrps/get_by_process_guid.r3", Method: "POST", Name: DesiredLRPByProcessGuidRoute_r3},

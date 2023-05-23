@@ -1542,6 +1542,38 @@ var _ = Describe("DesiredLRPSchedulingInfo", func() {
 	)
 })
 
+var _ = Describe("DesiredLRPRoutingInfo", func() {
+	const instances = 2
+	var (
+		rawMessage = json.RawMessage([]byte(`{"port": 8080,"hosts":["new-route-1","new-route-2"]}`))
+		routes     = models.Routes{
+			"router": &rawMessage,
+		}
+		largeRoutingString = randStringBytes(129 * 1024)
+		largeRoute         = json.RawMessage([]byte(largeRoutingString))
+		largeRoutes        = models.Routes{
+			"router": &largeRoute,
+		}
+		tag = models.ModificationTag{}
+	)
+
+	DescribeTable("Validation",
+		func(key models.DesiredLRP, expectedErr string) {
+			err := key.Validate()
+			if expectedErr == "" {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(expectedErr))
+			}
+		},
+		Entry("invalid instances", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), -2, &routes, &tag, map[string]*models.MetricTagValue{}), "instances"),
+		Entry("invalid key", models.NewDesiredLRPRoutingInfo(models.DesiredLRPKey{}, instances, &routes, &tag, map[string]*models.MetricTagValue{}), "process_guid"),
+		Entry("invalid routes", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &largeRoutes, &tag, map[string]*models.MetricTagValue{}), "routes"),
+		Entry("invalid metricTags", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &routes, &tag, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}), "metric_tags"),
+	)
+})
+
 var _ = Describe("DesiredLRPRunInfo", func() {
 	var envVars = []models.EnvironmentVariable{{"FOO", "bar"}}
 	var action = model_helpers.NewValidAction()

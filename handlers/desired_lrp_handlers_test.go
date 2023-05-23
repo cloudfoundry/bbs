@@ -740,6 +740,118 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 	})
 
+	Describe("DesiredLRPRoutingInfos", func() {
+		var (
+			requestBody  interface{}
+			routingInfo1 models.DesiredLRP
+			routingInfo2 models.DesiredLRP
+		)
+
+		BeforeEach(func() {
+			requestBody = &models.DesiredLRPsRequest{}
+			routingInfo1 = models.DesiredLRP{}
+			routingInfo2 = models.DesiredLRP{}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			handler.DesiredLRPRoutingInfos(logger, responseRecorder, request)
+		})
+
+		Context("when reading routing infos from DB succeeds", func() {
+			var routingInfos []*models.DesiredLRP
+
+			BeforeEach(func() {
+				routingInfos = []*models.DesiredLRP{&routingInfo1, &routingInfo2}
+				fakeDesiredLRPDB.DesiredLRPRoutingInfosReturns(routingInfos, nil)
+			})
+
+			It("returns a list of desired lrps", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrps).To(Equal(routingInfos))
+			})
+
+			Context("and no filter is provided", func() {
+				It("call the DB with no filters to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPRoutingInfosCallCount()).To(Equal(1))
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPRoutingInfosArgsForCall(0)
+					Expect(filter).To(Equal(models.DesiredLRPFilter{}))
+				})
+			})
+
+			Context("and filtering by domain", func() {
+				BeforeEach(func() {
+					requestBody = &models.DesiredLRPsRequest{Domain: "domain-1"}
+				})
+
+				It("call the DB with the domain filter to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPRoutingInfosCallCount()).To(Equal(1))
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPRoutingInfosArgsForCall(0)
+					Expect(filter.Domain).To(Equal("domain-1"))
+				})
+			})
+
+			Context("and filtering by process guids", func() {
+				BeforeEach(func() {
+					requestBody = &models.DesiredLRPsRequest{ProcessGuids: []string{"guid-1", "guid-2"}}
+				})
+
+				It("call the DB with the process guids filter to retrieve the desired lrps", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPRoutingInfosCallCount()).To(Equal(1))
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPRoutingInfosArgsForCall(0)
+					Expect(filter.ProcessGuids).To(Equal([]string{"guid-1", "guid-2"}))
+				})
+			})
+		})
+
+		Context("when the DB returns no desired lrps", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPRoutingInfosReturns([]*models.DesiredLRP{}, nil)
+			})
+
+			It("returns an empty list", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.DesiredLrps).To(BeEmpty())
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPRoutingInfosReturns([]*models.DesiredLRP{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPRoutingInfosReturns([]*models.DesiredLRP{}, models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
 	Describe("DesireDesiredLRP", func() {
 		var (
 			desiredLRP *models.DesiredLRP

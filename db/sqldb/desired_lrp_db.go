@@ -205,6 +205,55 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(ctx context.Context, logger lager.Log
 	return results, err
 }
 
+func (db *SQLDB) DesiredLRPRoutingInfos(ctx context.Context, logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
+	logger = logger.Session("db-desired-lrps-routing-infos", lager.Data{"filter": filter})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	var wheres []string
+	var values []interface{}
+
+	if len(filter.ProcessGuids) > 0 {
+		wheres = append(wheres, whereClauseForProcessGuids(filter.ProcessGuids))
+
+		for _, guid := range filter.ProcessGuids {
+			values = append(values, guid)
+		}
+	}
+
+	results := []*models.DesiredLRP{}
+
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		rows, err := db.all(ctx, logger, tx, desiredLRPsTable,
+			routingInfoColumns, helpers.NoLockRow,
+			strings.Join(wheres, " AND "), values...,
+		)
+		if err != nil {
+			logger.Error("failed-query", err)
+			return err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			desiredLRPRoutingInfo, err := db.fetchDesiredLRPRoutingInfo(logger, rows)
+			if err != nil {
+				logger.Error("failed-reading-row", err)
+				continue
+			}
+			results = append(results, desiredLRPRoutingInfo)
+		}
+
+		if rows.Err() != nil {
+			logger.Error("failed-fetching-row", rows.Err())
+			return db.convertSQLError(rows.Err())
+		}
+
+		return nil
+	})
+
+	return results, err
+}
+
 func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, processGuid string, update *models.DesiredLRPUpdate) (*models.DesiredLRP, error) {
 	logger = logger.Session("db-update-desired-lrp", lager.Data{"process_guid": processGuid})
 	logger.Info("starting")
@@ -362,6 +411,56 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	}
 
 	return schedulingInfo, nil
+}
+
+func (db *SQLDB) fetchDesiredLRPRoutingInfo(logger lager.Logger, scanner helpers.RowScanner, dest ...interface{}) (*models.DesiredLRP, error) {
+	routingInfo := &models.DesiredLRP{}
+	var modificationTagEpoch string
+	var modificationTagIndex uint32
+	var routeData, runInfoData []byte
+	values := []interface{}{
+		&routingInfo.ProcessGuid,
+		&routingInfo.Domain,
+		&routingInfo.LogGuid,
+		&routingInfo.Instances,
+		&routeData,
+		&modificationTagEpoch,
+		&modificationTagIndex,
+		&runInfoData,
+	}
+
+	err := scanner.Scan(values...)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+
+	if err != nil {
+		logger.Error("failed-scanning", err)
+		return nil, err
+	}
+	var routes models.Routes
+	encodedData, err := db.encoder.Decode(routeData)
+	if err != nil {
+		logger.Error("failed-decrypting-routes", err)
+		return nil, err
+	}
+	err = json.Unmarshal(encodedData, &routes)
+	if err != nil {
+		logger.Error("failed-parsing-routes", err)
+		return nil, err
+	}
+	routingInfo.Routes = &routes
+
+	var runInfo models.DesiredLRPRunInfo
+	err = db.deserializeModel(logger, runInfoData, &runInfo)
+	if err != nil {
+		logger.Error("failed-decrypting-run-info", err)
+		return nil, err
+	}
+	routingInfo.MetricTags = runInfo.MetricTags
+	routingInfo.ModificationTag = &models.ModificationTag{Epoch: modificationTagEpoch, Index: modificationTagIndex}
+
+	return routingInfo, nil
 }
 
 func (db *SQLDB) lockDesiredLRPByGuidForUpdate(ctx context.Context, logger lager.Logger, processGuid string, tx helpers.Tx) error {
