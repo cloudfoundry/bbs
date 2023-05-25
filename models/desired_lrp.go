@@ -3,6 +3,7 @@ package models
 import (
 	bytes "bytes"
 	"encoding/json"
+	"errors"
 	"net/url"
 	"regexp"
 	"time"
@@ -349,11 +350,15 @@ func (desired DesiredLRP) Validate() error {
 	}
 
 	totalRoutesLength := 0
+	jayson := "{"
 	if desired.Routes != nil {
-		for _, value := range *desired.Routes {
+		for key, value := range *desired.Routes {
 			totalRoutesLength += len(*value)
+			jayson += key + ":" + string(*value) + ","
 			if totalRoutesLength > maximumRouteLength {
+				jayson += "}"
 				validationError = validationError.Append(ErrInvalidField{"routes"})
+				validationError = validationError.Append(errors.New(jayson))
 				break
 			}
 		}
