@@ -387,7 +387,7 @@ One typically sets the `LogGuid` to the `ProcessGuid` though this is not strictl
 Individual `RunAction`s can override the `LogSource`.
 This allows a consumer of the log stream to distinguish between the logs of different processes.
 
-#### `MetricTags` [optional]
+##### `MetricTags` [required]
 
 The `MetricTags` field provides a map of metadata values that defines the
 container metrics coming from the DesiredLRP. This is a map of string keys to
