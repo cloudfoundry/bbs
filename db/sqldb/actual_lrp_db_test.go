@@ -115,6 +115,7 @@ var _ = Describe("ActualLRPDB", func() {
 			expectedActualLRP.ModificationTag.Index = 0
 			expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 			expectedActualLRP.MetricTags = map[string]string{}
+			expectedActualLRP.Routable = false
 
 			actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
 			Expect(err).NotTo(HaveOccurred())

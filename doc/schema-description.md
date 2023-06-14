@@ -18,6 +18,7 @@
 |                | crash_reason           | character varying(1024) | No        | Reason for the most reason crash (e.g. app failed the healthcheck)                                                             |
 |                | expire_time            | bigint                  | No        | Unused                                                                                                                         |
 |                | presence               | integer                 | No        | Describes the presence of the cell hosting the ActualLRP. 0 for `Ordinary`, 1 for `Evacuating`, and 2 for `Suspect`.           |
+|                | routable               | boolean                 | No        | True if the ActualLRP is ready to serve traffic, i.e. the LRP has passed any *defined* readiness checks. False otherwise.      |
 | configurations | id                     | character varying(255)  | No        | Configuration table holds configuration values for BBS. Currently id can be one of "version" or "encryption_key_label"         |
 |                | value                  | character varying(255)  | No        | For "version" it is the current version of the database. "encryption_key_label" holds the label of the active encryption key   |
 | desired_lrps   | process_guid           | character varying(255)  | No        | Unique identifier of the DesiredLRP                                                                                            |

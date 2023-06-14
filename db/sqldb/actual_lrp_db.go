@@ -145,6 +145,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 				"modification_tag_index": 0,
 				"internal_routes":        internalRoutesData,
 				"metric_tags":            metricTagsData,
+				"routable":               false,
 			},
 		)
 
@@ -162,6 +163,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
 		ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 		MetricTags:              map[string]string{},
+		Routable:                false,
 	}, nil
 }
 

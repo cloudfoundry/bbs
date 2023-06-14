@@ -91,14 +91,25 @@ err := client.DesireLRP(logger, &models.DesiredLRP{
 	CheckDefinition: &models.CheckDefinition{
 		Checks: []*models.Check{
 			{
-				HttpCheck: &models.HTTPCheck{
-					Port:             12345,
+				TcpCheck: &models.TCPCheck{
+					Port:             54321,
+					ConnectTimeoutMs: 100
 					RequestTimeoutMs: 100,
-					Path:             "/some/path",
+					IntervalMs:       500,
 				},
 			},
 		},
 		LogSource: "health-check",
+		ReadinessChecks: []*models.Check{
+			{
+				HttpCheck: &models.HTTPCheck{
+					Port:             12345,
+					Path:             "/some/path",
+					RequestTimeoutMs: 100,
+					IntervalMs:       500,
+				},
+			},
+		},
 	},
 	MetricTags: map[string]*models.MetricTagValue{
 		"source_id": &models.MetricTagValue{
@@ -290,11 +301,23 @@ For more details on the available actions see [actions](actions.md).
 
 ##### `CheckDefinition` [optional]
 
-`CheckDefinition` provides a more structured way to declare healthchecks. It is up to the `Rep` whether to use the `Monitor` action or the `CheckDefinition`. See `enable_declarative_healthcheck` property in the [Rep job spec](https://github.com/cloudfoundry/diego-release/blob/develop/jobs/rep/spec)
+`CheckDefinition` provides a more structured way to declare healthchecks. It is
+up to the `Rep` whether to use the `Monitor` action or the `CheckDefinition`.
+See `enable_declarative_healthcheck` property in the [Rep job
+spec](https://github.com/cloudfoundry/diego-release/blob/develop/jobs/rep/spec)
 
 ###### `Checks` [repeated]
 
-A list of health checks. Each healthcheck can be either a `TCPCheck` or `HTTPCheck`. It is an error to have both set.
+A list of health checks for startup and liveness checking of the LRP. Each
+healthcheck can be either a `TCPCheck` or `HTTPCheck`. It is an error to have
+both set.
+
+###### `ReadinessChecks` [repeated, optional]
+
+A list of readiness health checks used to indicate if the LRP is responsive and
+ready to serve traffic (i.e. ready to be put in the routing table). As with
+`Checks`, each healthcheck can be either a `TCPCheck` or `HTTPCheck`. It is an
+error to have both set.
 
 ###### `LogSource` [optional]
 

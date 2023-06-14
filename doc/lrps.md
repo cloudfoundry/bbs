@@ -196,6 +196,16 @@ The last modified time of the ActualLRP represented as the number of nanoseconds
 
 A map of metadata values that are attached to emitted logs and metrics for the container.
 
+#### `routable`
+
+Indicates if the ActualLRP can respond to traffic succesfully or not.
+
+When an ActualLRP is first created, `routable` is set by default to `False`.
+
+Once the ActualLRP is assigned to a cell, the container performs start up and parallel healthchecking processes, including optional [readiness checks as defined in the DesiredLRP](./defining-lrps.md).
+
+After the readiness checks pass, or if there are no readiness checks defined at all, the ActualLRP `routable` field is tranistioned from `False` to `True`.
+
 #### Networking
 
 #### `address`

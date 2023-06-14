@@ -42,7 +42,6 @@ func (e *AddRoutableToActualLrps) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddRoutableToActualLrps) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *AddRoutableToActualLrps) Up(logger lager.Logger) error {
-	// TODO: add migration code here
 	logger.Info("altering the table", lager.Data{"query": alterActualLRPAddRoutableSQL})
 	_, err := e.rawSQLDB.Exec(alterActualLRPAddRoutableSQL)
 	if err != nil {
