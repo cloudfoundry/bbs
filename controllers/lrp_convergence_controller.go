@@ -260,18 +260,17 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lage
 		dereferencedKey := *key
 		works = append(works, func() {
 			logger := logger.Session("suspect-keys-with-existing-cells")
-			err := h.lrpDB.RemoveActualLRP(ctx, logger, dereferencedKey.ProcessGuid, dereferencedKey.Index, nil)
-			if err != nil && err != models.ErrResourceNotFound {
-				logger.Error("cannot-remove-lrp", err, lager.Data{"key": dereferencedKey})
-				return
-			}
-			before, after, err := h.lrpDB.ChangeActualLRPPresence(ctx, logger, &dereferencedKey, models.ActualLRP_Suspect, models.ActualLRP_Ordinary)
+			beforeLRP, afterLRP, removedLRP, err := h.suspectDB.PromoteSuspectActualLRP(ctx, logger, dereferencedKey.ProcessGuid, dereferencedKey.Index)
 			if err != nil {
-				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
+				logger.Error("cannot-promote-suspect-lrp", err, lager.Data{"key": dereferencedKey})
 				return
 			}
+			if removedLRP != nil {
+				go h.actualHub.Emit(models.NewActualLRPRemovedEvent(removedLRP.ToActualLRPGroup()))
+				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(removedLRP, traceId))
 
-			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(before, after, traceId))
+			}
+			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceChangedEvent(beforeLRP, afterLRP, traceId))
 		})
 	}
 
