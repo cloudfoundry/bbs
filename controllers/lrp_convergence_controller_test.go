@@ -568,83 +568,52 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLRPKey}
 
 			fakeLRPDB.ActualLRPsReturns([]*models.ActualLRP{ordinaryActualLRP}, nil)
-			fakeLRPDB.ChangeActualLRPPresenceReturns(suspectActualLRP, ordinaryActualLRP, nil)
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				SuspectKeysWithExistingCells: suspectKeysWithExistingCells,
 			})
-			fakeSuspectDB.RemoveSuspectActualLRPReturns(removedActualLRP, nil)
 		})
 
-		It("remove the Ordinary LRP", func() {
-			Eventually(fakeLRPDB.RemoveActualLRPCallCount).Should(Equal(1))
-
-			_, _, guid, index, key := fakeLRPDB.RemoveActualLRPArgsForCall(0)
-
-			Expect(guid).To(Equal(ordinaryActualLRP.ProcessGuid))
-			Expect(index).To(Equal(ordinaryActualLRP.Index))
-			Expect(key).To(BeNil())
-		})
-
-		It("changes the suspect LRP presence to Ordinary", func() {
-			Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
-			_, _, lrpKey, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
-
-			Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
-			Expect(from).To(Equal(models.ActualLRP_Suspect))
-			Expect(to).To(Equal(models.ActualLRP_Ordinary))
-		})
-
-		It("does not emit any events", func() {
-			Consistently(actualHub.EmitCallCount).Should(Equal(0))
-		})
-
-		It("emits ActualLRPInstanceChangedEvent for suspect becoming ordinary and ActualLRPRemovedEvent for the replacement ordinary going away", func() {
-			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-			Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-
-			Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
-				models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP, traceId),
-			))
-		})
-
-		Context("when the ordinary lrp does not exist", func() {
-			var (
-				ordinaryActualLRP            *models.ActualLRP
-				suspectActualLRP             *models.ActualLRP
-				suspectKeysWithExistingCells []*models.ActualLRPKey
-			)
-
+		Context("suspect LRP can not be promoted to Ordinary", func() {
 			BeforeEach(func() {
-				ordinaryActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
-				suspectActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
-				suspectActualLRP.Presence = models.ActualLRP_Suspect
-
-				suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLRPKey}
-
-				fakeLRPDB.RemoveActualLRPReturns(models.ErrResourceNotFound)
-				fakeLRPDB.ChangeActualLRPPresenceReturns(suspectActualLRP, ordinaryActualLRP, nil)
-				fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
-					SuspectKeysWithExistingCells: suspectKeysWithExistingCells,
-				})
+				fakeSuspectDB.PromoteSuspectActualLRPReturns(nil, nil, nil, errors.New("failed-to-promote-suspect-lrp"))
 			})
 
-			It("changes the suspect LRP presence to Ordinary", func() {
-				Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
-				_, _, lrpKey, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
-
-				Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
-				Expect(from).To(Equal(models.ActualLRP_Suspect))
-				Expect(to).To(Equal(models.ActualLRP_Ordinary))
+			It("does not emit any events", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
 			})
 		})
 
-		Context("when the ordinary lrp cannot be removed", func() {
+		Context("when the suspect LRP promoted to Ordinary and Ordinary is removed", func() {
 			BeforeEach(func() {
-				fakeLRPDB.RemoveActualLRPReturns(errors.New("booom!"))
+				fakeSuspectDB.PromoteSuspectActualLRPReturns(suspectActualLRP, ordinaryActualLRP, removedActualLRP, nil)
 			})
 
-			It("does not change the suspect LRP presence", func() {
-				Consistently(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(BeZero())
+			It("emits event for removed LRP", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+
+				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
+					models.NewActualLRPInstanceRemovedEvent(removedActualLRP, traceId),
+				))
+				Expect(actualLRPInstanceHub.EmitArgsForCall(1)).To(Equal(
+					models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP, traceId),
+				))
+			})
+		})
+
+		Context("when the suspect LRP promoted to Ordinary and Ordinary is not removed", func() {
+			BeforeEach(func() {
+				fakeSuspectDB.PromoteSuspectActualLRPReturns(suspectActualLRP, ordinaryActualLRP, nil, nil)
+			})
+
+			It("emits event for changed LRP", func() {
+				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
+					models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP, traceId),
+				))
 			})
 		})
 	})
