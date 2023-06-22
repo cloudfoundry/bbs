@@ -71,7 +71,7 @@ var _ = Describe("Convergence API", func() {
 					InstanceGuid: "ig-1",
 					CellId:       "missing-cell",
 				}
-				err := client.StartActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := client.StartActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -173,7 +173,9 @@ var _ = Describe("Convergence API", func() {
 							},
 							&netInfo,
 							[]*models.ActualLRPInternalRoute{},
-							map[string]string{})
+							map[string]string{},
+							false,
+						)
 						Expect(err).NotTo(HaveOccurred())
 					})
 
@@ -338,7 +340,7 @@ var _ = Describe("Convergence API", func() {
 							}, &models.ActualLRPInstanceKey{
 								InstanceGuid: "ig-2",
 								CellId:       "some-cell",
-							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 							Expect(err).NotTo(HaveOccurred())
 						})
 
@@ -377,7 +379,7 @@ var _ = Describe("Convergence API", func() {
 							}, &models.ActualLRPInstanceKey{
 								InstanceGuid: "ig-1",
 								CellId:       "missing-cell",
-							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 							Expect(err).To(MatchError(models.ErrActualLRPCannotBeStarted))
 						})
 					})
@@ -392,7 +394,7 @@ var _ = Describe("Convergence API", func() {
 							}, &models.ActualLRPInstanceKey{
 								InstanceGuid: "ig-1",
 								CellId:       "missing-cell",
-							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+							}, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 							Expect(err).NotTo(HaveOccurred())
 						})
 

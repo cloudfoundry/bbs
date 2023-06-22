@@ -228,7 +228,7 @@ var _ = Describe("Events API", func() {
 					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 					By("starting and then evacuating the ActualLRP on another cell")
-					err = client.StartActualLRP(logger, "some-trace-id", &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+					err = client.StartActualLRP(logger, "some-trace-id", &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 
 					Expect(err).NotTo(HaveOccurred())
 

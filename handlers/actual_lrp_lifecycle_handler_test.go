@@ -136,7 +136,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			internalRoutes []*models.ActualLRPInternalRoute
 			metricTags     map[string]string
 
-			requestBody interface{}
+			requestBody models.StartActualLRPRequest
 		)
 
 		BeforeEach(func() {
@@ -152,29 +152,61 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
 			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
 			metricTags = map[string]string{"app_name": "some-app-name"}
-			requestBody = &models.StartActualLRPRequest{
+			requestBody = models.StartActualLRPRequest{
 				ActualLrpKey:            &key,
 				ActualLrpInstanceKey:    &instanceKey,
 				ActualLrpNetInfo:        &netInfo,
 				ActualLrpInternalRoutes: internalRoutes,
 				MetricTags:              metricTags,
 			}
+			requestBody.SetRoutable(true)
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			request := newTestRequest(&requestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.StartActualLRP(logger, responseRecorder, request)
 		})
 
 		It("calls the controller", func() {
 			Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags := fakeController.StartActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable := fakeController.StartActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
 			Expect(actualNetInfo).To(Equal(&netInfo))
 			Expect(actualInternalRoutes).To(Equal(internalRoutes))
 			Expect(actualMetricTags).To(Equal(metricTags))
+			Expect(routable).To(Equal(true))
+		})
+
+		Context("when routable is not provided (old rep)", func() {
+			BeforeEach(func() {
+				requestBody = models.StartActualLRPRequest{
+					ActualLrpKey:            &key,
+					ActualLrpInstanceKey:    &instanceKey,
+					ActualLrpNetInfo:        &netInfo,
+					ActualLrpInternalRoutes: internalRoutes,
+					MetricTags:              metricTags,
+				}
+			})
+
+			It("sets it to true", func() {
+				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
+				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				Expect(routable).To(Equal(true))
+			})
+		})
+
+		Context("when routable is provided as false", func() {
+			BeforeEach(func() {
+				requestBody.SetRoutable(false)
+			})
+
+			It("sets it to false", func() {
+				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
+				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				Expect(routable).To(Equal(false))
+			})
 		})
 
 		Context("when starting the actual lrp in the DB succeeds", func() {
@@ -231,7 +263,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			internalRoutes []*models.ActualLRPInternalRoute
 			metricTags     map[string]string
 
-			requestBody interface{}
+			requestBody models.StartActualLRPRequest
 		)
 
 		BeforeEach(func() {
@@ -247,29 +279,61 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
 			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
 			metricTags = map[string]string{"app_name": "some-app-name"}
-			requestBody = &models.StartActualLRPRequest{
+			requestBody = models.StartActualLRPRequest{
 				ActualLrpKey:            &key,
 				ActualLrpInstanceKey:    &instanceKey,
 				ActualLrpNetInfo:        &netInfo,
 				ActualLrpInternalRoutes: internalRoutes,
 				MetricTags:              metricTags,
 			}
+			requestBody.SetRoutable(true)
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			request := newTestRequest(&requestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.StartActualLRP_r0(logger, responseRecorder, request)
 		})
 
 		It("calls the controller", func() {
 			Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags := fakeController.StartActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable := fakeController.StartActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
 			Expect(actualNetInfo).To(Equal(&netInfo))
 			Expect(len(actualInternalRoutes)).To(Equal(0))
 			Expect(actualMetricTags).To(BeNil())
+			Expect(routable).To(Equal(true))
+		})
+
+		Context("when routable is not provided (old rep)", func() {
+			BeforeEach(func() {
+				requestBody = models.StartActualLRPRequest{
+					ActualLrpKey:            &key,
+					ActualLrpInstanceKey:    &instanceKey,
+					ActualLrpNetInfo:        &netInfo,
+					ActualLrpInternalRoutes: internalRoutes,
+					MetricTags:              metricTags,
+				}
+			})
+
+			It("sets it to true", func() {
+				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
+				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				Expect(routable).To(Equal(true))
+			})
+		})
+
+		Context("when routable is provided as false", func() {
+			BeforeEach(func() {
+				requestBody.SetRoutable(false)
+			})
+
+			It("sets it to false", func() {
+				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
+				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				Expect(routable).To(Equal(false))
+			})
 		})
 
 		Context("when starting the actual lrp in the DB succeeds", func() {

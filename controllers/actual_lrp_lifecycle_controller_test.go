@@ -257,6 +257,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			netInfo        models.ActualLRPNetInfo
 			internalRoutes []*models.ActualLRPInternalRoute
 			metricTags     map[string]string
+			routable       bool
 			err            error
 		)
 
@@ -264,6 +265,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
 			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
 			metricTags = map[string]string{"app_name": "some-app-name"}
+			routable = true
 
 			actualLRPState = models.ActualLRPStateUnclaimed
 			afterActualLRPState = models.ActualLRPStateRunning
@@ -298,7 +300,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("removes the suspect lrp", func() {
-				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 				Eventually(fakeSuspectDB.RemoveSuspectActualLRPCallCount).Should(Equal(1))
 				_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
 				Expect(lrpKey).To(Equal(&models.ActualLRPKey{
@@ -309,7 +311,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits ActualLRPCreatedEvent and an ActualLRPRemovedEvent", func() {
-				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 				Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 				Expect(actualHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPCreatedEvent(
@@ -321,7 +323,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits ActualLRPInstanceChangedEvent and an ActualLRPInstanceRemovedEvent", func() {
-				err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+				err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
@@ -337,12 +339,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("logs the error", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 					Expect(logger.Buffer()).Should(gbytes.Say("boooom!"))
 				})
 
 				It("emits ActualLRPCreatedEvent and an ActualLRPRemovedEvent", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 					Expect(actualHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPCreatedEvent(
@@ -371,7 +373,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("returns ErrActualLRPCannotBeStarted", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 					Expect(err).To(MatchError(models.ErrActualLRPCannotBeStarted))
 				})
 			})
@@ -387,7 +389,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("don't do anything", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(BeZero())
 				})
 			})
@@ -400,17 +402,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("calls DB successfully", func() {
-				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
 				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 
-				_, _, _, _, _, internalRoutesArgument, metricTagsArgument := fakeActualLRPDB.StartActualLRPArgsForCall(0)
+				_, _, _, _, _, internalRoutesArgument, metricTagsArgument, routable := fakeActualLRPDB.StartActualLRPArgsForCall(0)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(internalRoutesArgument).To(Equal(internalRoutes))
 				Expect(metricTagsArgument).To(Equal(metricTags))
+				Expect(routable).To(Equal(true))
 			})
 
 			Context("when a non-ResourceNotFound error occurs while fetching the lrp", func() {
@@ -419,7 +422,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should return the error", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 					Expect(err).To(MatchError("BOOM!!!"))
 				})
 			})
@@ -430,7 +433,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should continue to start the LRP", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
 				})
@@ -450,7 +453,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("removes the evacuating lrp", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 					_, _, lrpKey, lrpInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
 					Expect(*lrpKey).To(Equal(evacuating.ActualLRPKey))
@@ -458,7 +461,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should emit an ActualLRPChanged event and an ActualLRPRemoved event", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
@@ -473,7 +476,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should emit LRP instance changed event and LRP instance removed event", func() {
-					err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
@@ -489,7 +492,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits a created event to the hub", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
@@ -499,7 +502,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits LRP instance create event", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 					event := actualLRPInstanceHub.EmitArgsForCall(0)
@@ -512,7 +515,27 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			Context("when the actual lrp was updated", func() {
 				It("emits a change event to the hub", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
+					Eventually(actualHub.EmitCallCount).Should(Equal(1))
+					event := actualHub.EmitArgsForCall(0)
+					changedEvent, ok := event.(*models.ActualLRPChangedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
+					Expect(changedEvent.After).To(Equal(afterActualLRP.ToActualLRPGroup()))
+				})
+			})
+
+			Context("when Routable was updated", func() {
+				JustBeforeEach(func() {
+					*actualLRP = *afterActualLRP
+					actualLRP.Routable = true
+					afterActualLRP.Routable = false
+					fakeActualLRPDB.StartActualLRPReturns(actualLRP, afterActualLRP, nil)
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+				})
+
+				It("emits a change event to the hub", func() {
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, false)
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
 					changedEvent, ok := event.(*models.ActualLRPChangedEvent)
@@ -528,7 +551,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("does not emit a change event to the hub", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 
 					Consistently(actualHub.EmitCallCount).Should(Equal(0))
 				})
@@ -542,13 +565,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("responds with an error", func() {
-				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrUnknownError))
 			})
 
 			It("does not emit a change event to the hub", func() {
-				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags)
+				err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable)
 				Consistently(actualHub.EmitCallCount).Should(Equal(0))
 			})
 		})

@@ -260,7 +260,7 @@ func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstance
 	if actualLRPInfo == nil {
 		return nil
 	}
-	return &ActualLRP{
+	lrp := ActualLRP{
 		ActualLRPKey:         lrpKey,
 		ActualLRPInstanceKey: lrpInstanceKey,
 		ActualLRPNetInfo:     actualLRPInfo.ActualLRPNetInfo,
@@ -271,14 +271,16 @@ func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstance
 		Since:                actualLRPInfo.Since,
 		ModificationTag:      actualLRPInfo.ModificationTag,
 		Presence:             actualLRPInfo.Presence,
+		Routable:             actualLRPInfo.GetRoutable(),
 	}
+	return &lrp
 }
 
 func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
 	if actual == nil {
 		return nil
 	}
-	return &ActualLRPInfo{
+	info := ActualLRPInfo{
 		ActualLRPNetInfo: actual.ActualLRPNetInfo,
 		CrashCount:       actual.CrashCount,
 		CrashReason:      actual.CrashReason,
@@ -288,6 +290,8 @@ func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
 		ModificationTag:  actual.ModificationTag,
 		Presence:         actual.Presence,
 	}
+	info.SetRoutable(actual.GetRoutable())
+	return &info
 }
 
 // DEPRECATED

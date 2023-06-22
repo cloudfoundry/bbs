@@ -101,7 +101,7 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(ctx context.Context, logge
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo, actualLRPInternalRoutes []*models.ActualLRPInternalRoute, actualLRPMetricTags map[string]string) error {
+func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo, actualLRPInternalRoutes []*models.ActualLRPInternalRoute, actualLRPMetricTags map[string]string, routable bool) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
@@ -125,7 +125,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logge
 
 	// creates ordinary running actual LRP if it doesn't exist, otherwise updates
 	// the existing ordinary actual LRP to running state
-	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, actualLRPInternalRoutes, actualLRPMetricTags)
+	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, routable)
 	if err != nil {
 		return err
 	}

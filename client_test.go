@@ -61,22 +61,24 @@ var _ = Describe("Client", func() {
 		Context("StartActualLRP", func() {
 			It("populates the request", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+				request := models.StartActualLRPRequest{
+					ActualLrpKey:            &actualLRP.ActualLRPKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+					ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
+					MetricTags:              actualLRP.MetricTags,
+				}
+				request.SetRoutable(false)
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.VerifyProtoRepresenting(&models.StartActualLRPRequest{
-							ActualLrpKey:            &actualLRP.ActualLRPKey,
-							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
-							ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
-							MetricTags:              actualLRP.MetricTags,
-						}),
+						ghttp.VerifyProtoRepresenting(&request),
 						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -89,7 +91,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -115,7 +117,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable())
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -128,7 +130,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 
@@ -146,7 +148,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{})
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})

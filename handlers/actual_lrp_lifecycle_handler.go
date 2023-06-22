@@ -14,7 +14,7 @@ import (
 //counterfeiter:generate -o fake_controllers/fake_actual_lrp_lifecycle_controller.go . ActualLRPLifecycleController
 type ActualLRPLifecycleController interface {
 	ClaimActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error
-	StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo, actualLRPInternalRoutes []*models.ActualLRPInternalRoute, actualLRPMetricTags map[string]string) error
+	StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo, actualLRPInternalRoutes []*models.ActualLRPInternalRoute, actualLRPMetricTags map[string]string, routable bool) error
 	CrashActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) error
@@ -73,8 +73,13 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 		response.Error = models.ConvertError(err)
 		return
 	}
+	routable := true
+	if request.RoutableExists() {
+		r := request.GetRoutable()
+		routable = r
+	}
 
-	err = h.controller.StartActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.ActualLrpInternalRoutes, request.MetricTags)
+	err = h.controller.StartActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.ActualLrpInternalRoutes, request.MetricTags, routable)
 	response.Error = models.ConvertError(err)
 }
 
@@ -94,8 +99,13 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP_r0(logger lager.Logger, w htt
 		response.Error = models.ConvertError(err)
 		return
 	}
+	routable := true
+	if request.RoutableExists() {
+		r := request.GetRoutable()
+		routable = r
+	}
 
-	err = h.controller.StartActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, []*models.ActualLRPInternalRoute{}, nil)
+	err = h.controller.StartActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, []*models.ActualLRPInternalRoute{}, nil, routable)
 	response.Error = models.ConvertError(err)
 }
 

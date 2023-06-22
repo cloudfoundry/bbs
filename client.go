@@ -51,7 +51,7 @@ type InternalClient interface {
 	Client
 
 	ClaimActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
-	StartActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) error
+	StartActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool) error
 	CrashActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
@@ -426,15 +426,17 @@ func (c *client) ClaimActualLRP(logger lager.Logger, traceID string, key *models
 	return response.Error.ToError()
 }
 
-func (c *client) StartActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) error {
+func (c *client) StartActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool) error {
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, traceID, StartActualLRPRoute_r1, nil, nil, &models.StartActualLRPRequest{
+	request := &models.StartActualLRPRequest{
 		ActualLrpKey:            key,
 		ActualLrpInstanceKey:    instanceKey,
 		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
 		MetricTags:              metricTags,
-	}, &response)
+	}
+	request.SetRoutable(routable)
+	err := c.doRequest(logger, traceID, StartActualLRPRoute_r1, nil, nil, request, &response)
 	if err != nil && err == EndpointNotFoundErr {
 		err = c.doRequest(logger, traceID, StartActualLRPRoute_r0, nil, nil, &models.StartActualLRPRequest{
 			ActualLrpKey:         key,
