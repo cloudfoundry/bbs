@@ -156,6 +156,32 @@ var _ = Describe("RestartCalculator", func() {
 })
 
 var _ = Describe("ActualLRP", func() {
+	Describe("ToActualLRP", func() {
+		var actualLRPInfo models.ActualLRPInfo
+
+		BeforeEach(func() {
+			actualLRPInfo = models.ActualLRPInfo{}
+		})
+
+		Context("when Routable is not provided", func() {
+			It("sets routable to true", func() {
+				actualLRP := actualLRPInfo.ToActualLRP(models.NewActualLRPKey("p-guid", 0, "domain"), models.NewActualLRPInstanceKey("i-1", "cell-1"))
+				Expect(actualLRP.Routable).To(Equal(true))
+			})
+		})
+
+		Context("when Routable is provided", func() {
+			BeforeEach(func() {
+				actualLRPInfo.SetRoutable(false)
+			})
+
+			It("sets routable to true", func() {
+				actualLRP := actualLRPInfo.ToActualLRP(models.NewActualLRPKey("p-guid", 0, "domain"), models.NewActualLRPInstanceKey("i-1", "cell-1"))
+				Expect(actualLRP.Routable).To(Equal(false))
+			})
+		})
+	})
+
 	Describe("ShouldRestartCrash", func() {
 		Context("when the lpr is CRASHED", func() {
 			const maxWaitTime = 16 * time.Minute

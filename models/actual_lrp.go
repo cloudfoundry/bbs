@@ -271,7 +271,12 @@ func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstance
 		Since:                actualLRPInfo.Since,
 		ModificationTag:      actualLRPInfo.ModificationTag,
 		Presence:             actualLRPInfo.Presence,
-		Routable:             actualLRPInfo.GetRoutable(),
+	}
+
+	if actualLRPInfo.RoutableExists() {
+		lrp.Routable = actualLRPInfo.GetRoutable()
+	} else {
+		lrp.Routable = true
 	}
 	return &lrp
 }
@@ -290,6 +295,7 @@ func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
 		ModificationTag:  actual.ModificationTag,
 		Presence:         actual.Presence,
 	}
+
 	info.SetRoutable(actual.GetRoutable())
 	return &info
 }
