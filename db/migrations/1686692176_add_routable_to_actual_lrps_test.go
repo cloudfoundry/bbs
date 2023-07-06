@@ -64,7 +64,7 @@ var _ = Describe("AddRoutableToActualLrps", func() {
 			Expect(routable).To(BeTrue())
 		})
 
-		It("sets routable false for all existing actual_lrp rows", func() {
+		It("sets routable true for all existing actual_lrp rows in RUNNING state", func() {
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(
 					`INSERT INTO actual_lrps
@@ -74,6 +74,28 @@ var _ = Describe("AddRoutableToActualLrps", func() {
 					flavor,
 				),
 				"guid-1", 10, "cfapps", "RUNNING", "", "epoch", 0,
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(migration.Up(logger)).To(Succeed())
+
+			var routable bool
+			query := helpers.RebindForFlavor("select routable from actual_lrps limit 1", flavor)
+			row := rawSQLDB.QueryRow(query)
+			Expect(row.Scan(&routable)).To(Succeed())
+			Expect(routable).To(BeTrue())
+		})
+
+		It("sets routable false for all existing actual_lrp rows not in RUNNING state", func() {
+			_, err := rawSQLDB.Exec(
+				helpers.RebindForFlavor(
+					`INSERT INTO actual_lrps
+						(process_guid, instance_index, domain, state, net_info,
+						modification_tag_epoch, modification_tag_index)
+					VALUES (?, ?, ?, ?, ?, ?, ?)`,
+					flavor,
+				),
+				"guid-1", 10, "cfapps", "CLAIMED", "", "epoch", 0,
 			)
 			Expect(err).NotTo(HaveOccurred())
 

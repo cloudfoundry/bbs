@@ -42,16 +42,25 @@ func (e *AddRoutableToActualLrps) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddRoutableToActualLrps) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *AddRoutableToActualLrps) Up(logger lager.Logger) error {
-	logger.Info("altering the table", lager.Data{"query": alterActualLRPAddRoutableSQL})
-	_, err := e.rawSQLDB.Exec(alterActualLRPAddRoutableSQL)
-	if err != nil {
-		logger.Error("failed-altering-tables", err)
-		return err
+	var alterTablesSQL = []string{
+		alterActualLRPAddRoutableSQL,
+		alterActualLRPSetRoutableForRunningSQL,
 	}
-	logger.Info("altered the table", lager.Data{"query": alterActualLRPAddRoutableSQL})
+	for _, query := range alterTablesSQL {
+		logger.Info("altering the table", lager.Data{"query": query})
+		_, err := e.rawSQLDB.Exec(query)
+		if err != nil {
+			logger.Error("failed-altering-tables", err)
+			return err
+		}
+		logger.Info("altered the table", lager.Data{"query": query})
+	}
 
 	return nil
 }
 
 const alterActualLRPAddRoutableSQL = `ALTER TABLE actual_lrps
 ADD COLUMN routable BOOL DEFAULT false;`
+
+const alterActualLRPSetRoutableForRunningSQL = `UPDATE actual_lrps
+SET routable = true WHERE state = 'RUNNING';`
