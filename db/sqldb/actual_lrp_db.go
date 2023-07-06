@@ -156,15 +156,16 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
 		return nil, err
 	}
-	return &models.ActualLRP{
+	lrp := &models.ActualLRP{
 		ActualLRPKey:            *key,
 		State:                   models.ActualLRPStateUnclaimed,
 		Since:                   now,
 		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
 		ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 		MetricTags:              map[string]string{},
-		Routable:                false,
-	}, nil
+	}
+	lrp.SetRoutable(false)
+	return lrp, nil
 }
 
 func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
@@ -325,7 +326,7 @@ func (db *SQLDB) StartActualLRP(
 			actualLRP.ActualLRPNetInfo.Equal(netInfo) &&
 			reflect.DeepEqual(actualLRP.ActualLrpInternalRoutes, internalRoutes) &&
 			reflect.DeepEqual(actualLRP.MetricTags, metricTags) &&
-			actualLRP.Routable == routable &&
+			actualLRP.GetRoutable() == routable &&
 			actualLRP.State == models.ActualLRPStateRunning {
 			logger.Debug("nothing-to-change")
 			return nil
@@ -346,7 +347,7 @@ func (db *SQLDB) StartActualLRP(
 		actualLRP.Since = now
 		actualLRP.ModificationTag.Increment()
 		actualLRP.PlacementError = ""
-		actualLRP.Routable = routable
+		actualLRP.SetRoutable(routable)
 
 		netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
 		if err != nil {
@@ -377,7 +378,7 @@ func (db *SQLDB) StartActualLRP(
 				"net_info":               netInfoData,
 				"internal_routes":        internalRoutesData,
 				"metric_tags":            metricTagsData,
-				"routable":               actualLRP.Routable,
+				"routable":               actualLRP.GetRoutable(),
 			},
 			"process_guid = ? AND instance_index = ? AND presence = ?",
 			key.ProcessGuid, key.Index, models.ActualLRP_Ordinary,
@@ -581,7 +582,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 	actualLRP.MetricTags = metricTags
 	actualLRP.State = models.ActualLRPStateRunning
 	actualLRP.Since = now
-	actualLRP.Routable = routable
+	actualLRP.SetRoutable(routable)
 
 	netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
 	if err != nil {
@@ -611,7 +612,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 			"net_info":               netInfoData,
 			"internal_routes":        internalRoutesData,
 			"metric_tags":            metricTagsData,
-			"routable":               actualLRP.Routable,
+			"routable":               actualLRP.GetRoutable(),
 			"since":                  actualLRP.Since,
 			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 			"modification_tag_index": actualLRP.ModificationTag.Index,
@@ -628,6 +629,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	var netInfoData []byte
 	var internalRoutesData []byte
 	var metricTagsData []byte
+	var routable bool
 	var actualLRP models.ActualLRP
 
 	err := row.Scan(
@@ -643,7 +645,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		&netInfoData,
 		&internalRoutesData,
 		&metricTagsData,
-		&actualLRP.Routable,
+		&routable,
 		&actualLRP.ModificationTag.Epoch,
 		&actualLRP.ModificationTag.Index,
 		&actualLRP.CrashCount,
@@ -691,6 +693,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		}
 	}
 	actualLRP.MetricTags = metricTags
+	actualLRP.SetRoutable(routable)
 
 	return &actualLRP, nil
 }

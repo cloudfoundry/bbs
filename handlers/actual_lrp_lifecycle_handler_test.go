@@ -209,6 +209,18 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			})
 		})
 
+		Context("when routable is provided as true", func() {
+			BeforeEach(func() {
+				requestBody.SetRoutable(true)
+			})
+
+			It("sets it to true", func() {
+				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
+				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				Expect(routable).To(Equal(true))
+			})
+		})
+
 		Context("when starting the actual lrp in the DB succeeds", func() {
 			BeforeEach(func() {
 				fakeController.StartActualLRPReturns(nil)

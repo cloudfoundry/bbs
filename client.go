@@ -57,7 +57,7 @@ type InternalClient interface {
 	RemoveActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 
 	EvacuateClaimedActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateRunningActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)
+	EvacuateRunningActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool) (bool, error)
 	EvacuateStoppedActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateCrashedActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
 	RemoveEvacuatingActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
@@ -530,14 +530,16 @@ func (c *client) EvacuateStoppedActualLRP(logger lager.Logger, traceID string, k
 	})
 }
 
-func (c *client) EvacuateRunningActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string) (bool, error) {
-	keepContainer, err := c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r1, KeepContainer, &models.EvacuateRunningActualLRPRequest{
+func (c *client) EvacuateRunningActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool) (bool, error) {
+	request := &models.EvacuateRunningActualLRPRequest{
 		ActualLrpKey:            key,
 		ActualLrpInstanceKey:    instanceKey,
 		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
 		MetricTags:              metricTags,
-	})
+	}
+	request.SetRoutable(routable)
+	keepContainer, err := c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r1, KeepContainer, request)
 	if err != nil && err == EndpointNotFoundErr {
 		keepContainer, err = c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r0, KeepContainer, &models.EvacuateRunningActualLRPRequest{
 			ActualLrpKey:         key,

@@ -164,20 +164,33 @@ var _ = Describe("ActualLRP", func() {
 		})
 
 		Context("when Routable is not provided", func() {
-			It("sets routable to true", func() {
+			It("does not set routable", func() {
 				actualLRP := actualLRPInfo.ToActualLRP(models.NewActualLRPKey("p-guid", 0, "domain"), models.NewActualLRPInstanceKey("i-1", "cell-1"))
-				Expect(actualLRP.Routable).To(Equal(true))
+				Expect(actualLRP.RoutableExists()).To(Equal(false))
 			})
 		})
 
-		Context("when Routable is provided", func() {
+		Context("when Routable is false", func() {
 			BeforeEach(func() {
 				actualLRPInfo.SetRoutable(false)
 			})
 
-			It("sets routable to true", func() {
+			It("sets routable to provided value", func() {
 				actualLRP := actualLRPInfo.ToActualLRP(models.NewActualLRPKey("p-guid", 0, "domain"), models.NewActualLRPInstanceKey("i-1", "cell-1"))
-				Expect(actualLRP.Routable).To(Equal(false))
+				Expect(actualLRP.RoutableExists()).To(Equal(true))
+				Expect(actualLRP.GetRoutable()).To(Equal(false))
+			})
+		})
+
+		Context("when Routable is true", func() {
+			BeforeEach(func() {
+				actualLRPInfo.SetRoutable(true)
+			})
+
+			It("sets routable to provided value", func() {
+				actualLRP := actualLRPInfo.ToActualLRP(models.NewActualLRPKey("p-guid", 0, "domain"), models.NewActualLRPInstanceKey("i-1", "cell-1"))
+				Expect(actualLRP.RoutableExists()).To(Equal(true))
+				Expect(actualLRP.GetRoutable()).To(Equal(true))
 			})
 		})
 	})

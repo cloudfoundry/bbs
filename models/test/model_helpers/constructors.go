@@ -24,6 +24,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 			Index: 999,
 		},
 	}
+	actualLRP.SetRoutable(false)
 	err := actualLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
 

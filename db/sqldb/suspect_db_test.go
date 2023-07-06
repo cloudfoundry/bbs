@@ -60,11 +60,12 @@ var _ = Describe("Suspect ActualLRPs", func() {
 					replacementLRP.ModificationTag.Increment()
 					replacementLRP.ModificationTag.Increment()
 					replacementLRP.MetricTags = nil
+					replacementLRP.SetRoutable(false)
 					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &replacementLRP.ActualLRPKey)
 					Expect(err).NotTo(HaveOccurred())
 					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, replacementGuid, replacementIndex, &replacementLRP.ActualLRPInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false)
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, replacementLRP.GetRoutable())
 					Expect(err).NotTo(HaveOccurred())
 				})
 

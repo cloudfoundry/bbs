@@ -138,12 +138,12 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logge
 	evacuating := findWithPresence(lrps, models.ActualLRP_Evacuating)
 	suspect := findWithPresence(lrps, models.ActualLRP_Suspect)
 
-	var suspectLRP *models.ActualLRP
 	if evacuating != nil {
 		h.evacuationDB.RemoveEvacuatingActualLRP(ctx, logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
 		newLRPs = eventCalculator.RecordChange(evacuating, nil, newLRPs)
 	}
 
+	var suspectLRP *models.ActualLRP
 	// prior to starting this ActualLRP there was a suspect LRP that we need to remove
 	if suspect != nil {
 		suspectLRP, err = h.suspectDB.RemoveSuspectActualLRP(ctx, logger, actualLRPKey)

@@ -200,7 +200,7 @@ var _ = Describe("Events API", func() {
 
 					By("evacuating the ActualLRP")
 					initialAuctioneerRequests := auctioneerServer.ReceivedRequests()
-					_, err = client.EvacuateRunningActualLRP(logger, "some-trace-id", &key, &instanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+					_, err = client.EvacuateRunningActualLRP(logger, "some-trace-id", &key, &instanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 					Expect(err).NotTo(HaveOccurred())
 					auctioneerRequests := auctioneerServer.ReceivedRequests()
 					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))
@@ -239,7 +239,7 @@ var _ = Describe("Events API", func() {
 					}).Should(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
 
 					initialAuctioneerRequests = auctioneerServer.ReceivedRequests()
-					_, err = client.EvacuateRunningActualLRP(logger, "some-trace-id", &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+					_, err = client.EvacuateRunningActualLRP(logger, "some-trace-id", &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 					Expect(err).NotTo(HaveOccurred())
 					auctioneerRequests = auctioneerServer.ReceivedRequests()
 					Expect(auctioneerRequests).To(HaveLen(len(initialAuctioneerRequests) + 1))

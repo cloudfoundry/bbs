@@ -14,7 +14,7 @@ type EvacuationController interface {
 	RemoveEvacuatingActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 	EvacuateClaimedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
 	EvacuateCrashedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) error
-	EvacuateRunningActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string) (bool, error)
+	EvacuateRunningActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool) (bool, error)
 	EvacuateStoppedActualLRP(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
 }
 
@@ -129,8 +129,13 @@ func (h *EvacuationHandler) commonEvacuateRunningActualLRP(logger lager.Logger, 
 		actualLrpInternalRoutes = request.ActualLrpInternalRoutes
 		metricTags = request.MetricTags
 	}
+	routable := true
+	if request.RoutableExists() {
+		r := request.GetRoutable()
+		routable = r
+	}
 
-	keepContainer, err = h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, actualLrpInternalRoutes, metricTags)
+	keepContainer, err = h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, actualLrpInternalRoutes, metricTags, routable)
 	response.Error = models.ConvertError(err)
 	response.KeepContainer = keepContainer
 }

@@ -144,6 +144,17 @@ func (actual ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator
 	return calc.ShouldRestart(now.UnixNano(), actual.Since, actual.CrashCount)
 }
 
+func (actual *ActualLRP) SetRoutable(routable bool) {
+	actual.OptionalRoutable = &ActualLRP_Routable{
+		Routable: routable,
+	}
+}
+
+func (actual *ActualLRP) RoutableExists() bool {
+	_, ok := actual.GetOptionalRoutable().(*ActualLRP_Routable)
+	return ok
+}
+
 func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
 	if !before.ActualLRPKey.Equal(lrpKey) {
 		return false
@@ -274,10 +285,9 @@ func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstance
 	}
 
 	if actualLRPInfo.RoutableExists() {
-		lrp.Routable = actualLRPInfo.GetRoutable()
-	} else {
-		lrp.Routable = true
+		lrp.SetRoutable(actualLRPInfo.GetRoutable())
 	}
+
 	return &lrp
 }
 
@@ -296,7 +306,9 @@ func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
 		Presence:         actual.Presence,
 	}
 
-	info.SetRoutable(actual.GetRoutable())
+	if actual.RoutableExists() {
+		info.SetRoutable(actual.GetRoutable())
+	}
 	return &info
 }
 

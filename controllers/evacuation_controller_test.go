@@ -752,7 +752,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		JustBeforeEach(func() {
 			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
-			keepContainer, err = controller.EvacuateRunningActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags)
+			keepContainer, err = controller.EvacuateRunningActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags, false)
 			modelErr = models.ConvertError(err)
 		})
 
@@ -868,12 +868,13 @@ var _ = Describe("Evacuation Controller", func() {
 					Expect(err).To(BeNil())
 
 					Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-					_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+					_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 					Expect(*actualLRPKey).To(Equal(targetKey))
 					Expect(*actualLRPInstanceKey).To(Equal(targetInstanceKey))
 					Expect(*actualLrpNetInfo).To(Equal(netInfo))
 					Expect(actualLRPInternalRoutes).To(Equal(internalRoutes))
 					Expect(actualLRPMetricTags).To(Equal(metricTags))
+					Expect(actualRoutable).To(Equal(false))
 				})
 
 				It("emits events to the hub", func() {
@@ -999,22 +1000,24 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(err).To(BeNil())
 
 						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
 						Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 						Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
+						Expect(actualRoutable).To(Equal(false))
 					})
 
 					It("unclaims the lrp and requests an auction", func() {
 						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
 						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
 						Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 						Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
+						Expect(actualRoutable).To(Equal(false))
 
 						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
@@ -1093,12 +1096,13 @@ var _ = Describe("Evacuation Controller", func() {
 					Expect(err).To(BeNil())
 
 					Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-					_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+					_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
 					Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
 					Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
 					Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
 					Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 					Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
+					Expect(actualRoutable).To(Equal(false))
 				})
 
 				It("unclaims the lrp and requests an auction", func() {

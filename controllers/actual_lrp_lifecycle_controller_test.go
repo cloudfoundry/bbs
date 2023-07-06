@@ -528,8 +528,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			Context("when Routable was updated", func() {
 				JustBeforeEach(func() {
 					*actualLRP = *afterActualLRP
-					actualLRP.Routable = true
-					afterActualLRP.Routable = false
+					actualLRP.SetRoutable(true)
+					afterActualLRP.SetRoutable(false)
 					fakeActualLRPDB.StartActualLRPReturns(actualLRP, afterActualLRP, nil)
 					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 				})

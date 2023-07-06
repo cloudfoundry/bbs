@@ -83,7 +83,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			Context("because it has the wrong presence", func() {
 				BeforeEach(func() {
-					_, err := sqlDB.EvacuateActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes, metricTags)
+					_, err := sqlDB.EvacuateActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes, metricTags, true)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -115,7 +115,7 @@ var _ = Describe("ActualLRPDB", func() {
 			expectedActualLRP.ModificationTag.Index = 0
 			expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 			expectedActualLRP.MetricTags = map[string]string{}
-			expectedActualLRP.Routable = false
+			expectedActualLRP.SetRoutable(false)
 
 			actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: key.ProcessGuid, Index: &key.Index})
 			Expect(err).NotTo(HaveOccurred())
@@ -185,6 +185,7 @@ var _ = Describe("ActualLRPDB", func() {
 				},
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 				MetricTags:              map[string]string{},
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 
 			actualLRPKey2 := &models.ActualLRPKey{
@@ -213,6 +214,7 @@ var _ = Describe("ActualLRPDB", func() {
 				},
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 				MetricTags:              map[string]string{},
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 
 			actualLRPKey3 := &models.ActualLRPKey{
@@ -240,6 +242,7 @@ var _ = Describe("ActualLRPDB", func() {
 				},
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 				MetricTags:              map[string]string{},
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 
 			actualLRPKey4 := &models.ActualLRPKey{
@@ -259,6 +262,7 @@ var _ = Describe("ActualLRPDB", func() {
 				},
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 				MetricTags:              map[string]string{},
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 
 			actualLRPKey5 := &models.ActualLRPKey{
@@ -293,6 +297,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Presence:                models.ActualLRP_Evacuating,
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 				MetricTags:              map[string]string{},
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 
 			actualLRPKey6 := &models.ActualLRPKey{
@@ -343,6 +348,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Presence:                models.ActualLRP_Suspect,
 				ActualLrpInternalRoutes: internalRoutes,
 				MetricTags:              metricTags,
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 			allActualLRPs = append(allActualLRPs, &models.ActualLRP{
 				ActualLRPKey:         *actualLRPKey6,
@@ -355,6 +361,7 @@ var _ = Describe("ActualLRPDB", func() {
 				},
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 				MetricTags:              map[string]string{},
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 
 			nullInternalRoutesActualLRPKey := &models.ActualLRPKey{
@@ -391,6 +398,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Presence:                models.ActualLRP_Ordinary,
 				ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 				MetricTags:              map[string]string{},
+				OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 			})
 		})
 
@@ -619,6 +627,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
+					expectedActualLRP.SetRoutable(false)
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
@@ -633,6 +642,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.Since = lrpCreationTime.UnixNano()
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
+					expectedActualLRP.SetRoutable(false)
 
 					Expect(beforeActualLRP).To(Equal(expectedActualLRP))
 
@@ -668,6 +678,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 						expectedActualLRP.MetricTags = map[string]string{}
+						expectedActualLRP.SetRoutable(false)
 
 						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: expectedActualLRP.ProcessGuid, Index: &expectedActualLRP.Index})
 						Expect(err).NotTo(HaveOccurred())
@@ -690,6 +701,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 						expectedActualLRP.MetricTags = map[string]string{}
+						expectedActualLRP.SetRoutable(false)
 
 						fakeClock.Increment(time.Hour)
 
@@ -775,6 +787,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.ModificationTag.Increment()
 						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 						expectedActualLRP.MetricTags = metricTags
+						expectedActualLRP.SetRoutable(false)
 
 						Expect(actualLRPs).To(ConsistOf(expectedActualLRP))
 					})
@@ -867,6 +880,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.Presence = models.ActualLRP_Evacuating
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
+					expectedActualLRP.SetRoutable(false)
 				})
 
 				It("returns an error", func() {
@@ -962,7 +976,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 					expectedActualLRP.MetricTags = metricTags
-					expectedActualLRP.Routable = true
+					expectedActualLRP.SetRoutable(true)
 
 					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
@@ -979,7 +993,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
-					expectedActualLRP.Routable = false
+					expectedActualLRP.SetRoutable(false)
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -1013,7 +1027,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 					expectedActualLRP.MetricTags = metricTags
-					expectedActualLRP.Routable = true
+					expectedActualLRP.SetRoutable(true)
 
 					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
@@ -1033,7 +1047,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
-					expectedActualLRP.Routable = false
+					expectedActualLRP.SetRoutable(false)
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
 					Expect(err).NotTo(HaveOccurred())
@@ -1062,7 +1076,7 @@ var _ = Describe("ActualLRPDB", func() {
 						}
 						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 						expectedActualLRP.MetricTags = metricTags
-						expectedActualLRP.Routable = true
+						expectedActualLRP.SetRoutable(true)
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1214,7 +1228,7 @@ var _ = Describe("ActualLRPDB", func() {
 								Expect(actualLRPs).To(ConsistOf(afterActualLRP))
 								Expect(actualLRPs).NotTo(Equal(expectedActualLRPs))
 
-								expectedActualLRPs[0].Routable = true
+								expectedActualLRPs[0].SetRoutable(true)
 								expectedActualLRPs[0].ModificationTag.Increment()
 								Expect(actualLRPs).To(Equal(expectedActualLRPs))
 							})
@@ -1261,6 +1275,7 @@ var _ = Describe("ActualLRPDB", func() {
 						}
 						expectedBeforeActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 						expectedBeforeActualLRP.MetricTags = map[string]string{}
+						expectedBeforeActualLRP.SetRoutable(false)
 						Expect(beforeActualLRP).To(Equal(&expectedBeforeActualLRP))
 
 						fetchedActualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: actualLRP.ProcessGuid, Index: &actualLRP.Index})
@@ -1277,6 +1292,7 @@ var _ = Describe("ActualLRPDB", func() {
 						}
 						expectedAfterActualLRP.ActualLrpInternalRoutes = internalRoutes
 						expectedAfterActualLRP.MetricTags = metricTags
+						expectedAfterActualLRP.SetRoutable(false)
 
 						Expect(fetchedActualLRPs).To(ContainElement(afterActualLRP))
 						Expect(fetchedActualLRPs).To(ContainElement(&expectedAfterActualLRP))
@@ -1333,6 +1349,7 @@ var _ = Describe("ActualLRPDB", func() {
 				expectedActualLRP.ActualLRPNetInfo = *netInfo
 				expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 				expectedActualLRP.MetricTags = metricTags
+				expectedActualLRP.SetRoutable(false)
 				expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 				expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
@@ -1370,6 +1387,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
 					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 					expectedActualLRP.MetricTags = metricTags
+					expectedActualLRP.SetRoutable(false)
 					expectedActualLRP.ActualLRPInstanceKey = *instanceKey
 					expectedActualLRP.Since = fakeClock.Now().UnixNano()
 
@@ -1435,6 +1453,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.ActualLRPNetInfo = *netInfo
 					expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 					expectedActualLRP.MetricTags = metricTags
+					expectedActualLRP.SetRoutable(false)
 
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
@@ -1461,6 +1480,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 						expectedActualLRP.MetricTags = metricTags
+						expectedActualLRP.SetRoutable(false)
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1483,6 +1503,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 						expectedActualLRP.MetricTags = metricTags
+						expectedActualLRP.SetRoutable(false)
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1520,6 +1541,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 						expectedActualLRP.MetricTags = metricTags
+						expectedActualLRP.SetRoutable(false)
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1573,6 +1595,7 @@ var _ = Describe("ActualLRPDB", func() {
 					expectedActualLRP.Since = fakeClock.Now().Add(-time.Hour).UnixNano()
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
+					expectedActualLRP.SetRoutable(false)
 
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 
@@ -1613,6 +1636,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 						expectedActualLRP.MetricTags = map[string]string{}
+						expectedActualLRP.SetRoutable(false)
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1650,6 +1674,7 @@ var _ = Describe("ActualLRPDB", func() {
 						expectedActualLRP.Since = fakeClock.Now().UnixNano()
 						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 						expectedActualLRP.MetricTags = map[string]string{}
+						expectedActualLRP.SetRoutable(false)
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1832,6 +1857,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
+					expectedActualLRP.SetRoutable(false)
 
 					Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 				})
@@ -1855,6 +1881,7 @@ var _ = Describe("ActualLRPDB", func() {
 						}
 						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 						expectedActualLRP.MetricTags = map[string]string{}
+						expectedActualLRP.SetRoutable(false)
 
 						Expect(actualLRPs).To(ConsistOf(&expectedActualLRP))
 					})
@@ -1876,6 +1903,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
+					expectedActualLRP.SetRoutable(false)
 
 					Expect(beforeActualLRP).To(Equal(&expectedActualLRP))
 					Expect(actualLRPs).To(ConsistOf(afterActualLRP))
@@ -2074,6 +2102,7 @@ var _ = Describe("ActualLRPDB", func() {
 					}
 					expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
 					expectedActualLRP.MetricTags = map[string]string{}
+					expectedActualLRP.SetRoutable(false)
 
 					Expect(beforeActualLRP).To(BeEquivalentTo(&expectedActualLRP))
 

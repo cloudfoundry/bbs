@@ -473,7 +473,7 @@ var _ = Describe("Convergence API", func() {
 						Context("when the suspect LRP is evacuated", func() {
 							BeforeEach(func() {
 								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
-								_, err := client.EvacuateRunningActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{})
+								_, err := client.EvacuateRunningActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
 								Expect(err).NotTo(HaveOccurred())
 							})
 

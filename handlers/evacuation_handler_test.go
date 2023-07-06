@@ -480,13 +480,16 @@ var _ = Describe("Evacuation Handlers", func() {
 		)
 
 		Context("when request is valid", func() {
-			JustBeforeEach(func() {
+			BeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateRunningActualLRPRequest{
 					ActualLrpKey:         &actual.ActualLRPKey,
 					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
 					ActualLrpNetInfo:     &actual.ActualLRPNetInfo,
 				}
+			})
+
+			JustBeforeEach(func() {
 				request = newTestRequest(requestBody)
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
@@ -521,6 +524,38 @@ var _ = Describe("Evacuation Handlers", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 						Expect(response.KeepContainer).To(BeTrue())
+					})
+				})
+
+				Context("when routable is not provided (old rep)", func() {
+					It("sets it to true", func() {
+						Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
+						_, _, _, _, _, _, _, routable := controller.EvacuateRunningActualLRPArgsForCall(0)
+						Expect(routable).To(Equal(true))
+					})
+				})
+
+				Context("when routable is provided as false", func() {
+					BeforeEach(func() {
+						requestBody.SetRoutable(false)
+					})
+
+					It("sets it to false", func() {
+						Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
+						_, _, _, _, _, _, _, routable := controller.EvacuateRunningActualLRPArgsForCall(0)
+						Expect(routable).To(Equal(false))
+					})
+				})
+
+				Context("when routable is provided as true", func() {
+					BeforeEach(func() {
+						requestBody.SetRoutable(true)
+					})
+
+					It("sets it to false", func() {
+						Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
+						_, _, _, _, _, _, _, routable := controller.EvacuateRunningActualLRPArgsForCall(0)
+						Expect(routable).To(Equal(true))
 					})
 				})
 			})
