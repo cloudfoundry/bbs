@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package models;
-
+option go_package = "github.com/cloudfoundry/bbs/models";
 
 message ModificationTag {
   string epoch = 1 [json_name =  "epoch"];

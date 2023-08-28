@@ -1,10 +1,7 @@
 syntax = "proto3";
 
 package models;
-
-
-option (gogoproto.equal_all) = false;
-option (gogoproto.goproto_enum_prefix_all) = true;
+option go_package = "github.com/cloudfoundry/bbs/models";
 
 message Error {
   enum Type {

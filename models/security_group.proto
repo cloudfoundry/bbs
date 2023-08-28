@@ -1,17 +1,17 @@
 syntax = "proto3";
 
 package models;
+option go_package = "github.com/cloudfoundry/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message PortRange {
-  uint32 start = 1 [(gogoproto.jsontag) =  "start"];
-  uint32 end = 2 [(gogoproto.jsontag) =  "end"];
+  uint32 start = 1 [json_name =  "start"];
+  uint32 end = 2 [json_name =  "end"];
 }
 
 message ICMPInfo {
-  int32 type = 1 [(gogoproto.jsontag) =  "type"];
-  int32 code = 2 [(gogoproto.jsontag) =  "code"];
+  int32 type = 1 [json_name =  "type"];
+  int32 code = 2 [json_name =  "code"];
 }
 
 message SecurityGroupRule {
@@ -20,6 +20,6 @@ message SecurityGroupRule {
   repeated uint32 ports = 3 [packed = false];
   PortRange port_range = 4;
   ICMPInfo icmp_info = 5;
-  bool log = 6 [(gogoproto.jsontag) = "log"];
+  bool log = 6 [json_name = "log"];
   repeated string annotations = 7;
 }

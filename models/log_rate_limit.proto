@@ -1,6 +1,8 @@
 syntax = "proto3";
 
 package models;
+option go_package = "github.com/cloudfoundry/bbs/models";
+
 
 message LogRateLimit {
   int64 bytes_per_second = 1;

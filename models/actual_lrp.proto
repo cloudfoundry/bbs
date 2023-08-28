@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package models;
-
+option go_package = "github.com/cloudfoundry/bbs/models";
 import "modification_tag.proto";
 
 message ActualLRPGroup {
@@ -49,19 +49,19 @@ message ActualLRPInternalRoute {
 message ActualLRP {
   enum Presence {
      ORDINARY   = 0;
--    EVACUATING = 1;
--    SUSPECT    = 2;
+    EVACUATING = 1;
+    SUSPECT    = 2;
   }
 
-  ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
-  ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
-  ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
+  ActualLRPKey actual_lrp_key = 1 [json_name = ""];
+  ActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = ""];
+  ActualLRPNetInfo actual_lrp_net_info = 3 [json_name = ""];
   int32 crash_count = 4 [json_name = "crash_count"];
   string crash_reason = 5;
   string state = 6 [json_name = "state"];
   string placement_error = 7;
   int64 since = 8 [json_name = "since"];
-  ModificationTag modification_tag = 9 [(gogoproto.nullable) = false,json_name = "modification_tag"];
+  ModificationTag modification_tag = 9 [json_name = "modification_tag"];
   Presence presence = 10 [json_name = "presence"];
   repeated ActualLRPInternalRoute actual_lrp_internal_routes = 11;
   map<string, string> metric_tags = 12;

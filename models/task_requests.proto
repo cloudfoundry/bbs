@@ -1,8 +1,8 @@
 syntax = "proto3";
 
 package models;
+option go_package = "github.com/cloudfoundry/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "task.proto";
 import "error.proto";
 
@@ -11,56 +11,56 @@ message TaskLifecycleResponse {
 }
 
 message DesireTaskRequest {
-  TaskDefinition task_definition = 1 [(gogoproto.jsontag) = "task_definition"];
-  string task_guid = 2 [(gogoproto.jsontag) =  "task_guid"];
-  string domain = 3 [(gogoproto.jsontag) =  "domain"];
+  TaskDefinition task_definition = 1 [json_name = "task_definition"];
+  string task_guid = 2 [json_name =  "task_guid"];
+  string domain = 3 [json_name =  "domain"];
 }
 
 message StartTaskRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string cell_id = 2 [(gogoproto.jsontag) =  "cell_id"];
+  string task_guid = 1 [json_name =  "task_guid"];
+  string cell_id = 2 [json_name =  "cell_id"];
 }
 
 message StartTaskResponse {
   Error error = 1;
-  bool should_start = 2 [(gogoproto.jsontag) =  "should_start"];
+  bool should_start = 2 [json_name =  "should_start"];
 }
 
 message FailTaskRequest {
   option deprecated = true;
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string failure_reason = 2 [(gogoproto.jsontag) =  "failure_reason"];
+  string task_guid = 1 [json_name =  "task_guid"];
+  string failure_reason = 2 [json_name =  "failure_reason"];
 }
 
 message RejectTaskRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string rejection_reason = 2 [(gogoproto.jsontag) =  "rejection_reason"];
+  string task_guid = 1 [json_name =  "task_guid"];
+  string rejection_reason = 2 [json_name =  "rejection_reason"];
 }
 
 message TaskGuidRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
+  string task_guid = 1 [json_name =  "task_guid"];
 }
 
 message CompleteTaskRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string cell_id = 2 [(gogoproto.jsontag) =  "cell_id"];
-  bool failed = 3 [(gogoproto.jsontag) =  "failed"];
-  string failure_reason = 4 [(gogoproto.jsontag) =  "failure_reason"];
-  string result = 5 [(gogoproto.jsontag) =  "result"];
+  string task_guid = 1 [json_name =  "task_guid"];
+  string cell_id = 2 [json_name =  "cell_id"];
+  bool failed = 3 [json_name =  "failed"];
+  string failure_reason = 4 [json_name =  "failure_reason"];
+  string result = 5 [json_name =  "result"];
 }
 
 message TaskCallbackResponse {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  bool failed = 2 [(gogoproto.jsontag) =  "failed"];
-  string failure_reason = 3 [(gogoproto.jsontag) =  "failure_reason"];
-  string result = 4 [(gogoproto.jsontag) =  "result"];
+  string task_guid = 1 [json_name =  "task_guid"];
+  bool failed = 2 [json_name =  "failed"];
+  string failure_reason = 3 [json_name =  "failure_reason"];
+  string result = 4 [json_name =  "result"];
   string annotation = 5;
-  int64 created_at = 6 [(gogoproto.jsontag) =  "created_at"];
+  int64 created_at = 6 [json_name =  "created_at"];
 }
 
 message TasksRequest{
-  string domain = 1 [(gogoproto.jsontag) =  "domain"];
-  string cell_id = 2 [(gogoproto.jsontag) =  "cell_id"];
+  string domain = 1 [json_name =  "domain"];
+  string cell_id = 2 [json_name =  "cell_id"];
 }
 
 message TasksResponse{
@@ -69,7 +69,7 @@ message TasksResponse{
 }
 
 message TaskByGuidRequest{
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
+  string task_guid = 1 [json_name =  "task_guid"];
 }
 
 message TaskResponse{
