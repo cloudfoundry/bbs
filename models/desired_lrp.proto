@@ -25,7 +25,7 @@ message DesiredLRPSchedulingInfo {
 
   DesiredLRPResource desired_lrp_resource = 4 [json_name = ""];
 
-  ProtoRoutes routes = 5;
+  Routes routes = 5;
   ModificationTag modification_tag = 6 [json_name = ""];
   VolumePlacement volume_placement = 7;
   repeated string PlacementTags = 8 [json_name ="placement_tags,omitempty"];
@@ -73,7 +73,7 @@ message DesiredLRPRunInfo {
 }
 
 // helper message for marshalling routes
-message ProtoRoutes {
+message Routes {
   map<string, bytes> routes = 1;
 }
 
@@ -81,7 +81,7 @@ message DesiredLRPUpdate {
   oneof optional_instances {
     int32 instances = 1;
   }
-  ProtoRoutes routes = 2;
+  Routes routes = 2;
   oneof optional_annotation {
     string annotation = 3;
   }
@@ -119,7 +119,7 @@ message DesiredLRP {
   uint32 cpu_weight = 12 [json_name = "cpu_weight"];
   bool privileged = 13 [json_name = "privileged"];
   repeated uint32 ports = 14 [packed = false];
-  ProtoRoutes routes = 15;
+  Routes routes = 15;
   string log_source = 16 [json_name = "log_source"];
   string log_guid = 17 [json_name = "log_guid"];
   string metrics_guid = 18 [deprecated=true, json_name = "metrics_guid"];

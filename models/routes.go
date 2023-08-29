@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 )
 
-type Routes map[string]*json.RawMessage
-
-func (r *Routes) protoRoutes() *ProtoRoutes {
-	pr := &ProtoRoutes{
+func (r *Routes) routes() *Routes {
+	pr := &Routes{
 		Routes: map[string][]byte{},
 	}
 
@@ -20,15 +18,15 @@ func (r *Routes) protoRoutes() *ProtoRoutes {
 }
 
 func (r *Routes) Marshal() ([]byte, error) {
-	return r.protoRoutes().Marshal()
+	return r.routes().Marshal()
 }
 
 func (r *Routes) MarshalTo(data []byte) (n int, err error) {
-	return r.protoRoutes().MarshalTo(data)
+	return r.routes().MarshalTo(data)
 }
 
 func (r *Routes) Unmarshal(data []byte) error {
-	pr := &ProtoRoutes{}
+	pr := &Routes{}
 	err := pr.Unmarshal(data)
 	if err != nil {
 		return err
@@ -38,10 +36,10 @@ func (r *Routes) Unmarshal(data []byte) error {
 		return nil
 	}
 
-	routes := map[string]*json.RawMessage{}
+	routes := map[string][]byte{}
 	for k, v := range pr.Routes {
 		raw := json.RawMessage(v)
-		routes[k] = &raw
+		routes[k] = raw
 	}
 	*r = routes
 
@@ -53,7 +51,7 @@ func (r *Routes) Size() int {
 		return 0
 	}
 
-	return r.protoRoutes().Size()
+	return r.routes().Size()
 }
 
 func (r *Routes) Equal(other Routes) bool {
