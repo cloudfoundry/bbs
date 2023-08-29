@@ -79,11 +79,11 @@ func NewCellPresence(
 	for _, preProv := range preloadedRootFSes {
 		pProviders = append(pProviders, preProv)
 	}
-	providers = append(providers, &Provider{PreloadedRootFSScheme, pProviders})
-	providers = append(providers, &Provider{PreloadedOCIRootFSScheme, pProviders})
+	providers = append(providers, &Provider{Name: PreloadedRootFSScheme, Properties: pProviders})
+	providers = append(providers, &Provider{Name: PreloadedOCIRootFSScheme, Properties: pProviders})
 
 	for _, prov := range rootFSProviders {
-		providers = append(providers, &Provider{prov, []string{}})
+		providers = append(providers, &Provider{Name: prov, Properties: []string{}})
 	}
 
 	return CellPresence{

@@ -35,26 +35,26 @@ func PreloadedRootFS(stack string) string {
 func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+		environmentVariables[i] = runInfo.EnvironmentVariables[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
+		egressRules[i] = runInfo.EgressRules[i]
 	}
 
 	return DesiredLRP{
-		ProcessGuid:                   schedInfo.ProcessGuid,
-		Domain:                        schedInfo.Domain,
-		LogGuid:                       schedInfo.LogGuid,
-		MemoryMb:                      schedInfo.MemoryMb,
-		DiskMb:                        schedInfo.DiskMb,
-		MaxPids:                       schedInfo.MaxPids,
-		RootFs:                        schedInfo.RootFs,
+		ProcessGuid:                   schedInfo.DesiredLrpKey.ProcessGuid,
+		Domain:                        schedInfo.DesiredLrpKey.Domain,
+		LogGuid:                       schedInfo.DesiredLrpKey.LogGuid,
+		MemoryMb:                      schedInfo.DesiredLrpResource.MemoryMb,
+		DiskMb:                        schedInfo.DesiredLrpResource.DiskMb,
+		MaxPids:                       schedInfo.DesiredLrpResource.MaxPids,
+		RootFs:                        schedInfo.DesiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
-		Routes:                        &schedInfo.Routes,
-		ModificationTag:               &schedInfo.ModificationTag,
+		Routes:                        schedInfo.Routes,
+		ModificationTag:               schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
 		Setup:                         runInfo.Setup,
@@ -86,12 +86,12 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+		environmentVariables[i] = runInfo.EnvironmentVariables[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
+		egressRules[i] = runInfo.EgressRules[i]
 	}
 
 	desiredLRP.EnvironmentVariables = environmentVariables
@@ -213,9 +213,9 @@ func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
 }
 
 func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
-	var routes Routes
+	var routes *ProtoRoutes
 	if d.Routes != nil {
-		routes = *d.Routes
+		routes = d.Routes
 	}
 	var modificationTag ModificationTag
 	if d.ModificationTag != nil {
