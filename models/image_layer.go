@@ -154,11 +154,11 @@ func (d ImageLayer_DigestAlgorithm) Valid() bool {
 
 func (m ImageLayer_MediaType) Valid() bool {
 	switch m {
-	case MediaTypeTar:
+	case ImageLayer_TAR:
 		return true
-	case MediaTypeTgz:
+	case ImageLayer_TGZ:
 		return true
-	case MediaTypeZip:
+	case ImageLayer_ZIP:
 		return true
 	default:
 		return false
@@ -167,9 +167,9 @@ func (m ImageLayer_MediaType) Valid() bool {
 
 func (t ImageLayer_Type) Valid() bool {
 	switch t {
-	case LayerTypeExclusive:
+	case ImageLayer_EXCLUSIVE:
 		return true
-	case LayerTypeShared:
+	case ImageLayer_SHARED:
 		return true
 	default:
 		return false
