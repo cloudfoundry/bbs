@@ -582,7 +582,7 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 func (s DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, s.Routes)
+	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource)
 
 	if s.GetInstances() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"instances"})

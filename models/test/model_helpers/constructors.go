@@ -10,16 +10,33 @@ import (
 
 func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := &models.ActualLRP{
-		ActualLRPKey:            models.NewActualLRPKey(guid, index, "some-domain"),
-		ActualLRPInstanceKey:    models.NewActualLRPInstanceKey("some-guid", "some-cell"),
-		ActualLRPNetInfo:        models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444)),
+		ActualLrpKey: &models.ActualLRPKey{
+			ProcessGuid: guid,
+			Index:       index,
+			Domain:      "some-domain",
+		},
+		ActualLrpInstanceKey: &models.ActualLRPInstanceKey{
+			InstanceGuid: "some-guid",
+			CellId:       "some-cell",
+		},
+		ActualLrpNetInfo: &models.ActualLRPNetInfo{
+			Address:          "some-address",
+			InstanceAddress:  "container-address",
+			PreferredAddress: models.ActualLRPNetInfo_UNKNOWN,
+			Ports: []*models.PortMapping{
+				&models.PortMapping{
+					HostPort:      2222,
+					ContainerPort: 4444,
+				},
+			},
+		},
 		ActualLrpInternalRoutes: NewActualLRPInternalRoutes(),
 		MetricTags:              NewActualLRPMetricTags(),
 		CrashCount:              33,
 		CrashReason:             "badness",
 		State:                   models.ActualLRPStateRunning,
 		Since:                   1138,
-		ModificationTag: models.ModificationTag{
+		ModificationTag: &models.ModificationTag{
 			Epoch: "some-epoch",
 			Index: 999,
 		},
@@ -45,8 +62,11 @@ func NewActualLRPMetricTags() map[string]string {
 
 func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := NewValidActualLRP(guid, index)
-	actualLRP.Presence = models.ActualLRP_Evacuating
-	actualLRP.ActualLRPInstanceKey = models.NewActualLRPInstanceKey("some-guid", "some-evacuating-cell")
+	actualLRP.Presence = models.ActualLRP_EVACUATING
+	actualLRP.ActualLrpInstanceKey = &models.ActualLRPInstanceKey{
+		InstanceGuid: "some-guid",
+		CellId:       "some-evacuating-cell",
+	}
 	return actualLRP
 }
 
@@ -126,8 +146,8 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
 		ImageLayers: []*models.ImageLayer{
-			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
-			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
+			{Name: "shared layer", LayerType: models.ImageLayer_SHARED, Url: "some-url", DestinationPath: "/tmp", MediaType: models.ImageLayer_TGZ},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_EXCLUSIVE, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.ImageLayer_ZIP, DigestAlgorithm: models.ImageLayer_SHA256, DigestValue: "some-sha256"},
 		},
 		MetricTags: map[string]*models.MetricTagValue{
 			"source_id": {Static: "some-metrics-guid"},
@@ -210,8 +230,8 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
 		ImageLayers: []*models.ImageLayer{
-			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
-			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
+			{Name: "shared layer", LayerType: models.ImageLayer_SHARED, Url: "some-url", DestinationPath: "/tmp", MediaType: models.ImageLayer_TGZ},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_EXCLUSIVE, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.ImageLayer_ZIP, DigestAlgorithm: models.ImageLayer_SHA256, DigestValue: "some-sha256"},
 		},
 	}
 }
