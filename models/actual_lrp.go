@@ -485,21 +485,21 @@ func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
 // precendence over an Ordinary instance if it is Running.  Otherwise, the
 // Ordinary instance is returned in the Instance field of the ActualLRPGroup.
 func ResolveActualLRPGroups(lrps []*ActualLRP) []*ActualLRPGroup {
-	mapOfGroups := map[*ActualLRPKey]*ActualLRPGroup{}
+	mapOfGroups := map[string]*ActualLRPGroup{}
 	result := []*ActualLRPGroup{}
 	for _, actualLRP := range lrps {
 		// Every actual LRP has potentially 2 rows in the database: one for the instance
 		// one for the evacuating.  When building the list of actual LRP groups (where
 		// a group is the instance and corresponding evacuating), make sure we don't add the same
 		// actual lrp twice.
-		if mapOfGroups[actualLRP.ActualLrpKey] == nil {
-			mapOfGroups[actualLRP.ActualLrpKey] = &ActualLRPGroup{}
-			result = append(result, mapOfGroups[actualLRP.ActualLrpKey])
+		if mapOfGroups[actualLRP.ActualLrpKey.String()] == nil {
+			mapOfGroups[actualLRP.ActualLrpKey.String()] = &ActualLRPGroup{}
+			result = append(result, mapOfGroups[actualLRP.ActualLrpKey.String()])
 		}
 		if actualLRP.Presence == ActualLRP_EVACUATING {
-			mapOfGroups[actualLRP.ActualLrpKey].Evacuating = actualLRP
-		} else if hasHigherPriority(actualLRP, mapOfGroups[actualLRP.ActualLrpKey].Instance) {
-			mapOfGroups[actualLRP.ActualLrpKey].Instance = actualLRP
+			mapOfGroups[actualLRP.ActualLrpKey.String()].Evacuating = actualLRP
+		} else if hasHigherPriority(actualLRP, mapOfGroups[actualLRP.ActualLrpKey.String()].Instance) {
+			mapOfGroups[actualLRP.ActualLrpKey.String()].Instance = actualLRP
 		}
 	}
 
