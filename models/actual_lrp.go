@@ -40,24 +40,24 @@ type ActualLRPFilter struct {
 	Index       *int32
 }
 
-func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
-	return ActualLRPKey{ProcessGuid: processGuid,
+func NewActualLRPKey(processGuid string, index int32, domain string) *ActualLRPKey {
+	return &ActualLRPKey{ProcessGuid: processGuid,
 		Index:  index,
 		Domain: domain}
 }
 
-func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstanceKey {
-	return ActualLRPInstanceKey{InstanceGuid: instanceGuid,
+func NewActualLRPInstanceKey(instanceGuid string, cellId string) *ActualLRPInstanceKey {
+	return &ActualLRPInstanceKey{InstanceGuid: instanceGuid,
 		CellId: cellId}
 }
 
-func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddress ActualLRPNetInfo_PreferredAddress, ports ...*PortMapping) ActualLRPNetInfo {
-	return ActualLRPNetInfo{Address: address, Ports: ports,
+func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddress ActualLRPNetInfo_PreferredAddress, ports ...*PortMapping) *ActualLRPNetInfo {
+	return &ActualLRPNetInfo{Address: address, Ports: ports,
 		InstanceAddress:  instanceAddress,
 		PreferredAddress: preferredAddress}
 }
 
-func EmptyActualLRPNetInfo() ActualLRPNetInfo {
+func EmptyActualLRPNetInfo() *ActualLRPNetInfo {
 	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_UNKNOWN)
 }
 

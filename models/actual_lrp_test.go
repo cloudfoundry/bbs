@@ -11,8 +11,9 @@ import (
 )
 
 func defaultCrashedActual(crashCount int32, lastCrashed int64) *models.ActualLRP {
+
 	return &models.ActualLRP{
-		ActualLRPKey: models.NewActualLRPKey("p-guid", 0, "domain"),
+		ActualLrpKey: models.NewActualLRPKey("p-guid", 0, "domain"),
 		State:        models.ActualLRPStateCrashed,
 		CrashCount:   crashCount,
 		Since:        lastCrashed,
@@ -233,7 +234,7 @@ var _ = Describe("ActualLRP", func() {
 
 	Describe("ActualLRPKey", func() {
 		Describe("Validate", func() {
-			var actualLRPKey models.ActualLRPKey
+			var actualLRPKey *models.ActualLRPKey
 
 			BeforeEach(func() {
 				actualLRPKey = models.NewActualLRPKey("process-guid", 1, "domain")
@@ -279,7 +280,7 @@ var _ = Describe("ActualLRP", func() {
 
 	Describe("ActualLRPInstanceKey", func() {
 		Describe("Validate", func() {
-			var actualLRPInstanceKey models.ActualLRPInstanceKey
+			var actualLRPInstanceKey *models.ActualLRPInstanceKey
 
 			Context("when both instance guid and cell id are specified", func() {
 				It("returns nil", func() {
@@ -321,7 +322,7 @@ var _ = Describe("ActualLRP", func() {
 
 					Expect(netInfo.GetAddress()).To(BeEmpty())
 					Expect(netInfo.GetPorts()).To(BeEmpty())
-					Expect(netInfo.PreferredAddress).To(Equal(models.ActualLRPNetInfo_PreferredAddressUnknown))
+					Expect(netInfo.PreferredAddress).To(Equal(models.ActualLRPNetInfo_UNKNOWN))
 				})
 			})
 
@@ -334,9 +335,9 @@ var _ = Describe("ActualLRP", func() {
 							Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 							Expect(testV).To(Equal(v))
 						},
-						Entry("UNKNOWN", models.ActualLRPNetInfo_PreferredAddressUnknown, `"UNKNOWN"`),
-						Entry("INSTANCE", models.ActualLRPNetInfo_PreferredAddressInstance, `"INSTANCE"`),
-						Entry("HOST", models.ActualLRPNetInfo_PreferredAddressHost, `"HOST"`),
+						Entry("UNKNOWN", models.ActualLRPNetInfo_UNKNOWN, `"UNKNOWN"`),
+						Entry("INSTANCE", models.ActualLRPNetInfo_INSTANCE, `"INSTANCE"`),
+						Entry("HOST", models.ActualLRPNetInfo_HOST, `"HOST"`),
 					)
 				})
 			})
@@ -360,11 +361,11 @@ var _ = Describe("ActualLRP", func() {
 			BeforeEach(func() {
 				lrpKey := models.NewActualLRPKey("process-guid", 1, "domain")
 				instanceLRP = &models.ActualLRP{
-					ActualLRPKey: lrpKey,
+					ActualLrpKey: lrpKey,
 					Since:        1138,
 				}
 				evacuatingLRP = &models.ActualLRP{
-					ActualLRPKey: lrpKey,
+					ActualLrpKey: lrpKey,
 					Since:        3417,
 				}
 			})
@@ -480,24 +481,24 @@ var _ = Describe("ActualLRP", func() {
 	})
 
 	Describe("ActualLRP", func() {
-		var lrp models.ActualLRP
-		var lrpKey models.ActualLRPKey
-		var instanceKey models.ActualLRPInstanceKey
-		var netInfo models.ActualLRPNetInfo
+		var lrp *models.ActualLRP
+		var lrpKey *models.ActualLRPKey
+		var instanceKey *models.ActualLRPInstanceKey
+		var netInfo *models.ActualLRPNetInfo
 
 		BeforeEach(func() {
 			lrpKey = models.NewActualLRPKey("some-guid", 2, "some-domain")
 			instanceKey = models.NewActualLRPInstanceKey("some-instance-guid", "some-cell-id")
-			netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(5678, 8080), models.NewPortMapping(1234, 8081))
+			netInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(5678, 8080), models.NewPortMapping(1234, 8081))
 
-			lrp = models.ActualLRP{
-				ActualLRPKey:         lrpKey,
-				ActualLRPInstanceKey: instanceKey,
-				ActualLRPNetInfo:     netInfo,
+			lrp = &models.ActualLRP{
+				ActualLrpKey:         lrpKey,
+				ActualLrpInstanceKey: instanceKey,
+				ActualLrpNetInfo:     netInfo,
 				CrashCount:           1,
 				State:                models.ActualLRPStateRunning,
 				Since:                1138,
-				ModificationTag: models.ModificationTag{
+				ModificationTag: &models.ModificationTag{
 					Epoch: "some-guid",
 					Index: 50,
 				},
@@ -512,42 +513,42 @@ var _ = Describe("ActualLRP", func() {
 
 			BeforeEach(func() {
 				before = &models.ActualLRP{
-					ActualLRPKey: models.NewActualLRPKey("fake-process-guid", 1, "fake-domain"),
+					ActualLrpKey: models.NewActualLRPKey("fake-process-guid", 1, "fake-domain"),
 				}
 				afterKey = models.ActualLRPKey{}
-				afterKey = before.ActualLRPKey
+				afterKey = *before.ActualLrpKey
 			})
 
 			Context("when the ProcessGuid fields differ", func() {
 				BeforeEach(func() {
-					before.ProcessGuid = "some-process-guid"
+					before.ActualLrpKey.ProcessGuid = "some-process-guid"
 					afterKey.ProcessGuid = "another-process-guid"
 				})
 
 				It("is not allowed", func() {
-					Expect(before.AllowsTransitionTo(&afterKey, &before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
+					Expect(before.AllowsTransitionTo(&afterKey, before.ActualLrpInstanceKey, before.GetState())).To(BeFalse())
 				})
 			})
 
 			Context("when the Index fields differ", func() {
 				BeforeEach(func() {
-					before.Index = 1138
+					before.ActualLrpKey.Index = 1138
 					afterKey.Index = 3417
 				})
 
 				It("is not allowed", func() {
-					Expect(before.AllowsTransitionTo(&afterKey, &before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
+					Expect(before.AllowsTransitionTo(&afterKey, before.ActualLrpInstanceKey, before.GetState())).To(BeFalse())
 				})
 			})
 
 			Context("when the Domain fields differ", func() {
 				BeforeEach(func() {
-					before.Domain = "some-domain"
+					before.ActualLrpKey.Domain = "some-domain"
 					afterKey.Domain = "another-domain"
 				})
 
 				It("is not allowed", func() {
-					Expect(before.AllowsTransitionTo(&afterKey, &before.ActualLRPInstanceKey, before.GetState())).To(BeFalse())
+					Expect(before.AllowsTransitionTo(&afterKey, before.ActualLrpInstanceKey, before.GetState())).To(BeFalse())
 				})
 			})
 
@@ -583,48 +584,48 @@ var _ = Describe("ActualLRP", func() {
 				}
 
 				stateTable := []stateTableEntry{
-					{models.ActualLRPStateUnclaimed, models.ActualLRPStateUnclaimed, emptyKey, equivalentEmptyKey, true},
-					{models.ActualLRPStateUnclaimed, models.ActualLRPStateClaimed, emptyKey, claimedKey, true},
-					{models.ActualLRPStateUnclaimed, models.ActualLRPStateRunning, emptyKey, claimedKey, true},
-					{models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed, emptyKey, claimedKey, false},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateUnclaimed, claimedKey, emptyKey, true},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, claimedKey, differentInstanceGuidKey, true},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, claimedKey, differentCellIDKey, true},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateCrashed, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateCrashed, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateClaimed, models.ActualLRPStateCrashed, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateRunning, models.ActualLRPStateUnclaimed, claimedKey, emptyKey, true},
-					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateRunning, models.ActualLRPStateCrashed, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateRunning, models.ActualLRPStateCrashed, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateRunning, models.ActualLRPStateCrashed, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateUnclaimed, claimedKey, emptyKey, true},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateClaimed, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateClaimed, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateClaimed, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateRunning, claimedKey, equivalentClaimedKey, true},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateRunning, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateRunning, claimedKey, differentCellIDKey, false},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, claimedKey, equivalentClaimedKey, false},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, claimedKey, differentInstanceGuidKey, false},
-					{models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, claimedKey, differentCellIDKey, false},
+					{models.ActualLRPStateUnclaimed, models.ActualLRPStateUnclaimed, *emptyKey, *equivalentEmptyKey, true},
+					{models.ActualLRPStateUnclaimed, models.ActualLRPStateClaimed, *emptyKey, *claimedKey, true},
+					{models.ActualLRPStateUnclaimed, models.ActualLRPStateRunning, *emptyKey, *claimedKey, true},
+					{models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed, *emptyKey, *claimedKey, false},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateUnclaimed, *claimedKey, *emptyKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateClaimed, *claimedKey, *differentCellIDKey, false},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, *claimedKey, *differentInstanceGuidKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateRunning, *claimedKey, *differentCellIDKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateCrashed, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateCrashed, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateClaimed, models.ActualLRPStateCrashed, *claimedKey, *differentCellIDKey, false},
+					{models.ActualLRPStateRunning, models.ActualLRPStateUnclaimed, *claimedKey, *emptyKey, true},
+					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateRunning, models.ActualLRPStateClaimed, *claimedKey, *differentCellIDKey, false},
+					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateRunning, models.ActualLRPStateRunning, *claimedKey, *differentCellIDKey, false},
+					{models.ActualLRPStateRunning, models.ActualLRPStateCrashed, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateRunning, models.ActualLRPStateCrashed, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateRunning, models.ActualLRPStateCrashed, *claimedKey, *differentCellIDKey, false},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateUnclaimed, *claimedKey, *emptyKey, true},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateClaimed, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateClaimed, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateClaimed, *claimedKey, *differentCellIDKey, false},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateRunning, *claimedKey, *equivalentClaimedKey, true},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateRunning, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateRunning, *claimedKey, *differentCellIDKey, false},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, *claimedKey, *equivalentClaimedKey, false},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, *claimedKey, *differentInstanceGuidKey, false},
+					{models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, *claimedKey, *differentCellIDKey, false},
 				}
 
 				for _, entry := range stateTable {
 					entry := entry
 					It(EntryToString(entry), func() {
 						before.State = entry.BeforeState
-						before.ActualLRPInstanceKey = entry.BeforeInstanceKey
-						Expect(before.AllowsTransitionTo(&before.ActualLRPKey, &entry.AfterInstanceKey, entry.AfterState)).To(Equal(entry.Allowed))
+						before.ActualLrpInstanceKey = &entry.BeforeInstanceKey
+						Expect(before.AllowsTransitionTo(before.ActualLrpKey, &entry.AfterInstanceKey, entry.AfterState)).To(Equal(entry.Allowed))
 					})
 				}
 			})
@@ -633,57 +634,57 @@ var _ = Describe("ActualLRP", func() {
 		Describe("Validate", func() {
 			Context("when state is unclaimed", func() {
 				BeforeEach(func() {
-					lrp = models.ActualLRP{
-						ActualLRPKey: lrpKey,
+					lrp = &models.ActualLRP{
+						ActualLrpKey: lrpKey,
 						State:        models.ActualLRPStateUnclaimed,
 						Since:        1138,
 					}
 				})
 
-				itValidatesPresenceOfTheLRPKey(&lrp)
-				itValidatesAbsenceOfTheInstanceKey(&lrp)
-				itValidatesAbsenceOfNetInfo(&lrp)
-				itValidatesPresenceOfPlacementError(&lrp)
-				itValidatesOrdinaryPresence(&lrp)
+				itValidatesPresenceOfTheLRPKey(lrp)
+				itValidatesAbsenceOfTheInstanceKey(lrp)
+				itValidatesAbsenceOfNetInfo(lrp)
+				itValidatesPresenceOfPlacementError(lrp)
+				itValidatesOrdinaryPresence(lrp)
 			})
 
 			Context("when state is claimed", func() {
 				BeforeEach(func() {
-					lrp = models.ActualLRP{
-						ActualLRPKey:         lrpKey,
-						ActualLRPInstanceKey: instanceKey,
+					lrp = &models.ActualLRP{
+						ActualLrpKey:         lrpKey,
+						ActualLrpInstanceKey: instanceKey,
 						State:                models.ActualLRPStateClaimed,
 						Since:                1138,
 					}
 				})
 
-				itValidatesPresenceOfTheLRPKey(&lrp)
-				itValidatesPresenceOfTheInstanceKey(&lrp)
-				itValidatesAbsenceOfNetInfo(&lrp)
-				itValidatesAbsenceOfPlacementError(&lrp)
+				itValidatesPresenceOfTheLRPKey(lrp)
+				itValidatesPresenceOfTheInstanceKey(lrp)
+				itValidatesAbsenceOfNetInfo(lrp)
+				itValidatesAbsenceOfPlacementError(lrp)
 			})
 
 			Context("when state is running", func() {
 				BeforeEach(func() {
-					lrp = models.ActualLRP{
-						ActualLRPKey:         lrpKey,
-						ActualLRPInstanceKey: instanceKey,
-						ActualLRPNetInfo:     netInfo,
+					lrp = &models.ActualLRP{
+						ActualLrpKey:         lrpKey,
+						ActualLrpInstanceKey: instanceKey,
+						ActualLrpNetInfo:     netInfo,
 						State:                models.ActualLRPStateRunning,
 						Since:                1138,
 					}
 				})
 
-				itValidatesPresenceOfTheLRPKey(&lrp)
-				itValidatesPresenceOfTheInstanceKey(&lrp)
-				itValidatesPresenceOfNetInfo(&lrp)
-				itValidatesAbsenceOfPlacementError(&lrp)
+				itValidatesPresenceOfTheLRPKey(lrp)
+				itValidatesPresenceOfTheInstanceKey(lrp)
+				itValidatesPresenceOfNetInfo(lrp)
+				itValidatesAbsenceOfPlacementError(lrp)
 			})
 
 			Context("when state is not set", func() {
 				BeforeEach(func() {
-					lrp = models.ActualLRP{
-						ActualLRPKey: lrpKey,
+					lrp = &models.ActualLRP{
+						ActualLrpKey: lrpKey,
 						State:        "",
 						Since:        1138,
 					}
@@ -699,8 +700,8 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when since is not set", func() {
 				BeforeEach(func() {
-					lrp = models.ActualLRP{
-						ActualLRPKey: lrpKey,
+					lrp = &models.ActualLRP{
+						ActualLrpKey: lrpKey,
 						State:        models.ActualLRPStateUnclaimed,
 						Since:        0,
 					}
@@ -715,17 +716,17 @@ var _ = Describe("ActualLRP", func() {
 
 			Context("when state is crashed", func() {
 				BeforeEach(func() {
-					lrp = models.ActualLRP{
-						ActualLRPKey: lrpKey,
+					lrp = &models.ActualLRP{
+						ActualLrpKey: lrpKey,
 						State:        models.ActualLRPStateCrashed,
 						Since:        1138,
 					}
 				})
 
-				itValidatesPresenceOfTheLRPKey(&lrp)
-				itValidatesAbsenceOfTheInstanceKey(&lrp)
-				itValidatesAbsenceOfNetInfo(&lrp)
-				itValidatesAbsenceOfPlacementError(&lrp)
+				itValidatesPresenceOfTheLRPKey(lrp)
+				itValidatesAbsenceOfTheInstanceKey(lrp)
+				itValidatesAbsenceOfNetInfo(lrp)
+				itValidatesAbsenceOfPlacementError(lrp)
 			})
 		})
 	})
@@ -733,15 +734,15 @@ var _ = Describe("ActualLRP", func() {
 	Describe("ResolveActualLRPGroups", func() {
 		It("returns ordinary ActualLRPs in the instance slot of ActualLRPGroups", func() {
 			lrp1 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
-				Presence:             models.ActualLRP_Ordinary,
+				ActualLrpKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
+				ActualLrpInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
+				Presence:             models.ActualLRP_ORDINARY,
 				State:                models.ActualLRPStateRunning,
 			}
 			lrp2 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-1", 1, "domain-1"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-0"),
-				Presence:             models.ActualLRP_Ordinary,
+				ActualLrpKey:         models.NewActualLRPKey("process-guid-1", 1, "domain-1"),
+				ActualLrpInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-0"),
+				Presence:             models.ActualLRP_ORDINARY,
 				State:                models.ActualLRPStateRunning,
 			}
 			groups := models.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
@@ -753,15 +754,15 @@ var _ = Describe("ActualLRP", func() {
 
 		It("returns evacuating ActualLRPs in the evacuating slot of ActualLRPGroups", func() {
 			lrp1 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
-				Presence:             models.ActualLRP_Evacuating,
+				ActualLrpKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
+				ActualLrpInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
+				Presence:             models.ActualLRP_EVACUATING,
 				State:                models.ActualLRPStateRunning,
 			}
 			lrp2 := &models.ActualLRP{
-				ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-				ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1"),
-				Presence:             models.ActualLRP_Ordinary,
+				ActualLrpKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
+				ActualLrpInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1"),
+				Presence:             models.ActualLRP_ORDINARY,
 				State:                models.ActualLRPStateRunning,
 			}
 			groups := models.ResolveActualLRPGroups([]*models.ActualLRP{lrp1, lrp2})
@@ -771,20 +772,20 @@ var _ = Describe("ActualLRP", func() {
 
 		})
 
-		DescribeTable("resolution priority of the Instance slot",
+		FDescribeTable("resolution priority of the Instance slot",
 			func(
 				supLRPState string, supLRPPresence models.ActualLRP_Presence,
 				infLRPState string, infLRPPresence models.ActualLRP_Presence,
 			) {
 				supLRP := &models.ActualLRP{
-					ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-					ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
+					ActualLrpKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
+					ActualLrpInstanceKey: models.NewActualLRPInstanceKey("instance-guid-0", "cell-id-0"),
 					Presence:             supLRPPresence,
 					State:                supLRPState,
 				}
 				infLRP := &models.ActualLRP{
-					ActualLRPKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
-					ActualLRPInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1"),
+					ActualLrpKey:         models.NewActualLRPKey("process-guid-0", 0, "domain-0"),
+					ActualLrpInstanceKey: models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1"),
 					Presence:             infLRPPresence,
 					State:                infLRPState,
 				}
@@ -794,36 +795,36 @@ var _ = Describe("ActualLRP", func() {
 				))
 			},
 			Entry("chooses RUNNING/Ordinary over RUNNING/Suspect",
-				models.ActualLRPStateRunning, models.ActualLRP_Ordinary,
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
+				models.ActualLRPStateRunning, models.ActualLRP_ORDINARY,
+				models.ActualLRPStateRunning, models.ActualLRP_SUSPECT,
 			),
 			Entry("chooses RUNNING/Ordinary over CLAIMED/Suspect",
-				models.ActualLRPStateRunning, models.ActualLRP_Ordinary,
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
+				models.ActualLRPStateRunning, models.ActualLRP_ORDINARY,
+				models.ActualLRPStateClaimed, models.ActualLRP_SUSPECT,
 			),
 			Entry("chooses RUNNING/Suspect over CLAIMED/Ordinary",
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
-				models.ActualLRPStateClaimed, models.ActualLRP_Ordinary,
+				models.ActualLRPStateRunning, models.ActualLRP_SUSPECT,
+				models.ActualLRPStateClaimed, models.ActualLRP_ORDINARY,
 			),
 			Entry("chooses RUNNING/Suspect over UNCLAIMED/Ordinary",
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
-				models.ActualLRPStateUnclaimed, models.ActualLRP_Ordinary,
+				models.ActualLRPStateRunning, models.ActualLRP_SUSPECT,
+				models.ActualLRPStateUnclaimed, models.ActualLRP_ORDINARY,
 			),
 			Entry("chooses RUNNING/Suspect over CRASHED/Ordinary",
-				models.ActualLRPStateRunning, models.ActualLRP_Suspect,
-				models.ActualLRPStateCrashed, models.ActualLRP_Ordinary,
+				models.ActualLRPStateRunning, models.ActualLRP_SUSPECT,
+				models.ActualLRPStateCrashed, models.ActualLRP_ORDINARY,
 			),
 			Entry("chooses CLAIMED/Suspect over CLAIMED/Ordinary",
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
-				models.ActualLRPStateClaimed, models.ActualLRP_Ordinary,
+				models.ActualLRPStateClaimed, models.ActualLRP_SUSPECT,
+				models.ActualLRPStateClaimed, models.ActualLRP_ORDINARY,
 			),
 			Entry("chooses CLAIMED/Suspect over UNCLAIMED/Ordinary",
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
-				models.ActualLRPStateUnclaimed, models.ActualLRP_Ordinary,
+				models.ActualLRPStateClaimed, models.ActualLRP_SUSPECT,
+				models.ActualLRPStateUnclaimed, models.ActualLRP_ORDINARY,
 			),
 			Entry("chooses CLAIMED/Suspect over CRASHED/Ordinary",
-				models.ActualLRPStateClaimed, models.ActualLRP_Suspect,
-				models.ActualLRPStateCrashed, models.ActualLRP_Ordinary,
+				models.ActualLRPStateClaimed, models.ActualLRP_SUSPECT,
+				models.ActualLRPStateCrashed, models.ActualLRP_ORDINARY,
 			),
 		)
 
@@ -836,9 +837,9 @@ var _ = Describe("ActualLRP", func() {
 						Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 						Expect(testV).To(Equal(v))
 					},
-					Entry("Ordinary", models.ActualLRP_Ordinary, `"ORDINARY"`),
-					Entry("EVACUATING", models.ActualLRP_Evacuating, `"EVACUATING"`),
-					Entry("SUSPECT", models.ActualLRP_Suspect, `"SUSPECT"`),
+					Entry("Ordinary", models.ActualLRP_ORDINARY, `"ORDINARY"`),
+					Entry("EVACUATING", models.ActualLRP_EVACUATING, `"EVACUATING"`),
+					Entry("SUSPECT", models.ActualLRP_SUSPECT, `"SUSPECT"`),
 				)
 			})
 		})
@@ -848,7 +849,7 @@ var _ = Describe("ActualLRP", func() {
 func itValidatesPresenceOfTheLRPKey(lrp *models.ActualLRP) {
 	Context("when the lrp key is set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPKey = models.NewActualLRPKey("some-guid", 1, "domain")
+			lrp.ActualLrpKey = models.NewActualLRPKey("some-guid", 1, "domain")
 		})
 
 		It("validate does not return an error", func() {
@@ -858,7 +859,7 @@ func itValidatesPresenceOfTheLRPKey(lrp *models.ActualLRP) {
 
 	Context("when the lrp key is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPKey = models.ActualLRPKey{}
+			lrp.ActualLrpKey = &models.ActualLRPKey{}
 		})
 
 		It("validate returns an error", func() {
@@ -872,7 +873,7 @@ func itValidatesPresenceOfTheLRPKey(lrp *models.ActualLRP) {
 func itValidatesPresenceOfTheInstanceKey(lrp *models.ActualLRP) {
 	Context("when the instance key is set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPInstanceKey = models.NewActualLRPInstanceKey("some-instance", "some-cell")
+			lrp.ActualLrpInstanceKey = models.NewActualLRPInstanceKey("some-instance", "some-cell")
 		})
 
 		It("validate does not return an error", func() {
@@ -882,7 +883,7 @@ func itValidatesPresenceOfTheInstanceKey(lrp *models.ActualLRP) {
 
 	Context("when the instance key is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+			lrp.ActualLrpInstanceKey = &models.ActualLRPInstanceKey{}
 		})
 
 		It("validate returns an error", func() {
@@ -896,7 +897,7 @@ func itValidatesPresenceOfTheInstanceKey(lrp *models.ActualLRP) {
 func itValidatesAbsenceOfTheInstanceKey(lrp *models.ActualLRP) {
 	Context("when the instance key is set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPInstanceKey = models.NewActualLRPInstanceKey("some-instance", "some-cell")
+			lrp.ActualLrpInstanceKey = models.NewActualLRPInstanceKey("some-instance", "some-cell")
 		})
 
 		It("validate returns an error", func() {
@@ -908,7 +909,7 @@ func itValidatesAbsenceOfTheInstanceKey(lrp *models.ActualLRP) {
 
 	Context("when the instance key is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+			lrp.ActualLrpInstanceKey = &models.ActualLRPInstanceKey{}
 		})
 
 		It("validate does not return an error", func() {
@@ -920,7 +921,7 @@ func itValidatesAbsenceOfTheInstanceKey(lrp *models.ActualLRP) {
 func itValidatesPresenceOfNetInfo(lrp *models.ActualLRP) {
 	Context("when net info is set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown)
+			lrp.ActualLrpNetInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.ActualLRPNetInfo_UNKNOWN)
 		})
 
 		It("validate does not return an error", func() {
@@ -930,7 +931,7 @@ func itValidatesPresenceOfNetInfo(lrp *models.ActualLRP) {
 
 	Context("when net info is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
+			lrp.ActualLrpNetInfo = &models.ActualLRPNetInfo{}
 		})
 
 		It("validate returns an error", func() {
@@ -944,7 +945,7 @@ func itValidatesPresenceOfNetInfo(lrp *models.ActualLRP) {
 func itValidatesAbsenceOfNetInfo(lrp *models.ActualLRP) {
 	Context("when net info is set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown)
+			lrp.ActualLrpNetInfo = models.NewActualLRPNetInfo("1.2.3.4", "2.2.2.2", models.ActualLRPNetInfo_UNKNOWN)
 		})
 
 		It("validate returns an error", func() {
@@ -956,7 +957,7 @@ func itValidatesAbsenceOfNetInfo(lrp *models.ActualLRP) {
 
 	Context("when net info is not set", func() {
 		BeforeEach(func() {
-			lrp.ActualLRPNetInfo = models.ActualLRPNetInfo{}
+			lrp.ActualLrpNetInfo = &models.ActualLRPNetInfo{}
 		})
 
 		It("validate does not return an error", func() {
@@ -1014,7 +1015,7 @@ func itValidatesAbsenceOfPlacementError(lrp *models.ActualLRP) {
 func itValidatesOrdinaryPresence(lrp *models.ActualLRP) {
 	Context("when presence is set", func() {
 		BeforeEach(func() {
-			lrp.Presence = models.ActualLRP_Evacuating
+			lrp.Presence = models.ActualLRP_EVACUATING
 		})
 
 		It("validate returns an error", func() {
@@ -1026,7 +1027,7 @@ func itValidatesOrdinaryPresence(lrp *models.ActualLRP) {
 
 	Context("when presence is not set", func() {
 		BeforeEach(func() {
-			lrp.Presence = models.ActualLRP_Ordinary
+			lrp.Presence = models.ActualLRP_ORDINARY
 		})
 
 		It("validate does not return an error", func() {

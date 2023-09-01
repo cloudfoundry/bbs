@@ -1,7 +1,6 @@
 package model_helpers
 
 import (
-	"encoding/json"
 	"time"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -71,7 +70,7 @@ func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
 }
 
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
-	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
+	myRouterJSON := []byte(`{"foo":"bar"}`)
 	modTag := models.NewModificationTag("epoch", 0)
 	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          guid,
@@ -109,7 +108,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		MemoryMb:    1024,
 		CpuWeight:   42,
 		MaxPids:     1024,
-		Routes:      &models.Routes{"my-router": &myRouterJSON},
+		Routes:      &models.Routes{Routes: map[string][]byte{"my-router": myRouterJSON}},
 		LogSource:   "some-log-source",
 		LogGuid:     "some-log-guid",
 		MetricsGuid: "some-metrics-guid",
@@ -236,8 +235,8 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 	}
 }
 
-func NewValidEgressRules() []models.SecurityGroupRule {
-	return []models.SecurityGroupRule{
+func NewValidEgressRules() []*models.SecurityGroupRule {
+	return []*models.SecurityGroupRule{
 		{
 			Protocol:     "tcp",
 			Destinations: []string{"0.0.0.0/0"},

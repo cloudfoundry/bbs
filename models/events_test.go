@@ -14,12 +14,12 @@ var _ = Describe("Events", func() {
 		Context("when before is set", func() {
 			BeforeEach(func() {
 				before = &models.ActualLRP{
-					ActualLRPKey: models.ActualLRPKey{
+					ActualLrpKey: &models.ActualLRPKey{
 						ProcessGuid: "before-process-guid",
 						Index:       5,
 						Domain:      "before-domain",
 					},
-					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+					ActualLrpInstanceKey: &models.ActualLRPInstanceKey{
 						InstanceGuid: "before-instance-guid",
 						CellId:       "before-cell-id",
 					},
@@ -29,12 +29,12 @@ var _ = Describe("Events", func() {
 			Context("when after is set", func() {
 				BeforeEach(func() {
 					after = &models.ActualLRP{
-						ActualLRPKey: models.ActualLRPKey{
+						ActualLrpKey: &models.ActualLRPKey{
 							ProcessGuid: "after-process-guid",
 							Index:       7,
 							Domain:      "after-domain",
 						},
-						ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+						ActualLrpInstanceKey: &models.ActualLRPInstanceKey{
 							InstanceGuid: "after-instance-guid",
 							CellId:       "after-cell-id",
 						},
@@ -43,15 +43,15 @@ var _ = Describe("Events", func() {
 
 				It("returns the after's actual lrp key and instance key", func() {
 					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
-					Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
-					Expect(event.ActualLRPInstanceKey).To(Equal(after.ActualLRPInstanceKey))
+					Expect(event.ActualLrpKey).To(Equal(after.ActualLrpKey))
+					Expect(event.ActualLrpInstanceKey).To(Equal(after.ActualLrpInstanceKey))
 				})
 			})
 
 			Context("when after is unclaimed", func() {
 				BeforeEach(func() {
 					after = &models.ActualLRP{
-						ActualLRPKey: models.ActualLRPKey{
+						ActualLrpKey: &models.ActualLRPKey{
 							ProcessGuid: "after-process-guid",
 							Index:       7,
 							Domain:      "after-domain",
@@ -62,8 +62,8 @@ var _ = Describe("Events", func() {
 
 				It("returns after's actual lrp key and before's instance key", func() {
 					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
-					Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
-					Expect(event.ActualLRPInstanceKey).To(Equal(before.ActualLRPInstanceKey))
+					Expect(event.ActualLrpKey).To(Equal(after.ActualLrpKey))
+					Expect(event.ActualLrpInstanceKey).To(Equal(before.ActualLrpInstanceKey))
 				})
 			})
 
@@ -74,8 +74,8 @@ var _ = Describe("Events", func() {
 
 				It("returns the before's actual lrp key and instance key", func() {
 					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
-					Expect(event.ActualLRPKey).To(Equal(before.ActualLRPKey))
-					Expect(event.ActualLRPInstanceKey).To(Equal(before.ActualLRPInstanceKey))
+					Expect(event.ActualLrpKey).To(Equal(before.ActualLrpKey))
+					Expect(event.ActualLrpInstanceKey).To(Equal(before.ActualLrpInstanceKey))
 				})
 			})
 		})
@@ -88,12 +88,12 @@ var _ = Describe("Events", func() {
 			Context("when after is set", func() {
 				BeforeEach(func() {
 					after = &models.ActualLRP{
-						ActualLRPKey: models.ActualLRPKey{
+						ActualLrpKey: &models.ActualLRPKey{
 							ProcessGuid: "after-process-guid",
 							Index:       7,
 							Domain:      "after-domain",
 						},
-						ActualLRPInstanceKey: models.ActualLRPInstanceKey{
+						ActualLrpInstanceKey: &models.ActualLRPInstanceKey{
 							InstanceGuid: "after-instance-guid",
 							CellId:       "after-cell-id",
 						},
@@ -102,14 +102,14 @@ var _ = Describe("Events", func() {
 
 				It("returns the after's actual lrp key and instance key", func() {
 					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
-					Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
-					Expect(event.ActualLRPInstanceKey).To(Equal(after.ActualLRPInstanceKey))
+					Expect(event.ActualLrpKey).To(Equal(after.ActualLrpKey))
+					Expect(event.ActualLrpInstanceKey).To(Equal(after.ActualLrpInstanceKey))
 				})
 
 				Context("when before is unclaimed", func() {
 					BeforeEach(func() {
 						before = &models.ActualLRP{
-							ActualLRPKey: models.ActualLRPKey{
+							ActualLrpKey: &models.ActualLRPKey{
 								ProcessGuid: "before-process-guid",
 								Index:       5,
 								Domain:      "before-domain",
@@ -120,8 +120,8 @@ var _ = Describe("Events", func() {
 
 					It("returns after's actual lrp key and after's instance key", func() {
 						event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
-						Expect(event.ActualLRPKey).To(Equal(after.ActualLRPKey))
-						Expect(event.ActualLRPInstanceKey).To(Equal(after.ActualLRPInstanceKey))
+						Expect(event.ActualLrpKey).To(Equal(after.ActualLrpKey))
+						Expect(event.ActualLrpInstanceKey).To(Equal(after.ActualLrpInstanceKey))
 					})
 				})
 			})
@@ -133,8 +133,8 @@ var _ = Describe("Events", func() {
 
 				It("returns the empty actual lrp key and instance key", func() {
 					event := models.NewActualLRPInstanceChangedEvent(before, after, "some-trace-id")
-					Expect(event.ActualLRPKey).To(Equal(models.ActualLRPKey{}))
-					Expect(event.ActualLRPInstanceKey).To(Equal(models.ActualLRPInstanceKey{}))
+					Expect(event.ActualLrpKey).To(Equal(&models.ActualLRPKey{}))
+					Expect(event.ActualLrpInstanceKey).To(Equal(&models.ActualLRPInstanceKey{}))
 				})
 			})
 		})

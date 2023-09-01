@@ -314,8 +314,8 @@ var _ = Describe("Actions", func() {
 				Dir:  "./some-dir",
 				Args: []string{"-rf", "/"},
 				Env: []*models.EnvironmentVariable{
-					{"FOO", "1"},
-					{"BAR", "2"},
+					{Name: "FOO", Value: "1"},
+					{Name: "BAR", Value: "2"},
 				},
 				ResourceLimits: resourceLimits,
 			}),

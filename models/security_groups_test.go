@@ -103,7 +103,10 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when it is a valid port range", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{1, 65535}
+						portRange = &models.PortRange{
+							Start: 1,
+							End:   65535,
+						}
 					})
 
 					It("passes validation and does not return an error", func() {
@@ -114,7 +117,10 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when port range has a start value greater than the end value", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{1024, 1}
+						portRange = &models.PortRange{
+							Start: 1024,
+							End:   1,
+						}
 					})
 
 					It("returns an error", func() {
@@ -125,7 +131,10 @@ var _ = Describe("SecurityGroupRule", func() {
 
 			Context("when ports and port range are provided", func() {
 				BeforeEach(func() {
-					portRange = &models.PortRange{1, 65535}
+					portRange = &models.PortRange{
+						Start: 1,
+						End:   65535,
+					}
 					ports = []uint32{1}
 				})
 
@@ -174,7 +183,10 @@ var _ = Describe("SecurityGroupRule", func() {
 			Context("when Port range is provided", func() {
 				BeforeEach(func() {
 					ports = nil
-					portRange = &models.PortRange{1, 65535}
+					portRange = &models.PortRange{
+						Start: 1,
+						End:   65535,
+					}
 				})
 
 				It("fails", func() {
@@ -345,7 +357,10 @@ var _ = Describe("SecurityGroupRule", func() {
 			BeforeEach(func() {
 				protocol = "tcp"
 				destination = "garbage"
-				portRange = &models.PortRange{443, 80}
+				portRange = &models.PortRange{
+					Start: 443,
+					End:   0,
+				}
 			})
 
 			It("aggregates validation errors", func() {

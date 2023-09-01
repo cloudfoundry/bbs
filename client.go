@@ -18,9 +18,9 @@ import (
 	cfhttp "code.cloudfoundry.org/cfhttp/v2"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/tlsconfig"
-	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
 	"github.com/vito/go-sse/sse"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
