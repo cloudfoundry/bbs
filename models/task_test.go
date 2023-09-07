@@ -8,9 +8,9 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	. "code.cloudfoundry.org/bbs/test_helpers"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Task", func() {
@@ -19,87 +19,94 @@ var _ = Describe("Task", func() {
 
 	BeforeEach(func() {
 		taskPayload = `{
-		"task_guid":"some-guid",
-		"domain":"some-domain",
-		"rootfs": "docker:///docker.com/docker",
-		"env":[
-			{
-				"name":"ENV_VAR_NAME",
-				"value":"an environmment value"
-			}
-		],
-		"cell_id":"cell",
-		"action": {
-			"download":{
-				"from":"old_location",
-				"to":"new_location",
-				"cache_key":"the-cache-key",
-				"user":"someone",
-				"checksum_algorithm": "md5",
-				"checksum_value": "some value"
-			}
-		},
-		"result_file":"some-file.txt",
-		"result": "turboencabulated",
-		"failed":true,
-		"failure_reason":"because i said so",
-		"memory_mb":256,
-		"disk_mb":1024,
-		"log_rate_limit": {
-			"bytes_per_second": 2048
-		},
-		"cpu_weight": 42,
-		"privileged": true,
-		"log_guid": "123",
-		"log_source": "APP",
-		"metrics_guid": "456",
-		"created_at": 1393371971000000000,
-		"updated_at": 1393371971000000010,
-		"first_completed_at": 1393371971000000030,
-		"state": "Pending",
-		"annotation": "[{\"anything\": \"you want!\"}]... dude",
-		"network": {
-			"properties": {
-				"some-key": "some-value",
-				"some-other-key": "some-other-value"
-			}
-		},
-		"egress_rules": [
-			{
-				"protocol": "tcp",
-				"destinations": ["0.0.0.0/0"],
-				"port_range": {
-					"start": 1,
-					"end": 1024
-				},
-				"log": true
-			},
-			{
-				"protocol": "udp",
-				"destinations": ["8.8.0.0/16"],
-				"ports": [53],
-				"log": false
-			}
-		],
-		"completion_callback_url":"http://user:password@a.b.c/d/e/f",
-		"max_pids": 256,
-		"certificate_properties": {
-			"organizational_unit": ["stuff"]
-		},
-		"image_username": "jake",
-		"image_password": "thedog",
-		"rejection_count": 0,
-		"rejection_reason": "",
-		"image_layers": [
-		  {
-				"url": "some-url",
-				"destination_path": "/tmp",
-				"media_type": "TGZ",
-				"layer_type": "SHARED"
-			}
-		],
-    "legacy_download_user": "some-user"
-	}`
+        "task_definition": {
+          "root_fs": "docker:///docker.com/docker",
+          "environment_variables": [
+            {
+              "name": "ENV_VAR_NAME",
+              "value": "an environmment value"
+            }
+          ],
+          "action": {
+            "download_action": {
+              "from": "old_location",
+              "to": "new_location",
+              "cache_key": "the-cache-key",
+              "user": "someone",
+              "checksum_algorithm": "md5",
+              "checksum_value": "some value"
+            }
+          },
+          "disk_mb": 1024,
+          "memory_mb": 256,
+          "cpu_weight": 42,
+          "privileged": true,
+          "log_source": "APP",
+          "log_guid": "123",
+          "metrics_guid": "456",
+          "result_file": "some-file.txt",
+          "completion_callback_url": "http://user:password@a.b.c/d/e/f",
+          "annotation": "[{\"anything\": \"you want!\"}]... dude",
+          "egress_rules": [
+            {
+              "protocol": "tcp",
+              "destinations": [
+                "0.0.0.0/0"
+              ],
+              "port_range": {
+                "start": 1,
+                "end": 1024
+              },
+              "log": true
+            },
+            {
+              "protocol": "udp",
+              "destinations": [
+                "8.8.0.0/16"
+              ],
+              "ports": [
+                53
+              ]
+            }
+          ],
+          "legacy_download_user": "some-user",
+          "network": {
+            "properties": {
+              "some-key": "some-value",
+              "some-other-key": "some-other-value"
+            }
+          },
+          "max_pids": 256,
+          "certificate_properties": {
+            "organizational_unit": [
+              "stuff"
+            ]
+          },
+          "image_username": "jake",
+          "image_password": "thedog",
+          "image_layers": [
+            {
+              "url": "some-url",
+              "destination_path": "/tmp",
+              "layer_type": "SHARED",
+              "media_type": "TGZ"
+            }
+          ],
+          "log_rate_limit": {
+            "bytes_per_second": 2048
+          }
+        },
+        "task_guid": "some-guid",
+        "domain": "some-domain",
+        "created_at": 1393371971000000000,
+        "updated_at": 1393371971000000010,
+        "first_completed_at": 1393371971000000030,
+        "state": "Pending",
+        "cell_id": "cell",
+        "result": "turboencabulated",
+        "failed": true,
+        "failure_reason": "because i said so"
+      }`
 
 		task = models.Task{
 			TaskDefinition: &models.TaskDefinition{
@@ -189,8 +196,7 @@ var _ = Describe("Task", func() {
 			var protoDeserialization models.Task
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
-
-			Expect(protoDeserialization).To(Equal(task))
+			Expect(proto.Equal(&protoDeserialization, &task)).To(BeTrue())
 		})
 	})
 

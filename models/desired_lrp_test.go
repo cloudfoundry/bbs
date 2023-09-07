@@ -10,14 +10,13 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/gogo/protobuf/proto"
-
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
 )
 
-var _ = Describe("DesiredLRP", func() {
+var _ = FDescribe("DesiredLRP", func() {
 	var desiredLRP models.DesiredLRP
 
 	jsonDesiredLRP := `{
@@ -337,10 +336,14 @@ var _ = Describe("DesiredLRP", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Describe("serialization", func() {
+	FDescribe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
 			jsonSerialization, err := json.Marshal(desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
+			fmt.Println()
+			fmt.Println(string(jsonSerialization))
+			fmt.Println()
+			fmt.Println(jsonDesiredLRP)
 			Expect(jsonSerialization).To(MatchJSON(jsonDesiredLRP))
 
 			protoSerialization, err := proto.Marshal(&desiredLRP)
@@ -360,6 +363,7 @@ var _ = Describe("DesiredLRP", func() {
 
 			desiredLRP.Routes = nil
 			protoDeserialization.Routes = nil
+			Expect(proto.Equal(&protoDeserialization, &desiredLRP)).To(BeTrue())
 			Expect(protoDeserialization).To(Equal(desiredLRP))
 		})
 	})

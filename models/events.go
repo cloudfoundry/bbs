@@ -111,25 +111,29 @@ func (event DesiredLRPRemovedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
 }
 
-// FIXME: change the signature
 func NewActualLRPInstanceChangedEvent(before, after *ActualLRP, traceId string) *ActualLRPInstanceChangedEvent {
 	var (
 		actualLRPKey         *ActualLRPKey
 		actualLRPInstanceKey *ActualLRPInstanceKey
 	)
 
-	if (before != nil && before.ActualLrpKey != &ActualLRPKey{}) {
+	if before != nil && before.ActualLrpKey != nil {
 		actualLRPKey = before.ActualLrpKey
 	}
-	if (after != nil && after.ActualLrpKey != &ActualLRPKey{}) {
+	if after != nil && after.ActualLrpKey != nil {
 		actualLRPKey = after.ActualLrpKey
 	}
 
-	if (before != nil && before.ActualLrpInstanceKey != &ActualLRPInstanceKey{}) {
+	if before != nil && before.ActualLrpInstanceKey != nil {
 		actualLRPInstanceKey = before.ActualLrpInstanceKey
 	}
-	if (after != nil && after.ActualLrpInstanceKey != &ActualLRPInstanceKey{}) {
+	if after != nil && after.ActualLrpInstanceKey != nil {
 		actualLRPInstanceKey = after.ActualLrpInstanceKey
+	}
+
+	if (after == nil || after.ActualLrpKey == nil) && (before == nil || before.ActualLrpKey == nil) {
+		actualLRPKey = &ActualLRPKey{}
+		actualLRPInstanceKey = &ActualLRPInstanceKey{}
 	}
 
 	return &ActualLRPInstanceChangedEvent{

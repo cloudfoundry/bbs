@@ -144,7 +144,7 @@ var _ = Describe("ImageLayer", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.ImageLayer_DigestAlgorithmInvalid, `"ImageLayer_DigestAlgorithmInvalid"`),
+				Entry("invalid", models.ImageLayer_DigestAlgorithmInvalid, `"DigestAlgorithmInvalid"`),
 				Entry("sha256", models.ImageLayer_SHA256, `"SHA256"`),
 				Entry("sha512", models.ImageLayer_SHA512, `"SHA512"`),
 			)
@@ -160,7 +160,7 @@ var _ = Describe("ImageLayer", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.ImageLayer_MediaTypeInvalid, `"ImageLayer_MediaTypeInvalid"`),
+				Entry("invalid", models.ImageLayer_MediaTypeInvalid, `"MediaTypeInvalid"`),
 				Entry("tgz", models.ImageLayer_TGZ, `"TGZ"`),
 				Entry("tar", models.ImageLayer_TAR, `"TAR"`),
 				Entry("zip", models.ImageLayer_ZIP, `"ZIP"`),
@@ -177,7 +177,7 @@ var _ = Describe("ImageLayer", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.ImageLayer_LayerTypeInvalid, `"ImageLayer_LayerTypeInvalid"`),
+				Entry("invalid", models.ImageLayer_LayerTypeInvalid, `"LayerTypeInvalid"`),
 				Entry("shared", models.ImageLayer_SHARED, `"SHARED"`),
 				Entry("exclusive", models.ImageLayer_EXCLUSIVE, `"EXCLUSIVE"`),
 			)

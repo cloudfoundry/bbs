@@ -58,7 +58,7 @@ var _ = Describe("MetricTagValue", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.MetricTagValue_DynamicValueInvalid, `"MetricTagValue_DynamicValueInvalid"`),
+				Entry("invalid", models.MetricTagValue_DynamicValueInvalid, `"DynamicValueInvalid"`),
 				Entry("index", models.MetricTagValue_INDEX, `"INDEX"`),
 				Entry("instance_guid", models.MetricTagValue_INSTANCE_GUID, `"INSTANCE_GUID"`),
 			)

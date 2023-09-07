@@ -306,7 +306,7 @@ var _ = Describe("Actions", func() {
 						{"name":"BAR", "value":"2"}
 					],
 					"resource_limits":{"nofile": 10, "nproc": 20},
-					"suppress_log_output": false
+					"suppress_log_output": true 
 			}`,
 			models.WrapAction(&models.RunAction{
 				User: "me",
@@ -317,7 +317,8 @@ var _ = Describe("Actions", func() {
 					{Name: "FOO", Value: "1"},
 					{Name: "BAR", Value: "2"},
 				},
-				ResourceLimits: resourceLimits,
+				ResourceLimits:    resourceLimits,
+				SuppressLogOutput: true,
 			}),
 		)
 
@@ -364,13 +365,13 @@ var _ = Describe("Actions", func() {
 		itSerializesAndDeserializes(
 			`{
 				"action": {
-					"run": {
+					"run_action": {
 						"path": "echo",
 						"user": "someone",
 						"resource_limits":{
 							"nofile": 10
 						},
-						"suppress_log_output": false
+						"suppress_log_output": true 
 					}
 				},
 				"timeout_ms": 10
@@ -378,9 +379,10 @@ var _ = Describe("Actions", func() {
 			models.WrapAction(
 				models.Timeout(
 					&models.RunAction{
-						Path:           "echo",
-						User:           "someone",
-						ResourceLimits: resourceLimits,
+						Path:              "echo",
+						User:              "someone",
+						ResourceLimits:    resourceLimits,
+						SuppressLogOutput: true,
 					},
 					10*time.Millisecond,
 				)),
@@ -448,18 +450,19 @@ var _ = Describe("Actions", func() {
 		itSerializesAndDeserializes(
 			`{
 					"action": {
-						"run": {
+						"run_action": {
 							"path": "echo",
 							"resource_limits":{},
 							"user": "me",
-							"suppress_log_output": false
+							"suppress_log_output": true 
 						}
 					}
 			}`,
 			models.WrapAction(models.Try(&models.RunAction{
-				Path:           "echo",
-				User:           "me",
-				ResourceLimits: &models.ResourceLimits{},
+				Path:              "echo",
+				User:              "me",
+				ResourceLimits:    &models.ResourceLimits{},
+				SuppressLogOutput: true,
 			})),
 		)
 
@@ -509,7 +512,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -517,11 +520,11 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false
+								"suppress_log_output": true 
 							}
 						}
 					]
@@ -534,9 +537,10 @@ var _ = Describe("Actions", func() {
 					User:     "someone",
 				},
 				&models.RunAction{
-					Path:           "echo",
-					User:           "me",
-					ResourceLimits: &models.ResourceLimits{},
+					Path:              "echo",
+					User:              "me",
+					ResourceLimits:    &models.ResourceLimits{},
+					SuppressLogOutput: true,
 				},
 			)),
 		)
@@ -603,7 +607,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -611,11 +615,11 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false
+								"suppress_log_output": true 
 							}
 						}
 					]
@@ -628,9 +632,10 @@ var _ = Describe("Actions", func() {
 					User:     "someone",
 				},
 				&models.RunAction{
-					Path:           "echo",
-					User:           "me",
-					ResourceLimits: &models.ResourceLimits{},
+					Path:              "echo",
+					User:              "me",
+					ResourceLimits:    &models.ResourceLimits{},
+					SuppressLogOutput: true,
 				},
 			)),
 		)
@@ -690,19 +695,20 @@ var _ = Describe("Actions", func() {
 					"success_message": "reticulated splines",
 					"failure_message_prefix": "reticulation failed",
 					"action": {
-						"run": {
+						"run_action": {
 							"path": "echo",
 							"resource_limits":{},
 							"user": "me",
-							"suppress_log_output": false
+							"suppress_log_output": true 
 						}
 					}
 			}`,
 			models.WrapAction(models.EmitProgressFor(
 				&models.RunAction{
-					Path:           "echo",
-					User:           "me",
-					ResourceLimits: &models.ResourceLimits{},
+					Path:              "echo",
+					User:              "me",
+					ResourceLimits:    &models.ResourceLimits{},
+					SuppressLogOutput: true,
 				},
 				"reticulating splines", "reticulated splines", "reticulation failed",
 			)),
@@ -752,7 +758,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -760,11 +766,11 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false
+								"suppress_log_output": true 
 							}
 						}
 					]
@@ -776,7 +782,12 @@ var _ = Describe("Actions", func() {
 					CacheKey: "elephant",
 					User:     "someone",
 				},
-				&models.RunAction{Path: "echo", User: "me", ResourceLimits: &models.ResourceLimits{}},
+				&models.RunAction{
+					Path:              "echo",
+					User:              "me",
+					ResourceLimits:    &models.ResourceLimits{},
+					SuppressLogOutput: true,
+				},
 			)),
 		)
 

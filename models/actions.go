@@ -12,15 +12,15 @@ import (
 )
 
 const (
-	ActionTypeDownload     = "download"
-	ActionTypeEmitProgress = "emit_progress"
-	ActionTypeRun          = "run"
-	ActionTypeUpload       = "upload"
-	ActionTypeTimeout      = "timeout"
-	ActionTypeTry          = "try"
-	ActionTypeParallel     = "parallel"
-	ActionTypeSerial       = "serial"
-	ActionTypeCodependent  = "codependent"
+	ActionTypeDownload     = "download_action"
+	ActionTypeEmitProgress = "emit_progress_action"
+	ActionTypeRun          = "run_action"
+	ActionTypeUpload       = "upload_action"
+	ActionTypeTimeout      = "timeout_action"
+	ActionTypeTry          = "try_action"
+	ActionTypeParallel     = "parallel_action"
+	ActionTypeSerial       = "serial_action"
+	ActionTypeCodependent  = "codependent_action"
 )
 
 var ErrInvalidActionType = errors.New("invalid action type")

@@ -772,7 +772,7 @@ var _ = Describe("ActualLRP", func() {
 
 		})
 
-		FDescribeTable("resolution priority of the Instance slot",
+		DescribeTable("resolution priority of the Instance slot",
 			func(
 				supLRPState string, supLRPPresence models.ActualLRP_Presence,
 				infLRPState string, infLRPPresence models.ActualLRP_Presence,
