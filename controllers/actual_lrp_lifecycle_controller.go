@@ -312,6 +312,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 			}
 
 			var client rep.Client
+                        removeLRP()
 			client, err = h.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl, trace.RequestIdFromContext(ctx))
 			if err != nil {
 				return err
