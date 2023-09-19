@@ -1466,6 +1466,15 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						Expect(stoppedKey).To(Equal(actualLRPKey))
 						Expect(stoppedInstanceKey).To(Equal(afterInstanceKey))
 					})
+					
+					It("emits a removed event to the hub", func() {
+						err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
+						Eventually(actualHub.EmitCallCount).Should(Equal(1))
+						event := actualHub.EmitArgsForCall(0)
+						removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
+						Expect(ok).To(BeTrue())
+						Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
+					})					
 
 					Context("when the rep announces a rep url", func() {
 						BeforeEach(func() {
