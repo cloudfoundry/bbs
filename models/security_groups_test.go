@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("SecurityGroupRule", func() {
@@ -103,7 +103,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when it is a valid port range", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{1, 65535}
+						portRange = &models.PortRange{Start: 1, End: 65535}
 					})
 
 					It("passes validation and does not return an error", func() {
@@ -114,7 +114,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when port range has a start value greater than the end value", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{1024, 1}
+						portRange = &models.PortRange{Start: 1024, End: 1}
 					})
 
 					It("returns an error", func() {
@@ -125,7 +125,7 @@ var _ = Describe("SecurityGroupRule", func() {
 
 			Context("when ports and port range are provided", func() {
 				BeforeEach(func() {
-					portRange = &models.PortRange{1, 65535}
+					portRange = &models.PortRange{Start: 1, End: 65535}
 					ports = []uint32{1}
 				})
 
@@ -174,7 +174,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			Context("when Port range is provided", func() {
 				BeforeEach(func() {
 					ports = nil
-					portRange = &models.PortRange{1, 65535}
+					portRange = &models.PortRange{Start: 1, End: 65535}
 				})
 
 				It("fails", func() {
@@ -345,7 +345,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			BeforeEach(func() {
 				protocol = "tcp"
 				destination = "garbage"
-				portRange = &models.PortRange{443, 80}
+				portRange = &models.PortRange{Start: 443, End: 80}
 			})
 
 			It("aggregates validation errors", func() {
@@ -365,7 +365,6 @@ var _ = Describe("SecurityGroupRule", func() {
         "destinations": [
           "0.0.0.0-9.255.255.255"
         ],
-        "log": false,
 				"annotations":["quack"]
       }`
 
@@ -389,7 +388,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(protoDeserialization).To(Equal(securityGroup))
+			Expect(proto.Equal(&protoDeserialization, &securityGroup)).To(BeTrue())
 		})
 
 		Context("when annotations are empty", func() {
@@ -398,8 +397,7 @@ var _ = Describe("SecurityGroupRule", func() {
 					"protocol": "all",
 					"destinations": [
 						"0.0.0.0-9.255.255.255"
-					],
-					"log": false
+					]
 				}`
 
 				securityGroup.Annotations = []string{}

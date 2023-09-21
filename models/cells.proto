@@ -2,28 +2,29 @@ syntax = "proto3";
 
 package models;
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "error.proto";
 
+option go_package = "github.com/cloudfoundry/bbs/models";
+
 message CellCapacity {
-  int32 memory_mb = 1 [(gogoproto.jsontag) = "memory_mb"];
-  int32 disk_mb = 2 [(gogoproto.jsontag) = "disk_mb"];
-  int32 containers = 3 [(gogoproto.jsontag) = "containers"];
+  int32 memory_mb = 1 [json_name = "memory_mb"];
+  int32 disk_mb = 2 [json_name = "disk_mb"];
+  int32 containers = 3 [json_name = "containers"];
 }
 
 message CellPresence {
-  string cell_id = 1 [(gogoproto.jsontag) = "cell_id"];
-  string rep_address = 2 [(gogoproto.jsontag) = "rep_address"];
-  string zone = 3 [(gogoproto.jsontag) = "zone"];
+  string cell_id = 1 [json_name = "cell_id"];
+  string rep_address = 2 [json_name = "rep_address"];
+  string zone = 3 [json_name = "zone"];
   CellCapacity capacity = 4;
-  repeated Provider rootfs_providers = 5 [(gogoproto.jsontag) = "rootfs_provider_list,omitempty"];
+  repeated Provider rootfs_providers = 5 [json_name = "rootfs_provider_list,omitempty"];
   repeated string placement_tags = 6;
   repeated string optional_placement_tags = 7;
-  string rep_url = 8 [(gogoproto.jsontag) = "rep_url"];
+  string rep_url = 8 [json_name = "rep_url"];
 }
 
 message Provider {
-  string name = 1 [(gogoproto.jsontag) = "name"];
+  string name = 1 [json_name = "name"];
   repeated string properties = 2;
 }
 

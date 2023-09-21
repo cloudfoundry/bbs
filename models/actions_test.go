@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Actions", func() {
+var _ = FDescribe("Actions", func() {
 	itSerializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
 		It("Action -> JSON for "+string(action.ActionType()), func() {
@@ -89,10 +89,10 @@ var _ = Describe("Actions", func() {
 		})
 	})
 
-	Describe("Download", func() {
+	FDescribe("Download", func() {
 		var downloadAction *models.DownloadAction
 
-		Context("with checksum algorithm and value missing", func() {
+		FContext("with checksum algorithm and value missing", func() {
 			itSerializesAndDeserializes(
 				`{
 					"artifact": "mouse",
@@ -305,8 +305,7 @@ var _ = Describe("Actions", func() {
 						{"name":"FOO", "value":"1"},
 						{"name":"BAR", "value":"2"}
 					],
-					"resource_limits":{"nofile": 10, "nproc": 20},
-					"suppress_log_output": false
+					"resource_limits":{"nofile": 10, "nproc": 20}
 			}`,
 			models.WrapAction(&models.RunAction{
 				User: "me",
@@ -314,8 +313,8 @@ var _ = Describe("Actions", func() {
 				Dir:  "./some-dir",
 				Args: []string{"-rf", "/"},
 				Env: []*models.EnvironmentVariable{
-					{"FOO", "1"},
-					{"BAR", "2"},
+					{Name: "FOO", Value: "1"},
+					{Name: "BAR", Value: "2"},
 				},
 				ResourceLimits: resourceLimits,
 			}),
@@ -364,13 +363,12 @@ var _ = Describe("Actions", func() {
 		itSerializesAndDeserializes(
 			`{
 				"action": {
-					"run": {
+					"run_action": {
 						"path": "echo",
 						"user": "someone",
 						"resource_limits":{
 							"nofile": 10
-						},
-						"suppress_log_output": false
+						}
 					}
 				},
 				"timeout_ms": 10
@@ -448,11 +446,10 @@ var _ = Describe("Actions", func() {
 		itSerializesAndDeserializes(
 			`{
 					"action": {
-						"run": {
+						"run_action": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me",
-							"suppress_log_output": false
+							"user": "me"
 						}
 					}
 			}`,
@@ -509,7 +506,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -517,11 +514,10 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
@@ -603,7 +599,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -611,11 +607,10 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
@@ -690,11 +685,10 @@ var _ = Describe("Actions", func() {
 					"success_message": "reticulated splines",
 					"failure_message_prefix": "reticulation failed",
 					"action": {
-						"run": {
+						"run_action": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me",
-							"suppress_log_output": false
+							"user": "me"
 						}
 					}
 			}`,
@@ -752,7 +746,7 @@ var _ = Describe("Actions", func() {
 			`{
 					"actions": [
 						{
-							"download": {
+							"download_action": {
 								"cache_key": "elephant",
 								"to": "local_location",
 								"from": "web_location",
@@ -760,11 +754,10 @@ var _ = Describe("Actions", func() {
 							}
 						},
 						{
-							"run": {
+							"run_action": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]

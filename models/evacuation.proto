@@ -2,15 +2,14 @@ syntax = "proto3";
 
 package models;
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actual_lrp.proto";
 import "error.proto";
 
-option (gogoproto.equal_all) = false;
+option go_package = "github.com/cloudfoundry/bbs/models";
 
 message EvacuationResponse {
   Error error = 1;
-  bool keep_container = 2 [(gogoproto.jsontag) = "keep_container"];
+  bool keep_container = 2 [json_name = "keep_container"];
 }
 
 message EvacuateClaimedActualLRPRequest {
@@ -39,7 +38,7 @@ message EvacuateStoppedActualLRPRequest {
 message EvacuateCrashedActualLRPRequest {
   ActualLRPKey actual_lrp_key = 1;
   ActualLRPInstanceKey actual_lrp_instance_key = 2;
-  string error_message = 3 [(gogoproto.jsontag) = "error_message"];
+  string error_message = 3 [json_name = "error_message"];
 }
 
 message RemoveEvacuatingActualLRPRequest {

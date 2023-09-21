@@ -2,12 +2,13 @@ syntax = "proto3";
 
 package models;
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actions.proto";
+
+option go_package = "github.com/cloudfoundry/bbs/models";
 
 message Sidecar {
   Action action = 1;
 
-  int32 disk_mb = 2 [(gogoproto.jsontag) = "disk_mb"];
-  int32 memory_mb = 3 [(gogoproto.jsontag) = "memory_mb"];
+  int32 disk_mb = 2 [json_name = "disk_mb"];
+  int32 memory_mb = 3 [json_name = "memory_mb"];
 }

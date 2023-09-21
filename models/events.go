@@ -1,8 +1,10 @@
 package models
 
 import (
+	"fmt"
+
 	"code.cloudfoundry.org/bbs/format"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type Event interface {
@@ -114,27 +116,36 @@ func (event DesiredLRPRemovedEvent) Key() string {
 // FIXME: change the signature
 func NewActualLRPInstanceChangedEvent(before, after *ActualLRP, traceId string) *ActualLRPInstanceChangedEvent {
 	var (
-		actualLRPKey         ActualLRPKey
-		actualLRPInstanceKey ActualLRPInstanceKey
+		actualLRPKey         *ActualLRPKey
+		actualLRPInstanceKey *ActualLRPInstanceKey
 	)
 
-	if (before != nil && before.ActualLRPKey != ActualLRPKey{}) {
-		actualLRPKey = before.ActualLRPKey
+	if (before != nil && before.ActualLrpKey != nil && before.ActualLrpKey != &ActualLRPKey{}) {
+		actualLRPKey = before.ActualLrpKey
 	}
-	if (after != nil && after.ActualLRPKey != ActualLRPKey{}) {
-		actualLRPKey = after.ActualLRPKey
+	if (after != nil && after.ActualLrpKey != nil && after.ActualLrpKey != &ActualLRPKey{}) {
+		actualLRPKey = after.ActualLrpKey
+	}
+	if actualLRPKey == nil {
+		actualLRPKey = &ActualLRPKey{}
 	}
 
-	if (before != nil && before.ActualLRPInstanceKey != ActualLRPInstanceKey{}) {
-		actualLRPInstanceKey = before.ActualLRPInstanceKey
+	if (before != nil && before.ActualLrpInstanceKey != nil && before.ActualLrpInstanceKey != &ActualLRPInstanceKey{}) {
+		fmt.Println("Before wasn't nil")
+		actualLRPInstanceKey = before.ActualLrpInstanceKey
 	}
-	if (after != nil && after.ActualLRPInstanceKey != ActualLRPInstanceKey{}) {
-		actualLRPInstanceKey = after.ActualLRPInstanceKey
+	if (after != nil && after.ActualLrpInstanceKey != nil && after.ActualLrpInstanceKey != &ActualLRPInstanceKey{}) {
+		fmt.Println("After wasn't nil")
+		fmt.Printf("%+v\n", after.ActualLrpInstanceKey)
+		actualLRPInstanceKey = after.ActualLrpInstanceKey
+	}
+	if actualLRPInstanceKey == nil {
+		actualLRPInstanceKey = &ActualLRPInstanceKey{}
 	}
 
 	return &ActualLRPInstanceChangedEvent{
-		ActualLRPKey:         actualLRPKey,
-		ActualLRPInstanceKey: actualLRPInstanceKey,
+		ActualLrpKey:         actualLRPKey,
+		ActualLrpInstanceKey: actualLRPInstanceKey,
 		Before:               before.ToActualLRPInfo(),
 		After:                after.ToActualLRPInfo(),
 		TraceId:              traceId,
@@ -146,7 +157,7 @@ func (event *ActualLRPInstanceChangedEvent) EventType() string {
 }
 
 func (event *ActualLRPInstanceChangedEvent) Key() string {
-	return event.GetInstanceGuid()
+	return event.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 // DEPRECATED
@@ -168,13 +179,13 @@ func (event *ActualLRPChangedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func NewActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
 	return &ActualLRPCrashedEvent{
-		ActualLRPKey:         after.ActualLRPKey,
-		ActualLRPInstanceKey: before.ActualLRPInstanceKey,
+		ActualLrpKey:         after.ActualLrpKey,
+		ActualLrpInstanceKey: before.ActualLrpInstanceKey,
 		CrashCount:           after.CrashCount,
 		CrashReason:          after.CrashReason,
 		Since:                after.Since,
@@ -186,7 +197,7 @@ func (event *ActualLRPCrashedEvent) EventType() string {
 }
 
 func (event *ActualLRPCrashedEvent) Key() string {
-	return event.ActualLRPInstanceKey.InstanceGuid
+	return event.ActualLrpInstanceKey.InstanceGuid
 }
 
 // DEPRECATED
@@ -207,7 +218,7 @@ func (event *ActualLRPRemovedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func NewActualLRPInstanceRemovedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceRemovedEvent {
@@ -225,7 +236,7 @@ func (event *ActualLRPInstanceRemovedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetInstanceGuid()
+	return event.ActualLrp.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 // DEPRECATED
@@ -246,7 +257,7 @@ func (event *ActualLRPCreatedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func NewActualLRPInstanceCreatedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceCreatedEvent {
@@ -264,7 +275,7 @@ func (event *ActualLRPInstanceCreatedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetInstanceGuid()
+	return event.ActualLrp.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func (request *EventsByCellId) Validate() error {

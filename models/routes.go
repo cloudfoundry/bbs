@@ -1,11 +1,10 @@
 package models
 
 import (
-	"bytes"
 	"encoding/json"
 )
 
-type Routes map[string]*json.RawMessage
+type Routes map[string]json.RawMessage
 
 func (r *Routes) protoRoutes() *ProtoRoutes {
 	pr := &ProtoRoutes{
@@ -13,63 +12,92 @@ func (r *Routes) protoRoutes() *ProtoRoutes {
 	}
 
 	for k, v := range *r {
-		pr.Routes[k] = *v
+		pr.Routes[k] = v
 	}
 
 	return pr
 }
 
-func (r *Routes) Marshal() ([]byte, error) {
-	return r.protoRoutes().Marshal()
+func (r *ProtoRoutes) routes() *Routes {
+	nr := Routes{}
+
+	for k, v := range r.Routes {
+		var rawMessage json.RawMessage
+		rawMessage = v
+		nr[k] = rawMessage
+	}
+
+	return &nr
 }
 
-func (r *Routes) MarshalTo(data []byte) (n int, err error) {
-	return r.protoRoutes().MarshalTo(data)
-}
-
-func (r *Routes) Unmarshal(data []byte) error {
-	pr := &ProtoRoutes{}
-	err := pr.Unmarshal(data)
+func (pr *ProtoRoutes) UnmarshalJSON(data []byte) error {
+	tempRoutes := Routes{}
+	err := json.Unmarshal(data, &tempRoutes)
 	if err != nil {
 		return err
 	}
 
-	if pr.Routes == nil {
-		return nil
+	byteMap := make(map[string][]byte)
+	for k, v := range tempRoutes {
+		byteMap[k] = []byte(v)
 	}
 
-	routes := map[string]*json.RawMessage{}
-	for k, v := range pr.Routes {
-		raw := json.RawMessage(v)
-		routes[k] = &raw
-	}
-	*r = routes
+	pr.Routes = byteMap
 
 	return nil
 }
 
-func (r *Routes) Size() int {
-	if r == nil {
-		return 0
-	}
-
-	return r.protoRoutes().Size()
+func (r *ProtoRoutes) MarshalJSON() ([]byte, error) {
+	return r.routes().Marshal()
 }
 
-func (r *Routes) Equal(other Routes) bool {
-	for k, v := range *r {
-		if !bytes.Equal(*v, *other[k]) {
-			return false
-		}
-	}
-	return true
+func (r *Routes) Marshal() ([]byte, error) {
+	return json.Marshal(r)
 }
 
-func (r Routes) Validate() error {
+// func (r *Routes) MarshalTo(data []byte) (n int, err error) {
+// 	return r.protoRoutes().MarshalTo(data)
+// }
+
+// func (r *Routes) Unmarshal(data []byte) error {
+// 	return json.Unmarshal(data, r.protoRoutes().Routes)
+// }
+
+// func (r *Routes) Size() int {
+// 	if r == nil {
+// 		return 0
+// 	}
+
+// 	return r.protoRoutes().Size()
+// }
+
+// func (r *Routes) Equal(other Routes) bool {
+// 	for k, v := range *r {
+// 		if !bytes.Equal(*v, *other[k]) {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
+
+// func (r Routes) Validate() error {
+// 	totalRoutesLength := 0
+// 	if r != nil {
+// 		for _, value := range r {
+// 			totalRoutesLength += len(*value)
+// 			if totalRoutesLength > maximumRouteLength {
+// 				return ErrInvalidField{"routes"}
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
+
+func (r *ProtoRoutes) Validate() error {
 	totalRoutesLength := 0
 	if r != nil {
-		for _, value := range r {
-			totalRoutesLength += len(*value)
+		for _, value := range r.Routes {
+			totalRoutesLength += len(value)
 			if totalRoutesLength > maximumRouteLength {
 				return ErrInvalidField{"routes"}
 			}

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
-	proto "github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 const (

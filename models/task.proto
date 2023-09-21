@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package models;
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actions.proto";
 import "environment_variables.proto";
 import "security_group.proto";
@@ -13,20 +12,20 @@ import "certificate_properties.proto";
 import "image_layer.proto";
 import "log_rate_limit.proto";
 
-option (gogoproto.goproto_enum_prefix_all) = true;
+option go_package = "github.com/cloudfoundry/bbs/models";
 
 message TaskDefinition {
-  string root_fs = 1 [(gogoproto.jsontag) = "rootfs"];
-  repeated EnvironmentVariable environment_variables = 2 [(gogoproto.jsontag) = "env,omitempty"];
+  string root_fs = 1 [json_name = "rootfs"];
+  repeated EnvironmentVariable environment_variables = 2 [json_name = "env,omitempty"];
   Action action = 3;
-  int32 disk_mb = 4 [(gogoproto.jsontag) =  "disk_mb"];
-  int32 memory_mb = 5 [(gogoproto.jsontag) =  "memory_mb"];
-  uint32 cpu_weight = 6 [(gogoproto.jsontag) =  "cpu_weight"];
-  bool privileged = 7 [(gogoproto.jsontag) =  "privileged"];
-  string log_source = 8 [(gogoproto.jsontag) =  "log_source"];
-  string log_guid = 9 [(gogoproto.jsontag) =  "log_guid"];
-  string metrics_guid = 10 [(gogoproto.jsontag) =  "metrics_guid"];
-  string result_file = 11 [(gogoproto.jsontag) =  "result_file"];
+  int32 disk_mb = 4 [json_name =  "disk_mb"];
+  int32 memory_mb = 5 [json_name =  "memory_mb"];
+  uint32 cpu_weight = 6 [json_name =  "cpu_weight"];
+  bool privileged = 7 [json_name =  "privileged"];
+  string log_source = 8 [json_name =  "log_source"];
+  string log_guid = 9 [json_name =  "log_guid"];
+  string metrics_guid = 10 [json_name =  "metrics_guid"];
+  string result_file = 11 [json_name =  "result_file"];
   string completion_callback_url = 12;
   string annotation = 13;
   repeated SecurityGroupRule egress_rules = 14;
@@ -36,10 +35,10 @@ message TaskDefinition {
   repeated VolumeMount volume_mounts = 18;
   Network network = 19;
   repeated string placement_tags = 20;
-  int32 max_pids = 21 [(gogoproto.jsontag) =  "max_pids"];
+  int32 max_pids = 21 [json_name =  "max_pids"];
   CertificateProperties certificate_properties = 22;
-  string image_username = 23 [(gogoproto.jsontag) =  "image_username"];
-  string image_password = 24 [(gogoproto.jsontag) =  "image_password"];
+  string image_username = 23 [json_name =  "image_username"];
+  string image_password = 24 [json_name =  "image_password"];
   repeated ImageLayer image_layers = 25;
   LogRateLimit log_rate_limit = 26;
 }
@@ -53,22 +52,22 @@ message Task {
     Resolving = 4;
   }
 
-  TaskDefinition task_definition = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  TaskDefinition task_definition = 1 [json_name = ""];
 
-  string task_guid = 2 [(gogoproto.jsontag) =  "task_guid"];
-  string domain = 3 [(gogoproto.jsontag) =  "domain"];
-  int64 created_at = 4 [(gogoproto.jsontag) =  "created_at"];
-  int64 updated_at = 5 [(gogoproto.jsontag) =  "updated_at"];
-  int64 first_completed_at = 6 [(gogoproto.jsontag) =  "first_completed_at"];
+  string task_guid = 2 [json_name =  "task_guid"];
+  string domain = 3 [json_name =  "domain"];
+  int64 created_at = 4 [json_name =  "created_at"];
+  int64 updated_at = 5 [json_name =  "updated_at"];
+  int64 first_completed_at = 6 [json_name =  "first_completed_at"];
 
-  State state = 7 [(gogoproto.jsontag) =  "state"];
+  State state = 7 [json_name =  "state"];
 
-  string cell_id = 8 [(gogoproto.jsontag) =  "cell_id"];
+  string cell_id = 8 [json_name =  "cell_id"];
 
-  string result = 9 [(gogoproto.jsontag) =  "result"];
-  bool failed = 10 [(gogoproto.jsontag) =  "failed"];
-  string failure_reason = 11 [(gogoproto.jsontag) =  "failure_reason"];
-  int32 rejection_count = 12 [(gogoproto.jsontag) = "rejection_count"];
-  string rejection_reason = 13 [(gogoproto.jsontag) = "rejection_reason"];
+  string result = 9 [json_name =  "result"];
+  bool failed = 10 [json_name =  "failed"];
+  string failure_reason = 11 [json_name =  "failure_reason"];
+  int32 rejection_count = 12 [json_name = "rejection_count"];
+  string rejection_reason = 13 [json_name = "rejection_reason"];
 }
 

@@ -35,26 +35,26 @@ func PreloadedRootFS(stack string) string {
 func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+		environmentVariables[i] = runInfo.EnvironmentVariables[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
+		egressRules[i] = runInfo.EgressRules[i]
 	}
 
 	return DesiredLRP{
-		ProcessGuid:                   schedInfo.ProcessGuid,
-		Domain:                        schedInfo.Domain,
-		LogGuid:                       schedInfo.LogGuid,
-		MemoryMb:                      schedInfo.MemoryMb,
-		DiskMb:                        schedInfo.DiskMb,
-		MaxPids:                       schedInfo.MaxPids,
-		RootFs:                        schedInfo.RootFs,
+		ProcessGuid:                   schedInfo.DesiredLrpKey.ProcessGuid,
+		Domain:                        schedInfo.DesiredLrpKey.Domain,
+		LogGuid:                       schedInfo.DesiredLrpKey.LogGuid,
+		MemoryMb:                      schedInfo.DesiredLrpResource.MemoryMb,
+		DiskMb:                        schedInfo.DesiredLrpResource.DiskMb,
+		MaxPids:                       schedInfo.DesiredLrpResource.MaxPids,
+		RootFs:                        schedInfo.DesiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
-		Routes:                        &schedInfo.Routes,
-		ModificationTag:               &schedInfo.ModificationTag,
+		Routes:                        schedInfo.Routes,
+		ModificationTag:               schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
 		Setup:                         runInfo.Setup,
@@ -86,12 +86,12 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+		environmentVariables[i] = runInfo.EnvironmentVariables[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
+		egressRules[i] = runInfo.EgressRules[i]
 	}
 
 	desiredLRP.EnvironmentVariables = environmentVariables
@@ -213,10 +213,6 @@ func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
 }
 
 func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
-	var routes Routes
-	if d.Routes != nil {
-		routes = *d.Routes
-	}
 	var modificationTag ModificationTag
 	if d.ModificationTag != nil {
 		modificationTag = *d.ModificationTag
@@ -233,7 +229,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 		d.Annotation,
 		d.Instances,
 		d.DesiredLRPResource(),
-		routes,
+		*d.Routes,
 		modificationTag,
 		&volumePlacement,
 		d.PlacementTags,
@@ -241,10 +237,6 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 }
 
 func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
-	var routes Routes
-	if d.Routes != nil {
-		routes = *d.Routes
-	}
 
 	var modificationTag ModificationTag
 	if d.ModificationTag != nil {
@@ -254,21 +246,21 @@ func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
 	return NewDesiredLRPRoutingInfo(
 		d.DesiredLRPKey(),
 		d.Instances,
-		&routes,
+		d.Routes,
 		&modificationTag,
 		d.MetricTags,
 	)
 }
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
-	environmentVariables := make([]EnvironmentVariable, len(d.EnvironmentVariables))
+	environmentVariables := make([]*EnvironmentVariable, len(d.EnvironmentVariables))
 	for i := range d.EnvironmentVariables {
-		environmentVariables[i] = *d.EnvironmentVariables[i]
+		environmentVariables[i] = d.EnvironmentVariables[i]
 	}
 
-	egressRules := make([]SecurityGroupRule, len(d.EgressRules))
+	egressRules := make([]*SecurityGroupRule, len(d.EgressRules))
 	for i := range d.EgressRules {
-		egressRules[i] = *d.EgressRules[i]
+		egressRules[i] = d.EgressRules[i]
 	}
 
 	return NewDesiredLRPRunInfo(
@@ -350,8 +342,8 @@ func (desired DesiredLRP) Validate() error {
 
 	totalRoutesLength := 0
 	if desired.Routes != nil {
-		for _, value := range *desired.Routes {
-			totalRoutesLength += len(*value)
+		for _, value := range desired.Routes.Routes {
+			totalRoutesLength += len(value)
 			if totalRoutesLength > maximumRouteLength {
 				validationError = validationError.Append(ErrInvalidField{"routes"})
 				break
@@ -380,8 +372,8 @@ func (desired *DesiredLRPUpdate) Validate() error {
 
 	totalRoutesLength := 0
 	if desired.Routes != nil {
-		for _, value := range *desired.Routes {
-			totalRoutesLength += len(*value)
+		for _, value := range desired.Routes.Routes {
+			totalRoutesLength += len(value)
 			if totalRoutesLength > maximumRouteLength {
 				validationError = validationError.Append(ErrInvalidField{"routes"})
 				break
@@ -420,7 +412,7 @@ func (desired DesiredLRPUpdate) AnnotationExists() bool {
 	return ok
 }
 
-func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup string) bool {
+func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *ProtoRoutes, routerGroup string) bool {
 	if desired.Routes == nil {
 		return false
 	}
@@ -429,14 +421,14 @@ func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup
 		return true
 	}
 
-	desiredRoutes, desiredRoutesPresent := (*desired.Routes)[routerGroup]
-	requestRoutes, requestRoutesPresent := (*routes)[routerGroup]
+	desiredRoutes, desiredRoutesPresent := (desired.Routes.Routes)[routerGroup] // TODO: can we make this call without parens
+	requestRoutes, requestRoutesPresent := (routes.Routes)[routerGroup]
 	if desiredRoutesPresent != requestRoutesPresent {
 		return true
 	}
 
 	if desiredRoutesPresent && requestRoutesPresent {
-		return !bytes.Equal(*desiredRoutes, *requestRoutes)
+		return !bytes.Equal(desiredRoutes, requestRoutes)
 	}
 
 	return true
@@ -463,7 +455,7 @@ func (desired DesiredLRPUpdate) IsMetricTagsUpdated(existingTags map[string]*Met
 
 type internalDesiredLRPUpdate struct {
 	Instances  *int32                     `json:"instances,omitempty"`
-	Routes     *Routes                    `json:"routes,omitempty"`
+	Routes     *ProtoRoutes               `json:"routes,omitempty"`
 	Annotation *string                    `json:"annotation,omitempty"`
 	MetricTags map[string]*MetricTagValue `json:"metric_tags,omitempty"`
 }
@@ -527,18 +519,18 @@ func NewDesiredLRPSchedulingInfo(
 	annotation string,
 	instances int32,
 	resource DesiredLRPResource,
-	routes Routes,
+	routes ProtoRoutes,
 	modTag ModificationTag,
 	volumePlacement *VolumePlacement,
 	placementTags []string,
 ) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
-		DesiredLRPKey:      key,
+		DesiredLrpKey:      &key,
 		Annotation:         annotation,
 		Instances:          instances,
-		DesiredLRPResource: resource,
-		Routes:             routes,
-		ModificationTag:    modTag,
+		DesiredLrpResource: &resource,
+		Routes:             &routes,
+		ModificationTag:    &modTag,
 		VolumePlacement:    volumePlacement,
 		PlacementTags:      placementTags,
 	}
@@ -547,7 +539,7 @@ func NewDesiredLRPSchedulingInfo(
 func NewDesiredLRPRoutingInfo(
 	key DesiredLRPKey,
 	instances int32,
-	routes *Routes,
+	routes *ProtoRoutes,
 	modTag *ModificationTag,
 	metrTags map[string]*MetricTagValue,
 ) DesiredLRP {
@@ -567,7 +559,7 @@ func (s *DesiredLRPSchedulingInfo) ApplyUpdate(update *DesiredLRPUpdate) {
 		s.Instances = update.GetInstances()
 	}
 	if update.Routes != nil {
-		s.Routes = *update.Routes
+		s.Routes = update.Routes
 	}
 	if update.AnnotationExists() {
 		s.Annotation = update.GetAnnotation()
@@ -582,7 +574,7 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 func (s DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(s.DesiredLRPKey, s.DesiredLRPResource, s.Routes)
+	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, s.Routes)
 
 	if s.GetInstances() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"instances"})
@@ -630,7 +622,7 @@ func (resource DesiredLRPResource) Validate() error {
 func NewDesiredLRPRunInfo(
 	key DesiredLRPKey,
 	createdAt time.Time,
-	envVars []EnvironmentVariable,
+	envVars []*EnvironmentVariable,
 	cacheDeps []*CachedDependency,
 	setup,
 	action,
@@ -639,7 +631,7 @@ func NewDesiredLRPRunInfo(
 	privileged bool,
 	cpuWeight uint32,
 	ports []uint32,
-	egressRules []SecurityGroupRule,
+	egressRules []*SecurityGroupRule,
 	logSource,
 	metricsGuid string,
 	legacyDownloadUser string,
@@ -655,7 +647,7 @@ func NewDesiredLRPRunInfo(
 	logRateLimit *LogRateLimit,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
-		DesiredLRPKey:                 key,
+		DesiredLrpKey:                 &key,
 		CreatedAt:                     createdAt.UnixNano(),
 		EnvironmentVariables:          envVars,
 		CachedDependencies:            cacheDeps,
@@ -687,7 +679,7 @@ func NewDesiredLRPRunInfo(
 func (runInfo DesiredLRPRunInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(runInfo.DesiredLRPKey)
+	validationError = validationError.Check(runInfo.DesiredLrpKey)
 
 	if runInfo.Setup != nil {
 		if err := runInfo.Setup.Validate(); err != nil {

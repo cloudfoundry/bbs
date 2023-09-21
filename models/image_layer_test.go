@@ -17,8 +17,8 @@ var _ = Describe("ImageLayer", func() {
 				layer = &models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					MediaType:       models.MediaTypeTgz,
-					LayerType:       models.LayerTypeShared,
+					MediaType:       models.ImageLayer_TGZ,
+					LayerType:       models.ImageLayer_SHARED,
 				}
 
 				err := layer.Validate()
@@ -31,9 +31,9 @@ var _ = Describe("ImageLayer", func() {
 						Url:             "web_location",
 						DestinationPath: "local_location",
 						DigestValue:     "some digest",
-						DigestAlgorithm: models.DigestAlgorithmSha256,
-						MediaType:       models.MediaTypeTgz,
-						LayerType:       models.LayerTypeExclusive,
+						DigestAlgorithm: models.ImageLayer_SHA256,
+						MediaType:       models.ImageLayer_TGZ,
+						LayerType:       models.ImageLayer_EXCLUSIVE,
 					}
 
 					err := layer.Validate()
@@ -70,8 +70,8 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					DigestAlgorithm: models.DigestAlgorithmSha256,
-					MediaType:       models.MediaTypeTgz,
+					DigestAlgorithm: models.ImageLayer_SHA256,
+					MediaType:       models.ImageLayer_TGZ,
 				},
 			},
 			{
@@ -80,7 +80,7 @@ var _ = Describe("ImageLayer", func() {
 					Url:             "web_location",
 					DestinationPath: "local_location",
 					DigestValue:     "some digest",
-					MediaType:       models.MediaTypeTgz,
+					MediaType:       models.ImageLayer_TGZ,
 				},
 			},
 			{
@@ -88,8 +88,8 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					MediaType:       models.MediaTypeTgz,
-					LayerType:       models.LayerTypeExclusive,
+					MediaType:       models.ImageLayer_TGZ,
+					LayerType:       models.ImageLayer_EXCLUSIVE,
 				},
 			},
 			{
@@ -97,8 +97,9 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					MediaType:       models.MediaTypeTgz,
-					LayerType:       models.LayerTypeExclusive,
+					MediaType:       models.ImageLayer_TGZ,
+					LayerType:       models.ImageLayer_EXCLUSIVE,
+					DigestValue:     "potato", //???? why do we need to add this :(
 				},
 			},
 			{
@@ -108,7 +109,7 @@ var _ = Describe("ImageLayer", func() {
 					DestinationPath: "local_location",
 					DigestAlgorithm: models.ImageLayer_DigestAlgorithm(5),
 					DigestValue:     "some digest",
-					MediaType:       models.MediaTypeTgz,
+					MediaType:       models.ImageLayer_TGZ,
 				},
 			},
 			{
@@ -116,7 +117,7 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					DigestAlgorithm: models.DigestAlgorithmSha256,
+					DigestAlgorithm: models.ImageLayer_SHA256,
 					DigestValue:     "some digest",
 				},
 			},
@@ -125,7 +126,7 @@ var _ = Describe("ImageLayer", func() {
 				&models.ImageLayer{
 					Url:             "web_location",
 					DestinationPath: "local_location",
-					DigestAlgorithm: models.DigestAlgorithmSha256,
+					DigestAlgorithm: models.ImageLayer_SHA256,
 					DigestValue:     "some digest",
 					MediaType:       models.ImageLayer_MediaType(9),
 				},
@@ -144,9 +145,9 @@ var _ = Describe("ImageLayer", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.DigestAlgorithmInvalid, `"DigestAlgorithmInvalid"`),
-				Entry("sha256", models.DigestAlgorithmSha256, `"SHA256"`),
-				Entry("sha512", models.DigestAlgorithmSha512, `"SHA512"`),
+				Entry("invalid", models.ImageLayer_DigestAlgorithmInvalid, `"DigestAlgorithmInvalid"`),
+				Entry("sha256", models.ImageLayer_SHA256, `"SHA256"`),
+				Entry("sha512", models.ImageLayer_SHA512, `"SHA512"`),
 			)
 		})
 	})
@@ -160,10 +161,10 @@ var _ = Describe("ImageLayer", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.MediaTypeInvalid, `"MediaTypeInvalid"`),
-				Entry("tgz", models.MediaTypeTgz, `"TGZ"`),
-				Entry("tar", models.MediaTypeTar, `"TAR"`),
-				Entry("zip", models.MediaTypeZip, `"ZIP"`),
+				Entry("invalid", models.ImageLayer_MediaTypeInvalid, `"MediaTypeInvalid"`),
+				Entry("tgz", models.ImageLayer_TGZ, `"TGZ"`),
+				Entry("tar", models.ImageLayer_TAR, `"TAR"`),
+				Entry("zip", models.ImageLayer_ZIP, `"ZIP"`),
 			)
 		})
 	})
@@ -177,9 +178,9 @@ var _ = Describe("ImageLayer", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.LayerTypeInvalid, `"LayerTypeInvalid"`),
-				Entry("shared", models.LayerTypeShared, `"SHARED"`),
-				Entry("exclusive", models.LayerTypeExclusive, `"EXCLUSIVE"`),
+				Entry("invalid", models.ImageLayer_LayerTypeInvalid, `"LayerTypeInvalid"`),
+				Entry("shared", models.ImageLayer_SHARED, `"SHARED"`),
+				Entry("exclusive", models.ImageLayer_EXCLUSIVE, `"EXCLUSIVE"`),
 			)
 		})
 	})

@@ -1,10 +1,9 @@
 syntax = "proto3";
 
 package models;
-
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+option go_package = "github.com/cloudfoundry/bbs/models";
 
 message EnvironmentVariable {
-  string name = 1 [(gogoproto.jsontag) = "name"];
-  string value = 2 [(gogoproto.jsontag) = "value"];
+  string name = 1 [json_name = "name"];
+  string value = 2 [json_name = "value"];
 }

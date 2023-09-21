@@ -2,10 +2,8 @@ syntax = "proto3";
 
 package models;
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-
-option (gogoproto.goproto_enum_prefix_all) = true;
+option go_package = "github.com/cloudfoundry/bbs/models";
 
 message Network {
-  map<string, string> properties = 1 [(gogoproto.jsontag) = "properties,omitempty"];
+  map<string, string> properties = 1 [json_name = "properties,omitempty"];
 }
