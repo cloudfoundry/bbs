@@ -289,13 +289,17 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 	}()
 
-	removeLRP := func() error {
-		err = h.db.RemoveActualLRP(ctx, logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
-		if err == nil {
-			newLRPs = eventCalculator.RecordChange(lrp, nil, lrps)
-		}
-		return err
-	}
+        recordChange := func() {
+                newLRPs = eventCalculator.RecordChange(lrp, nil, lrps)
+        }
+
+        removeLRP := func() error {
+                err = h.db.RemoveActualLRP(ctx, logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+                if err == nil {
+                        recordChange()
+                }
+                return err
+        }
 
 	for retryCount := 0; retryCount < models.RetireActualLRPRetryAttempts; retryCount++ {
 		switch lrp.State {
@@ -312,6 +316,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 			}
 
 			var client rep.Client
+			recordChange()
 			client, err = h.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl, trace.RequestIdFromContext(ctx))
 			if err != nil {
 				return err
