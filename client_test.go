@@ -3,7 +3,6 @@ package bbs_test
 import (
 	"context"
 	"net/http"
-	"os"
 	"path"
 	"time"
 
@@ -275,7 +274,7 @@ var _ = Describe("Client", func() {
 			var tlsServer *ghttp.Server
 
 			BeforeEach(func() {
-				basePath := path.Join(os.Getenv("DIEGO_RELEASE_DIR"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+				basePath := path.Join("cmd", "bbs", "fixtures")
 				caFile := path.Join(basePath, "green-certs", "server-ca.crt")
 
 				cfg.IsTLS = true
