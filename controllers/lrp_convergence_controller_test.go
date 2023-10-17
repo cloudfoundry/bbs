@@ -589,7 +589,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				fakeSuspectDB.PromoteSuspectActualLRPReturns(suspectActualLRP, ordinaryActualLRP, removedActualLRP, nil)
 			})
 
-			FIt("emits event for removed LRP", func() {
+			It("emits event for removed LRP", func() {
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
