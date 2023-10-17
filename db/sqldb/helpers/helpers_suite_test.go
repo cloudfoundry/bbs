@@ -35,11 +35,11 @@ var _ = BeforeEach(func() {
 
 	if test_helpers.UsePostgres() {
 		dbDriverName = "postgres"
-		user, ok := os.LookupEnv("POSTGRES_USER")
+		user, ok := os.LookupEnv("DB_USER")
 		if !ok {
 			user = "diego"
 		}
-		password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+		password, ok := os.LookupEnv("DB_PASSWORD")
 		if !ok {
 			password = "diego_pw"
 		}

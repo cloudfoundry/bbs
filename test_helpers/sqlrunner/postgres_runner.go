@@ -37,11 +37,11 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	user, ok := os.LookupEnv("POSTGRES_USER")
+	user, ok := os.LookupEnv("DB_USER")
 	if !ok {
 		user = "diego"
 	}
-	password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+	password, ok := os.LookupEnv("DB_PASSWORD")
 	if !ok {
 		password = "diego_pw"
 	}
@@ -89,11 +89,11 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 }
 
 func (p *PostgresRunner) ConnectionString() string {
-	user, ok := os.LookupEnv("POSTGRES_USER")
+	user, ok := os.LookupEnv("DB_USER")
 	if !ok {
 		user = "diego"
 	}
-	password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+	password, ok := os.LookupEnv("DB_PASSWORD")
 	if !ok {
 		password = "diego_pw"
 	}
@@ -113,7 +113,7 @@ func (p *PostgresRunner) DriverName() string {
 }
 
 func (p *PostgresRunner) Password() string {
-	password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+	password, ok := os.LookupEnv("DB_PASSWORD")
 	if !ok {
 		password = "diego_pw"
 	}
@@ -121,7 +121,7 @@ func (p *PostgresRunner) Password() string {
 }
 
 func (p *PostgresRunner) Username() string {
-	user, ok := os.LookupEnv("POSTGRES_USER")
+	user, ok := os.LookupEnv("DB_USER")
 	if !ok {
 		user = "diego"
 	}
