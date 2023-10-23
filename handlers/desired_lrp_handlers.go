@@ -402,10 +402,12 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						continue
 					}
 					logger.Debug("stopping-lrp-instance")
-					err = repClient.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
-					if err != nil {
-						logger.Error("failed-stopping-lrp-instance", err)
-					}
+					go func() {
+						err := repClient.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
+						if err != nil {
+							logger.Error("failed-stopping-lrp-instance", err)
+						}
+					} ()
 				}
 			}
 		}
@@ -458,10 +460,12 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 			}
 
 			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes, metricTags)
-			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
-			if err != nil {
-				logger.Error("updating-lrp-instance", err)
-			}
+			go func() {
+				err := repClient.UpdateLRPInstance(logger, lrpUpdate)
+				if err != nil {
+					logger.Error("updating-lrp-instance", err)
+				}
+			} ()
 		}
 	}
 }

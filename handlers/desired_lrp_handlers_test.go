@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
@@ -1089,6 +1091,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			request := newTestRequest(requestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.UpdateDesiredLRP(logger, responseRecorder, request)
+			time.Sleep(100 * time.Millisecond)
 		})
 
 		Context("when updating desired lrp in DB succeeds", func() {
@@ -1175,12 +1178,14 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Expect(traceID).To(Equal(requestIdHeader))
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
-						_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-						Expect(key).To(Equal(actualLRPs[0].ActualLRPKey))
-						Expect(instanceKey).To(Equal(actualLRPs[0].ActualLRPInstanceKey))
-						_, key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
-						Expect(key).To(Equal(actualLRPs[1].ActualLRPKey))
-						Expect(instanceKey).To(Equal(actualLRPs[1].ActualLRPInstanceKey))
+						_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
+						_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
+						Expect((key0 == actualLRPs[0].ActualLRPKey && key1 == actualLRPs[1].ActualLRPKey) || 
+						       (key1 == actualLRPs[0].ActualLRPKey && key0 == actualLRPs[1].ActualLRPKey)).To(BeTrue())
+
+						Expect((instanceKey0 == actualLRPs[0].ActualLRPInstanceKey && instanceKey1 == actualLRPs[1].ActualLRPInstanceKey) || 
+						       (instanceKey1 == actualLRPs[0].ActualLRPInstanceKey && instanceKey0 == actualLRPs[1].ActualLRPInstanceKey)).To(BeTrue())
+
 					})
 
 					Context("when the rep announces a url", func() {
@@ -1217,9 +1222,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					})
 
 					Context("when fetching cell presence fails", func() {
+						var atomicCallCounter int32
 						BeforeEach(func() {
 							fakeServiceClient.CellByIdStub = func(lager.Logger, string) (*models.CellPresence, error) {
-								if fakeRepClient.StopLRPInstanceCallCount() == 1 {
+								atomic.AddInt32(&atomicCallCounter, 1)
+								if atomic.LoadInt32(&atomicCallCounter) == 1 {
 									return nil, errors.New("ohhhhh nooooo, mr billlll")
 								} else {
 									return &models.CellPresence{RepAddress: "some-address"}, nil
@@ -1235,9 +1242,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					})
 
 					Context("when stopping the lrp fails", func() {
+						var atomicCallCounter int32
 						BeforeEach(func() {
 							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, models.ActualLRPKey, models.ActualLRPInstanceKey) error {
-								if fakeRepClient.StopLRPInstanceCallCount() == 1 {
+								atomic.AddInt32(&atomicCallCounter, 1)
+								if atomic.LoadInt32(&atomicCallCounter) == 1 {
 									return errors.New("ohhhhh nooooo, mr billlll")
 								} else {
 									return nil
@@ -1251,6 +1260,22 @@ var _ = Describe("DesiredLRP Handlers", func() {
 							Expect(logger).Should(gbytes.Say(b3RequestIdHeader))
 						})
 					})
+
+					Context("when stopping of the LRPs takes some time", func() {
+						var atomicCallCounter int32
+						BeforeEach(func() {
+							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, models.ActualLRPKey, models.ActualLRPInstanceKey) error {
+								atomic.AddInt32(&atomicCallCounter, 1)
+								time.Sleep(1000 * time.Millisecond)
+								atomic.AddInt32(&atomicCallCounter, -1)
+								return nil
+							}
+						})
+
+						It("the requests are still sent in parallel", func() {
+							Eventually(atomic.LoadInt32(&atomicCallCounter)).Should(Equal(int32(2)));
+						})
+					})					
 				})
 
 				Context("when the number of instances increases", func() {
@@ -1530,6 +1555,22 @@ var _ = Describe("DesiredLRP Handlers", func() {
 							Expect(lrp2Update.MetricTags).To(Equal(map[string]string{"some-tag": "some-value"}))
 						})
 
+						Context("when updatwing of the LRPs takes some time", func() {
+							var atomicCallCounter int32
+							BeforeEach(func() {
+								fakeRepClient.UpdateLRPInstanceStub = func(lager.Logger, rep.LRPUpdate) error {
+									atomic.AddInt32(&atomicCallCounter, 1)
+									time.Sleep(1000 * time.Millisecond)
+									atomic.AddInt32(&atomicCallCounter, -1)
+									return nil
+								}
+							})
+	
+							It("the requests are still sent in parallel", func() {
+								Eventually(atomic.LoadInt32(&atomicCallCounter)).Should(Equal(int32(2)));
+							})
+						})							
+
 						Context("when internal routes are unchanged", func() {
 							BeforeEach(func() {
 								internalRoutes := []byte("[{\"hostname\":\"updated.apps.internal\"}]")
@@ -1668,6 +1709,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			request := newTestRequest(requestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RemoveDesiredLRP(logger, responseRecorder, request)
+			time.Sleep(100 * time.Millisecond)
 		})
 
 		Context("when removing desired lrp in DB succeeds", func() {
@@ -1763,12 +1805,16 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(traceID).To(Equal(requestIdHeader))
 
 					Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
-					_, key, instanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-					Expect(key).To(Equal(runningActualLRP0.ActualLRPKey))
-					Expect(instanceKey).To(Equal(runningActualLRP0.ActualLRPInstanceKey))
-					_, key, instanceKey = fakeRepClient.StopLRPInstanceArgsForCall(1)
-					Expect(key).To(Equal(evacuatingActualLRP1.ActualLRPKey))
-					Expect(instanceKey).To(Equal(evacuatingActualLRP1.ActualLRPInstanceKey))
+					_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
+					_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
+
+
+					Expect((key0 == runningActualLRP0.ActualLRPKey && key1 == evacuatingActualLRP1.ActualLRPKey) || 
+					       (key1 == runningActualLRP0.ActualLRPKey && key0 == evacuatingActualLRP1.ActualLRPKey)).To(BeTrue())
+
+			 		Expect((instanceKey0 == runningActualLRP0.ActualLRPInstanceKey && instanceKey1 == evacuatingActualLRP1.ActualLRPInstanceKey) || 
+					       (instanceKey1 == runningActualLRP0.ActualLRPInstanceKey && instanceKey0 == evacuatingActualLRP1.ActualLRPInstanceKey)).To(BeTrue())					
+
 				})
 
 				It("removes all of the corresponding unclaimed and crashed actual lrps", func() {
