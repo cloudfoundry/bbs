@@ -67,6 +67,7 @@ var _ = Describe("Client", func() {
 					ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
 					ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
 					MetricTags:              actualLRP.MetricTags,
+					AvailabilityZone:        actualLRP.AvailabilityZone,
 				}
 				request.SetRoutable(false)
 				bbsServer.AppendHandlers(
@@ -78,7 +79,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -91,7 +92,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -112,12 +113,13 @@ var _ = Describe("Client", func() {
 							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
 							ActualLrpInternalRoutes: nil,
 							MetricTags:              nil,
+							AvailabilityZone:        "",
 						}),
 						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable())
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -130,7 +132,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 
@@ -148,7 +150,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})
@@ -166,13 +168,14 @@ var _ = Describe("Client", func() {
 							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
 							ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
 							MetricTags:              actualLRP.MetricTags,
+							AvailabilityZone:        actualLRP.AvailabilityZone,
 							OptionalRoutable:        &models.EvacuateRunningActualLRPRequest_Routable{Routable: actualLRP.GetRoutable()},
 						}),
 						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable())
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 			It("Calls the current endpoint", func() {
@@ -184,7 +187,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -206,12 +209,13 @@ var _ = Describe("Client", func() {
 							ActualLrpInternalRoutes: nil,
 							MetricTags:              nil,
 							OptionalRoutable:        nil,
+							AvailabilityZone:        "",
 						}),
 						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -224,7 +228,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 
@@ -242,7 +246,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &models.ActualLRPKey{}, &models.ActualLRPInstanceKey{}, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 				Expect(err).To(MatchError("Invalid Response with status code: 403"))
 			})
 		})

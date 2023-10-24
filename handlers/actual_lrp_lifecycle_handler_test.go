@@ -158,6 +158,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				ActualLrpNetInfo:        &netInfo,
 				ActualLrpInternalRoutes: internalRoutes,
 				MetricTags:              metricTags,
+				AvailabilityZone:        "some-availability-zone",
 			}
 			requestBody.SetRoutable(true)
 		})
@@ -170,12 +171,13 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable := fakeController.StartActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable, availabilityZone := fakeController.StartActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
 			Expect(actualNetInfo).To(Equal(&netInfo))
 			Expect(actualInternalRoutes).To(Equal(internalRoutes))
 			Expect(actualMetricTags).To(Equal(metricTags))
+			Expect(availabilityZone).To(Equal("some-availability-zone"))
 			Expect(routable).To(Equal(true))
 		})
 
@@ -187,12 +189,13 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 					ActualLrpNetInfo:        &netInfo,
 					ActualLrpInternalRoutes: internalRoutes,
 					MetricTags:              metricTags,
+					AvailabilityZone:        "some-availability-zone",
 				}
 			})
 
 			It("sets it to true", func() {
 				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				_, _, _, _, _, _, _, routable, _ := fakeController.StartActualLRPArgsForCall(0)
 				Expect(routable).To(Equal(true))
 			})
 		})
@@ -204,7 +207,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("sets it to false", func() {
 				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				_, _, _, _, _, _, _, routable, _ := fakeController.StartActualLRPArgsForCall(0)
 				Expect(routable).To(Equal(false))
 			})
 		})
@@ -216,7 +219,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("sets it to true", func() {
 				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				_, _, _, _, _, _, _, routable, _ := fakeController.StartActualLRPArgsForCall(0)
 				Expect(routable).To(Equal(true))
 			})
 		})
@@ -297,6 +300,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				ActualLrpNetInfo:        &netInfo,
 				ActualLrpInternalRoutes: internalRoutes,
 				MetricTags:              metricTags,
+				AvailabilityZone:        "some-zone",
 			}
 			requestBody.SetRoutable(true)
 		})
@@ -309,13 +313,14 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		It("calls the controller", func() {
 			Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable := fakeController.StartActualLRPArgsForCall(0)
+			_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable, availabilityZone := fakeController.StartActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(&key))
 			Expect(actualInstanceKey).To(Equal(&instanceKey))
 			Expect(actualNetInfo).To(Equal(&netInfo))
 			Expect(len(actualInternalRoutes)).To(Equal(0))
 			Expect(actualMetricTags).To(BeNil())
 			Expect(routable).To(Equal(true))
+			Expect(availabilityZone).To(Equal("some-zone"))
 		})
 
 		Context("when routable is not provided (old rep)", func() {
@@ -331,7 +336,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("sets it to true", func() {
 				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				_, _, _, _, _, _, _, routable, _ := fakeController.StartActualLRPArgsForCall(0)
 				Expect(routable).To(Equal(true))
 			})
 		})
@@ -343,7 +348,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("sets it to false", func() {
 				Expect(fakeController.StartActualLRPCallCount()).To(Equal(1))
-				_, _, _, _, _, _, _, routable := fakeController.StartActualLRPArgsForCall(0)
+				_, _, _, _, _, _, _, routable, _ := fakeController.StartActualLRPArgsForCall(0)
 				Expect(routable).To(Equal(false))
 			})
 		})

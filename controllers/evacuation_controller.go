@@ -248,6 +248,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 	internalRoutes []*models.ActualLRPInternalRoute,
 	metricTags map[string]string,
 	routable bool,
+	availabilityZone string,
 ) (bool, error) {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
@@ -312,7 +313,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 		// FIXME: there might be a bug when the LRP is originally in the CLAIMED
 		// state.  db.EvacuateActualLRP always create an evacuating LRP in the
 		// running state regardless.
-		newLRP, err := h.db.EvacuateActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, netInfo, internalRoutes, metricTags, routable)
+		newLRP, err := h.db.EvacuateActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, netInfo, internalRoutes, metricTags, routable, availabilityZone)
 
 		if err != nil {
 			logger.Error("failed-evacuating-actual-lrp", err)
@@ -404,7 +405,7 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
 
-	evacuating, err := h.db.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable())
+	evacuating, err := h.db.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 	if err != nil {
 		return err
 	}

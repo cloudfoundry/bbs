@@ -163,6 +163,12 @@ var _ = Describe("ActualLRP", func() {
 			actualLRPInfo = models.ActualLRPInfo{}
 		})
 
+		It("updates availability zone", func() {
+			actualLRPInfo.AvailabilityZone = "some-zone-1"
+			actualLRP := actualLRPInfo.ToActualLRP(models.NewActualLRPKey("p-guid", 0, "domain"), models.NewActualLRPInstanceKey("i-1", "cell-1"))
+			Expect(actualLRP.AvailabilityZone).To(Equal("some-zone-1"))
+		})
+
 		Context("when Routable is not provided", func() {
 			It("does not set routable", func() {
 				actualLRP := actualLRPInfo.ToActualLRP(models.NewActualLRPKey("p-guid", 0, "domain"), models.NewActualLRPInstanceKey("i-1", "cell-1"))

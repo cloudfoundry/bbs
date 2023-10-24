@@ -15,6 +15,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 		ActualLRPNetInfo:        models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444)),
 		ActualLrpInternalRoutes: NewActualLRPInternalRoutes(),
 		MetricTags:              NewActualLRPMetricTags(),
+		AvailabilityZone:        "some-zone",
 		CrashCount:              33,
 		CrashReason:             "badness",
 		State:                   models.ActualLRPStateRunning,

@@ -82,6 +82,7 @@ var (
 		actualLRPsTable + ".internal_routes",
 		actualLRPsTable + ".metric_tags",
 		actualLRPsTable + ".routable",
+		actualLRPsTable + ".availability_zone",
 		actualLRPsTable + ".modification_tag_epoch",
 		actualLRPsTable + ".modification_tag_index",
 		actualLRPsTable + ".crash_count",

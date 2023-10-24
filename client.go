@@ -51,16 +51,16 @@ type InternalClient interface {
 	Client
 
 	ClaimActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
-	StartActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool) error
+	StartActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool, availabilityZone string) error
 	CrashActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) error
 	FailActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, errorMessage string) error
 	RemoveActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 
-	EvacuateClaimedActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateRunningActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool) (bool, error)
-	EvacuateStoppedActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) (bool, error)
-	EvacuateCrashedActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey, string) (bool, error)
-	RemoveEvacuatingActualLRP(lager.Logger, string, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error
+	EvacuateClaimedActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateRunningActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool, availabilityZone string) (bool, error)
+	EvacuateStoppedActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error)
+	EvacuateCrashedActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, error)
+	RemoveEvacuatingActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error
 
 	StartTask(logger lager.Logger, traceID string, taskGuid string, cellID string) (bool, error)
 	FailTask(logger lager.Logger, traceID string, taskGuid, failureReason string) error
@@ -426,7 +426,16 @@ func (c *client) ClaimActualLRP(logger lager.Logger, traceID string, key *models
 	return response.Error.ToError()
 }
 
-func (c *client) StartActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool) error {
+func (c *client) StartActualLRP(logger lager.Logger,
+	traceID string,
+	key *models.ActualLRPKey,
+	instanceKey *models.ActualLRPInstanceKey,
+	netInfo *models.ActualLRPNetInfo,
+	internalRoutes []*models.ActualLRPInternalRoute,
+	metricTags map[string]string,
+	routable bool,
+	availabilityZone string,
+) error {
 	response := models.ActualLRPLifecycleResponse{}
 	request := &models.StartActualLRPRequest{
 		ActualLrpKey:            key,
@@ -434,6 +443,7 @@ func (c *client) StartActualLRP(logger lager.Logger, traceID string, key *models
 		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
 		MetricTags:              metricTags,
+		AvailabilityZone:        availabilityZone,
 	}
 	request.SetRoutable(routable)
 	err := c.doRequest(logger, traceID, StartActualLRPRoute_r1, nil, nil, request, &response)
@@ -530,13 +540,23 @@ func (c *client) EvacuateStoppedActualLRP(logger lager.Logger, traceID string, k
 	})
 }
 
-func (c *client) EvacuateRunningActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool) (bool, error) {
+func (c *client) EvacuateRunningActualLRP(logger lager.Logger,
+	traceID string,
+	key *models.ActualLRPKey,
+	instanceKey *models.ActualLRPInstanceKey,
+	netInfo *models.ActualLRPNetInfo,
+	internalRoutes []*models.ActualLRPInternalRoute,
+	metricTags map[string]string,
+	routable bool,
+	availabilityZone string,
+) (bool, error) {
 	request := &models.EvacuateRunningActualLRPRequest{
 		ActualLrpKey:            key,
 		ActualLrpInstanceKey:    instanceKey,
 		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
 		MetricTags:              metricTags,
+		AvailabilityZone:        availabilityZone,
 	}
 	request.SetRoutable(routable)
 	keepContainer, err := c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r1, KeepContainer, request)

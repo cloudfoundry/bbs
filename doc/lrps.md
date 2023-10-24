@@ -149,7 +149,8 @@ In all cases, the consumer is given an array of `ActualLRPResponse`:
         },
         "OptionalRoutable": {
           "routable": true
-        }
+        },
+        "availability_zone": "some-zone"
     },
     ...
 ]
@@ -212,6 +213,10 @@ When an ActualLRP is first created, `routable` is set by default to `False`.
 Once the ActualLRP is assigned to a cell, the container performs start up and parallel healthchecking processes, including optional [readiness checks as defined in the DesiredLRP](./defining-lrps.md).
 
 After the readiness checks pass, or if there are no readiness checks defined at all, the ActualLRP `routable` field is tranistioned from `False` to `True`.
+
+#### `availability_zone`
+
+The availability zone of the Diego cell where ActualLRP is running.
 
 #### Networking
 

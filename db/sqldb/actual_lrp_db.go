@@ -298,6 +298,7 @@ func (db *SQLDB) StartActualLRP(
 	internalRoutes []*models.ActualLRPInternalRoute,
 	metricTags map[string]string,
 	routable bool,
+	availabilityZone string,
 ) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.Session("db-start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo, "routable": routable})
 	logger.Info("starting")
@@ -310,7 +311,7 @@ func (db *SQLDB) StartActualLRP(
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err == models.ErrResourceNotFound {
-			actualLRP, err = db.createRunningActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes, metricTags, routable, tx)
+			actualLRP, err = db.createRunningActualLRP(ctx, logger, key, instanceKey, netInfo, internalRoutes, metricTags, routable, availabilityZone, tx)
 			return err
 		}
 
@@ -327,6 +328,7 @@ func (db *SQLDB) StartActualLRP(
 			reflect.DeepEqual(actualLRP.ActualLrpInternalRoutes, internalRoutes) &&
 			reflect.DeepEqual(actualLRP.MetricTags, metricTags) &&
 			actualLRP.GetRoutable() == routable &&
+			actualLRP.AvailabilityZone == availabilityZone &&
 			actualLRP.State == models.ActualLRPStateRunning {
 			logger.Debug("nothing-to-change")
 			return nil
@@ -343,6 +345,7 @@ func (db *SQLDB) StartActualLRP(
 		actualLRP.ActualLRPNetInfo = *netInfo
 		actualLRP.ActualLrpInternalRoutes = internalRoutes
 		actualLRP.MetricTags = metricTags
+		actualLRP.AvailabilityZone = availabilityZone
 		actualLRP.State = models.ActualLRPStateRunning
 		actualLRP.Since = now
 		actualLRP.ModificationTag.Increment()
@@ -379,6 +382,7 @@ func (db *SQLDB) StartActualLRP(
 				"internal_routes":        internalRoutesData,
 				"metric_tags":            metricTagsData,
 				"routable":               actualLRP.GetRoutable(),
+				"availability_zone":      actualLRP.AvailabilityZone,
 			},
 			"process_guid = ? AND instance_index = ? AND presence = ?",
 			key.ProcessGuid, key.Index, models.ActualLRP_Ordinary,
@@ -566,7 +570,7 @@ func (db *SQLDB) RemoveActualLRP(ctx context.Context, logger lager.Logger, proce
 	})
 }
 
-func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool, tx helpers.Tx) (*models.ActualLRP, error) {
+func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, netInfo *models.ActualLRPNetInfo, internalRoutes []*models.ActualLRPInternalRoute, metricTags map[string]string, routable bool, availabilityZone string, tx helpers.Tx) (*models.ActualLRP, error) {
 	now := db.clock.Now().UnixNano()
 	guid, err := db.guidProvider.NextGUID()
 	if err != nil {
@@ -583,6 +587,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 	actualLRP.State = models.ActualLRPStateRunning
 	actualLRP.Since = now
 	actualLRP.SetRoutable(routable)
+	actualLRP.AvailabilityZone = availabilityZone
 
 	netInfoData, err := db.serializeModel(logger, &actualLRP.ActualLRPNetInfo)
 	if err != nil {
@@ -613,6 +618,7 @@ func (db *SQLDB) createRunningActualLRP(ctx context.Context, logger lager.Logger
 			"internal_routes":        internalRoutesData,
 			"metric_tags":            metricTagsData,
 			"routable":               actualLRP.GetRoutable(),
+			"availability_zone":      actualLRP.AvailabilityZone,
 			"since":                  actualLRP.Since,
 			"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 			"modification_tag_index": actualLRP.ModificationTag.Index,
@@ -646,6 +652,7 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 		&internalRoutesData,
 		&metricTagsData,
 		&routable,
+		&actualLRP.AvailabilityZone,
 		&actualLRP.ModificationTag.Epoch,
 		&actualLRP.ModificationTag.Index,
 		&actualLRP.CrashCount,

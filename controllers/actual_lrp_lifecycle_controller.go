@@ -101,7 +101,16 @@ func (h *ActualLRPLifecycleController) ClaimActualLRP(ctx context.Context, logge
 	return nil
 }
 
-func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, actualLRPNetInfo *models.ActualLRPNetInfo, actualLRPInternalRoutes []*models.ActualLRPInternalRoute, actualLRPMetricTags map[string]string, routable bool) error {
+func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context,
+	logger lager.Logger,
+	actualLRPKey *models.ActualLRPKey,
+	actualLRPInstanceKey *models.ActualLRPInstanceKey,
+	actualLRPNetInfo *models.ActualLRPNetInfo,
+	actualLRPInternalRoutes []*models.ActualLRPInternalRoute,
+	actualLRPMetricTags map[string]string,
+	routable bool,
+	availabilityZone string,
+) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
@@ -125,7 +134,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context, logge
 
 	// creates ordinary running actual LRP if it doesn't exist, otherwise updates
 	// the existing ordinary actual LRP to running state
-	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, routable)
+	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, routable, availabilityZone)
 	if err != nil {
 		return err
 	}
@@ -289,17 +298,17 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
 	}()
 
-        recordChange := func() {
-                newLRPs = eventCalculator.RecordChange(lrp, nil, lrps)
-        }
+	recordChange := func() {
+		newLRPs = eventCalculator.RecordChange(lrp, nil, lrps)
+	}
 
-        removeLRP := func() error {
-                err = h.db.RemoveActualLRP(ctx, logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
-                if err == nil {
-                        recordChange()
-                }
-                return err
-        }
+	removeLRP := func() error {
+		err = h.db.RemoveActualLRP(ctx, logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+		if err == nil {
+			recordChange()
+		}
+		return err
+	}
 
 	for retryCount := 0; retryCount < models.RetireActualLRPRetryAttempts; retryCount++ {
 		switch lrp.State {

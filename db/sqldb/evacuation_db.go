@@ -18,6 +18,7 @@ func (db *SQLDB) EvacuateActualLRP(
 	internalRoutes []*models.ActualLRPInternalRoute,
 	metricTags map[string]string,
 	routable bool,
+	availabilityZone string,
 ) (*models.ActualLRP, error) {
 	logger = logger.Session("db-evacuate-actual-lrp", lager.Data{"lrp_key": lrpKey, "instance_key": instanceKey, "net_info": netInfo, "routable": routable})
 	logger.Debug("starting")
@@ -33,7 +34,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Evacuating, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
-			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, internalRoutes, metricTags, routable, tx)
+			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, internalRoutes, metricTags, routable, availabilityZone, tx)
 			return err
 		}
 
@@ -57,6 +58,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		actualLRP.ActualLRPNetInfo = *netInfo
 		actualLRP.ActualLrpInternalRoutes = internalRoutes
 		actualLRP.MetricTags = metricTags
+		actualLRP.AvailabilityZone = availabilityZone
 		actualLRP.Presence = models.ActualLRP_Evacuating
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
@@ -150,6 +152,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 	internalRoutes []*models.ActualLRPInternalRoute,
 	metricTags map[string]string,
 	routable bool,
+	availabilityZone string,
 	tx helpers.Tx,
 ) (*models.ActualLRP, error) {
 	netInfoData, err := db.serializeModel(logger, netInfo)
@@ -182,6 +185,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		ActualLRPNetInfo:        *netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
 		MetricTags:              metricTags,
+		AvailabilityZone:        availabilityZone,
 		State:                   models.ActualLRPStateRunning,
 		Since:                   now.UnixNano(),
 		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
@@ -201,6 +205,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		"internal_routes":        internalRoutesData,
 		"metric_tags":            metricTagsData,
 		"routable":               routable,
+		"availability_zone":      availabilityZone,
 		"since":                  actualLRP.Since,
 		"modification_tag_epoch": actualLRP.ModificationTag.Epoch,
 		"modification_tag_index": actualLRP.ModificationTag.Index,

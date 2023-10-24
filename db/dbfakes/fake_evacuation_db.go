@@ -11,7 +11,7 @@ import (
 )
 
 type FakeEvacuationDB struct {
-	EvacuateActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool) (*models.ActualLRP, error)
+	EvacuateActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string) (*models.ActualLRP, error)
 	evacuateActualLRPMutex       sync.RWMutex
 	evacuateActualLRPArgsForCall []struct {
 		arg1 context.Context
@@ -22,6 +22,7 @@ type FakeEvacuationDB struct {
 		arg6 []*models.ActualLRPInternalRoute
 		arg7 map[string]string
 		arg8 bool
+		arg9 string
 	}
 	evacuateActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -49,7 +50,7 @@ type FakeEvacuationDB struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute, arg7 map[string]string, arg8 bool) (*models.ActualLRP, error) {
+func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute, arg7 map[string]string, arg8 bool, arg9 string) (*models.ActualLRP, error) {
 	var arg6Copy []*models.ActualLRPInternalRoute
 	if arg6 != nil {
 		arg6Copy = make([]*models.ActualLRPInternalRoute, len(arg6))
@@ -66,13 +67,14 @@ func (fake *FakeEvacuationDB) EvacuateActualLRP(arg1 context.Context, arg2 lager
 		arg6 []*models.ActualLRPInternalRoute
 		arg7 map[string]string
 		arg8 bool
-	}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8})
+		arg9 string
+	}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8, arg9})
 	stub := fake.EvacuateActualLRPStub
 	fakeReturns := fake.evacuateActualLRPReturns
-	fake.recordInvocation("EvacuateActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8})
+	fake.recordInvocation("EvacuateActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8, arg9})
 	fake.evacuateActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -86,17 +88,17 @@ func (fake *FakeEvacuationDB) EvacuateActualLRPCallCount() int {
 	return len(fake.evacuateActualLRPArgsForCall)
 }
 
-func (fake *FakeEvacuationDB) EvacuateActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool) (*models.ActualLRP, error)) {
+func (fake *FakeEvacuationDB) EvacuateActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string) (*models.ActualLRP, error)) {
 	fake.evacuateActualLRPMutex.Lock()
 	defer fake.evacuateActualLRPMutex.Unlock()
 	fake.EvacuateActualLRPStub = stub
 }
 
-func (fake *FakeEvacuationDB) EvacuateActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool) {
+func (fake *FakeEvacuationDB) EvacuateActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string) {
 	fake.evacuateActualLRPMutex.RLock()
 	defer fake.evacuateActualLRPMutex.RUnlock()
 	argsForCall := fake.evacuateActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7, argsForCall.arg8
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7, argsForCall.arg8, argsForCall.arg9
 }
 
 func (fake *FakeEvacuationDB) EvacuateActualLRPReturns(result1 *models.ActualLRP, result2 error) {

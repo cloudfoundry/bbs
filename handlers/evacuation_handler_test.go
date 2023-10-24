@@ -483,9 +483,12 @@ var _ = Describe("Evacuation Handlers", func() {
 			BeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateRunningActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
-					ActualLrpNetInfo:     &actual.ActualLRPNetInfo,
+					ActualLrpKey:            &actual.ActualLRPKey,
+					ActualLrpInstanceKey:    &actual.ActualLRPInstanceKey,
+					ActualLrpNetInfo:        &actual.ActualLRPNetInfo,
+					ActualLrpInternalRoutes: actual.ActualLrpInternalRoutes,
+					MetricTags:              actual.MetricTags,
+					AvailabilityZone:        actual.AvailabilityZone,
 				}
 			})
 
@@ -494,6 +497,18 @@ var _ = Describe("Evacuation Handlers", func() {
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+
+			It("calls the controller", func() {
+				Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
+				_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable, availabilityZone := controller.EvacuateRunningActualLRPArgsForCall(0)
+				Expect(actualKey).To(Equal(&actual.ActualLRPKey))
+				Expect(actualInstanceKey).To(Equal(&actual.ActualLRPInstanceKey))
+				Expect(actualNetInfo).To(Equal(&actual.ActualLRPNetInfo))
+				Expect(actualInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
+				Expect(actualMetricTags).To(Equal(actual.MetricTags))
+				Expect(availabilityZone).To(Equal(actual.AvailabilityZone))
+				Expect(routable).To(Equal(true))
 			})
 
 			Context("when the controller succeeds in evacuating the actual lrp", func() {
@@ -530,7 +545,7 @@ var _ = Describe("Evacuation Handlers", func() {
 				Context("when routable is not provided (old rep)", func() {
 					It("sets it to true", func() {
 						Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
-						_, _, _, _, _, _, _, routable := controller.EvacuateRunningActualLRPArgsForCall(0)
+						_, _, _, _, _, _, _, routable, _ := controller.EvacuateRunningActualLRPArgsForCall(0)
 						Expect(routable).To(Equal(true))
 					})
 				})
@@ -542,7 +557,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("sets it to false", func() {
 						Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
-						_, _, _, _, _, _, _, routable := controller.EvacuateRunningActualLRPArgsForCall(0)
+						_, _, _, _, _, _, _, routable, _ := controller.EvacuateRunningActualLRPArgsForCall(0)
 						Expect(routable).To(Equal(false))
 					})
 				})
@@ -554,7 +569,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 					It("sets it to false", func() {
 						Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
-						_, _, _, _, _, _, _, routable := controller.EvacuateRunningActualLRPArgsForCall(0)
+						_, _, _, _, _, _, _, routable, _ := controller.EvacuateRunningActualLRPArgsForCall(0)
 						Expect(routable).To(Equal(true))
 					})
 				})
