@@ -22,7 +22,7 @@ specifically documented [here](https://godoc.org/github.com/cloudfoundry/bbs#Ext
 
 Here is a happy path overview of the LRP lifecycle:
 
-- The Nsync listens for desired app requests and creates/modifies the DesiredLRPs via the BBS
+- The Cloud Controller sends DesireDesiredLRP request to BBS
 - The Converger compares DesiredLRPs and their ActualLRPs and takes action to enforce the desired state
 - Starts are requested and sent to the Auctioneer
     - The Rep starts the ActualLRP and updates its state in the BBS
@@ -84,13 +84,17 @@ These may be provided simultaneously in one request, or independently over sever
 
 ## Monitoring Health
 
-It is up to the consumer to tell Diego how to monitor an LRP instance.  If provided, Diego uses the `monitor` action to ascertain when an LRP is up.
+It is up to the consumer to tell Diego how to monitor an LRP instance. An ActualLRP instance begins in an unhealthy state (`CLAIMED`).
 
-Typically, an ActualLRP instance begins in an unhealthy state (`CLAIMED`).  At this point the `monitor` action is polled every 0.5 seconds.  Eventually the `monitor` action succeeds and the instance enters a healthy state (`RUNNING`).  At this point the `monitor` action is polled every 30 seconds.  If the `monitor` action subsequently fails, the ActualLRP is considered crashed.  Diego's consumer is free to define an arbitrary `monitor` action - a `monitor` action may check that a port is accepting connections, or that a URL returns a happy status code, or that a file is present in the container.  In fact, a single `monitor` action might be a composition of other actions that can monitor multiple processes running in the container.
+If provided, Diego uses the `check_definition` property to create application health check processes. The `checks` list in `check_definition` represent liveness health checks. Each check is configured with `interval_ms` and `request_timeout_ms` for HTTP type health checks or `connection_timeout_ms` for TCP type health checks. Health check process will be running along side application process and based on configuration it will poll the port or an endpoint. If polling succeeds application instance is considered as healthy and LRP transitions to `RUNNING` state.
+
+Additionally, `readiness_checks` might be configured in `check_definition`. For each readiness check a health check process is running along side application process and liveness health check process. If readiness health check succeeds, actual LRP field `routable` field is marked as `true` and `StartActualLRP` request will updated the LRP state in BBS which will emit an event for the router to advertize this application instance as a backend for application routes. If readiness health check fails `routable` field is set to `false`, eventually removing application instance from backends list for application routes.
+
+If `check_definition` is not provided, Diego falls back to deprecated `monitor` action to ascertain when an LRP is up for backwards compatibility. At this point the `monitor` action is polled every 0.5 seconds.  Eventually the `monitor` action succeeds and the instance enters a healthy state (`RUNNING`).  At this point the `monitor` action is polled every 30 seconds.  If the `monitor` action subsequently fails, the ActualLRP is considered crashed.  Diego's consumer is free to define an arbitrary `monitor` action - a `monitor` action may check that a port is accepting connections, or that a URL returns a happy status code, or that a file is present in the container.  In fact, a single `monitor` action might be a composition of other actions that can monitor multiple processes running in the container.
 
 Normally, the `action` action on the DesiredLRP does not exit.  It is possible, however, to launch and daemonize a process in Diego.  If the `action` action exits succesfully Diego assumes the process is a daemon and continues monitoring it with the `monitor` action.  If the `action` action fails (e.g. exit with non-zero status code for a `RunAction`) Diego assumes the ActualLRP has failed and schedules it to be restarted.
 
-Finally, it is possible to opt out of monitoring.  If no `monitor` action is specified then the health of the ActualLRP is dependent on the `action` continuing to run indefinitely.  The ActualLRP is considered `RUNNING` as soon as the `action` action begins, and is considered to have failed if the `action` action ever exits.
+Finally, it is possible to opt out of monitoring.  If no `check_definition` or `monitor` action is specified then the health of the ActualLRP is dependent on the `action` continuing to run indefinitely.  The ActualLRP is considered `RUNNING` as soon as the `action` action begins, and is considered to have failed if the `action` action ever exits.
 
 > Note that Diego does not currently stream back logs for processes that daemonize.
 
@@ -142,6 +146,9 @@ In all cases, the consumer is given an array of `ActualLRPResponse`:
             "source_id": "some-process-guid",
             "space_id": "some-space-guid",
             "space_name": "some-space-name"
+        },
+        "OptionalRoutable": {
+          "routable": true
         }
     },
     ...
