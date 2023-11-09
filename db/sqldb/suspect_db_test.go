@@ -30,7 +30,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
 		Expect(err).NotTo(HaveOccurred())
-		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false)
+		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false, actualLRP.AvailabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -65,7 +65,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 					Expect(err).NotTo(HaveOccurred())
 					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, replacementGuid, replacementIndex, &replacementLRP.ActualLRPInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, replacementLRP.GetRoutable())
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, replacementLRP.GetRoutable(), replacementLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -102,7 +102,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 					Expect(err).NotTo(HaveOccurred())
 					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &replacementLRP.ActualLRPInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false)
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false, replacementLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

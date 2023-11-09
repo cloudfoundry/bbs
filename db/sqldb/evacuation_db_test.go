@@ -32,7 +32,7 @@ var _ = Describe("Evacuation", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
 		Expect(err).NotTo(HaveOccurred())
-		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), actualLRP.GetRoutable())
+		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -67,7 +67,7 @@ var _ = Describe("Evacuation", func() {
 				})
 
 				It("persists the evacuating lrp in sqldb", func() {
-					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true)
+					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true, actualLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
@@ -83,7 +83,7 @@ var _ = Describe("Evacuation", func() {
 				})
 
 				It("persists the evacuating lrp", func() {
-					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true)
+					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true, actualLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
@@ -101,7 +101,7 @@ var _ = Describe("Evacuation", func() {
 				})
 
 				It("persists the evacuating lrp", func() {
-					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true)
+					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true, actualLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
@@ -114,7 +114,7 @@ var _ = Describe("Evacuation", func() {
 
 		Context("when the evacuating actual lrp already exists", func() {
 			It("returns an ErrResourceExists", func() {
-				_, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true)
+				_, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true, actualLRP.AvailabilityZone)
 				Expect(err).To(Equal(models.ErrResourceExists))
 			})
 		})
@@ -137,7 +137,7 @@ var _ = Describe("Evacuation", func() {
 				It("creates the evacuating actual lrp", func() {
 					internalRoutes := model_helpers.NewActualLRPInternalRoutes()
 					metricTags := model_helpers.NewActualLRPMetricTags()
-					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, internalRoutes, metricTags, true)
+					evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, internalRoutes, metricTags, true, actualLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 
 					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
@@ -150,6 +150,7 @@ var _ = Describe("Evacuation", func() {
 					Expect(actualLRPs[0].ActualLrpInternalRoutes).To(Equal(internalRoutes))
 					Expect(actualLRPs[0].MetricTags).To(Equal(metricTags))
 					Expect(actualLRPs[0].GetRoutable()).To(Equal(true))
+					Expect(actualLRPs[0].AvailabilityZone).To(Equal(actualLRP.AvailabilityZone))
 
 					actualLRPs[0].ModificationTag = actualLRP.ModificationTag
 					Expect(actualLRPs).To(ConsistOf(actualLRP))
@@ -169,7 +170,7 @@ var _ = Describe("Evacuation", func() {
 			})
 
 			It("removes the invalid record and inserts a replacement", func() {
-				evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true)
+				evacuating, err := sqlDB.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), true, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 
 				actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
