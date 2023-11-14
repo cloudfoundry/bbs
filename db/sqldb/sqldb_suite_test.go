@@ -60,11 +60,11 @@ var _ = BeforeSuite(func() {
 
 	if test_helpers.UsePostgres() {
 		dbDriverName = "postgres"
-		user, ok := os.LookupEnv("POSTGRES_USER")
+		user, ok := os.LookupEnv("DB_USER")
 		if !ok {
 			user = "diego"
 		}
-		password, ok := os.LookupEnv("POSTGRES_PASSWORD")
+		password, ok := os.LookupEnv("DB_PASSWORD")
 		if !ok {
 			password = "diego_pw"
 		}
@@ -72,11 +72,11 @@ var _ = BeforeSuite(func() {
 		dbFlavor = helpers.Postgres
 	} else if test_helpers.UseMySQL() {
 		dbDriverName = "mysql"
-		user, ok := os.LookupEnv("MYSQL_USER")
+		user, ok := os.LookupEnv("DB_USER")
 		if !ok {
 			user = "diego"
 		}
-		password, ok := os.LookupEnv("MYSQL_PASSWORD")
+		password, ok := os.LookupEnv("DB_PASSWORD")
 		if !ok {
 			password = "diego_password"
 		}

@@ -1180,11 +1180,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
 						_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
-						Expect((key0 == actualLRPs[0].ActualLRPKey && key1 == actualLRPs[1].ActualLRPKey) || 
-						       (key1 == actualLRPs[0].ActualLRPKey && key0 == actualLRPs[1].ActualLRPKey)).To(BeTrue())
+						Expect((key0 == actualLRPs[0].ActualLRPKey && key1 == actualLRPs[1].ActualLRPKey) ||
+							(key1 == actualLRPs[0].ActualLRPKey && key0 == actualLRPs[1].ActualLRPKey)).To(BeTrue())
 
-						Expect((instanceKey0 == actualLRPs[0].ActualLRPInstanceKey && instanceKey1 == actualLRPs[1].ActualLRPInstanceKey) || 
-						       (instanceKey1 == actualLRPs[0].ActualLRPInstanceKey && instanceKey0 == actualLRPs[1].ActualLRPInstanceKey)).To(BeTrue())
+						Expect((instanceKey0 == actualLRPs[0].ActualLRPInstanceKey && instanceKey1 == actualLRPs[1].ActualLRPInstanceKey) ||
+							(instanceKey1 == actualLRPs[0].ActualLRPInstanceKey && instanceKey0 == actualLRPs[1].ActualLRPInstanceKey)).To(BeTrue())
 
 					})
 
@@ -1273,9 +1273,9 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						})
 
 						It("the requests are still sent in parallel", func() {
-							Eventually(atomic.LoadInt32(&atomicCallCounter)).Should(Equal(int32(2)));
+							Eventually(atomic.LoadInt32(&atomicCallCounter)).Should(Equal(int32(2)))
 						})
-					})					
+					})
 				})
 
 				Context("when the number of instances increases", func() {
@@ -1565,11 +1565,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 									return nil
 								}
 							})
-	
+
 							It("the requests are still sent in parallel", func() {
-								Eventually(atomic.LoadInt32(&atomicCallCounter)).Should(Equal(int32(2)));
+								Eventually(atomic.LoadInt32(&atomicCallCounter)).Should(Equal(int32(2)))
 							})
-						})							
+						})
 
 						Context("when internal routes are unchanged", func() {
 							BeforeEach(func() {
@@ -1808,12 +1808,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
 					_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
 
+					Expect((key0 == runningActualLRP0.ActualLRPKey && key1 == evacuatingActualLRP1.ActualLRPKey) ||
+						(key1 == runningActualLRP0.ActualLRPKey && key0 == evacuatingActualLRP1.ActualLRPKey)).To(BeTrue())
 
-					Expect((key0 == runningActualLRP0.ActualLRPKey && key1 == evacuatingActualLRP1.ActualLRPKey) || 
-					       (key1 == runningActualLRP0.ActualLRPKey && key0 == evacuatingActualLRP1.ActualLRPKey)).To(BeTrue())
-
-			 		Expect((instanceKey0 == runningActualLRP0.ActualLRPInstanceKey && instanceKey1 == evacuatingActualLRP1.ActualLRPInstanceKey) || 
-					       (instanceKey1 == runningActualLRP0.ActualLRPInstanceKey && instanceKey0 == evacuatingActualLRP1.ActualLRPInstanceKey)).To(BeTrue())					
+					Expect((instanceKey0 == runningActualLRP0.ActualLRPInstanceKey && instanceKey1 == evacuatingActualLRP1.ActualLRPInstanceKey) ||
+						(instanceKey1 == runningActualLRP0.ActualLRPInstanceKey && instanceKey0 == evacuatingActualLRP1.ActualLRPInstanceKey)).To(BeTrue())
 
 				})
 

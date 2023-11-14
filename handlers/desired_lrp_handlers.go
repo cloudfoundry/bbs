@@ -407,7 +407,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						if err != nil {
 							logger.Error("failed-stopping-lrp-instance", err)
 						}
-					} ()
+					}()
 				}
 			}
 		}
@@ -465,7 +465,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				if err != nil {
 					logger.Error("updating-lrp-instance", err)
 				}
-			} ()
+			}()
 		}
 	}
 }

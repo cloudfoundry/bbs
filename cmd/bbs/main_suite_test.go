@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -113,7 +112,7 @@ var _ = BeforeEach(func() {
 	var err error
 	logger = lagertest.NewTestLogger("test")
 	ctx = context.Background()
-	fixturesPath := path.Join(os.Getenv("DIEGO_RELEASE_DIR"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+	fixturesPath := "fixtures"
 
 	locketPort, err := portAllocator.ClaimPorts(1)
 	Expect(err).NotTo(HaveOccurred())

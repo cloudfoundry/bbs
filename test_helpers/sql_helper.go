@@ -19,7 +19,7 @@ func UseSQL() bool {
 }
 
 func driver() string {
-	flavor := os.Getenv("SQL_FLAVOR")
+	flavor := os.Getenv("DB")
 	if flavor == "" {
 		flavor = postgresFlavor
 	}

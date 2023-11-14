@@ -593,12 +593,17 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
-				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
-					models.NewActualLRPInstanceRemovedEvent(removedActualLRP, traceId),
-				))
-				Expect(actualLRPInstanceHub.EmitArgsForCall(1)).To(Equal(
+				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Or(Equal(
 					models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP, traceId),
-				))
+				), Equal(
+					models.NewActualLRPInstanceRemovedEvent(removedActualLRP, traceId),
+				)))
+				Expect(actualLRPInstanceHub.EmitArgsForCall(1)).To(Or(Equal(
+					models.NewActualLRPInstanceChangedEvent(suspectActualLRP, ordinaryActualLRP, traceId),
+				), Equal(
+					models.NewActualLRPInstanceRemovedEvent(removedActualLRP, traceId),
+				)))
+				Expect(actualLRPInstanceHub.EmitArgsForCall(1)).ToNot(Equal(actualLRPInstanceHub.EmitArgsForCall(0)))
 			})
 		})
 

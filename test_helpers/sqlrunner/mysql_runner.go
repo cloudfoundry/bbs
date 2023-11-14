@@ -36,11 +36,11 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	user, ok := os.LookupEnv("MYSQL_USER")
+	user, ok := os.LookupEnv("DB_USER")
 	if !ok {
 		user = "diego"
 	}
-	password, ok := os.LookupEnv("MYSQL_PASSWORD")
+	password, ok := os.LookupEnv("DB_PASSWORD")
 	if !ok {
 		password = "diego_password"
 	}
@@ -81,11 +81,11 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 }
 
 func (m *MySQLRunner) ConnectionString() string {
-	user, ok := os.LookupEnv("MYSQL_USER")
+	user, ok := os.LookupEnv("DB_USER")
 	if !ok {
 		user = "diego"
 	}
-	password, ok := os.LookupEnv("MYSQL_PASSWORD")
+	password, ok := os.LookupEnv("DB_PASSWORD")
 	if !ok {
 		password = "diego_password"
 	}
@@ -101,7 +101,7 @@ func (p *MySQLRunner) DBName() string {
 }
 
 func (p *MySQLRunner) Password() string {
-	password, ok := os.LookupEnv("MYSQL_PASSWORD")
+	password, ok := os.LookupEnv("DB_PASSWORD")
 	if !ok {
 		password = "diego_password"
 	}
@@ -109,7 +109,7 @@ func (p *MySQLRunner) Password() string {
 }
 
 func (p *MySQLRunner) Username() string {
-	user, ok := os.LookupEnv("MYSQL_USER")
+	user, ok := os.LookupEnv("DB_USER")
 	if !ok {
 		user = "diego"
 	}

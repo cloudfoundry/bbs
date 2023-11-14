@@ -2,7 +2,6 @@ package main_test
 
 import (
 	"net/http"
-	"os"
 	"path"
 
 	"code.cloudfoundry.org/bbs"
@@ -26,7 +25,7 @@ var _ = Describe("Secure", func() {
 	)
 
 	BeforeEach(func() {
-		basePath = path.Join(os.Getenv("DIEGO_RELEASE_DIR"), "src/code.cloudfoundry.org/bbs/cmd/bbs/fixtures")
+		basePath = "fixtures"
 		bbsURL.Scheme = "https"
 	})
 
