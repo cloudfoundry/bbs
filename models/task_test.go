@@ -98,83 +98,23 @@ var _ = Describe("Task", func() {
 				"layer_type": "SHARED"
 			}
 		],
-    "legacy_download_user": "some-user"
-	}`
-
-		task = models.Task{
-			TaskDefinition: &models.TaskDefinition{
-				RootFs: "docker:///docker.com/docker",
-				EnvironmentVariables: []*models.EnvironmentVariable{
-					{
-						Name:  "ENV_VAR_NAME",
-						Value: "an environmment value",
-					},
-				},
-				Action: models.WrapAction(&models.DownloadAction{
-					From:              "old_location",
-					To:                "new_location",
-					CacheKey:          "the-cache-key",
-					User:              "someone",
-					ChecksumAlgorithm: "md5",
-					ChecksumValue:     "some value",
-				}),
-				MemoryMb:     256,
-				DiskMb:       1024,
-				LogRateLimit: &models.LogRateLimit{BytesPerSecond: 2048},
-				MaxPids:      256,
-				CpuWeight:    42,
-				Privileged:   true,
-				LogGuid:      "123",
-				LogSource:    "APP",
-				MetricsGuid:  "456",
-				ResultFile:   "some-file.txt",
-
-				EgressRules: []*models.SecurityGroupRule{
-					{
-						Protocol:     "tcp",
-						Destinations: []string{"0.0.0.0/0"},
-						PortRange: &models.PortRange{
-							Start: 1,
-							End:   1024,
-						},
-						Log: true,
-					},
-					{
-						Protocol:     "udp",
-						Destinations: []string{"8.8.0.0/16"},
-						Ports:        []uint32{53},
-					},
-				},
-
-				Annotation: `[{"anything": "you want!"}]... dude`,
-				Network: &models.Network{
-					Properties: map[string]string{
-						"some-key":       "some-value",
-						"some-other-key": "some-other-value",
-					},
-				},
-				CompletionCallbackUrl: "http://user:password@a.b.c/d/e/f",
-				CertificateProperties: &models.CertificateProperties{
-					OrganizationalUnit: []string{"stuff"},
-				},
-				ImageUsername: "jake",
-				ImagePassword: "thedog",
-				ImageLayers: []*models.ImageLayer{
-					{Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeShared},
-				},
-				LegacyDownloadUser: "some-user",
-			},
-			TaskGuid:         "some-guid",
-			Domain:           "some-domain",
-			CreatedAt:        time.Date(2014, time.February, 25, 23, 46, 11, 00, time.UTC).UnixNano(),
-			UpdatedAt:        time.Date(2014, time.February, 25, 23, 46, 11, 10, time.UTC).UnixNano(),
-			FirstCompletedAt: time.Date(2014, time.February, 25, 23, 46, 11, 30, time.UTC).UnixNano(),
-			State:            models.Task_Pending,
-			CellId:           "cell",
-			Result:           "turboencabulated",
-			Failed:           true,
-			FailureReason:    "because i said so",
+		"legacy_download_user": "some-user",
+		"metric_tags": {
+		  "source_id": {
+			  "static": "some-guid"
+		  },
+		  "foo": {
+			  "static": "some-value"
+		  },
+		  "bar": {
+			  "dynamic": "INDEX"
+		  }
 		}
+	  }`
+
+		task = models.Task{}
+		err := json.Unmarshal([]byte(taskPayload), &task)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("serialization", func() {
