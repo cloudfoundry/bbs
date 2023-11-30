@@ -27,11 +27,6 @@ type FakeMigration struct {
 	setDBFlavorArgsForCall []struct {
 		arg1 string
 	}
-	SetRawSQLDBStub        func(*sql.DB)
-	setRawSQLDBMutex       sync.RWMutex
-	setRawSQLDBArgsForCall []struct {
-		arg1 *sql.DB
-	}
 	StringStub        func() string
 	stringMutex       sync.RWMutex
 	stringArgsForCall []struct {
@@ -42,10 +37,11 @@ type FakeMigration struct {
 	stringReturnsOnCall map[int]struct {
 		result1 string
 	}
-	UpStub        func(lager.Logger) error
+	UpStub        func(*sql.Tx, lager.Logger) error
 	upMutex       sync.RWMutex
 	upArgsForCall []struct {
-		arg1 lager.Logger
+		arg1 *sql.Tx
+		arg2 lager.Logger
 	}
 	upReturns struct {
 		result1 error
@@ -163,38 +159,6 @@ func (fake *FakeMigration) SetDBFlavorArgsForCall(i int) string {
 	return argsForCall.arg1
 }
 
-func (fake *FakeMigration) SetRawSQLDB(arg1 *sql.DB) {
-	fake.setRawSQLDBMutex.Lock()
-	fake.setRawSQLDBArgsForCall = append(fake.setRawSQLDBArgsForCall, struct {
-		arg1 *sql.DB
-	}{arg1})
-	stub := fake.SetRawSQLDBStub
-	fake.recordInvocation("SetRawSQLDB", []interface{}{arg1})
-	fake.setRawSQLDBMutex.Unlock()
-	if stub != nil {
-		fake.SetRawSQLDBStub(arg1)
-	}
-}
-
-func (fake *FakeMigration) SetRawSQLDBCallCount() int {
-	fake.setRawSQLDBMutex.RLock()
-	defer fake.setRawSQLDBMutex.RUnlock()
-	return len(fake.setRawSQLDBArgsForCall)
-}
-
-func (fake *FakeMigration) SetRawSQLDBCalls(stub func(*sql.DB)) {
-	fake.setRawSQLDBMutex.Lock()
-	defer fake.setRawSQLDBMutex.Unlock()
-	fake.SetRawSQLDBStub = stub
-}
-
-func (fake *FakeMigration) SetRawSQLDBArgsForCall(i int) *sql.DB {
-	fake.setRawSQLDBMutex.RLock()
-	defer fake.setRawSQLDBMutex.RUnlock()
-	argsForCall := fake.setRawSQLDBArgsForCall[i]
-	return argsForCall.arg1
-}
-
 func (fake *FakeMigration) String() string {
 	fake.stringMutex.Lock()
 	ret, specificReturn := fake.stringReturnsOnCall[len(fake.stringArgsForCall)]
@@ -248,18 +212,19 @@ func (fake *FakeMigration) StringReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeMigration) Up(arg1 lager.Logger) error {
+func (fake *FakeMigration) Up(arg1 *sql.Tx, arg2 lager.Logger) error {
 	fake.upMutex.Lock()
 	ret, specificReturn := fake.upReturnsOnCall[len(fake.upArgsForCall)]
 	fake.upArgsForCall = append(fake.upArgsForCall, struct {
-		arg1 lager.Logger
-	}{arg1})
+		arg1 *sql.Tx
+		arg2 lager.Logger
+	}{arg1, arg2})
 	stub := fake.UpStub
 	fakeReturns := fake.upReturns
-	fake.recordInvocation("Up", []interface{}{arg1})
+	fake.recordInvocation("Up", []interface{}{arg1, arg2})
 	fake.upMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -273,17 +238,17 @@ func (fake *FakeMigration) UpCallCount() int {
 	return len(fake.upArgsForCall)
 }
 
-func (fake *FakeMigration) UpCalls(stub func(lager.Logger) error) {
+func (fake *FakeMigration) UpCalls(stub func(*sql.Tx, lager.Logger) error) {
 	fake.upMutex.Lock()
 	defer fake.upMutex.Unlock()
 	fake.UpStub = stub
 }
 
-func (fake *FakeMigration) UpArgsForCall(i int) lager.Logger {
+func (fake *FakeMigration) UpArgsForCall(i int) (*sql.Tx, lager.Logger) {
 	fake.upMutex.RLock()
 	defer fake.upMutex.RUnlock()
 	argsForCall := fake.upArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeMigration) UpReturns(result1 error) {
@@ -371,8 +336,6 @@ func (fake *FakeMigration) Invocations() map[string][][]interface{} {
 	defer fake.setCryptorMutex.RUnlock()
 	fake.setDBFlavorMutex.RLock()
 	defer fake.setDBFlavorMutex.RUnlock()
-	fake.setRawSQLDBMutex.RLock()
-	defer fake.setRawSQLDBMutex.RUnlock()
 	fake.stringMutex.RLock()
 	defer fake.stringMutex.RUnlock()
 	fake.upMutex.RLock()

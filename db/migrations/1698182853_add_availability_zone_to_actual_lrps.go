@@ -17,7 +17,6 @@ func init() {
 type AddAvailabilityZoneToActualLrps struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -37,13 +36,12 @@ func (e *AddAvailabilityZoneToActualLrps) SetCryptor(cryptor encryption.Cryptor)
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *AddAvailabilityZoneToActualLrps) SetRawSQLDB(db *sql.DB)    { e.rawSQLDB = db }
 func (e *AddAvailabilityZoneToActualLrps) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddAvailabilityZoneToActualLrps) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *AddAvailabilityZoneToActualLrps) Up(logger lager.Logger) error {
+func (e *AddAvailabilityZoneToActualLrps) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger.Info("altering the table", lager.Data{"query": alterActualLRPAddAvailabilityZoneSQL})
-	_, err := e.rawSQLDB.Exec(alterActualLRPAddAvailabilityZoneSQL)
+	_, err := tx.Exec(alterActualLRPAddAvailabilityZoneSQL)
 	if err != nil {
 		logger.Error("failed-altering-tables", err)
 		return err

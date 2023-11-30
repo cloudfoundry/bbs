@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
@@ -73,14 +74,8 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	if len(m.migrations) > 0 {
 		maxMigrationVersion = m.migrations[len(m.migrations)-1].Version()
 	}
-
-	version, err := m.resolveStoredVersion(logger)
-	if err == models.ErrResourceNotFound {
-		err = m.writeVersion(0)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
+	version, err := m.initializeVersion(logger)
+	if err != nil {
 		return err
 	}
 
@@ -129,23 +124,37 @@ func (m *Manager) performMigration(
 					"migration_version": nextVersion,
 				})
 
+				tx, err := m.rawSQLDB.Begin()
+				if err != nil {
+					errorChan <- err
+					return
+				}
+				defer tx.Rollback()
+
 				currentMigration.SetCryptor(m.cryptor)
-				currentMigration.SetRawSQLDB(m.rawSQLDB)
 				currentMigration.SetClock(m.clock)
 				currentMigration.SetDBFlavor(m.databaseDriver)
 
-				err := currentMigration.Up(m.logger.Session("migration"))
+				err = currentMigration.Up(tx, m.logger.Session("migration"))
 				if err != nil {
 					errorChan <- err
 					return
 				}
 
 				lastVersion = nextVersion
-				err = m.writeVersion(lastVersion)
+
+				err = m.writeVersion(tx, lastVersion)
 				if err != nil {
 					errorChan <- err
 					return
 				}
+
+				err = tx.Commit()
+				if err != nil {
+					errorChan <- err
+					return
+				}
+
 				logger.Info("completed-migration", lager.Data{
 					"current_version": lastVersion,
 					"target_version":  maxMigrationVersion,
@@ -164,22 +173,43 @@ func (m *Manager) performMigration(
 	m.finish(logger, readyChan)
 }
 
+func (m Manager) initializeVersion(logger lager.Logger) (int64, error) {
+	tx, err := m.rawSQLDB.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	version, err := m.sqlDB.Version(&queryableTx{tx}, context.Background(), logger)
+	if err == nil {
+		return version.CurrentVersion, nil
+	}
+
+	if err != models.ErrResourceNotFound {
+		return -1, err
+	}
+
+	err = m.writeVersion(tx, 0)
+	if err != nil {
+		return -1, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return -1, err
+	}
+
+	return 0, nil
+}
+
 func (m *Manager) finish(logger lager.Logger, ready chan<- struct{}) {
 	close(ready)
 	close(m.migrationsDone)
 	logger.Info("finished-migrations")
 }
 
-func (m *Manager) resolveStoredVersion(logger lager.Logger) (int64, error) {
-	version, err := m.sqlDB.Version(context.Background(), logger)
-	if err != nil {
-		return -1, err
-	}
-	return version.CurrentVersion, nil
-}
-
-func (m *Manager) writeVersion(currentVersion int64) error {
-	return m.sqlDB.SetVersion(context.Background(), m.logger, &models.Version{
+func (m *Manager) writeVersion(tx *sql.Tx, currentVersion int64) error {
+	return m.sqlDB.SetVersion(&queryableTx{tx}, context.Background(), m.logger, &models.Version{
 		CurrentVersion: currentVersion,
 	})
 }
@@ -189,3 +219,32 @@ type Migrations []Migration
 func (m Migrations) Len() int           { return len(m) }
 func (m Migrations) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m Migrations) Less(i, j int) bool { return m[i].Version() < m[j].Version() }
+
+type queryableTx struct {
+	tx *sql.Tx
+}
+
+func (tx *queryableTx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return tx.tx.ExecContext(ctx, query, args...)
+}
+
+func (tx *queryableTx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	return tx.tx.PrepareContext(ctx, query)
+}
+
+func (tx *queryableTx) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	return tx.tx.QueryContext(ctx, query, args...)
+}
+
+func (tx *queryableTx) QueryRowContext(ctx context.Context, query string, args ...interface{}) helpers.RowScanner {
+	// meow - perhaps this is where the nil exception is? does tx.tx not exist?
+	return tx.tx.QueryRowContext(ctx, query, args...)
+}
+
+func (tx *queryableTx) Commit() error {
+	return tx.tx.Commit()
+}
+
+func (tx *queryableTx) Rollback() error {
+	return tx.tx.Rollback()
+}

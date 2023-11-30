@@ -36,18 +36,16 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 	Describe("Up", func() {
 		BeforeEach(func() {
 			initialMigration := migrations.NewInitSQL()
-			initialMigration.SetRawSQLDB(rawSQLDB)
 			initialMigration.SetDBFlavor(flavor)
 			initialMigration.SetClock(fakeClock)
-			Expect(initialMigration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, initialMigration, logger)
 
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 
 		})
 
 		It("add presence to the actual_lrps and defaults it to ordinary", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(
@@ -69,7 +67,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 		})
 
 		It("adds presence as a primary key so that duplicate entries with different presence do not violate the unique constraint", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(
@@ -125,11 +123,11 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 					"guid", 1, "cfapps", "RUNNING", "", "epoch", 0, false,
 				)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(migration.Up(logger)).To(Succeed())
+				testUpInTransaction(rawSQLDB, migration, logger)
 			})
 
 			It("sets the presence of the evacuating row to evacuating", func() {
-				Expect(migration.Up(logger)).To(Succeed())
+				testUpInTransaction(rawSQLDB, migration, logger)
 
 				var presence string
 				query := helpers.RebindForFlavor("SELECT presence FROM actual_lrps WHERE evacuating = true LIMIT 1", flavor)

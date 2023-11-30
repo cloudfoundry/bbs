@@ -33,17 +33,15 @@ var _ = Describe("AddRoutableToActualLrps", func() {
 	Describe("Up", func() {
 		BeforeEach(func() {
 			initialMigration := migrations.NewInitSQL()
-			initialMigration.SetRawSQLDB(rawSQLDB)
 			initialMigration.SetDBFlavor(flavor)
 			initialMigration.SetClock(fakeClock)
-			Expect(initialMigration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, initialMigration, logger)
 
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 		})
 
 		It("adds the routable propety to actual lrps", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(
@@ -77,7 +75,7 @@ var _ = Describe("AddRoutableToActualLrps", func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			var routable bool
 			query := helpers.RebindForFlavor("select routable from actual_lrps limit 1", flavor)
@@ -99,7 +97,7 @@ var _ = Describe("AddRoutableToActualLrps", func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			var routable bool
 			query := helpers.RebindForFlavor("select routable from actual_lrps limit 1", flavor)

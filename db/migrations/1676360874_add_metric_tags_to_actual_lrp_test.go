@@ -33,17 +33,15 @@ var _ = Describe("AddMetricTagsToActualLrp", func() {
 	Describe("Up", func() {
 		BeforeEach(func() {
 			initialMigration := migrations.NewInitSQL()
-			initialMigration.SetRawSQLDB(rawSQLDB)
 			initialMigration.SetDBFlavor(flavor)
 			initialMigration.SetClock(fakeClock)
-			Expect(initialMigration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, initialMigration, logger)
 
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 		})
 
 		It("adds metric tags to actual_lrps", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(
@@ -89,7 +87,7 @@ var _ = Describe("AddMetricTagsToActualLrp", func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			var metricTagsNullCount int
 			query := helpers.RebindForFlavor("SELECT COUNT(*) FROM actual_lrps WHERE metric_tags IS NULL;", flavor)

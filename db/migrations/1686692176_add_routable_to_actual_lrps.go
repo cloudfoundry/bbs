@@ -17,7 +17,6 @@ func init() {
 type AddRoutableToActualLrps struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -37,18 +36,17 @@ func (e *AddRoutableToActualLrps) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *AddRoutableToActualLrps) SetRawSQLDB(db *sql.DB)    { e.rawSQLDB = db }
 func (e *AddRoutableToActualLrps) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddRoutableToActualLrps) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *AddRoutableToActualLrps) Up(logger lager.Logger) error {
+func (e *AddRoutableToActualLrps) Up(tx *sql.Tx, logger lager.Logger) error {
 	var alterTablesSQL = []string{
 		alterActualLRPAddRoutableSQL,
 		alterActualLRPSetRoutableForRunningSQL,
 	}
 	for _, query := range alterTablesSQL {
 		logger.Info("altering the table", lager.Data{"query": query})
-		_, err := e.rawSQLDB.Exec(query)
+		_, err := tx.Exec(query)
 		if err != nil {
 			logger.Error("failed-altering-tables", err)
 			return err

@@ -18,7 +18,6 @@ func init() {
 type AddMaxPidsToDesiredLRPs struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -38,15 +37,11 @@ func (e *AddMaxPidsToDesiredLRPs) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *AddMaxPidsToDesiredLRPs) SetRawSQLDB(db *sql.DB) {
-	e.rawSQLDB = db
-}
-
 func (e *AddMaxPidsToDesiredLRPs) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddMaxPidsToDesiredLRPs) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *AddMaxPidsToDesiredLRPs) Up(logger lager.Logger) error {
-	_, err := e.rawSQLDB.Exec(checkMaxPidsExistenceSQL)
+func (e *AddMaxPidsToDesiredLRPs) Up(tx *sql.Tx, logger lager.Logger) error {
+	_, err := tx.Exec(checkMaxPidsExistenceSQL)
 	if err == nil {
 		logger.Info("max-pid-already-available")
 		return nil
@@ -60,7 +55,7 @@ func (e *AddMaxPidsToDesiredLRPs) Up(logger lager.Logger) error {
 	}
 
 	logger.Info("altering the table", lager.Data{"query": alterDesiredLRPAddMaxPidsSQL})
-	_, err = e.rawSQLDB.Exec(alterDesiredLRPAddMaxPidsSQL)
+	_, err = tx.Exec(alterDesiredLRPAddMaxPidsSQL)
 	if err != nil {
 		logger.Error("failed-altering-tables", err)
 		return err

@@ -17,7 +17,6 @@ func init() {
 type IncreaseTaskErrorColumns struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -37,19 +36,18 @@ func (e *IncreaseTaskErrorColumns) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *IncreaseTaskErrorColumns) SetRawSQLDB(db *sql.DB)    { e.rawSQLDB = db }
 func (e *IncreaseTaskErrorColumns) SetClock(c clock.Clock)    { e.clock = c }
 func (e *IncreaseTaskErrorColumns) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *IncreaseTaskErrorColumns) Up(logger lager.Logger) error {
+func (e *IncreaseTaskErrorColumns) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger = logger.Session("increase-failure-reason-column")
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	return e.alterTables(logger, e.rawSQLDB, e.dbFlavor)
+	return e.alterTables(tx, logger)
 }
 
-func (e *IncreaseTaskErrorColumns) alterTables(logger lager.Logger, db *sql.DB, flavor string) error {
+func (e *IncreaseTaskErrorColumns) alterTables(tx *sql.Tx, logger lager.Logger) error {
 	var alterTaskTableSQL string
 
 	if e.dbFlavor == "mysql" {
@@ -65,7 +63,7 @@ func (e *IncreaseTaskErrorColumns) alterTables(logger lager.Logger, db *sql.DB, 
 
 	logger.Info("altering-tables")
 	logger.Info("altering the table", lager.Data{"query": alterTaskTableSQL})
-	_, err := db.Exec(alterTaskTableSQL)
+	_, err := tx.Exec(alterTaskTableSQL)
 	if err != nil {
 		logger.Error("failed-altering-tables", err)
 		return err

@@ -36,11 +36,10 @@ var _ = Describe("Init SQL Migration", func() {
 
 	Describe("Up", func() {
 		JustBeforeEach(func() {
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetCryptor(cryptor)
 			migration.SetClock(fakeClock)
 			migration.SetDBFlavor(flavor)
-			migrationErr = migration.Up(logger)
+			testUpInTransaction(rawSQLDB, migration, logger)
 		})
 
 		Context("when there is existing data in the database", func() {

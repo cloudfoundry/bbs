@@ -20,7 +20,6 @@ func init() {
 type EncryptRoutes struct {
 	encoder  format.Encoder
 	clock    clock.Clock
-	rawSQLDB *sql.DB
 	dbFlavor string
 }
 
@@ -40,29 +39,31 @@ func (e *EncryptRoutes) SetCryptor(cryptor encryption.Cryptor) {
 	e.encoder = format.NewEncoder(cryptor)
 }
 
-func (e *EncryptRoutes) SetRawSQLDB(db *sql.DB) {
-	e.rawSQLDB = db
-}
-
 func (e *EncryptRoutes) SetClock(c clock.Clock)    { e.clock = c }
 func (e *EncryptRoutes) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *EncryptRoutes) Up(logger lager.Logger) error {
+func (e *EncryptRoutes) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger = logger.Session("encrypt-route-column")
 	logger.Info("starting")
 	defer logger.Info("completed")
 
 	query := fmt.Sprintf("SELECT process_guid, routes FROM desired_lrps")
 
-	rows, err := e.rawSQLDB.Query(query)
+	rows, err := tx.Query(query)
 	if err != nil {
 		logger.Error("failed-query", err)
 		return err
 	}
-	defer rows.Close()
+
+	routeDataMap := map[string][]byte{}
 
 	var processGuid string
 	var routeData []byte
+
+	if rows.Err() != nil {
+		logger.Error("failed-fetching-row", rows.Err())
+		return rows.Err()
+	}
 
 	for rows.Next() {
 		err := rows.Scan(&processGuid, &routeData)
@@ -70,7 +71,12 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 			logger.Error("failed-reading-row", err)
 			continue
 		}
-		encodedData, err := e.encoder.Encode(routeData)
+		routeDataMap[processGuid] = routeData
+	}
+	rows.Close()
+
+	for pGuid, rData := range routeDataMap {
+		encodedData, err := e.encoder.Encode(rData)
 		if err != nil {
 			logger.Error("failed-encrypting-routes", err)
 			return models.ErrBadRequest
@@ -79,17 +85,13 @@ func (e *EncryptRoutes) Up(logger lager.Logger) error {
 		bindings := make([]interface{}, 0, 3)
 		updateQuery := fmt.Sprintf("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?")
 		bindings = append(bindings, encodedData)
-		bindings = append(bindings, processGuid)
-		_, err = e.rawSQLDB.Exec(helpers.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
+		bindings = append(bindings, pGuid)
+		_, err = tx.Exec(helpers.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
 		if err != nil {
 			logger.Error("failed-updating-desired-lrp-record", err)
 			return models.ErrBadRequest
 		}
 	}
 
-	if rows.Err() != nil {
-		logger.Error("failed-fetching-row", rows.Err())
-		return rows.Err()
-	}
 	return nil
 }

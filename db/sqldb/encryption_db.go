@@ -17,7 +17,9 @@ func (db *SQLDB) SetEncryptionKeyLabel(ctx context.Context, logger lager.Logger,
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.setConfigurationValue(ctx, logger, EncryptionKeyID, label)
+	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		return db.setConfigurationValue(tx, ctx, logger, EncryptionKeyID, label)
+	})
 }
 
 func (db *SQLDB) EncryptionKeyLabel(ctx context.Context, logger lager.Logger) (string, error) {
@@ -25,7 +27,16 @@ func (db *SQLDB) EncryptionKeyLabel(ctx context.Context, logger lager.Logger) (s
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	return db.getConfigurationValue(ctx, logger, EncryptionKeyID)
+	var ekLabel string
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		var getErr error
+		ekLabel, getErr = db.getConfigurationValue(tx, ctx, logger, EncryptionKeyID)
+		return getErr
+	})
+	if err != nil {
+		return "", err
+	}
+	return ekLabel, nil
 }
 
 func (db *SQLDB) PerformEncryption(ctx context.Context, logger lager.Logger) error {

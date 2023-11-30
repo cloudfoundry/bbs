@@ -36,7 +36,6 @@ var _ = Describe("Increase rootfs Column Migration", func() {
 
 	Describe("Up", func() {
 		BeforeEach(func() {
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 		})
 
@@ -53,7 +52,7 @@ var _ = Describe("Increase rootfs Column Migration", func() {
 		})
 
 		It("changes the size of the rootfs column", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 			value := strings.Repeat("x", 1024)
 			query := helpers.RebindForFlavor("insert into desired_lrps(rootfs) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, value)

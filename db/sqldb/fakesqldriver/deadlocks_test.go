@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/fakesqldriver/fakesqldriverfakes"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/helpersfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo/v2"
@@ -12,6 +13,8 @@ import (
 )
 
 var _ = Describe("Deadlocks", func() {
+	var fakeQueryableTx *helpersfakes.FakeTx
+
 	BeforeEach(func() {
 		fakeConn.PrepareStub = func(query string) (driver.Stmt, error) {
 			fakeStmt := &fakesqldriverfakes.FakeStmt{}
@@ -20,6 +23,12 @@ var _ = Describe("Deadlocks", func() {
 			fakeStmt.QueryReturns(nil, &mysql.MySQLError{Number: 1213})
 			return fakeStmt, nil
 		}
+
+		fakeQueryableTx = &helpersfakes.FakeTx{}
+		fakeRowScanner := &helpersfakes.FakeRowScanner{}
+		fakeRowScanner.ScanReturns(&mysql.MySQLError{Number: 1213})
+		fakeQueryableTx.QueryRowContextReturns(fakeRowScanner)
+		fakeQueryableTx.ExecContextReturns(nil, &mysql.MySQLError{Number: 1213})
 	})
 
 	Context("Domains", func() {
@@ -206,11 +215,11 @@ var _ = Describe("Deadlocks", func() {
 		})
 	})
 
-	Context("SetVersion", func() {
+	Context("SetVersion", func() { //TODO: fix
 		It("retries on deadlocks", func() {
-			err := sqlDB.SetVersion(ctx, logger, &models.Version{})
+			err := sqlDB.SetVersion(fakeQueryableTx, ctx, logger, &models.Version{})
 			Expect(err).To(HaveOccurred())
-			Expect(fakeConn.BeginCallCount()).To(Equal(3))
+			Expect(fakeQueryableTx.ExecContextCallCount()).To(Equal(3))
 		})
 	})
 
@@ -262,11 +271,11 @@ var _ = Describe("Deadlocks", func() {
 		})
 	})
 
-	Context("Version", func() {
+	Context("Version", func() { //TODO: fix
 		It("retries on deadlocks", func() {
-			_, err := sqlDB.Version(ctx, logger)
+			_, err := sqlDB.Version(fakeQueryableTx, ctx, logger) //panic
 			Expect(err).To(HaveOccurred())
-			Expect(fakeConn.BeginCallCount()).To(Equal(3))
+			Expect(fakeQueryableTx.QueryRowContextCallCount()).To(Equal(3))
 		})
 	})
 })

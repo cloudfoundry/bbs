@@ -20,7 +20,6 @@ func init() {
 type AddPresenceToActualLrp struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -40,19 +39,18 @@ func (e *AddPresenceToActualLrp) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *AddPresenceToActualLrp) SetRawSQLDB(db *sql.DB)    { e.rawSQLDB = db }
 func (e *AddPresenceToActualLrp) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddPresenceToActualLrp) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *AddPresenceToActualLrp) Up(logger lager.Logger) error {
+func (e *AddPresenceToActualLrp) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger = logger.Session("add-presence")
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	return e.alterTable(logger)
+	return e.alterTable(tx, logger)
 }
 
-func (e *AddPresenceToActualLrp) alterTable(logger lager.Logger) error {
+func (e *AddPresenceToActualLrp) alterTable(tx *sql.Tx, logger lager.Logger) error {
 	alterTablesSQL := []string{
 		"ALTER TABLE actual_lrps ADD COLUMN presence INT NOT NULL DEFAULT 0;",
 	}
@@ -72,7 +70,7 @@ func (e *AddPresenceToActualLrp) alterTable(logger lager.Logger) error {
 	logger.Info("altering-table")
 	for _, query := range alterTablesSQL {
 		logger.Info("altering the table", lager.Data{"query": query})
-		_, err := e.rawSQLDB.Exec(helpers.RebindForFlavor(query, e.dbFlavor))
+		_, err := tx.Exec(helpers.RebindForFlavor(query, e.dbFlavor))
 		if err != nil {
 			logger.Error("failed-altering-table", err)
 			return err

@@ -37,17 +37,15 @@ var _ = Describe("AddRejectionReasonToTask", func() {
 	Describe("Up", func() {
 		BeforeEach(func() {
 			initialMigration := migrations.NewInitSQL()
-			initialMigration.SetRawSQLDB(rawSQLDB)
 			initialMigration.SetDBFlavor(flavor)
 			initialMigration.SetClock(fakeClock)
-			Expect(initialMigration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, initialMigration, logger)
 
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 		})
 
 		It("add rejection_reason to the tasks and defaults it to \"\"", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(

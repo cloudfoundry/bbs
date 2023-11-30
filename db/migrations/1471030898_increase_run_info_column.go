@@ -17,7 +17,6 @@ func init() {
 type IncreaseRunInfoColumnSize struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -37,23 +36,19 @@ func (e *IncreaseRunInfoColumnSize) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *IncreaseRunInfoColumnSize) SetRawSQLDB(db *sql.DB) {
-	e.rawSQLDB = db
-}
-
 func (e *IncreaseRunInfoColumnSize) SetClock(c clock.Clock)    { e.clock = c }
 func (e *IncreaseRunInfoColumnSize) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *IncreaseRunInfoColumnSize) Up(logger lager.Logger) error {
+func (e *IncreaseRunInfoColumnSize) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger = logger.Session("increase-run-info-column")
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	return alterTables(logger, e.rawSQLDB, e.dbFlavor)
+	return e.alterTables(tx, logger)
 }
 
-func alterTables(logger lager.Logger, db *sql.DB, flavor string) error {
-	if flavor != "mysql" {
+func (e *IncreaseRunInfoColumnSize) alterTables(tx *sql.Tx, logger lager.Logger) error {
+	if e.dbFlavor != "mysql" {
 		return nil
 	}
 
@@ -66,7 +61,7 @@ func alterTables(logger lager.Logger, db *sql.DB, flavor string) error {
 	logger.Info("altering-tables")
 	for _, query := range alterTablesSQL {
 		logger.Info("altering the table", lager.Data{"query": query})
-		_, err := db.Exec(query)
+		_, err := tx.Exec(query)
 		if err != nil {
 			logger.Error("failed-altering-tables", err)
 			return err

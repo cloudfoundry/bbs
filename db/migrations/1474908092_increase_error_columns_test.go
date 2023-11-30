@@ -37,7 +37,6 @@ var _ = Describe("Increase Error Columns Migration", func() {
 
 	Describe("Up", func() {
 		BeforeEach(func() {
-			mig.SetRawSQLDB(rawSQLDB)
 			mig.SetDBFlavor(flavor)
 
 			createStatement := `CREATE TABLE actual_lrps(
@@ -51,7 +50,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 		testTableAndColumn := func(table, column string) {
 			title := fmt.Sprintf("should change the size of %s column ", column)
 			It(title, func() {
-				Expect(mig.Up(logger)).To(Succeed())
+				testUpInTransaction(rawSQLDB, mig, logger)
 				value := strings.Repeat("x", 1024)
 				insertQuery := fmt.Sprintf("insert into %s(%s) values(?)", table, column)
 				query := helpers.RebindForFlavor(insertQuery, flavor)
@@ -70,7 +69,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 		testTableAndColumn("actual_lrps", "placement_error")
 
 		It("does not change the default", func() {
-			Expect(mig.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, mig, logger)
 			query := helpers.RebindForFlavor("insert into actual_lrps(crash_reason) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, "crash_reason")
 			Expect(err).NotTo(HaveOccurred())
@@ -82,7 +81,7 @@ var _ = Describe("Increase Error Columns Migration", func() {
 		})
 
 		It("does not remove non null constraint", func() {
-			Expect(mig.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, mig, logger)
 			query := helpers.RebindForFlavor("insert into actual_lrps(crash_reason) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, nil)
 			Expect(err).To(MatchError(ContainSubstring("null")))

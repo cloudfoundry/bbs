@@ -15,9 +15,8 @@ import (
 type Migration interface {
 	String() string
 	Version() int64
-	Up(logger lager.Logger) error
+	Up(tx *sql.Tx, logger lager.Logger) error
 	SetCryptor(cryptor encryption.Cryptor)
 	SetClock(c clock.Clock)
-	SetRawSQLDB(rawSQLDB *sql.DB)
 	SetDBFlavor(flavor string)
 }

@@ -147,8 +147,7 @@ func dumpTableData(db *sql.DB, name string) [][][]byte {
 }
 
 func testIdempotency(db *sql.DB, mig migration.Migration, logger lager.Logger) {
-	Expect(mig.Up(logger)).To(Succeed())
-
+	testUpInTransaction(db, mig, logger)
 	tableNamesBefore, allSchemasBefore := getAllSchemas(db)
 
 	dataBefore := make(map[string][][][]byte)
@@ -158,7 +157,10 @@ func testIdempotency(db *sql.DB, mig migration.Migration, logger lager.Logger) {
 
 	// some migrations will not apply a second time, but we still want
 	// to make sure the data was not changed.
-	mig.Up(logger)
+	tx, err := db.Begin()
+	Expect(err).NotTo(HaveOccurred())
+	mig.Up(tx, logger)
+	Expect(tx.Commit()).To(Succeed())
 
 	tableNamesAfter, allSchemasAfter := getAllSchemas(db)
 
@@ -170,4 +172,11 @@ func testIdempotency(db *sql.DB, mig migration.Migration, logger lager.Logger) {
 	Expect(tableNamesBefore).To(Equal(tableNamesAfter))
 	Expect(allSchemasBefore).To(Equal(allSchemasAfter))
 	Expect(dataBefore).To(Equal(dataAfter))
+}
+
+func testUpInTransaction(db *sql.DB, mig migration.Migration, logger lager.Logger) {
+	tx, err := db.Begin()
+	Expect(err).NotTo(HaveOccurred())
+	Expect(mig.Up(tx, logger)).To(Succeed())
+	Expect(tx.Commit()).To(Succeed())
 }

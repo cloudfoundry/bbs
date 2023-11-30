@@ -17,7 +17,6 @@ func init() {
 type AddTaskRejectionCount struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -37,17 +36,16 @@ func (e *AddTaskRejectionCount) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *AddTaskRejectionCount) SetRawSQLDB(db *sql.DB)    { e.rawSQLDB = db }
 func (e *AddTaskRejectionCount) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddTaskRejectionCount) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *AddTaskRejectionCount) Up(logger lager.Logger) error {
+func (e *AddTaskRejectionCount) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger = logger.Session("add-task-rejection-count")
 	logger.Info("starting")
 	defer logger.Info("completed")
 
 	const stmt = "ALTER TABLE tasks ADD COLUMN rejection_count INTEGER NOT NULL DEFAULT 0;"
-	_, err := e.rawSQLDB.Exec(stmt)
+	_, err := tx.Exec(stmt)
 	if err != nil {
 		logger.Error("failed-altering-table", err)
 		return err

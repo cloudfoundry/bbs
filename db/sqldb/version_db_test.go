@@ -9,16 +9,25 @@ import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/lager/v3"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Version", func() {
+	var helper helpers.SQLHelper
+
+	BeforeEach(func() {
+		helper = helpers.NewSQLHelper(dbFlavor)
+	})
+
 	Describe("SetVersion", func() {
 		Context("when the version is not set", func() {
 			It("sets the version into the database", func() {
 				expectedVersion := &models.Version{CurrentVersion: 99}
-				err := sqlDB.SetVersion(ctx, logger, expectedVersion)
+				err := helper.Transact(ctx, logger, db, func(l lager.Logger, tx helpers.Tx) error {
+					return sqlDB.SetVersion(tx, ctx, logger, expectedVersion)
+				})
 				Expect(err).NotTo(HaveOccurred())
 
 				queryStr := "SELECT value FROM configurations WHERE id = ?"
@@ -58,7 +67,9 @@ var _ = Describe("Version", func() {
 			It("updates the version in the db", func() {
 				version := &models.Version{CurrentVersion: 20}
 
-				err := sqlDB.SetVersion(ctx, logger, version)
+				err := helper.Transact(ctx, logger, db, func(l lager.Logger, tx helpers.Tx) error {
+					return sqlDB.SetVersion(tx, ctx, logger, version)
+				})
 				Expect(err).NotTo(HaveOccurred())
 
 				queryStr := "SELECT value FROM configurations WHERE id = ?"
@@ -88,10 +99,16 @@ var _ = Describe("Version", func() {
 		Context("when the version exists", func() {
 			It("retrieves the version from the database", func() {
 				expectedVersion := &models.Version{CurrentVersion: 199}
-				err := sqlDB.SetVersion(ctx, logger, expectedVersion)
+				err := helper.Transact(ctx, logger, db, func(l lager.Logger, tx helpers.Tx) error {
+					return sqlDB.SetVersion(tx, ctx, logger, expectedVersion)
+				})
 				Expect(err).NotTo(HaveOccurred())
 
-				version, err := sqlDB.Version(ctx, logger)
+				var version *models.Version
+				err = helper.Transact(ctx, logger, db, func(l lager.Logger, tx helpers.Tx) error {
+					version, err = sqlDB.Version(tx, ctx, logger)
+					return err
+				})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(*version).To(Equal(*expectedVersion))
@@ -100,15 +117,16 @@ var _ = Describe("Version", func() {
 
 		Context("when the database is down", func() {
 			var (
-				sqlDB *sqldb.SQLDB
-				db    *sql.DB
+				sqlDB    *sqldb.SQLDB
+				db       *sql.DB
+				helperDB helpers.QueryableDB
 			)
 
 			BeforeEach(func() {
 				var err error
 				db, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString+"invalid-db", "", false)
 				Expect(err).NotTo(HaveOccurred())
-				helperDB := helpers.NewMonitoredDB(db, monitor.New())
+				helperDB = helpers.NewMonitoredDB(db, monitor.New())
 				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 			})
 
@@ -117,7 +135,10 @@ var _ = Describe("Version", func() {
 			})
 
 			It("does not return an ErrResourceNotFound", func() {
-				_, err := sqlDB.Version(ctx, logger)
+				err := helper.Transact(ctx, logger, helperDB, func(l lager.Logger, tx helpers.Tx) error {
+					_, err := sqlDB.Version(tx, ctx, logger)
+					return err
+				})
 				Expect(err).NotTo(MatchError(models.ErrResourceNotFound))
 			})
 		})
@@ -133,19 +154,27 @@ var _ = Describe("Version", func() {
 			})
 
 			It("returns a ErrResourceNotFound", func() {
-				version, err := sqlDB.Version(ctx, logger)
+				var version *models.Version
+				err := helper.Transact(ctx, logger, db, func(l lager.Logger, tx helpers.Tx) error {
+					var err error
+					version, err = sqlDB.Version(tx, ctx, logger)
+					return err
+				})
 				Expect(err).To(MatchError(models.ErrResourceNotFound))
 				Expect(version).To(BeNil())
 			})
 		})
 
 		Context("when the version key is not valid json", func() {
-			It("returns a ErrDeserialize", func() {
+			It("returns :a ErrDeserialize", func() {
 				queryStr := "UPDATE configurations SET value = '{{' WHERE id = ?"
 				_, err := db.ExecContext(ctx, helpers.RebindForFlavor(queryStr, dbDriverName), sqldb.VersionID)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.Version(ctx, logger)
+				err = helper.Transact(ctx, logger, db, func(l lager.Logger, tx helpers.Tx) error {
+					_, err := sqlDB.Version(tx, ctx, logger)
+					return err
+				})
 				Expect(err).To(MatchError(models.ErrDeserialize))
 			})
 		})

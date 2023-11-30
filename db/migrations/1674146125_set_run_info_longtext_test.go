@@ -38,7 +38,6 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 		BeforeEach(func() {
 			// Can't do this in the Describe BeforeEach
 			// as the test on line 37 will cause ginkgo to panic
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 		})
 
@@ -86,7 +85,7 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 		})
 
 		It("should change the size of all text columns ", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 			value := strings.Repeat("x", 16777215*2)
 			query := helpers.RebindForFlavor("insert into desired_lrps(annotation, routes, volume_placement, run_info) values('', '', '', ?)", flavor)
 			_, err := rawSQLDB.Exec(query, value)
@@ -106,7 +105,6 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 			}
 			// Can't do this in the Describe BeforeEach
 			// as the test on line 37 will cause ginkgo to panic
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 		})
 
@@ -145,7 +143,7 @@ var _ = Describe("Set Run Info LONGTEXT Column Migration", func() {
 			if flavor != "mysql" {
 				Skip("LONGTEXT doesn't exist on postgres, skipping")
 			}
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 			value := strings.Repeat("x", 16777215*2)
 			rows, err := rawSQLDB.Query("select run_info from desired_lrps;")
 			rows.Next()

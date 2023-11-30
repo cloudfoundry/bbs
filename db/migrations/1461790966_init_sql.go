@@ -18,7 +18,6 @@ func init() {
 type InitSQL struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -38,26 +37,22 @@ func (e *InitSQL) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *InitSQL) SetRawSQLDB(db *sql.DB) {
-	e.rawSQLDB = db
-}
-
 func (e *InitSQL) SetClock(c clock.Clock)    { e.clock = c }
 func (e *InitSQL) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *InitSQL) Up(logger lager.Logger) error {
+func (e *InitSQL) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger = logger.Session("init-sql")
 	logger.Info("truncating-tables")
 
 	// Ignore the error as the tables may not exist
-	_ = dropTables(e.rawSQLDB)
+	_ = e.dropTables(tx)
 
-	err := createTables(logger, e.rawSQLDB, e.dbFlavor)
+	err := e.createTables(tx, logger)
 	if err != nil {
 		return err
 	}
 
-	err = createIndices(logger, e.rawSQLDB)
+	err = e.createIndices(tx, logger)
 	if err != nil {
 		return err
 	}
@@ -65,7 +60,7 @@ func (e *InitSQL) Up(logger lager.Logger) error {
 	return nil
 }
 
-func dropTables(db *sql.DB) error {
+func (e *InitSQL) dropTables(tx *sql.Tx) error {
 	tableNames := []string{
 		"domains",
 		"tasks",
@@ -73,7 +68,7 @@ func dropTables(db *sql.DB) error {
 		"actual_lrps",
 	}
 	for _, tableName := range tableNames {
-		_, err := db.Exec("DROP TABLE IF EXISTS " + tableName)
+		_, err := tx.Exec("DROP TABLE IF EXISTS " + tableName)
 		if err != nil {
 			return err
 		}
@@ -81,18 +76,18 @@ func dropTables(db *sql.DB) error {
 	return nil
 }
 
-func createTables(logger lager.Logger, db *sql.DB, flavor string) error {
+func (e *InitSQL) createTables(tx *sql.Tx, logger lager.Logger) error {
 	var createTablesSQL = []string{
-		helpers.RebindForFlavor(createDomainSQL, flavor),
-		helpers.RebindForFlavor(createDesiredLRPsSQL, flavor),
-		helpers.RebindForFlavor(createActualLRPsSQL, flavor),
-		helpers.RebindForFlavor(createTasksSQL, flavor),
+		helpers.RebindForFlavor(createDomainSQL, e.dbFlavor),
+		helpers.RebindForFlavor(createDesiredLRPsSQL, e.dbFlavor),
+		helpers.RebindForFlavor(createActualLRPsSQL, e.dbFlavor),
+		helpers.RebindForFlavor(createTasksSQL, e.dbFlavor),
 	}
 
 	logger.Info("creating-tables")
 	for _, query := range createTablesSQL {
 		logger.Info("creating the table", lager.Data{"query": query})
-		_, err := db.Exec(query)
+		_, err := tx.Exec(query)
 		if err != nil {
 			logger.Error("failed-creating-tables", err)
 			return err
@@ -103,7 +98,7 @@ func createTables(logger lager.Logger, db *sql.DB, flavor string) error {
 	return nil
 }
 
-func createIndices(logger lager.Logger, db *sql.DB) error {
+func (e *InitSQL) createIndices(tx *sql.Tx, logger lager.Logger) error {
 	logger.Info("creating-indices")
 	createIndicesSQL := []string{}
 	createIndicesSQL = append(createIndicesSQL, createDomainsIndices...)
@@ -113,7 +108,7 @@ func createIndices(logger lager.Logger, db *sql.DB) error {
 
 	for _, query := range createIndicesSQL {
 		logger.Info("creating the index", lager.Data{"query": query})
-		_, err := db.Exec(query)
+		_, err := tx.Exec(query)
 		if err != nil {
 			logger.Error("failed-creating-index", err)
 			return err

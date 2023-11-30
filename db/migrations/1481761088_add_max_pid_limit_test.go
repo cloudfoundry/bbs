@@ -44,19 +44,16 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 			}
 
 			for _, m := range initialMigrations {
-				m.SetRawSQLDB(rawSQLDB)
 				m.SetDBFlavor(flavor)
 				m.SetClock(fakeClock)
-				err := m.Up(logger)
-				Expect(err).NotTo(HaveOccurred())
+				testUpInTransaction(rawSQLDB, m, logger)
 			}
 
-			mig.SetRawSQLDB(rawSQLDB)
 			mig.SetDBFlavor(flavor)
 		})
 
 		It("should add a max_pids column to desired lrps", func() {
-			Expect(mig.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, mig, logger)
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(
 					`INSERT INTO desired_lrps
@@ -78,7 +75,7 @@ var _ = Describe("Add Maximum Process limit to Desired LRPs", func() {
 		})
 
 		It("should add max pids column to desired lrps and default to 0", func() {
-			Expect(mig.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, mig, logger)
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(
 					`INSERT INTO desired_lrps

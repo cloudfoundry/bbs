@@ -45,21 +45,17 @@ var _ = Describe("Add Placement Tags to Desired LRPs", func() {
 			}
 
 			for _, m := range initialMigrations {
-				m.SetRawSQLDB(rawSQLDB)
 				m.SetDBFlavor(flavor)
 				m.SetClock(fakeClock)
-				err := m.Up(logger)
-				Expect(err).NotTo(HaveOccurred())
+				testUpInTransaction(rawSQLDB, m, logger)
 			}
 
-			// Can't do this in the Describe BeforeEach
-			// as the test on line 37 will cause ginkgo to panic
-			mig.SetRawSQLDB(rawSQLDB)
 			mig.SetDBFlavor(flavor)
+			mig.SetClock(fakeClock)
 		})
 
 		It("should add a placement_tags column to desired lrps", func() {
-			Expect(mig.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, mig, logger)
 			placementTags := []string{"tag-1"}
 
 			jsonData, err := json.Marshal(placementTags)

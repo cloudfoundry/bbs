@@ -40,18 +40,16 @@ var _ = Describe("AddTaskRejectionCount", func() {
 	Describe("Up", func() {
 		BeforeEach(func() {
 			initialMigration := migrations.NewInitSQL()
-			initialMigration.SetRawSQLDB(rawSQLDB)
 			initialMigration.SetDBFlavor(flavor)
 			initialMigration.SetClock(fakeClock)
-			Expect(initialMigration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, initialMigration, logger)
 
-			mig.SetRawSQLDB(rawSQLDB)
 			mig.SetDBFlavor(flavor)
 
 		})
 
 		It("adds rejection_count to tasks and defaults it to 0", func() {
-			Expect(mig.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, mig, logger)
 
 			_, err := rawSQLDB.Exec(
 				helpers.RebindForFlavor(

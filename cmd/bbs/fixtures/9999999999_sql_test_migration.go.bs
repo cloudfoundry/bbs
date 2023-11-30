@@ -23,15 +23,11 @@ func NewSQLTestMigration() migration.Migration {
 
 func (*SQLTestMigration) SetCryptor(cryptor encryption.Cryptor) {}
 
-func (t *SQLTestMigration) SetRawSQLDB(rawSQLDB *sql.DB) {
-	t.rawSQLDB = rawSQLDB
-}
-
 func (*SQLTestMigration) SetClock(clock.Clock) {}
 func (*SQLTestMigration) SetDBFlavor(string)   {}
 
-func (t *SQLTestMigration) Up(logger lager.Logger) error {
-	_, err := t.rawSQLDB.Exec(`CREATE TABLE IF NOT EXISTS sweet_table (
+func (t *SQLTestMigration) Up(tx *sql.Tx, logger lager.Logger) error {
+	_, err := tx.Exec(`CREATE TABLE IF NOT EXISTS sweet_table (
 		something VARCHAR(255) PRIMARY KEY,
 		something_else INT DEFAULT 0
 	);`)

@@ -50,14 +50,11 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 			}
 
 			for _, m := range initialMigrations {
-				m.SetRawSQLDB(rawSQLDB)
 				m.SetDBFlavor(flavor)
 				m.SetClock(fakeClock)
-				err := m.Up(logger)
-				Expect(err).NotTo(HaveOccurred())
+				testUpInTransaction(rawSQLDB, m, logger)
 			}
 
-			mig.SetRawSQLDB(rawSQLDB)
 			mig.SetDBFlavor(flavor)
 
 			key, err := encryption.NewKey("a", "my key")
@@ -86,7 +83,7 @@ var _ = Describe("Encrypt Routes in Desired LRPs", func() {
 		})
 
 		It("should encrypt route column in desired lrps", func() {
-			Expect(mig.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, mig, logger)
 			var fetchedJSONData string
 			query := helpers.RebindForFlavor("select routes from desired_lrps limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)

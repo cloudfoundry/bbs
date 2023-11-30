@@ -36,13 +36,6 @@ var _ = Describe("Increase Run Info Column Migration", func() {
 
 	Describe("Up", func() {
 		BeforeEach(func() {
-			// Can't do this in the Describe BeforeEach
-			// as the test on line 37 will cause ginkgo to panic
-			migration.SetRawSQLDB(rawSQLDB)
-			migration.SetDBFlavor(flavor)
-		})
-
-		BeforeEach(func() {
 			createStatements := []string{
 				`CREATE TABLE actual_lrps(
 	net_info TEXT NOT NULL
@@ -63,10 +56,13 @@ var _ = Describe("Increase Run Info Column Migration", func() {
 				_, err := rawSQLDB.Exec(st)
 				Expect(err).NotTo(HaveOccurred())
 			}
+
+			migration.SetDBFlavor(flavor)
 		})
 
 		It("should change the size of all text columns ", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
+
 			value := strings.Repeat("x", 65536*2)
 			query := helpers.RebindForFlavor("insert into desired_lrps(annotation, routes, volume_placement, run_info) values('', '', '', ?)", flavor)
 			_, err := rawSQLDB.Exec(query, value)

@@ -38,7 +38,6 @@ var _ = Describe("IncreaseTaskErrorColumns", func() {
 
 	Describe("Up", func() {
 		BeforeEach(func() {
-			migration.SetRawSQLDB(rawSQLDB)
 			migration.SetDBFlavor(flavor)
 
 			createStatement := `CREATE TABLE tasks(
@@ -52,7 +51,7 @@ var _ = Describe("IncreaseTaskErrorColumns", func() {
 		testTableAndColumn := func(table, column string) {
 			title := fmt.Sprintf("should change the size of %s column ", column)
 			It(title, func() {
-				Expect(migration.Up(logger)).To(Succeed())
+				testUpInTransaction(rawSQLDB, migration, logger)
 				value := strings.Repeat("x", 1024)
 				insertQuery := fmt.Sprintf("insert into %s(%s) values(?)", table, column)
 				query := helpers.RebindForFlavor(insertQuery, flavor)
@@ -71,7 +70,7 @@ var _ = Describe("IncreaseTaskErrorColumns", func() {
 		testTableAndColumn("tasks", "rejection_reason")
 
 		It("does not remove non null constraint", func() {
-			Expect(migration.Up(logger)).To(Succeed())
+			testUpInTransaction(rawSQLDB, migration, logger)
 			query := helpers.RebindForFlavor("insert into tasks(failure_reason) values(?)", flavor)
 			_, err := rawSQLDB.Exec(query, nil)
 			Expect(err).To(MatchError(ContainSubstring("null")))

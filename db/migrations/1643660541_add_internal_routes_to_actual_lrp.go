@@ -18,7 +18,6 @@ func init() {
 type AddInternalRoutesToActualLrp struct {
 	serializer format.Serializer
 	clock      clock.Clock
-	rawSQLDB   *sql.DB
 	dbFlavor   string
 }
 
@@ -38,18 +37,17 @@ func (e *AddInternalRoutesToActualLrp) SetCryptor(cryptor encryption.Cryptor) {
 	e.serializer = format.NewSerializer(cryptor)
 }
 
-func (e *AddInternalRoutesToActualLrp) SetRawSQLDB(db *sql.DB)    { e.rawSQLDB = db }
 func (e *AddInternalRoutesToActualLrp) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddInternalRoutesToActualLrp) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
-func (e *AddInternalRoutesToActualLrp) Up(logger lager.Logger) error {
+func (e *AddInternalRoutesToActualLrp) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger = logger.Session("add-internal-routes")
 	logger.Info("starting")
 	defer logger.Info("completed")
 
 	alterTableSQL := "ALTER TABLE actual_lrps ADD COLUMN internal_routes MEDIUMTEXT;"
 	logger.Info("altering the table", lager.Data{"query": alterTableSQL})
-	_, err := e.rawSQLDB.Exec(helpers.RebindForFlavor(alterTableSQL, e.dbFlavor))
+	_, err := tx.Exec(helpers.RebindForFlavor(alterTableSQL, e.dbFlavor))
 	if err != nil {
 		logger.Error("failed-altering-table", err)
 		return err
