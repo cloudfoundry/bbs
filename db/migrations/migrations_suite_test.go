@@ -154,13 +154,7 @@ func testIdempotency(db *sql.DB, mig migration.Migration, logger lager.Logger) {
 	for _, name := range tableNamesBefore {
 		dataBefore[name] = dumpTableData(db, name)
 	}
-
-	// some migrations will not apply a second time, but we still want
-	// to make sure the data was not changed.
-	tx, err := db.Begin()
-	Expect(err).NotTo(HaveOccurred())
-	mig.Up(tx, logger)
-	Expect(tx.Commit()).To(Succeed())
+	testUpInTransaction(db, mig, logger)
 
 	tableNamesAfter, allSchemasAfter := getAllSchemas(db)
 

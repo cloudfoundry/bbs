@@ -40,25 +40,34 @@ func (e *AddRoutableToActualLrps) SetClock(c clock.Clock)    { e.clock = c }
 func (e *AddRoutableToActualLrps) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *AddRoutableToActualLrps) Up(tx *sql.Tx, logger lager.Logger) error {
-	var alterTablesSQL = []string{
-		alterActualLRPAddRoutableSQL,
-		alterActualLRPSetRoutableForRunningSQL,
+	var alterActualLRPAddRoutableSQL string
+	if e.dbFlavor == "mysql" {
+		alterActualLRPAddRoutableSQL = `ALTER TABLE actual_lrps
+ADD COLUMN routable BOOL DEFAULT false;`
+	} else {
+		alterActualLRPAddRoutableSQL = `ALTER TABLE actual_lrps
+ADD COLUMN IF NOT EXISTS routable BOOL DEFAULT false;`
 	}
-	for _, query := range alterTablesSQL {
-		logger.Info("altering the table", lager.Data{"query": query})
-		_, err := tx.Exec(query)
-		if err != nil {
-			logger.Error("failed-altering-tables", err)
-			return err
-		}
-		logger.Info("altered the table", lager.Data{"query": query})
+
+	logger.Info("altering the table", lager.Data{"query": alterActualLRPAddRoutableSQL})
+	_, err := tx.Exec(alterActualLRPAddRoutableSQL)
+	if err != nil && !isDuplicateColumnError(err) {
+		logger.Error("failed-altering-table", err)
+		return err
 	}
+
+	logger.Info("altered the table", lager.Data{"query": alterActualLRPAddRoutableSQL})
+
+	logger.Info("altering the table", lager.Data{"query": alterActualLRPSetRoutableForRunningSQL})
+	_, err = tx.Exec(alterActualLRPSetRoutableForRunningSQL)
+	if err != nil {
+		logger.Error("failed-altering-table", err)
+		return err
+	}
+	logger.Info("altered the table", lager.Data{"query": alterActualLRPSetRoutableForRunningSQL})
 
 	return nil
 }
-
-const alterActualLRPAddRoutableSQL = `ALTER TABLE actual_lrps
-ADD COLUMN routable BOOL DEFAULT false;`
 
 const alterActualLRPSetRoutableForRunningSQL = `UPDATE actual_lrps
 SET routable = true WHERE state = 'RUNNING';`

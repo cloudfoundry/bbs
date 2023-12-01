@@ -44,9 +44,14 @@ func (e *AddRejectionReasonToTask) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	const query = "ALTER TABLE tasks ADD COLUMN rejection_reason VARCHAR(255) NOT NULL DEFAULT '';"
+	var query string
+	if e.dbFlavor == "mysql" {
+		query = "ALTER TABLE tasks ADD COLUMN rejection_reason VARCHAR(255) NOT NULL DEFAULT '';"
+	} else {
+		query = "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS rejection_reason VARCHAR(255) NOT NULL DEFAULT '';"
+	}
 	_, err := tx.Exec(query)
-	if err != nil {
+	if err != nil && !isDuplicateColumnError(err) {
 		logger.Error("failed-altering-table", err)
 		return err
 	}

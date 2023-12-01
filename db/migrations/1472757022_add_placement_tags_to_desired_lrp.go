@@ -40,9 +40,17 @@ func (e *AddPlacementTagsToDesiredLRPs) SetClock(c clock.Clock)    { e.clock = c
 func (e *AddPlacementTagsToDesiredLRPs) SetDBFlavor(flavor string) { e.dbFlavor = flavor }
 
 func (e *AddPlacementTagsToDesiredLRPs) Up(tx *sql.Tx, logger lager.Logger) error {
+	var alterDesiredLRPAddPlacementTagSQL string
+	if e.dbFlavor == "mysql" {
+		alterDesiredLRPAddPlacementTagSQL = `ALTER TABLE desired_lrps
+	ADD COLUMN placement_tags TEXT;`
+	} else {
+		alterDesiredLRPAddPlacementTagSQL = `ALTER TABLE desired_lrps
+	ADD COLUMN IF NOT EXISTS placement_tags TEXT;`
+	}
 	logger.Info("altering the table", lager.Data{"query": alterDesiredLRPAddPlacementTagSQL})
 	_, err := tx.Exec(alterDesiredLRPAddPlacementTagSQL)
-	if err != nil {
+	if err != nil && !isDuplicateColumnError(err) {
 		logger.Error("failed-altering-tables", err)
 		return err
 	}

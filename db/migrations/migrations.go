@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/migration"
+	"github.com/go-sql-driver/mysql"
+	"github.com/jackc/pgx"
 )
 
 var migrationsRegistry = migration.Migrations{}
@@ -34,4 +36,19 @@ func AllMigrations() migration.Migrations {
 		migs[i] = reflect.New(rt).Interface().(migration.Migration)
 	}
 	return migs
+}
+
+func isDuplicateColumnError(err error) bool {
+	switch err.(type) {
+	case *mysql.MySQLError:
+		if err.(*mysql.MySQLError).Number == 1060 {
+			return true
+		}
+	case pgx.PgError:
+		if err.(pgx.PgError).Code == "42701" {
+			return true
+		}
+	}
+
+	return false
 }

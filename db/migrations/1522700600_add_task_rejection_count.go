@@ -44,9 +44,14 @@ func (e *AddTaskRejectionCount) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	const stmt = "ALTER TABLE tasks ADD COLUMN rejection_count INTEGER NOT NULL DEFAULT 0;"
+	var stmt string
+	if e.dbFlavor == "mysql" {
+		stmt = "ALTER TABLE tasks ADD COLUMN rejection_count INTEGER NOT NULL DEFAULT 0;"
+	} else {
+		stmt = "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS rejection_count INTEGER NOT NULL DEFAULT 0;"
+	}
 	_, err := tx.Exec(stmt)
-	if err != nil {
+	if err != nil && !isDuplicateColumnError(err) {
 		logger.Error("failed-altering-table", err)
 		return err
 	}

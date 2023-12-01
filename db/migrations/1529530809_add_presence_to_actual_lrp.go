@@ -51,10 +51,21 @@ func (e *AddPresenceToActualLrp) Up(tx *sql.Tx, logger lager.Logger) error {
 }
 
 func (e *AddPresenceToActualLrp) alterTable(tx *sql.Tx, logger lager.Logger) error {
-	alterTablesSQL := []string{
-		"ALTER TABLE actual_lrps ADD COLUMN presence INT NOT NULL DEFAULT 0;",
+	var addColumnSQL string
+	if e.dbFlavor == "mysql" {
+		addColumnSQL = "ALTER TABLE actual_lrps ADD COLUMN presence INT NOT NULL DEFAULT 0;"
+	} else {
+		addColumnSQL = "ALTER TABLE actual_lrps ADD COLUMN IF NOT EXISTS presence INT NOT NULL DEFAULT 0;"
 	}
 
+	logger.Info("altering-table")
+	_, err := tx.Exec(helpers.RebindForFlavor(addColumnSQL, e.dbFlavor))
+	if err != nil && !isDuplicateColumnError(err) {
+		logger.Error("failed-altering-table", err)
+		return err
+	}
+
+	alterTablesSQL := []string{}
 	alterTablesSQL = append(alterTablesSQL, fmt.Sprintf("UPDATE actual_lrps SET presence = %d WHERE evacuating = true;", models.ActualLRP_Evacuating))
 
 	if e.dbFlavor == "mysql" {
@@ -67,7 +78,6 @@ func (e *AddPresenceToActualLrp) alterTable(tx *sql.Tx, logger lager.Logger) err
 		)
 	}
 
-	logger.Info("altering-table")
 	for _, query := range alterTablesSQL {
 		logger.Info("altering the table", lager.Data{"query": query})
 		_, err := tx.Exec(helpers.RebindForFlavor(query, e.dbFlavor))

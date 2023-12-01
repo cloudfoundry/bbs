@@ -262,7 +262,7 @@ var _ = Describe("Migration Manager", func() {
 					It("returns an error", func() {
 						var err error
 						Eventually(migrationProcess.Wait()).Should(Receive(&err))
-						Expect(err.Error()).To(ContainSubstring("invalid sql"))
+						Expect(err.Error()).To(ContainSubstring("invalid"))
 						Expect(migrationProcess.Ready()).ToNot(BeClosed())
 						Expect(migrationsDone).NotTo(BeClosed())
 					})

@@ -45,10 +45,15 @@ func (e *AddMetricTagsToActualLrp) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	alterTableSQL := "ALTER TABLE actual_lrps ADD COLUMN metric_tags MEDIUMTEXT;"
+	var alterTableSQL string
+	if e.dbFlavor == "mysql" {
+		alterTableSQL = "ALTER TABLE actual_lrps ADD COLUMN metric_tags MEDIUMTEXT;"
+	} else {
+		alterTableSQL = "ALTER TABLE actual_lrps ADD COLUMN IF NOT EXISTS metric_tags MEDIUMTEXT;"
+	}
 	logger.Info("altering the table", lager.Data{"query": alterTableSQL})
 	_, err := tx.Exec(helpers.RebindForFlavor(alterTableSQL, e.dbFlavor))
-	if err != nil {
+	if err != nil && !isDuplicateColumnError(err) {
 		logger.Error("failed-altering-table", err)
 		return err
 	}
