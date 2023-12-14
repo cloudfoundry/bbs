@@ -36,19 +36,51 @@ var _ = Describe("Unavailable Handler", func() {
 		))
 	})
 
-	verifyResponse := func(expectedStatus int, handler *handlers.UnavailableHandler) {
-		responseRecorder := httptest.NewRecorder()
-		handler.ServeHTTP(responseRecorder, request)
-		Expect(responseRecorder.Code).To(Equal(expectedStatus))
+	verifyEventualResponse := func(expectedStatus int, handler *handlers.UnavailableHandler) {
+		EventuallyWithOffset(1, func() int {
+			responseRecorder := httptest.NewRecorder()
+			handler.ServeHTTP(responseRecorder, request)
+			return responseRecorder.Code
+		}).Should(Equal(expectedStatus))
+	}
+
+	verifyConsistentResponse := func(expectedStatus int, handler *handlers.UnavailableHandler) {
+		ConsistentlyWithOffset(1, func() int {
+			responseRecorder := httptest.NewRecorder()
+			handler.ServeHTTP(responseRecorder, request)
+			return responseRecorder.Code
+		}).Should(Equal(expectedStatus))
 	}
 
 	It("responds with 503 until the service is ready", func() {
-		verifyResponse(http.StatusServiceUnavailable, handler)
-		verifyResponse(http.StatusServiceUnavailable, handler)
+		verifyConsistentResponse(http.StatusServiceUnavailable, handler)
 
 		close(serviceReady)
 
-		verifyResponse(http.StatusOK, handler)
-		verifyResponse(http.StatusOK, handler)
+		verifyEventualResponse(http.StatusOK, handler)
+		verifyConsistentResponse(http.StatusOK, handler)
+	})
+
+	Context("when there are multiple channels specifying whether the service is ready", func() {
+		var serviceReady2 chan struct{}
+
+		BeforeEach(func() {
+			serviceReady2 = make(chan struct{})
+			handler = handlers.NewUnavailableHandler(fakeServer, serviceReady, serviceReady2)
+		})
+
+		It("responds with 503 until both channels have been closed", func() {
+			verifyConsistentResponse(http.StatusServiceUnavailable, handler)
+
+			close(serviceReady)
+
+			verifyConsistentResponse(http.StatusServiceUnavailable, handler)
+
+			close(serviceReady2)
+
+			verifyEventualResponse(http.StatusOK, handler)
+			verifyConsistentResponse(http.StatusOK, handler)
+		})
+
 	})
 })
