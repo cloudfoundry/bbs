@@ -140,6 +140,7 @@ func main() {
 	encryptor := encryptor.New(logger, sqlDB, keyManager, cryptor, clock, metronClient)
 
 	migrationsDone := make(chan struct{})
+	lockReady := make(chan struct{})
 
 	migrationManager := migration.NewManager(
 		logger,
@@ -249,6 +250,7 @@ func main() {
 	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
 	requestStatsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
 	locksHeldTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
+	lockReadyNotifier := handlers.NewLockReadyNotifier(lockReady)
 
 	fileDescriptorPath := fmt.Sprintf("/proc/%d/fd", os.Getpid())
 	fileDescriptorMetronNotifier := metrics.NewFileDescriptorMetronNotifier(logger, fileDescriptorTicker, metronClient, fileDescriptorPath)
@@ -275,6 +277,7 @@ func main() {
 		repClientFactory,
 		taskStatMetronNotifier,
 		migrationsDone,
+		lockReady,
 		exitChan,
 	)
 
@@ -345,11 +348,12 @@ func main() {
 	members := grouper.Members{
 		{Name: "healthcheck", Runner: healthcheckServer},
 		{Name: "periodic-filedescriptor-metrics", Runner: fileDescriptorMetronNotifier},
+		{Name: "workpool", Runner: cbWorkPool},
+		{Name: "server", Runner: server},
 		{Name: "lock-held-metrics", Runner: lockHeldMetronNotifier},
 		{Name: "lock", Runner: lock},
 		{Name: "set-lock-held-metrics", Runner: lockheldmetrics.SetLockHeldRunner(logger, *lockHeldMetronNotifier)},
-		{Name: "workpool", Runner: cbWorkPool},
-		{Name: "server", Runner: server},
+		{Name: "lock-ready-notifier", Runner: lockReadyNotifier},
 		{Name: "migration-manager", Runner: migrationManager},
 		{Name: "encryptor", Runner: encryptor},
 		{Name: "hub-maintainer", Runner: hubMaintainer(logger, desiredHub, actualHub, taskHub)},
