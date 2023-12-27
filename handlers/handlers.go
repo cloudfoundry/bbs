@@ -36,7 +36,6 @@ func New(
 	repClientFactory rep.ClientFactory,
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 	migrationsDone <-chan struct{},
-	lockReady <-chan struct{},
 	exitChan chan struct{},
 ) http.Handler {
 	pingHandler := NewPingHandler()
@@ -142,7 +141,6 @@ func New(
 	return middleware.RecordRequestCount(
 		UnavailableWrap(handler,
 			migrationsDone,
-			lockReady,
 		),
 		emitter,
 	)
