@@ -37,7 +37,7 @@ func (v MetricTagValue_DynamicValue) Valid() bool {
 	}
 }
 
-func ConvertMetricTags(metricTags map[string]*MetricTagValue, info map[MetricTagValue_DynamicValue]any) (map[string]string, error) {
+func ConvertMetricTags(metricTags map[string]*MetricTagValue, info map[MetricTagValue_DynamicValue]interface{}) (map[string]string, error) {
 	tags := make(map[string]string)
 	for k, v := range metricTags {
 		if v.Dynamic > 0 {
