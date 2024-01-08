@@ -384,14 +384,13 @@ func (h *EvacuationController) EvacuateStoppedActualLRP(ctx context.Context, log
 }
 
 func (h *EvacuationController) requestAuction(ctx context.Context, logger lager.Logger, lrpKey *models.ActualLRPKey) {
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(ctx, logger, lrpKey.ProcessGuid)
-	if err != nil {
-		logger.Error("failed-fetching-desired-lrp", err)
+	schedInfos, err := h.desiredLRPDB.DesiredLRPSchedulingInfos(ctx, logger, models.DesiredLRPFilter{ProcessGuids: []string{lrpKey.ProcessGuid}})
+	if err != nil || len(schedInfos) == 0 {
+		logger.Error("failed-fetching-desired-lrp-scheduling-info", err)
 		return
 	}
 
-	schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedInfo, int(lrpKey.Index))
+	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedInfos[0], int(lrpKey.Index))
 	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&startRequest})
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
