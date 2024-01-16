@@ -159,6 +159,22 @@ var _ = Describe("Deadlocks", func() {
 		})
 	})
 
+	Context("DesiredLRPSchedulingInfoByProcessGuid", func() {
+		It("retries on deadlocks", func() {
+			_, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, "")
+			Expect(err).To(HaveOccurred())
+			Expect(fakeConn.BeginCallCount()).To(Equal(3))
+		})
+	})
+
+	Context("DesiredLRPRoutingInfo", func() {
+		It("retries on deadlocks", func() {
+			_, err := sqlDB.DesiredLRPRoutingInfos(ctx, logger, models.DesiredLRPFilter{})
+			Expect(err).To(HaveOccurred())
+			Expect(fakeConn.BeginCallCount()).To(Equal(3))
+		})
+	})
+
 	Context("DesiredLRPs", func() {
 		It("retries on deadlocks", func() {
 			_, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{})

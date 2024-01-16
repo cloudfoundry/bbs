@@ -34,12 +34,13 @@ const (
 	EvacuateRunningActualLRPRoute_r0  = "EvacuateRunningActualLRP_r0" // DEPRECATED
 
 	// Desired LRPs
-	DesiredLRPsRoute_r3               = "DesiredLRPs"
-	DesiredLRPSchedulingInfosRoute_r0 = "DesiredLRPSchedulingInfos"
-	DesiredLRPRoutingInfosRoute_r0    = "DesiredLRPRoutingInfos"
-	DesiredLRPByProcessGuidRoute_r3   = "DesiredLRPByProcessGuid"
-	DesiredLRPsRoute_r2               = "DesiredLRPs_r2"             // DEPRECATED
-	DesiredLRPByProcessGuidRoute_r2   = "DesiredLRPByProcessGuid_r2" // DEPRECATED
+	DesiredLRPsRoute_r3                      = "DesiredLRPs"
+	DesiredLRPSchedulingInfosRoute_r0        = "DesiredLRPSchedulingInfos"
+	DesiredLRPSchedulingInfoByProcessGuid_r0 = "DesiredLRPSchedulingInfoByProcessGuid"
+	DesiredLRPRoutingInfosRoute_r0           = "DesiredLRPRoutingInfos"
+	DesiredLRPByProcessGuidRoute_r3          = "DesiredLRPByProcessGuid"
+	DesiredLRPsRoute_r2                      = "DesiredLRPs_r2"             // DEPRECATED
+	DesiredLRPByProcessGuidRoute_r2          = "DesiredLRPByProcessGuid_r2" // DEPRECATED
 
 	// Desire LRP Lifecycle
 	DesireDesiredLRPRoute_r2 = "DesireDesiredLRP"
@@ -105,6 +106,7 @@ var Routes = rata.Routes{
 
 	// Desired LRPs
 	{Path: "/v1/desired_lrp_scheduling_infos/list", Method: "POST", Name: DesiredLRPSchedulingInfosRoute_r0},
+	{Path: "/v1/desired_lrp_scheduling_infos/get_by_process_guid", Method: "POST", Name: DesiredLRPSchedulingInfoByProcessGuid_r0},
 	{Path: "/v1/desired_lrp_routing_infos/list", Method: "POST", Name: DesiredLRPRoutingInfosRoute_r0},
 
 	{Path: "/v1/desired_lrps/list.r3", Method: "POST", Name: DesiredLRPsRoute_r3},

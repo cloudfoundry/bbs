@@ -329,6 +329,58 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 	})
 
+	Describe("DesiredLRPSchedulingInfoByProcessGuid", func() {
+		var expectedDesiredLRPSchedulingInfo models.DesiredLRPSchedulingInfo
+
+		BeforeEach(func() {
+			desiredLRPGuid := "desired-lrp-guid"
+			desiredLRP := model_helpers.NewValidDesiredLRP(desiredLRPGuid)
+			Expect(sqlDB.DesireLRP(ctx, logger, desiredLRP)).To(Succeed())
+			expectedDesiredLRPSchedulingInfo = desiredLRP.DesiredLRPSchedulingInfo()
+		})
+
+		It("Returns the desired-lrp", func() {
+			schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.ProcessGuid)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*schedInfo).To(BeEquivalentTo(expectedDesiredLRPSchedulingInfo))
+		})
+
+		Context("when the desired lrp does not exist", func() {
+			It("does not log an error", func() {
+				sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, "I am Batman")
+				Expect(logger.Errors).To(BeEmpty())
+			})
+
+			It("returns a ResourceNotFound error", func() {
+				schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, "I am Batman")
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+				Expect(schedInfo).To(BeNil())
+			})
+		})
+
+		Context("when the routes are invalid", func() {
+			BeforeEach(func() {
+				queryStr := "UPDATE desired_lrps SET routes = ? WHERE process_guid = ?"
+				if test_helpers.UsePostgres() {
+					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
+				}
+
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPSchedulingInfo.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+				rowsAffected, err := result.RowsAffected()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rowsAffected).To(BeEquivalentTo(1))
+			})
+
+			It("returns an invalid record error", func() {
+				schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.ProcessGuid)
+				Expect(err).To(HaveOccurred())
+				Expect(schedInfo).To(BeNil())
+			})
+		})
+	})
+
 	Describe("DesiredLRPRoutingInfos", func() {
 		var expectedDesiredLRPRoutingInfos []*models.DesiredLRP
 		var expectedDesiredLRPs []*models.DesiredLRP

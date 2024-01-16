@@ -148,6 +148,25 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
+func (h *DesiredLRPHandler) DesiredLRPSchedulingInfoByProcessGuid(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
+	logger = logger.Session("desired-lrp-scheduling-info-by-process-guid").WithTraceInfo(req)
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	request := &models.DesiredLRPByProcessGuidRequest{}
+	response := &models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
+
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		response.DesiredLrpSchedulingInfo, err = h.desiredLRPDB.DesiredLRPSchedulingInfoByProcessGuid(req.Context(), logger, request.ProcessGuid)
+	}
+
+	response.Error = models.ConvertError(err)
+	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
 func (h *DesiredLRPHandler) DesiredLRPRoutingInfos(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("desired-lrp-routing-infos")

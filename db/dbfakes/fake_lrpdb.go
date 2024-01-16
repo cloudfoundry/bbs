@@ -188,6 +188,21 @@ type FakeLRPDB struct {
 		result1 []*models.DesiredLRP
 		result2 error
 	}
+	DesiredLRPSchedulingInfoByProcessGuidStub        func(context.Context, lager.Logger, string) (*models.DesiredLRPSchedulingInfo, error)
+	desiredLRPSchedulingInfoByProcessGuidMutex       sync.RWMutex
+	desiredLRPSchedulingInfoByProcessGuidArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}
+	desiredLRPSchedulingInfoByProcessGuidReturns struct {
+		result1 *models.DesiredLRPSchedulingInfo
+		result2 error
+	}
+	desiredLRPSchedulingInfoByProcessGuidReturnsOnCall map[int]struct {
+		result1 *models.DesiredLRPSchedulingInfo
+		result2 error
+	}
 	DesiredLRPSchedulingInfosStub        func(context.Context, lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 	desiredLRPSchedulingInfosMutex       sync.RWMutex
 	desiredLRPSchedulingInfosArgsForCall []struct {
@@ -1066,6 +1081,72 @@ func (fake *FakeLRPDB) DesiredLRPRoutingInfosReturnsOnCall(i int, result1 []*mod
 	}{result1, result2}
 }
 
+func (fake *FakeLRPDB) DesiredLRPSchedulingInfoByProcessGuid(arg1 context.Context, arg2 lager.Logger, arg3 string) (*models.DesiredLRPSchedulingInfo, error) {
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.Lock()
+	ret, specificReturn := fake.desiredLRPSchedulingInfoByProcessGuidReturnsOnCall[len(fake.desiredLRPSchedulingInfoByProcessGuidArgsForCall)]
+	fake.desiredLRPSchedulingInfoByProcessGuidArgsForCall = append(fake.desiredLRPSchedulingInfoByProcessGuidArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+	}{arg1, arg2, arg3})
+	stub := fake.DesiredLRPSchedulingInfoByProcessGuidStub
+	fakeReturns := fake.desiredLRPSchedulingInfoByProcessGuidReturns
+	fake.recordInvocation("DesiredLRPSchedulingInfoByProcessGuid", []interface{}{arg1, arg2, arg3})
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeLRPDB) DesiredLRPSchedulingInfoByProcessGuidCallCount() int {
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.RLock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.RUnlock()
+	return len(fake.desiredLRPSchedulingInfoByProcessGuidArgsForCall)
+}
+
+func (fake *FakeLRPDB) DesiredLRPSchedulingInfoByProcessGuidCalls(stub func(context.Context, lager.Logger, string) (*models.DesiredLRPSchedulingInfo, error)) {
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.Lock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.Unlock()
+	fake.DesiredLRPSchedulingInfoByProcessGuidStub = stub
+}
+
+func (fake *FakeLRPDB) DesiredLRPSchedulingInfoByProcessGuidArgsForCall(i int) (context.Context, lager.Logger, string) {
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.RLock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.RUnlock()
+	argsForCall := fake.desiredLRPSchedulingInfoByProcessGuidArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeLRPDB) DesiredLRPSchedulingInfoByProcessGuidReturns(result1 *models.DesiredLRPSchedulingInfo, result2 error) {
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.Lock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.Unlock()
+	fake.DesiredLRPSchedulingInfoByProcessGuidStub = nil
+	fake.desiredLRPSchedulingInfoByProcessGuidReturns = struct {
+		result1 *models.DesiredLRPSchedulingInfo
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeLRPDB) DesiredLRPSchedulingInfoByProcessGuidReturnsOnCall(i int, result1 *models.DesiredLRPSchedulingInfo, result2 error) {
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.Lock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.Unlock()
+	fake.DesiredLRPSchedulingInfoByProcessGuidStub = nil
+	if fake.desiredLRPSchedulingInfoByProcessGuidReturnsOnCall == nil {
+		fake.desiredLRPSchedulingInfoByProcessGuidReturnsOnCall = make(map[int]struct {
+			result1 *models.DesiredLRPSchedulingInfo
+			result2 error
+		})
+	}
+	fake.desiredLRPSchedulingInfoByProcessGuidReturnsOnCall[i] = struct {
+		result1 *models.DesiredLRPSchedulingInfo
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeLRPDB) DesiredLRPSchedulingInfos(arg1 context.Context, arg2 lager.Logger, arg3 models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
 	fake.desiredLRPSchedulingInfosMutex.Lock()
 	ret, specificReturn := fake.desiredLRPSchedulingInfosReturnsOnCall[len(fake.desiredLRPSchedulingInfosArgsForCall)]
@@ -1637,6 +1718,8 @@ func (fake *FakeLRPDB) Invocations() map[string][][]interface{} {
 	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
 	fake.desiredLRPRoutingInfosMutex.RLock()
 	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.RLock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.RUnlock()
 	fake.desiredLRPSchedulingInfosMutex.RLock()
 	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
 	fake.desiredLRPsMutex.RLock()

@@ -742,6 +742,100 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 	})
 
+	Describe("DesiredLRPSchedulingInfoByProcessGuid", func() {
+		var (
+			processGuid = "process-guid"
+
+			requestBody interface{}
+		)
+
+		BeforeEach(func() {
+			requestBody = &models.DesiredLRPByProcessGuidRequest{
+				ProcessGuid: processGuid,
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.DesiredLRPSchedulingInfoByProcessGuid(logger, responseRecorder, request)
+		})
+
+		Context("when reading the desired lrp scheduling info from the DB succeeds", func() {
+			var schedInfo models.DesiredLRPSchedulingInfo
+			BeforeEach(func() {
+				desiredLRP := &models.DesiredLRP{
+					ProcessGuid: "some-guid",
+					VolumeMounts: []*models.VolumeMount{
+						&models.VolumeMount{
+							Driver: "some=driver",
+						},
+					},
+				}
+
+				schedInfo = desiredLRP.DesiredLRPSchedulingInfo()
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(&schedInfo, nil)
+			})
+
+			It("fetches the desired lrp scheduling info by process guid", func() {
+				Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidCallCount()).To(Equal(1))
+				_, _, process_guid := fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidArgsForCall(0)
+				Expect(process_guid).To(Equal(processGuid))
+
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				responseSchedInfo := response.DesiredLrpSchedulingInfo
+				Expect(*responseSchedInfo).To(DeepEqual(schedInfo))
+			})
+		})
+
+		Context("when the DB returns no desired lrp scheduling info", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, models.ErrResourceNotFound)
+			})
+
+			It("returns a resource not found error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to exit channels", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when the DB errros out", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
 	Describe("DesiredLRPRoutingInfos", func() {
 		var (
 			requestBody  interface{}

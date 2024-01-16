@@ -205,6 +205,26 @@ func (db *SQLDB) DesiredLRPSchedulingInfos(ctx context.Context, logger lager.Log
 	return results, err
 }
 
+func (db *SQLDB) DesiredLRPSchedulingInfoByProcessGuid(ctx context.Context, logger lager.Logger, processGuid string) (*models.DesiredLRPSchedulingInfo, error) {
+	logger = logger.Session("db-desired-lrp-scheduling-info-by-process-guid", lager.Data{"process_guid": processGuid})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	var desiredLRPSchedulingInfo *models.DesiredLRPSchedulingInfo
+	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		var err error
+		row := db.one(ctx, logger, tx, desiredLRPsTable,
+			schedulingInfoColumns, helpers.NoLockRow,
+			"process_guid = ?", processGuid,
+		)
+
+		desiredLRPSchedulingInfo, err = db.fetchDesiredLRPSchedulingInfo(logger, row)
+		return err
+	})
+
+	return desiredLRPSchedulingInfo, err
+}
+
 func (db *SQLDB) DesiredLRPRoutingInfos(ctx context.Context, logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	logger = logger.Session("db-desired-lrps-routing-infos", lager.Data{"filter": filter})
 	logger.Debug("starting")

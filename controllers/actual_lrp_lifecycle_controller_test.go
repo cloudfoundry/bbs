@@ -620,10 +620,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			}
 
 			schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(
-				[]*models.DesiredLRPSchedulingInfo{&schedInfo},
-				nil,
-			)
+			fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(&schedInfo, nil)
 		})
 
 		It("responds with no error", func() {
@@ -670,10 +667,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					err = controller.CrashActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
-					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
-					processGuid := filter.ProcessGuids
-					Expect(processGuid).To(Equal([]string{"process-guid"}))
+					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidCallCount()).To(Equal(1))
+					_, _, processGuid := fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidArgsForCall(0)
+					Expect(processGuid).To(Equal("process-guid"))
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 					_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
@@ -738,9 +734,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 			})
 
-			Context("when fetching the desired lrp scheduling info fails", func() {
+			Context("when fetching the desired lrp fails", func() {
 				JustBeforeEach(func() {
-					fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(nil, errors.New("error occured"))
+					fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, errors.New("error occured"))
 				})
 
 				It("fails and does not request an auction", func() {
@@ -882,10 +878,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					}
 
 					schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-					fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(
-						[]*models.DesiredLRPSchedulingInfo{&schedInfo},
-						nil,
-					)
+					fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(&schedInfo, nil)
 				})
 
 				It("returns the error to the caller", func() {

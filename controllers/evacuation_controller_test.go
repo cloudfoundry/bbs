@@ -232,11 +232,7 @@ var _ = Describe("Evacuation Controller", func() {
 		BeforeEach(func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("the-guid")
 			schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(
-				[]*models.DesiredLRPSchedulingInfo{&schedInfo},
-				nil,
-			)
-
+			fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(&schedInfo, nil)
 			actualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
 			actualLRP.State = models.ActualLRPStateClaimed
 			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
@@ -264,10 +260,9 @@ var _ = Describe("Evacuation Controller", func() {
 			_, _, key := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
 			Expect(key).To(Equal(lrpKey))
 
-			Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
-			_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
-			guid := filter.ProcessGuids
-			Expect(guid).To(Equal([]string{"process-guid"}))
+			Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidCallCount()).To(Equal(1))
+			_, _, guid := fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidArgsForCall(0)
+			Expect(guid).To(Equal("process-guid"))
 
 			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.Index))
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
@@ -362,9 +357,9 @@ var _ = Describe("Evacuation Controller", func() {
 			})
 		})
 
-		Context("when looking up the desired lrp scheduling info to auction fails", func() {
+		Context("when looking up the desired lrp to auction fails", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(nil, errors.New("error fetching desired lrp"))
+				fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, errors.New("error fetching desired lrp"))
 			})
 
 			It("does not error and tells the caller to not keep the lrp container", func() {
@@ -755,10 +750,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 			desiredLRP = model_helpers.NewValidDesiredLRP("the-guid")
 			schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(
-				[]*models.DesiredLRPSchedulingInfo{&schedInfo},
-				nil,
-			)
+			fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(&schedInfo, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -1299,7 +1291,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 				Context("when fetching the desired lrp scheduling info fails", func() {
 					BeforeEach(func() {
-						fakeDesiredLRPDB.DesiredLRPSchedulingInfosReturns(nil, errors.New("jolly rancher beer :/"))
+						fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, errors.New("jolly rancher beer :/"))
 					})
 
 					It("does not return an error and keeps the container", func() {
