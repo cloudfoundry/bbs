@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/handlers"
@@ -14,8 +15,11 @@ import (
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/bbs/trace"
+	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -29,6 +33,8 @@ var _ = Describe("Task Handlers", func() {
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.TaskHandler
 		exitCh           chan struct{}
+		requestMetrics   *helpers.RequestMetricsNotifier
+		fakeMetronClient *mfakes.FakeIngressClient
 
 		requestBody interface{}
 		request     *http.Request
@@ -42,7 +48,17 @@ var _ = Describe("Task Handlers", func() {
 		responseRecorder = httptest.NewRecorder()
 		exitCh = make(chan struct{}, 1)
 		controller = &fake_controllers.FakeTaskController{}
-		handler = handlers.NewTaskHandler(controller, exitCh)
+
+		clock := clock.NewClock()
+		requestMetrics = helpers.NewRequestMetricsNotifier(
+			logger,
+			clock,
+			fakeMetronClient,
+			1*time.Minute,
+			[]string{"TaskEndpoints"},
+		)
+
+		handler = handlers.NewTaskHandler(controller, exitCh, requestMetrics)
 
 		requestIdHeader = "e52a3684-8d05-4905-bfeb-f1d59d92eb1d"
 		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))

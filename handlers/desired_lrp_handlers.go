@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
@@ -13,22 +14,26 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
 
 type DesiredLRPHandler struct {
-	desiredLRPDB         db.DesiredLRPDB
-	actualLRPDB          db.ActualLRPDB
-	desiredHub           events.Hub
-	actualHub            events.Hub
-	actualLRPInstanceHub events.Hub
-	auctioneerClient     auctioneer.Client
-	repClientFactory     rep.ClientFactory
-	serviceClient        serviceclient.ServiceClient
-	updateWorkersCount   int
-	exitChan             chan<- struct{}
+	desiredLRPDB          db.DesiredLRPDB
+	actualLRPDB           db.ActualLRPDB
+	desiredHub            events.Hub
+	actualHub             events.Hub
+	actualLRPInstanceHub  events.Hub
+	auctioneerClient      auctioneer.Client
+	repClientFactory      rep.ClientFactory
+	serviceClient         serviceclient.ServiceClient
+	updateWorkersCount    int
+	exitChan              chan<- struct{}
+	requestMetrics        helpers.RequestMetrics
+	metricsGroup          string
+	metricsGroupLifecycle string
 }
 
 func NewDesiredLRPHandler(
@@ -42,18 +47,22 @@ func NewDesiredLRPHandler(
 	repClientFactory rep.ClientFactory,
 	serviceClient serviceclient.ServiceClient,
 	exitChan chan<- struct{},
+	requestMetrics helpers.RequestMetrics,
 ) *DesiredLRPHandler {
 	return &DesiredLRPHandler{
-		desiredLRPDB:         desiredLRPDB,
-		actualLRPDB:          actualLRPDB,
-		desiredHub:           desiredHub,
-		actualHub:            actualHub,
-		actualLRPInstanceHub: actualLRPInstanceHub,
-		auctioneerClient:     auctioneerClient,
-		repClientFactory:     repClientFactory,
-		serviceClient:        serviceClient,
-		updateWorkersCount:   updateWorkersCount,
-		exitChan:             exitChan,
+		desiredLRPDB:          desiredLRPDB,
+		actualLRPDB:           actualLRPDB,
+		desiredHub:            desiredHub,
+		actualHub:             actualHub,
+		actualLRPInstanceHub:  actualLRPInstanceHub,
+		auctioneerClient:      auctioneerClient,
+		repClientFactory:      repClientFactory,
+		serviceClient:         serviceClient,
+		updateWorkersCount:    updateWorkersCount,
+		exitChan:              exitChan,
+		requestMetrics:        requestMetrics,
+		metricsGroup:          "DesiredLRPEndpoints",
+		metricsGroupLifecycle: "DesiredLRPLifecycleEndponts",
 	}
 }
 
@@ -63,6 +72,10 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
@@ -101,6 +114,10 @@ func (h *DesiredLRPHandler) commonDesiredLRPByProcessGuid(logger lager.Logger, t
 	request := &models.DesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		var desiredLRP *models.DesiredLRP
@@ -134,6 +151,10 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPSchedulingInfosResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		filter := models.DesiredLRPFilter{
@@ -157,6 +178,10 @@ func (h *DesiredLRPHandler) DesiredLRPRoutingInfos(logger lager.Logger, w http.R
 	request := &models.DesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	err = parseRequest(logger, req, request)
 	if err == nil {
 		filter := models.DesiredLRPFilter{
@@ -172,14 +197,20 @@ func (h *DesiredLRPHandler) DesiredLRPRoutingInfos(logger lager.Logger, w http.R
 }
 
 func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("desire-lrp").WithTraceInfo(req)
 
 	request := &models.DesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroupLifecycle)
+	defer stopMetrics(h.requestMetrics, h.metricsGroupLifecycle, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -206,14 +237,20 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("update-desired-lrp").WithTraceInfo(req)
 
 	request := &models.UpdateDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroupLifecycle)
+	defer stopMetrics(h.requestMetrics, h.metricsGroupLifecycle, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -268,14 +305,20 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 }
 
 func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("remove-desired-lrp").WithTraceInfo(req)
 
 	request := &models.RemoveDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroupLifecycle)
+	defer stopMetrics(h.requestMetrics, h.metricsGroupLifecycle, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return

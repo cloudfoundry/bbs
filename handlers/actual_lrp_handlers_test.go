@@ -5,12 +5,16 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -23,6 +27,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.ActualLRPHandler
 		exitCh           chan struct{}
+		requestMetrics   *helpers.RequestMetricsNotifier
+		fakeMetronClient *mfakes.FakeIngressClient
 
 		actualLRP1     models.ActualLRP
 		actualLRP2     models.ActualLRP
@@ -76,7 +82,17 @@ var _ = Describe("ActualLRP Handlers", func() {
 		exitCh = make(chan struct{}, 1)
 		requestIdHeader = "f256f938-9e14-4abd-974f-63c6138f1cca"
 		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
-		handler = handlers.NewActualLRPHandler(fakeActualLRPDB, exitCh)
+
+		clock := clock.NewClock()
+		requestMetrics = helpers.NewRequestMetricsNotifier(
+			logger,
+			clock,
+			fakeMetronClient,
+			1*time.Minute,
+			[]string{"ActualLRPSEndpoint"},
+		)
+
+		handler = handlers.NewActualLRPHandler(fakeActualLRPDB, exitCh, requestMetrics)
 	})
 
 	Describe("ActualLRPs", func() {

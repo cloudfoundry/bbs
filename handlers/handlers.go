@@ -16,6 +16,7 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	"code.cloudfoundry.org/rep"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
@@ -37,10 +38,11 @@ func New(
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 	migrationsDone <-chan struct{},
 	exitChan chan struct{},
+	requestMetrics *helpers.RequestMetricsNotifier,
 ) http.Handler {
 	pingHandler := NewPingHandler()
 	domainHandler := NewDomainHandler(db, exitChan)
-	actualLRPHandler := NewActualLRPHandler(db, exitChan)
+	actualLRPHandler := NewActualLRPHandler(db, exitChan, requestMetrics)
 	actualLRPController := controllers.NewActualLRPLifecycleController(
 		db, db, db, db,
 		auctioneerClient,
@@ -55,11 +57,11 @@ func New(
 		actualHub,
 		actualLRPInstanceHub,
 	)
-	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
-	evacuationHandler := NewEvacuationHandler(evacuationController, exitChan)
-	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, actualLRPInstanceHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
+	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan, requestMetrics)
+	evacuationHandler := NewEvacuationHandler(evacuationController, exitChan, requestMetrics)
+	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, actualLRPInstanceHub, auctioneerClient, repClientFactory, serviceClient, exitChan, requestMetrics)
 	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, maxTaskPlacementRetries)
-	taskHandler := NewTaskHandler(taskController, exitChan)
+	taskHandler := NewTaskHandler(taskController, exitChan, requestMetrics)
 	lrpGroupEventsHandler := NewLRPGroupEventsHandler(desiredHub, actualHub)
 	taskEventsHandler := NewTaskEventHandler(taskHub)
 	lrpInstanceEventsHandler := NewLRPInstanceEventHandler(desiredHub, actualLRPInstanceHub)

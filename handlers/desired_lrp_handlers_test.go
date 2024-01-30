@@ -20,8 +20,11 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
+	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	"code.cloudfoundry.org/rep"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -41,6 +44,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.DesiredLRPHandler
 		exitCh           chan struct{}
+		requestMetrics   *helpers.RequestMetricsNotifier
+		fakeMetronClient *mfakes.FakeIngressClient
 
 		desiredLRP1 models.DesiredLRP
 		desiredLRP2 models.DesiredLRP
@@ -64,6 +69,16 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		exitCh = make(chan struct{}, 1)
 		requestIdHeader = "25f23d6a-f46d-460e-7135-7ddc0759a198"
 		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
+
+		clock := clock.NewClock()
+		requestMetrics = helpers.NewRequestMetricsNotifier(
+			logger,
+			clock,
+			fakeMetronClient,
+			1*time.Minute,
+			[]string{"DesiredLRPEndpoints", "DesiredLRPLifecycleEndponts"},
+		)
+
 		handler = handlers.NewDesiredLRPHandler(
 			5,
 			fakeDesiredLRPDB,
@@ -75,6 +90,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			fakeRepClientFactory,
 			fakeServiceClient,
 			exitCh,
+			requestMetrics,
 		)
 	})
 

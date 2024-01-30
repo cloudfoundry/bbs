@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -19,17 +21,22 @@ type EvacuationController interface {
 }
 
 type EvacuationHandler struct {
-	controller EvacuationController
-	exitChan   chan<- struct{}
+	controller     EvacuationController
+	exitChan       chan<- struct{}
+	requestMetrics helpers.RequestMetrics
+	metricsGroup   string
 }
 
 func NewEvacuationHandler(
 	controller EvacuationController,
 	exitChan chan<- struct{},
+	requestMetrics helpers.RequestMetrics,
 ) *EvacuationHandler {
 	return &EvacuationHandler{
-		controller: controller,
-		exitChan:   exitChan,
+		controller:     controller,
+		exitChan:       exitChan,
+		requestMetrics: requestMetrics,
+		metricsGroup:   "EvacuationEndpoints",
 	}
 }
 
@@ -48,6 +55,10 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 	request := &models.RemoveEvacuatingActualLRPRequest{}
 	response := &models.RemoveEvacuatingActualLRPResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
@@ -62,16 +73,22 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 }
 
 func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("evacuate-claimed-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
 	request := &models.EvacuateClaimedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -85,16 +102,22 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 }
 
 func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("evacuate-crashed-actual-lrp").WithTraceInfo(req)
 	logger.Info("started")
 	defer logger.Info("completed")
 
 	request := &models.EvacuateCrashedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -106,17 +129,23 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http
 }
 
 func (h *EvacuationHandler) commonEvacuateRunningActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request, useInternalRoutesAndTags bool) {
+	var err error
 	logger = logger.Session("evacuate-running-actual-lrp").WithTraceInfo(req)
 	logger.Info("starting")
 	defer logger.Info("completed")
 
 	response := &models.EvacuationResponse{}
 	response.KeepContainer = true
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
 	request := &models.EvacuateRunningActualLRPRequest{}
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -151,15 +180,20 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP_r0(logger lager.Logger, w h
 }
 
 func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("evacuate-stopped-actual-lrp").WithTraceInfo(req)
 
 	request := &models.EvacuateStoppedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		logger.Error("failed-to-parse-request", err)
 		response.Error = models.ConvertError(err)

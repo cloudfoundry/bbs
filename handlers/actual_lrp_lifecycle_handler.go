@@ -3,10 +3,12 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 )
 
 //go:generate counterfeiter -generate
@@ -31,28 +33,40 @@ type ActualLRPLifecycleController interface {
 }
 
 type ActualLRPLifecycleHandler struct {
-	controller ActualLRPLifecycleController
-	exitChan   chan<- struct{}
+	controller        ActualLRPLifecycleController
+	exitChan          chan<- struct{}
+	requestMetrics    helpers.RequestMetrics
+	metricsGroup      string
+	metricsGroupStart string
 }
 
 func NewActualLRPLifecycleHandler(
 	controller ActualLRPLifecycleController,
 	exitChan chan<- struct{},
+	requestMetrics helpers.RequestMetrics,
 ) *ActualLRPLifecycleHandler {
 	return &ActualLRPLifecycleHandler{
-		controller: controller,
-		exitChan:   exitChan,
+		controller:        controller,
+		exitChan:          exitChan,
+		requestMetrics:    requestMetrics,
+		metricsGroup:      "ActualLRPLifecycleEndpoints",
+		metricsGroupStart: "StartActualLRPEndpoint",
 	}
 }
 
 func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("claim-actual-lrp").WithTraceInfo(req)
-	logger.Debug("starting")
-	defer logger.Debug("complete")
+	logger.Info("starting")
+	defer logger.Info("complete")
 
 	request := &models.ClaimActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
@@ -67,6 +81,7 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.R
 }
 
 func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("start-actual-lrp").WithTraceInfo(req)
 	logger.Debug("starting")
 	defer logger.Debug("complete")
@@ -74,10 +89,14 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 	request := &models.StartActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroupStart)
+	defer stopMetrics(h.requestMetrics, h.metricsGroupStart, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -119,16 +138,22 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP_r0(logger lager.Logger, w htt
 }
 
 func (h *ActualLRPLifecycleHandler) CrashActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("crash-actual-lrp").WithTraceInfo(req)
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	request := &models.CrashActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -149,6 +174,10 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(logger lager.Logger, w http.Re
 
 	request := &models.FailActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
@@ -172,6 +201,10 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(logger lager.Logger, w http.
 	request := &models.RemoveActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 
@@ -186,13 +219,17 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(logger lager.Logger, w http.
 }
 
 func (h *ActualLRPLifecycleHandler) RetireActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("retire-actual-lrp").WithTraceInfo(req)
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 	request := &models.RetireActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
-	var err error
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
 

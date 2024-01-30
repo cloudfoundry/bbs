@@ -5,13 +5,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
+	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -24,9 +28,11 @@ var _ = Describe("Evacuation Handlers", func() {
 		handler          *handlers.EvacuationHandler
 		exitCh           chan struct{}
 
-		key         models.ActualLRPKey
-		instanceKey models.ActualLRPInstanceKey
-		controller  *fake_controllers.FakeEvacuationController
+		key              models.ActualLRPKey
+		instanceKey      models.ActualLRPInstanceKey
+		controller       *fake_controllers.FakeEvacuationController
+		requestMetrics   *helpers.RequestMetricsNotifier
+		fakeMetronClient *mfakes.FakeIngressClient
 
 		requestIdHeader   string
 		b3RequestIdHeader string
@@ -41,7 +47,17 @@ var _ = Describe("Evacuation Handlers", func() {
 		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 
 		controller = &fake_controllers.FakeEvacuationController{}
-		handler = handlers.NewEvacuationHandler(controller, exitCh)
+
+		clock := clock.NewClock()
+		requestMetrics = helpers.NewRequestMetricsNotifier(
+			logger,
+			clock,
+			fakeMetronClient,
+			1*time.Minute,
+			[]string{"EvacuationEndpoints"},
+		)
+
+		handler = handlers.NewEvacuationHandler(controller, exitCh, requestMetrics)
 
 		key = models.ActualLRPKey{
 			ProcessGuid: "some-guid",

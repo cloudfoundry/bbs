@@ -39,6 +39,7 @@ import (
 	"code.cloudfoundry.org/locket/jointlock"
 	"code.cloudfoundry.org/locket/lock"
 	"code.cloudfoundry.org/locket/lockheldmetrics"
+	requests "code.cloudfoundry.org/locket/metrics/helpers"
 	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/tlsconfig"
@@ -248,6 +249,16 @@ func main() {
 	logger.Info("report-interval", lager.Data{"value": bbsConfig.ReportInterval})
 	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
 	requestStatsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
+	requestTypes := []string{
+		"DesiredLRPEndpoints",
+		"DesiredLRPLifecycleEndponts",
+		"ActualLRPSEndpoint",
+		"ActualLRPLifecycleEndpoints",
+		"StartActualLRPEndpoint",
+		"EvacuationEndpoints",
+		"TaskEndpoints",
+	}
+	requestMetrics := requests.NewRequestMetricsNotifier(logger, clock, metronClient, time.Duration(bbsConfig.ReportInterval), requestTypes)
 	locksHeldTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
 
 	fileDescriptorPath := fmt.Sprintf("/proc/%d/fd", os.Getpid())
@@ -276,6 +287,7 @@ func main() {
 		taskStatMetronNotifier,
 		migrationsDone,
 		exitChan,
+		requestMetrics,
 	)
 
 	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger, metronClient)
@@ -359,6 +371,7 @@ func main() {
 		{Name: "lrp-stat-metron-notifier", Runner: lrpStatMetronNotifier},
 		{Name: "task-stat-metron-notifier", Runner: taskStatMetronNotifier},
 		{Name: "db-stat-metron-notifier", Runner: dbStatMetronNotifier},
+		{Name: "request-metrics-notifier", Runner: requestMetrics},
 	}
 
 	if bbsConfig.DebugAddress != "" {

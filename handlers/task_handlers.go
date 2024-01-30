@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 )
 
 //counterfeiter:generate -o fake_controllers/fake_task_controller.go . TaskController
@@ -28,17 +29,22 @@ type TaskController interface {
 }
 
 type TaskHandler struct {
-	controller TaskController
-	exitChan   chan<- struct{}
+	controller     TaskController
+	exitChan       chan<- struct{}
+	requestMetrics helpers.RequestMetrics
+	metricsGroup   string
 }
 
 func NewTaskHandler(
 	controller TaskController,
 	exitChan chan<- struct{},
+	requestMetrics helpers.RequestMetrics,
 ) *TaskHandler {
 	return &TaskHandler{
-		controller: controller,
-		exitChan:   exitChan,
+		controller:     controller,
+		exitChan:       exitChan,
+		requestMetrics: requestMetrics,
+		metricsGroup:   "TaskEndpoints",
 	}
 }
 
@@ -48,6 +54,10 @@ func (h *TaskHandler) commonTasks(logger lager.Logger, targetVersion format.Vers
 
 	request := &models.TasksRequest{}
 	response := &models.TasksResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
@@ -84,6 +94,10 @@ func (h *TaskHandler) commonTaskByGuid(logger lager.Logger, targetVersion format
 	request := &models.TaskByGuidRequest{}
 	response := &models.TaskResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
 
@@ -119,6 +133,10 @@ func (h *TaskHandler) DesireTask(logger lager.Logger, w http.ResponseWriter, req
 	request := &models.DesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
 
@@ -140,6 +158,10 @@ func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req 
 	request := &models.StartTaskRequest{}
 	response := &models.StartTaskResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
 
@@ -155,15 +177,20 @@ func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req 
 }
 
 func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
 	logger = logger.Session("cancel-task").WithTraceInfo(req)
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
 
-	err := parseRequest(logger, req, request)
+	err = parseRequest(logger, req, request)
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -202,6 +229,10 @@ func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req
 	request := &models.RejectTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
 
@@ -222,6 +253,10 @@ func (h *TaskHandler) CompleteTask(logger lager.Logger, w http.ResponseWriter, r
 
 	request := &models.CompleteTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
@@ -244,6 +279,10 @@ func (h *TaskHandler) ResolvingTask(logger lager.Logger, w http.ResponseWriter, 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
+
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
 
@@ -264,6 +303,10 @@ func (h *TaskHandler) DeleteTask(logger lager.Logger, w http.ResponseWriter, req
 
 	request := &models.TaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response) }()
