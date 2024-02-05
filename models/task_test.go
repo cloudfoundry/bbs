@@ -279,21 +279,6 @@ var _ = Describe("Task", func() {
 				},
 			},
 			{
-				"cpu_weight",
-				&models.Task{
-					Domain:   "some-domain",
-					TaskGuid: "task-guid",
-					TaskDefinition: &models.TaskDefinition{
-						RootFs: "some:rootfs",
-						Action: models.WrapAction(&models.RunAction{
-							Path: "ls",
-							User: "me",
-						}),
-						CpuWeight: 101,
-					},
-				},
-			},
-			{
 				"memory_mb",
 				&models.Task{
 					Domain:   "some-domain",
