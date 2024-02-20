@@ -339,7 +339,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			expectedDesiredLRPSchedulingInfo = desiredLRP.DesiredLRPSchedulingInfo()
 		})
 
-		It("Returns the desired-lrp", func() {
+		It("returns the desired lrp scheduling info", func() {
 			schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.ProcessGuid)
 
 			Expect(err).NotTo(HaveOccurred())
