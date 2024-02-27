@@ -146,7 +146,6 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 
 		logger.Info("callback-failed", lager.Data{"status_code": statusCode})
 	}
-	return
 }
 
 func shouldResolve(status int) bool {

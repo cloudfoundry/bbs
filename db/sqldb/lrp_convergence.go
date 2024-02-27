@@ -119,7 +119,6 @@ func (c *convergence) staleUnclaimedActualLRPs(ctx context.Context, logger lager
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 // Adds CRASHED Actual LRPs that can be restarted to the list of start requests
@@ -160,7 +159,6 @@ func (c *convergence) crashedActualLRPs(ctx context.Context, logger lager.Logger
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger lager.Logger) {
@@ -242,7 +240,6 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager.Logger) {
@@ -321,7 +318,6 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 func scanActualLRPs(logger lager.Logger, rows *sql.Rows) []*models.ActualLRPKey {
