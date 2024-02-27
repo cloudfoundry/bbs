@@ -12,7 +12,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/stdlib"
-	_ "github.com/jackc/pgx/stdlib"
 )
 
 // MYSQL group_concat_max_len system variable
