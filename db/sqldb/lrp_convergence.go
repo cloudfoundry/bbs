@@ -537,7 +537,7 @@ func (c *convergence) actualLRPsWithMissingCells(ctx context.Context, logger lag
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	for key, _ := range missingCellSet {
+	for key := range missingCellSet {
 		c.missingCellIds = append(c.missingCellIds, key)
 	}
 
