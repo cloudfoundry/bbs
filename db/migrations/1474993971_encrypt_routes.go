@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"database/sql"
-	"fmt"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
@@ -47,7 +46,7 @@ func (e *EncryptRoutes) Up(tx *sql.Tx, logger lager.Logger) error {
 	logger.Info("starting")
 	defer logger.Info("completed")
 
-	query := fmt.Sprintf("SELECT process_guid, routes FROM desired_lrps")
+	query := "SELECT process_guid, routes FROM desired_lrps"
 
 	rows, err := tx.Query(query)
 	if err != nil {
@@ -83,7 +82,7 @@ func (e *EncryptRoutes) Up(tx *sql.Tx, logger lager.Logger) error {
 		}
 
 		bindings := make([]interface{}, 0, 3)
-		updateQuery := fmt.Sprintf("UPDATE desired_lrps SET routes = ? WHERE process_guid = ?")
+		updateQuery := "UPDATE desired_lrps SET routes = ? WHERE process_guid = ?"
 		bindings = append(bindings, encodedData)
 		bindings = append(bindings, pGuid)
 		_, err = tx.Exec(helpers.RebindForFlavor(updateQuery, e.dbFlavor), bindings...)
