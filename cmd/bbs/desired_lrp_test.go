@@ -55,9 +55,7 @@ var _ = Describe("DesiredLRP API", func() {
 		Context("when not filtering", func() {
 			It("returns all desired lrps from the bbs", func() {
 				for _, domainLRPs := range desiredLRPs {
-					for _, lrp := range domainLRPs {
-						expectedDesiredLRPs = append(expectedDesiredLRPs, lrp)
-					}
+					expectedDesiredLRPs = append(expectedDesiredLRPs, domainLRPs...)
 				}
 				Expect(actualDesiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 			})
@@ -75,9 +73,7 @@ var _ = Describe("DesiredLRP API", func() {
 			})
 
 			It("returns only the desired lrps in the requested domain", func() {
-				for _, lrp := range desiredLRPs[domain] {
-					expectedDesiredLRPs = append(expectedDesiredLRPs, lrp)
-				}
+				expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRPs[domain]...)
 				Expect(actualDesiredLRPs).To(ConsistOf(expectedDesiredLRPs))
 			})
 		})
