@@ -73,8 +73,8 @@ func NewLRPConvergenceController(
 	}
 }
 
-func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context, logger lager.Logger) {
-	logger = h.logger.Session("converge-lrps")
+func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
+	logger := h.logger.Session("converge-lrps")
 	traceId := trace.RequestIdFromContext(ctx)
 
 	start := h.clock.Now()
