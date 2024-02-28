@@ -95,7 +95,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			2,
 			fakeLRPStatMetronNotifier,
 		)
-		controller.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeader, traceId))
+		controller.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId))
 	})
 
 	It("calls ConvergeLRPs", func() {

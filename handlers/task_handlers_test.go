@@ -685,7 +685,7 @@ var _ = Describe("Task Handlers", func() {
 				It("returns no error", func() {
 					Expect(controller.CancelTaskCallCount()).To(Equal(1))
 					taskContext, taskLogger, taskGuid := controller.CancelTaskArgsForCall(0)
-					Expect(taskContext).To(Equal(context.WithValue(request.Context(), trace.RequestIdHeader, requestIdHeader)))
+					Expect(taskContext).To(Equal(context.WithValue(request.Context(), trace.RequestIdHeaderCtxKey, requestIdHeader)))
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 
