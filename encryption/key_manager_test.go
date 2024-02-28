@@ -79,6 +79,7 @@ var _ = Describe("KeyManager", func() {
 	Context("when different keys with the same label are provided in decryption keys", func() {
 		BeforeEach(func() {
 			duplicateLabelKey1, err := encryption.NewKey("label", "a pass phrase")
+			Expect(err).ToNot(HaveOccurred())
 			duplicateLabelKey2, err := encryption.NewKey("label", "a different pass phrase")
 			Expect(err).NotTo(HaveOccurred())
 

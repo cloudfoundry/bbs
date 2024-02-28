@@ -38,6 +38,7 @@ var _ = Describe("Encryptor", func() {
 		logger = lagertest.NewTestLogger("test")
 
 		oldKey, err := encryption.NewKey("old-key", "old-passphrase")
+		Expect(err).ToNot(HaveOccurred())
 		encryptionKey, err := encryption.NewKey("label", "passphrase")
 		Expect(err).NotTo(HaveOccurred())
 		keyManager, err = encryption.NewKeyManager(encryptionKey, []encryption.Key{oldKey})
