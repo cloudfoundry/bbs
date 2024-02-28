@@ -1284,7 +1284,7 @@ func insertTask(ctx context.Context, db helpers.QueryableDB, serializer format.S
 }
 
 func updateTaskToInvalid(ctx context.Context, db helpers.QueryableDB, serializer format.Serializer, task *models.Task) {
-	taskDefData, err := serializer.Marshal(logger, task.TaskDefinition)
+	_, err := serializer.Marshal(logger, task.TaskDefinition)
 	Expect(err).NotTo(HaveOccurred())
 
 	taskDefData = []byte("{{{{{{{{{{")
