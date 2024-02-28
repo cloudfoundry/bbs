@@ -27,7 +27,7 @@ var _ = ginkgo.Describe("Errors", func() {
 		})
 
 		ginkgo.It("can convert a regular error to a *Error with unknown type", func() {
-			var err error = errors.New("fail")
+			err := errors.New("fail")
 			bbsError := ConvertError(err)
 			Expect(bbsError.Type).To(Equal(Error_UnknownError))
 			Expect(bbsError.Message).To(Equal("fail"))
