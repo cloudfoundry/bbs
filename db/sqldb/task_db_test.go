@@ -1287,7 +1287,7 @@ func updateTaskToInvalid(ctx context.Context, db helpers.QueryableDB, serializer
 	_, err := serializer.Marshal(logger, task.TaskDefinition)
 	Expect(err).NotTo(HaveOccurred())
 
-	taskDefData = []byte("{{{{{{{{{{")
+	taskDefData := []byte("{{{{{{{{{{")
 	queryStr := `UPDATE tasks
 						  SET task_definition=?
 							WHERE guid=?`
