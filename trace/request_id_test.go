@@ -24,13 +24,13 @@ var _ = Describe("RequestId", func() {
 	Describe("ContextWithRequestId", func() {
 		It("returns context with no request id header", func() {
 			ctx := trace.ContextWithRequestId(req)
-			Expect(ctx.Value(trace.RequestIdHeader)).To(Equal(""))
+			Expect(ctx.Value(trace.RequestIdHeaderCtxKey)).To(Equal(""))
 		})
 
 		It("returns context with request id header", func() {
 			req.Header.Add(trace.RequestIdHeader, "some-request-id")
 			ctx := trace.ContextWithRequestId(req)
-			Expect(ctx.Value(trace.RequestIdHeader)).To(Equal("some-request-id"))
+			Expect(ctx.Value(trace.RequestIdHeaderCtxKey)).To(Equal("some-request-id"))
 		})
 	})
 
@@ -41,7 +41,7 @@ var _ = Describe("RequestId", func() {
 		})
 
 		It("returns request id from context", func() {
-			ctx := context.WithValue(context.Background(), trace.RequestIdHeader, "some-request-id")
+			ctx := context.WithValue(context.Background(), trace.RequestIdHeaderCtxKey, "some-request-id")
 			Expect(trace.RequestIdFromContext(ctx)).To(Equal("some-request-id"))
 		})
 	})
