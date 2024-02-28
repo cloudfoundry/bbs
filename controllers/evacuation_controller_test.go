@@ -247,7 +247,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			keepContainer, err = controller.EvacuateClaimedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, lrpKey, lrpInstanceKey)
+			keepContainer, err = controller.EvacuateClaimedActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, lrpKey, lrpInstanceKey)
 		})
 
 		It("does not return an error and tells the caller not to keep the lrp container", func() {
@@ -546,7 +546,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.EvacuateCrashedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &key, &instanceKey, errMessage)
+			err = controller.EvacuateCrashedActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &key, &instanceKey, errMessage)
 		})
 
 		It("does not return an error", func() {
@@ -754,7 +754,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		JustBeforeEach(func() {
 			fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
-			keepContainer, err = controller.EvacuateRunningActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags, false, availabilityZone)
+			keepContainer, err = controller.EvacuateRunningActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &targetKey, &targetInstanceKey, &netInfo, internalRoutes, metricTags, false, availabilityZone)
 			modelErr = models.ConvertError(err)
 		})
 
@@ -1446,7 +1446,7 @@ var _ = Describe("Evacuation Controller", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = controller.EvacuateStoppedActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &targetKey, &targetInstanceKey)
+			err = controller.EvacuateStoppedActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &targetKey, &targetInstanceKey)
 			modelErr = models.ConvertError(err)
 		})
 

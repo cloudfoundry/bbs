@@ -154,7 +154,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		})
 
 		It("emits a LRP instance change to the hub", func() {
-			err = controller.ClaimActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, processGuid, index, &afterInstanceKey)
+			err = controller.ClaimActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, processGuid, index, &afterInstanceKey)
 			Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 			event := actualLRPInstanceHub.EmitArgsForCall(0)
 			Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actualLRP, afterActualLRP, traceId)))
@@ -325,7 +325,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits ActualLRPInstanceChangedEvent and an ActualLRPInstanceRemovedEvent", func() {
-				err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
+				err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 				event := actualLRPInstanceHub.EmitArgsForCall(0)
@@ -479,7 +479,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("should emit LRP instance changed event and LRP instance removed event", func() {
-					err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
+					err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
 
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
@@ -663,7 +663,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		Describe("restarting the instance", func() {
 			Context("when the actual LRP should be restarted", func() {
 				It("request an auction", func() {
-					err = controller.CrashActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(fakeDesiredLRPDB.DesiredLRPByProcessGuidCallCount()).To(Equal(1))
@@ -716,7 +716,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				})
 
 				It("emits crashed and changed event to the actual instance hub", func() {
-					err = controller.CrashActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
+					err = controller.CrashActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 					Expect(err).NotTo(HaveOccurred())
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
@@ -1051,7 +1051,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits an instance change event to the hub", func() {
-				err = controller.FailActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey, errorMessage)
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
 					models.NewActualLRPInstanceChangedEvent(actualLRP, afterActualLRP, traceId),
@@ -1074,7 +1074,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			})
 
 			It("emits an ActualLRPInstanceChangedEvent", func() {
-				err = controller.FailActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey, errorMessage)
+				err = controller.FailActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey, errorMessage)
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
@@ -1520,7 +1520,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						})
 
 						It("passes the url when creating a rep client", func() {
-							err = controller.RetireActualLRP(context.WithValue(ctx, trace.RequestIdHeader, traceId), logger, &actualLRPKey)
+							err = controller.RetireActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey)
 							Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(1))
 							repAddr, repURL, actualTraceId := fakeRepClientFactory.CreateClientArgsForCall(0)
 							Expect(repAddr).To(Equal(cellPresence.RepAddress))

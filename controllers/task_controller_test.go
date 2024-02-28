@@ -403,7 +403,7 @@ var _ = Describe("Task Controller", func() {
 			cellID = "the-cell"
 			after = model_helpers.NewValidTask("hi-bob")
 			fakeTaskDB.CancelTaskReturns(before, after, cellID, nil)
-			ctxWithTrace = context.WithValue(ctx, trace.RequestIdHeader, "some-trace-id")
+			ctxWithTrace = context.WithValue(ctx, trace.RequestIdHeaderCtxKey, "some-trace-id")
 		})
 
 		JustBeforeEach(func() {
