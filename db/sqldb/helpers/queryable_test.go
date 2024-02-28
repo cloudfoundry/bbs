@@ -163,8 +163,8 @@ var _ = Describe("SQL Helpers", func() {
 		It("executes queries", func() {
 			q := helpers.NewMonitoredDB(db, mon)
 			rows, err := helper.All(ctx, logger, q, tableName, []string{"existingcol"}, false, "")
-			defer rows.Close()
 			Expect(err).NotTo(HaveOccurred())
+			defer rows.Close()
 			Expect(mon.Succeeded()).To(BeEquivalentTo(1))
 		})
 
