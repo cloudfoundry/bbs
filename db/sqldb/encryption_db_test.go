@@ -507,8 +507,6 @@ var _ = Describe("Encryption", func() {
 			}
 
 			cryptor = makeCryptor("new", "old")
-			encoder = format.NewEncoder(cryptor)
-
 			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
 			err = sqlDB.PerformEncryption(ctx, logger)
 			Expect(err).NotTo(HaveOccurred())
