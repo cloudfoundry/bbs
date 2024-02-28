@@ -32,6 +32,7 @@ var _ = Describe("Encryption Flags", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			km, err := encryption.NewKeyManager(key, keys)
+			Expect(err).ToNot(HaveOccurred())
 			Expect(km.EncryptionKey().Label()).To(Equal("label"))
 		})
 
