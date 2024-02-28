@@ -426,7 +426,6 @@ func (c *convergence) lrpInstanceCounts(ctx context.Context, logger lager.Logger
 			continue
 		}
 
-		indices := []int{}
 		existingIndices := make(map[int]struct{})
 		if existingIndicesStr.String != "" {
 			for _, indexStr := range strings.Split(existingIndicesStr.String, ",") {
@@ -448,7 +447,6 @@ func (c *convergence) lrpInstanceCounts(ctx context.Context, logger lager.Logger
 				continue
 			}
 
-			indices = append(indices, i)
 			index := int32(i)
 			c.missingLRPKeys = append(c.missingLRPKeys, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
