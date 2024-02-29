@@ -58,7 +58,3 @@ func (e *AddMaxPidsToDesiredLRPs) Up(tx *sql.Tx, logger lager.Logger) error {
 
 	return nil
 }
-
-const postgresColumnNotExistErr = `"max_pids" does not exist`
-const mysqlColumnNotExistErr = `Unknown column 'max_pids'`
-const checkMaxPidsExistenceSQL = `SELECT count(max_pids) FROM desired_lrps`
