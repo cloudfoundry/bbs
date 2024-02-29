@@ -767,7 +767,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				desiredLRP := &models.DesiredLRP{
 					ProcessGuid: "some-guid",
 					VolumeMounts: []*models.VolumeMount{
-						&models.VolumeMount{
+						{
 							Driver: "some=driver",
 						},
 					},
@@ -779,8 +779,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("fetches the desired lrp scheduling info by process guid", func() {
 				Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidCallCount()).To(Equal(1))
-				_, _, process_guid := fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidArgsForCall(0)
-				Expect(process_guid).To(Equal(processGuid))
+				_, _, receivedProcessGuid := fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidArgsForCall(0)
+				Expect(receivedProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
@@ -820,7 +820,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
-		Context("when the DB errros out", func() {
+		Context("when the DB errors out", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, models.ErrUnknownError)
 			})
