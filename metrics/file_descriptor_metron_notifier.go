@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/tedsuo/ifrit"
@@ -62,7 +61,7 @@ func (notifier FileDescriptorMetronNotifier) Run(signals <-chan os.Signal, ready
 }
 
 func (notifier FileDescriptorMetronNotifier) descriptorCount() (int, error) {
-	descriptorInfos, err := ioutil.ReadDir(notifier.procFSPath)
+	descriptorInfos, err := os.ReadDir(notifier.procFSPath)
 
 	if err != nil {
 		return 0, err

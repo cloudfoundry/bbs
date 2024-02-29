@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"time"
 
@@ -99,7 +99,7 @@ func generateTLSConfig(logger lager.Logger, sqlCACertPath string, sqlEnableIdent
 		return tlsConfig
 	}
 
-	certBytes, err := ioutil.ReadFile(sqlCACertPath)
+	certBytes, err := os.ReadFile(sqlCACertPath)
 	if err != nil {
 		logger.Fatal("failed-to-read-sql-ca-file", err)
 	}

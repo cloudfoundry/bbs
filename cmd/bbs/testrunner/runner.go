@@ -2,7 +2,6 @@ package testrunner
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"time"
@@ -19,7 +18,7 @@ func New(binPath string, bbsConfig config.BBSConfig) *ginkgomon.Runner {
 		bbsConfig.ReportInterval = durationjson.Duration(time.Minute)
 	}
 
-	f, err := ioutil.TempFile("", "bbs.config")
+	f, err := os.CreateTemp("", "bbs.config")
 	Expect(err).NotTo(HaveOccurred())
 
 	err = json.NewEncoder(f).Encode(bbsConfig)

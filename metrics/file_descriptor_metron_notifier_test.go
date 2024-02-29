@@ -1,7 +1,6 @@
 package metrics_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -32,10 +31,10 @@ var _ = Describe("FileDescriptorMetronNotifier", func() {
 	)
 
 	BeforeEach(func() {
-		fakeProcFileSystemPath, err = ioutil.TempDir("", "proc")
+		fakeProcFileSystemPath, err = os.MkdirTemp("", "proc")
 		Expect(err).NotTo(HaveOccurred())
 
-		symlinkedFileDir, err = ioutil.TempDir("", "tmpdir")
+		symlinkedFileDir, err = os.MkdirTemp("", "tmpdir")
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeMetronClient = new(mfakes.FakeIngressClient)
@@ -113,7 +112,7 @@ var _ = Describe("FileDescriptorMetronNotifier", func() {
 })
 
 func createSymlink(dir, tmpdir, symlinkId string) {
-	fd, err := ioutil.TempFile(tmpdir, "socket")
+	fd, err := os.CreateTemp(tmpdir, "socket")
 	Expect(err).NotTo(HaveOccurred())
 	symlink := filepath.Join(dir, symlinkId)
 
