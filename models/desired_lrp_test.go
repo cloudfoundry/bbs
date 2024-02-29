@@ -1589,7 +1589,6 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 	var createdAt = time.Unix(123, 456)
 	var trustedSystemCertificatesPath = "/etc/cf-system-certificates"
 	var httpCheckDef = model_helpers.NewValidHTTPCheckDefinition()
-	const logRateLimitBytesPerSecond = 1024
 	var logRateLimit = &models.LogRateLimit{BytesPerSecond: 1024}
 
 	DescribeTable("Validation",

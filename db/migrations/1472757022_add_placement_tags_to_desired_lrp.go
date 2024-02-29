@@ -58,6 +58,3 @@ func (e *AddPlacementTagsToDesiredLRPs) Up(tx *sql.Tx, logger lager.Logger) erro
 
 	return nil
 }
-
-const alterDesiredLRPAddPlacementTagSQL = `ALTER TABLE desired_lrps
-	ADD COLUMN placement_tags TEXT;`
