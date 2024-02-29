@@ -169,6 +169,9 @@ type ExternalDesiredLRPClient interface {
 	// Returns all DesiredLRPSchedulingInfos that match the given DesiredLRPFilter
 	DesiredLRPSchedulingInfos(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 
+	//Returns the DesiredLRPSchedulingInfo that matches the given process guid
+	DesiredLRPSchedulingInfoByProcessGuid(logger lager.Logger, traceID string, processGuid string) (*models.DesiredLRPSchedulingInfo, error)
+
 	// Returns all DesiredLRPRoutingInfos that match the given DesiredLRPFilter
 	DesiredLRPRoutingInfos(lager.Logger, string, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 
@@ -625,6 +628,19 @@ func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, traceID string, 
 	}
 
 	return response.DesiredLrpSchedulingInfos, response.Error.ToError()
+}
+
+func (c *client) DesiredLRPSchedulingInfoByProcessGuid(logger lager.Logger, traceID string, processGuid string) (*models.DesiredLRPSchedulingInfo, error) {
+	request := models.DesiredLRPByProcessGuidRequest{
+		ProcessGuid: processGuid,
+	}
+	response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
+	err := c.doRequest(logger, traceID, DesiredLRPSchedulingInfoByProcessGuid_r0, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.DesiredLrpSchedulingInfo, response.Error.ToError()
 }
 
 func (c *client) DesiredLRPRoutingInfos(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

@@ -204,14 +204,13 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 		return nil
 	}
 
-	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(ctx, logger, actualLRPKey.ProcessGuid)
+	schedInfo, err := h.desiredLRPDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, actualLRPKey.ProcessGuid)
 	if err != nil {
 		logger.Error("failed-fetching-desired-lrp", err)
 		return err
 	}
 
-	schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
-	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedInfo, int(actualLRPKey.Index))
+	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedInfo, int(actualLRPKey.Index))
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
 	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&startRequest})
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})

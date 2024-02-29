@@ -15,10 +15,12 @@ import (
 
 var _ = Describe("DesiredLRP API", func() {
 	var (
-		desiredLRPs         map[string][]*models.DesiredLRP
-		schedulingInfos     []*models.DesiredLRPSchedulingInfo
-		expectedDesiredLRPs []*models.DesiredLRP
-		actualDesiredLRPs   []*models.DesiredLRP
+		desiredLRPs            map[string][]*models.DesiredLRP
+		schedulingInfos        []*models.DesiredLRPSchedulingInfo
+		routingInfos           []*models.DesiredLRP
+		expectedSchedulingInfo models.DesiredLRPSchedulingInfo
+		expectedDesiredLRPs    []*models.DesiredLRP
+		actualDesiredLRPs      []*models.DesiredLRP
 
 		filter models.DesiredLRPFilter
 
@@ -195,6 +197,77 @@ var _ = Describe("DesiredLRP API", func() {
 					&desiredLRP2,
 				}
 				Expect(schedulingInfos).To(ConsistOf(expectedSchedulingInfos))
+			})
+		})
+	})
+
+	Describe("DesiredLRPSchedulingInfoByProcessGuid", func() {
+		var schedulingInfoByProcessGuid *models.DesiredLRPSchedulingInfo
+
+		JustBeforeEach(func() {
+			expectedSchedulingInfo = desiredLRPs["domain-1"][0].DesiredLRPSchedulingInfo()
+			schedulingInfoByProcessGuid, getErr = client.DesiredLRPSchedulingInfoByProcessGuid(logger, "some-trace-id", expectedSchedulingInfo.GetProcessGuid())
+			schedulingInfoByProcessGuid.ModificationTag.Epoch = "epoch"
+		})
+
+		It("responds without error", func() {
+			Expect(getErr).ToNot(HaveOccurred())
+		})
+
+		It("returns the correct desired lrp scheduling info", func() {
+			Expect(*schedulingInfoByProcessGuid).To(Equal(expectedSchedulingInfo))
+		})
+	})
+
+	Describe("DesiredLRPRoutingInfos", func() {
+		JustBeforeEach(func() {
+			routingInfos, getErr = client.DesiredLRPRoutingInfos(logger, "some-trace-id", filter)
+			for _, routingInfo := range routingInfos {
+				routingInfo.ModificationTag.Epoch = "epoch"
+			}
+		})
+
+		It("responds without error", func() {
+			Expect(getErr).NotTo(HaveOccurred())
+		})
+
+		It("has the correct number of responses", func() {
+			Expect(routingInfos).To(HaveLen(5))
+		})
+
+		Context("when not filtering", func() {
+			It("returns all routing infos from the bbs", func() {
+				expectedRoutingInfos := []*models.DesiredLRP{}
+				for _, domainLRPs := range desiredLRPs {
+					for _, lrp := range domainLRPs {
+						routingInfo := lrp.DesiredLRPRoutingInfo()
+						expectedRoutingInfos = append(expectedRoutingInfos, &routingInfo)
+					}
+				}
+				Expect(routingInfos).To(ConsistOf(expectedRoutingInfos))
+			})
+		})
+
+		Context("when filtering by process guids", func() {
+			BeforeEach(func() {
+				guids := []string{
+					"guid-1-for-domain-1",
+					"guid-2-for-domain-2",
+				}
+
+				filter = models.DesiredLRPFilter{ProcessGuids: guids}
+			})
+
+			It("returns only the routing infos in the requested process guids", func() {
+				Expect(routingInfos).To(HaveLen(2))
+
+				routingInfo1 := desiredLRPs["domain-1"][1].DesiredLRPRoutingInfo()
+				routingInfo2 := desiredLRPs["domain-2"][2].DesiredLRPRoutingInfo()
+				expectedRoutingInfos := []*models.DesiredLRP{
+					&routingInfo1,
+					&routingInfo2,
+				}
+				Expect(routingInfos).To(ConsistOf(expectedRoutingInfos))
 			})
 		})
 	})

@@ -341,6 +341,89 @@ if err != nil {
 }
 ```
 
+## DesiredLRPSchedulingInfoByProcessGuid
+
+Returns the DesiredLRPSchedulingInfo with the given process guid.
+
+### BBS API Endpoint
+
+POST a [DesiredLRPByProcessGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPByProcessGuidRequest) to `/v1/desired_lrp_scheduling_infos/get_by_process_guid` and receive a [DesiredLRPSchedulingInfoByProcessGuidResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPSchedulingInfoByProcessGuidResponse) with a [DesiredLRPSchedulingInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPSchedulingInfo).
+
+### Golang Client API
+
+```go
+DesiredLRPSchedulingInfoByProcessGuid(ctx context.Context, logger lager.Logger, processGuid string) (*models.DesiredLRPSchedulingInfo, error)
+```
+
+#### Inputs
+
+* `processGuid string`: The GUID for the DesiredLRPSchedulingInfo.
+
+#### Output
+
+* `*models.DesiredLRPSchedulingInfo`: The requested [DesiredLRPSchedulingInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPSchedulingInfo).
+* `error`:  Non-nil if an error occurred.
+
+
+#### Example
+
+```go
+client := bbs.NewClient(url)
+schedInfo, err := client.DesiredLRPBySchedulingInfoProcessGuid(logger, "some-processs-guid")
+if err != nil {
+    log.Printf("failed to retrieve desired lrp scheduling info: " + err.Error())
+}
+```
+
+## DesiredLRPRoutingInfos
+
+Returns all DesiredLRPs with only the routing info, that matches the given DesiredLRPFilter.
+
+### BBS API Endpoint 
+
+POST a [DesiredLRPsRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsRequest)
+to `/v1/desired_lrp_routing_infos/list`
+and receive a [DesiredLRPsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPsResponse).
+
+### Golang Client API
+```go
+DesiredLRPRoutingInfos(ctx context.Context, logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
+```
+
+#### Inputs 
+
+* `filter models.DesiredLRPFilter`: [DesiredLRPFilter](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPFilter) to restrict the DesiredLRPs returned.
+  * `Domain string`: If non-empty, filter to only DesiredLRPs in this domain.
+  * `ProcessGuids []string`: If non-empty, filter to only DesiredLRPs with ProcessGuid in the given slice.
+
+#### Output 
+
+* `[]*models.DesiredLRP`: List of [DesiredLRPS](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRP) records.
+* Returned fields: 
+```go 
+".process_guid",
+".domain",
+".log_guid",
+".instances",
+".routes",
+".modification_tag_epoch",
+".modification_tag_index",
+".run_info",
+```
+* `error`:  Non-nil if an error occurred.
+
+#### Example
+
+```go
+client := bbs.NewClient(url)
+routingInfos, err := client.DesiredLRPRoutingInfos(logger, &models.DesiredLRPFilter{
+    Domain: "cf-apps",
+})
+if err != nil {
+    log.Printf("failed to retrieve desired lrp routing info: " + err.Error())
+}
+```
+
 ## DesireLRP
 
 Create a DesiredLRP and its corresponding associated ActualLRPs.
