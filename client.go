@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"mime"
 	"net"
 	"net/http"
@@ -990,7 +990,7 @@ func handleProtoResponse(response *http.Response, responseObject proto.Message) 
 		return models.NewError(models.Error_InvalidRequest, "responseObject cannot be nil")
 	}
 
-	buf, err := ioutil.ReadAll(response.Body)
+	buf, err := io.ReadAll(response.Body)
 	if err != nil {
 		return models.NewError(models.Error_InvalidResponse, fmt.Sprint("failed to read body: ", err.Error()))
 	}

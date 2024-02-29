@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -152,7 +152,7 @@ func route(f http.HandlerFunc) http.Handler {
 }
 
 func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) error {
-	data, err := ioutil.ReadAll(req.Body)
+	data, err := io.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-to-read-body", err)
 		return models.ErrUnknownError
