@@ -5,8 +5,6 @@ option go_package=".";
 
 import "modification_tag.proto";
 
-option (gogoproto.goproto_enum_prefix_all) = true;
-
 message ActualLRPGroup {
   option deprecated = true;
   ActualLRP instance = 1;
