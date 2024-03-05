@@ -3,9 +3,7 @@ syntax = "proto3";
 package models;
 option go_package=".";
 
-
 option (gogoproto.equal_all) = false;
-option (gogoproto.goproto_enum_prefix_all) = true;
 
 message Error {
   enum Type {
