@@ -7,11 +7,11 @@ option go_package=".";
 option (gogoproto.goproto_enum_prefix_all) = true;
 
 message CachedDependency {
-  string name = 1 [(gogoproto.jsontag) = "name"];
-  string from = 2 [(gogoproto.jsontag) = "from"];
-  string to = 3 [(gogoproto.jsontag) = "to"];
-  string cache_key = 4 [(gogoproto.jsontag) = "cache_key"];
-  string log_source = 5 [(gogoproto.jsontag) = "log_source"];
+  string name = 1 [json_name = "name"];
+  string from = 2 [json_name = "from"];
+  string to = 3 [json_name = "to"];
+  string cache_key = 4 [json_name = "cache_key"];
+  string log_source = 5 [json_name = "log_source"];
   string checksum_algorithm = 6;
   string checksum_value = 7;
 }

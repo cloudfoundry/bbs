@@ -10,7 +10,7 @@ option (gogoproto.equal_all) = false;
 
 message EvacuationResponse {
   Error error = 1;
-  bool keep_container = 2 [(gogoproto.jsontag) = "keep_container"];
+  bool keep_container = 2 [json_name = "keep_container"];
 }
 
 message EvacuateClaimedActualLRPRequest {
@@ -29,7 +29,7 @@ message EvacuateRunningActualLRPRequest {
   oneof optional_routable {
     bool Routable = 7;
   }
-  string availability_zone = 8 [(gogoproto.jsontag) = "availability_zone"];
+  string availability_zone = 8 [json_name = "availability_zone"];
 }
 
 message EvacuateStoppedActualLRPRequest {
@@ -40,7 +40,7 @@ message EvacuateStoppedActualLRPRequest {
 message EvacuateCrashedActualLRPRequest {
   ActualLRPKey actual_lrp_key = 1;
   ActualLRPInstanceKey actual_lrp_instance_key = 2;
-  string error_message = 3 [(gogoproto.jsontag) = "error_message"];
+  string error_message = 3 [json_name = "error_message"];
 }
 
 message RemoveEvacuatingActualLRPRequest {
