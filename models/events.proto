@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package models;
+option go_package=".";
 
 import "actual_lrp.proto";
 import "desired_lrp.proto";
