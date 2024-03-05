@@ -5,5 +5,5 @@ option go_package=".";
 
 
 message PingResponse {
-  bool available = 1 [(gogoproto.jsontag) =  "available"];
+  bool available = 1 [json_name =  "available"];
 }

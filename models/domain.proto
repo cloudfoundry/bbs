@@ -17,6 +17,6 @@ message UpsertDomainResponse {
 }
 
 message UpsertDomainRequest {
-  string domain = 1 [(gogoproto.jsontag) = "domain"];
-  uint32 ttl = 2 [(gogoproto.jsontag) = "ttl"];
+  string domain = 1 [json_name = "domain"];
+  uint32 ttl = 2 [json_name = "ttl"];
 }

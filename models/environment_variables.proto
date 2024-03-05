@@ -5,6 +5,6 @@ option go_package=".";
 
 
 message EnvironmentVariable {
-  string name = 1 [(gogoproto.jsontag) = "name"];
-  string value = 2 [(gogoproto.jsontag) = "value"];
+  string name = 1 [json_name = "name"];
+  string value = 2 [json_name = "value"];
 }

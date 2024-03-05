@@ -7,7 +7,7 @@ option go_package=".";
 
 message CheckDefinition {
   repeated Check checks = 1;
-  string log_source = 2 [(gogoproto.jsontag) = "log_source"];
+  string log_source = 2 [json_name = "log_source"];
   repeated Check readiness_checks = 3;
 }
 
@@ -20,14 +20,14 @@ message Check {
 }
 
 message TCPCheck {
-  uint32 port = 1 [(gogoproto.jsontag) = "port"];
+  uint32 port = 1 [json_name = "port"];
   uint64 connect_timeout_ms = 2;
   uint64 interval_ms = 3;
 }
 
 message HTTPCheck {
-  uint32 port = 1 [(gogoproto.jsontag) = "port"];
+  uint32 port = 1 [json_name = "port"];
   uint64 request_timeout_ms = 2;
-  string path = 3 [(gogoproto.jsontag) = "path"];
+  string path = 3 [json_name = "path"];
   uint64 interval_ms = 4;
 }
