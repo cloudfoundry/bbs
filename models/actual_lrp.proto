@@ -62,7 +62,7 @@ message ActualLRP {
   string state = 6 [json_name = "state"];
   string placement_error = 7;
   int64 since = 8 [json_name = "since"];
-  ModificationTag modification_tag = 9 [,json_name = "modification_tag"];
+  ModificationTag modification_tag = 9 [json_name = "modification_tag"];
   Presence presence = 10 [json_name = "presence"];
   repeated ActualLRPInternalRoute actual_lrp_internal_routes = 11;
   map<string, string> metric_tags = 12;
