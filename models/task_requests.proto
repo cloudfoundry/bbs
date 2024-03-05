@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package models;
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "task.proto";
 import "error.proto";
 
