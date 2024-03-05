@@ -7,5 +7,5 @@ option go_package=".";
 option (gogoproto.goproto_enum_prefix_all) = true;
 
 message Network {
-  map<string, string> properties = 1 [(gogoproto.jsontag) = "properties,omitempty"];
+  map<string, string> properties = 1 [json_name = "properties,omitempty"];
 }

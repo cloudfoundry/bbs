@@ -5,7 +5,7 @@ option go_package=".";
 
 
 message ModificationTag {
-  string epoch = 1 [(gogoproto.jsontag) =  "epoch"];
-  uint32 index = 2 [(gogoproto.jsontag) = "index"];
+  string epoch = 1 [json_name =  "epoch"];
+  uint32 index = 2 [json_name = "index"];
 }
 

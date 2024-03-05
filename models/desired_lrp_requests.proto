@@ -16,7 +16,7 @@ message DesiredLRPsResponse {
 }
 
 message DesiredLRPsRequest {
-  string domain = 1 [(gogoproto.jsontag) = "domain"];
+  string domain = 1 [json_name = "domain"];
   repeated string process_guids = 2;
 }
 
@@ -36,7 +36,7 @@ message DesiredLRPSchedulingInfoByProcessGuidResponse {
 }
 
 message DesiredLRPByProcessGuidRequest {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+  string process_guid = 1 [json_name = "process_guid"];
 }
 
 message DesireLRPRequest {
@@ -44,10 +44,10 @@ message DesireLRPRequest {
 }
 
 message UpdateDesiredLRPRequest {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+  string process_guid = 1 [json_name = "process_guid"];
   DesiredLRPUpdate update = 2;
 }
 
 message RemoveDesiredLRPRequest {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+  string process_guid = 1 [json_name = "process_guid"];
 }

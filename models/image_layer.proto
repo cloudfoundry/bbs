@@ -25,10 +25,10 @@ message ImageLayer {
   }
 
   string name                      = 1;
-  string url                       = 2 [(gogoproto.jsontag) =  "url"];
-  string destination_path          = 3 [(gogoproto.jsontag) =  "destination_path"];
-  Type layer_type                  = 4 [(gogoproto.jsontag) = "layer_type"];
-  MediaType media_type             = 5 [(gogoproto.jsontag) = "media_type"];
+  string url                       = 2 [json_name =  "url"];
+  string destination_path          = 3 [json_name =  "destination_path"];
+  Type layer_type                  = 4 [json_name = "layer_type"];
+  MediaType media_type             = 5 [json_name = "media_type"];
   DigestAlgorithm digest_algorithm = 6;
   string digest_value              = 7;
 }
