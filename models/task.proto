@@ -55,7 +55,7 @@ message Task {
     Resolving = 4;
   }
 
-  TaskDefinition task_definition = 1 [json_name = "", (gogoproto.embed) = true];
+  TaskDefinition task_definition = 1 [json_name = ""];
 
   string task_guid = 2 [json_name =  "task_guid"];
   string domain = 3 [json_name =  "domain"];
