@@ -3,8 +3,6 @@ syntax = "proto3";
 package models;
 option go_package=".";
 
-option (gogoproto.equal_all) = false;
-
 message Error {
   enum Type {
     reserved 1, 2, 10, 20, 22, 23, 25; // previously used and removed values
