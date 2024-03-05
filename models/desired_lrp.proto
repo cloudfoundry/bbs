@@ -18,23 +18,23 @@ import "sidecar.proto";
 import "log_rate_limit.proto";
 
 message DesiredLRPSchedulingInfo {
-  DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
+  DesiredLRPKey desired_lrp_key = 1 [json_name = "", (gogoproto.embed) = true];
 
   string annotation = 2 [json_name = "annotation"];
   int32 instances = 3 [json_name = "instances"];
 
-  DesiredLRPResource desired_lrp_resource = 4 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
+  DesiredLRPResource desired_lrp_resource = 4 [json_name = "", (gogoproto.embed) = true];
 
-  ProtoRoutes routes = 5 [(gogoproto.nullable) = false, (gogoproto.customtype) = "Routes"];
-  ModificationTag modification_tag = 6 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
+  ProtoRoutes routes = 5 [(gogoproto.customtype) = "Routes"];
+  ModificationTag modification_tag = 6 [json_name = "", (gogoproto.embed) = true];
   VolumePlacement volume_placement = 7;
   repeated string PlacementTags = 8 [json_name ="placement_tags,omitempty"];
 }
 
 message DesiredLRPRunInfo {
-  DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
+  DesiredLRPKey desired_lrp_key = 1 [json_name = "", (gogoproto.embed) = true];
 
-  repeated EnvironmentVariable environment_variables = 2 [json_name = "env", (gogoproto.nullable) = false];
+  repeated EnvironmentVariable environment_variables = 2 [json_name = "env"];
   Action setup = 3;
   Action action = 4;
   Action monitor = 5;
@@ -45,7 +45,7 @@ message DesiredLRPRunInfo {
 
   uint32 cpu_weight = 8 [json_name = "cpu_weight"];
   repeated uint32 ports = 9 [packed = false];
-  repeated SecurityGroupRule egress_rules = 10 [(gogoproto.nullable) = false];
+  repeated SecurityGroupRule egress_rules = 10 [];
   string log_source = 11 [json_name = "log_source"];
   string metrics_guid = 12 [deprecated=true, json_name = "metrics_guid"];
   int64 created_at = 13 [json_name = "created_at"];
