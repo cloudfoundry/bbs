@@ -7,21 +7,21 @@ option go_package=".";
 message ImageLayer {
   enum DigestAlgorithm {
     DigestAlgorithmInvalid = 0; // not camel cased since it isn't supposed to be used by API users
-    SHA256                 = 1 [(string_name) = "DigestAlgorithmSha256"];
-    SHA512                 = 2 [(string_name) = "DigestAlgorithmSha512", deprecated=true];
+    SHA256                 = 1;
+    SHA512                 = 2 [deprecated=true];
   }
 
   enum MediaType {
     MediaTypeInvalid = 0; // not camel cased since it isn't supposed to be used by API users
-    TGZ              = 1 [(string_name) = "MediaTypeTgz"];
-    TAR              = 2 [(string_name) = "MediaTypeTar"];
-    ZIP              = 3 [(string_name) = "MediaTypeZip"];
+    TGZ              = 1;
+    TAR              = 2;
+    ZIP              = 3;
   }
 
   enum Type {
     LayerTypeInvalid = 0; // not camel cased since it isn't supposed to be used by API users
-    SHARED           = 1 [(string_name) = "LayerTypeShared"];
-    EXCLUSIVE        = 2 [(string_name) = "LayerTypeExclusive"];
+    SHARED           = 1;
+    EXCLUSIVE        = 2;
   }
 
   string name                      = 1;

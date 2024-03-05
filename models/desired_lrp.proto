@@ -45,7 +45,7 @@ message DesiredLRPRunInfo {
 
   uint32 cpu_weight = 8 [json_name = "cpu_weight"];
   repeated uint32 ports = 9 [packed = false];
-  repeated SecurityGroupRule egress_rules = 10 [];
+  repeated SecurityGroupRule egress_rules = 10;
   string log_source = 11 [json_name = "log_source"];
   string metrics_guid = 12 [deprecated=true, json_name = "metrics_guid"];
   int64 created_at = 13 [json_name = "created_at"];
