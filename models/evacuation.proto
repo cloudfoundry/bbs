@@ -6,8 +6,6 @@ option go_package=".";
 import "actual_lrp.proto";
 import "error.proto";
 
-option (gogoproto.equal_all) = false;
-
 message EvacuationResponse {
   Error error = 1;
   bool keep_container = 2 [json_name = "keep_container"];
