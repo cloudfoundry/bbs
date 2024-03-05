@@ -14,8 +14,6 @@ import "image_layer.proto";
 import "log_rate_limit.proto";
 import "metric_tags.proto";
 
-option (gogoproto.goproto_enum_prefix_all) = true;
-
 message TaskDefinition {
   string root_fs = 1 [json_name = "rootfs"];
   repeated EnvironmentVariable environment_variables = 2 [json_name = "env,omitempty"];

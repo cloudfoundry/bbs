@@ -3,9 +3,6 @@ syntax = "proto3";
 package models;
 option go_package=".";
 
-
-option (gogoproto.goproto_enum_prefix_all) = true;
-
 message SharedDevice {
   string volume_id = 1 [json_name = "volume_id"];
   string mount_config = 2 [json_name = "mount_config"];
