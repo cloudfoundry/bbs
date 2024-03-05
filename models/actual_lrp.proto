@@ -35,9 +35,9 @@ message ActualLRPNetInfo {
   string instance_address = 3;
 
   enum PreferredAddress {
-    UNKNOWN = 0 [(string_name) = "PreferredAddressUnknown"];
-    INSTANCE = 1 [(string_name) = "PreferredAddressInstance"];
-    HOST = 2 [(string_name) = "PreferredAddressHost"];
+    UNKNOWN   = 0;
+    INSTANCE  = 1;
+    HOST      = 2;
   }
 
   PreferredAddress preferred_address = 4 [json_name = "preferred_address"];
@@ -49,9 +49,9 @@ message ActualLRPInternalRoute {
 
 message ActualLRP {
   enum Presence {
-    ORDINARY   = 0 [(string_name) = "Ordinary"];
-    EVACUATING = 1 [(string_name) = "Evacuating"];
-    SUSPECT    = 2 [(string_name) = "Suspect"];
+    ORDINARY   = 0;
+    EVACUATING = 1;
+    SUSPECT    = 2;
   }
 
   ActualLRPKey actual_lrp_key = 1 [json_name = ""];
