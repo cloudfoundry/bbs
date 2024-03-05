@@ -37,9 +37,9 @@ message ActualLRPNetInfo {
   string instance_address = 3;
 
   enum PreferredAddress {
-    UNKNOWN = 0 [(gogoproto.enumvalue_customname) = "PreferredAddressUnknown"];
-    INSTANCE = 1 [(gogoproto.enumvalue_customname) = "PreferredAddressInstance"];
-    HOST = 2 [(gogoproto.enumvalue_customname) = "PreferredAddressHost"];
+    UNKNOWN = 0 [(string_name) = "PreferredAddressUnknown"];
+    INSTANCE = 1 [(string_name) = "PreferredAddressInstance"];
+    HOST = 2 [(string_name) = "PreferredAddressHost"];
   }
 
   PreferredAddress preferred_address = 4 [json_name = "preferred_address"];
@@ -51,9 +51,9 @@ message ActualLRPInternalRoute {
 
 message ActualLRP {
   enum Presence {
-    ORDINARY   = 0 [(gogoproto.enumvalue_customname) = "Ordinary"];
-    EVACUATING = 1 [(gogoproto.enumvalue_customname) = "Evacuating"];
-    SUSPECT    = 2 [(gogoproto.enumvalue_customname) = "Suspect"];
+    ORDINARY   = 0 [(string_name) = "Ordinary"];
+    EVACUATING = 1 [(string_name) = "Evacuating"];
+    SUSPECT    = 2 [(string_name) = "Suspect"];
   }
 
   ActualLRPKey actual_lrp_key = 1 [json_name = ""];
