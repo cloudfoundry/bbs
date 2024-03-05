@@ -56,15 +56,15 @@ message ActualLRP {
     SUSPECT    = 2 [(gogoproto.enumvalue_customname) = "Suspect"];
   }
 
-  ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
-  ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
-  ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.nullable) = false, json_name = "", (gogoproto.embed) = true];
+  ActualLRPKey actual_lrp_key = 1 [json_name = "", (gogoproto.embed) = true];
+  ActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "", (gogoproto.embed) = true];
+  ActualLRPNetInfo actual_lrp_net_info = 3 [json_name = "", (gogoproto.embed) = true];
   int32 crash_count = 4 [json_name = "crash_count"];
   string crash_reason = 5;
   string state = 6 [json_name = "state"];
   string placement_error = 7;
   int64 since = 8 [json_name = "since"];
-  ModificationTag modification_tag = 9 [(gogoproto.nullable) = false,json_name = "modification_tag"];
+  ModificationTag modification_tag = 9 [,json_name = "modification_tag"];
   Presence presence = 10 [json_name = "presence"];
   repeated ActualLRPInternalRoute actual_lrp_internal_routes = 11;
   map<string, string> metric_tags = 12;
