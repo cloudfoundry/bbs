@@ -15,15 +15,15 @@ message Action {
   // disadvantages of using multiple optionals without onlyone:
   //   - writing our own GetAction/SetAction methods
   // action oneof {
-    DownloadAction download_action = 1 [json_name = "download,omitempty"];
-    UploadAction upload_action = 2 [json_name = "upload,omitempty"];
-    RunAction run_action = 3 [json_name = "run,omitempty"];
-    TimeoutAction timeout_action = 4 [json_name = "timeout,omitempty"];
-    EmitProgressAction emit_progress_action = 5 [json_name = "emit_progress,omitempty"];
-    TryAction try_action = 6 [json_name = "try,omitempty"];
-    ParallelAction parallel_action = 7 [json_name = "parallel,omitempty"];
-    SerialAction serial_action = 8 [json_name = "serial,omitempty"];
-    CodependentAction codependent_action = 9 [json_name = "codependent,omitempty"];
+    DownloadAction download_action = 1 [json_name="download"];
+    UploadAction upload_action = 2 [json_name = "upload"];
+    RunAction run_action = 3 [json_name = "run"];
+    TimeoutAction timeout_action = 4 [json_name = "timeout"];
+    EmitProgressAction emit_progress_action = 5 [json_name = "emit_progress"];
+    TryAction try_action = 6 [json_name = "try"];
+    ParallelAction parallel_action = 7 [json_name = "parallel"];
+    SerialAction serial_action = 8 [json_name = "serial"];
+    CodependentAction codependent_action = 9 [json_name = "codependent"];
   // }
 }
 
@@ -59,7 +59,7 @@ message RunAction {
 
 message TimeoutAction {
   Action action = 1;
-  int64 deprecated_timeout_ns = 2 [json_name = "timeout,omitempty", deprecated=true];
+  int64 deprecated_timeout_ns = 2 [json_name = "timeout", deprecated=true];
   string log_source = 3;
   int64 timeout_ms = 4 [json_name = "timeout_ms"];
 }

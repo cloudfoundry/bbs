@@ -16,7 +16,7 @@ import "metric_tags.proto";
 
 message TaskDefinition {
   string root_fs = 1 [json_name = "rootfs"];
-  repeated EnvironmentVariable environment_variables = 2 [json_name = "env,omitempty"];
+  repeated EnvironmentVariable environment_variables = 2 [json_name = "env"];
   Action action = 3;
   int32 disk_mb = 4 [json_name =  "disk_mb"];
   int32 memory_mb = 5 [json_name =  "memory_mb"];
