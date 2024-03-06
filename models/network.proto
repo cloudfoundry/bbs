@@ -4,5 +4,5 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 message Network {
-  map<string, string> properties = 1 [json_name = "properties,omitempty"];
+  map<string, string> properties = 1 [json_name = "properties"];
 }

@@ -28,7 +28,7 @@ message DesiredLRPSchedulingInfo {
   ProtoRoutes routes = 5;
   ModificationTag modification_tag = 6;
   VolumePlacement volume_placement = 7;
-  repeated string PlacementTags = 8 [json_name ="placement_tags,omitempty"];
+  repeated string PlacementTags = 8 [json_name ="placement_tags"];
 }
 
 message DesiredLRPRunInfo {
@@ -39,7 +39,7 @@ message DesiredLRPRunInfo {
   Action action = 4;
   Action monitor = 5;
 
-  uint32 deprecated_start_timeout_s = 6 [json_name = "start_timeout,omitempty", deprecated=true];
+  uint32 deprecated_start_timeout_s = 6 [json_name = "start_timeout", deprecated=true];
 
   bool privileged = 7 [json_name = "privileged"];
 
@@ -111,7 +111,7 @@ message DesiredLRP {
   Action action = 7;
 
   int64 start_timeout_ms = 27 [json_name = "start_timeout_ms"];
-  uint32 deprecated_start_timeout_s = 8 [json_name = "deprecated_timeout_ns,omitempty", deprecated=true];
+  uint32 deprecated_start_timeout_s = 8 [json_name = "deprecated_timeout_ns", deprecated=true];
 
   Action monitor = 9;
   int32 disk_mb = 10 [json_name = "disk_mb"];
@@ -131,7 +131,7 @@ message DesiredLRP {
   string trusted_system_certificates_path = 24;
   repeated VolumeMount volume_mounts = 25;
   Network network = 26;
-  repeated string PlacementTags = 28 [json_name ="placement_tags,omitempty"];
+  repeated string PlacementTags = 28 [json_name ="placement_tags"];
   int32 max_pids = 29 [json_name = "max_pids"];
 
   optional CertificateProperties certificate_properties = 30;
