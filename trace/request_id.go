@@ -14,12 +14,16 @@ const (
 	RequestIdHeader = "X-Vcap-Request-Id"
 )
 
+type RequestIdHeaderCtxKeyType struct{}
+
+var RequestIdHeaderCtxKey = RequestIdHeaderCtxKeyType{}
+
 func ContextWithRequestId(req *http.Request) context.Context {
-	return context.WithValue(req.Context(), RequestIdHeader, RequestIdFromRequest(req))
+	return context.WithValue(req.Context(), RequestIdHeaderCtxKey, RequestIdFromRequest(req))
 }
 
 func RequestIdFromContext(ctx context.Context) string {
-	if val, ok := ctx.Value(RequestIdHeader).(string); ok {
+	if val, ok := ctx.Value(RequestIdHeaderCtxKey).(string); ok {
 		return val
 	}
 

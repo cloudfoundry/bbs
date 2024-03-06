@@ -119,7 +119,6 @@ func (c *convergence) staleUnclaimedActualLRPs(ctx context.Context, logger lager
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 // Adds CRASHED Actual LRPs that can be restarted to the list of start requests
@@ -160,7 +159,6 @@ func (c *convergence) crashedActualLRPs(ctx context.Context, logger lager.Logger
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger lager.Logger) {
@@ -242,7 +240,6 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager.Logger) {
@@ -321,7 +318,6 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	return
 }
 
 func scanActualLRPs(logger lager.Logger, rows *sql.Rows) []*models.ActualLRPKey {
@@ -430,7 +426,6 @@ func (c *convergence) lrpInstanceCounts(ctx context.Context, logger lager.Logger
 			continue
 		}
 
-		indices := []int{}
 		existingIndices := make(map[int]struct{})
 		if existingIndicesStr.String != "" {
 			for _, indexStr := range strings.Split(existingIndicesStr.String, ",") {
@@ -452,7 +447,6 @@ func (c *convergence) lrpInstanceCounts(ctx context.Context, logger lager.Logger
 				continue
 			}
 
-			indices = append(indices, i)
 			index := int32(i)
 			c.missingLRPKeys = append(c.missingLRPKeys, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
@@ -541,7 +535,7 @@ func (c *convergence) actualLRPsWithMissingCells(ctx context.Context, logger lag
 		logger.Error("failed-getting-next-row", rows.Err())
 	}
 
-	for key, _ := range missingCellSet {
+	for key := range missingCellSet {
 		c.missingCellIds = append(c.missingCellIds, key)
 	}
 

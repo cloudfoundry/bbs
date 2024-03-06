@@ -39,13 +39,13 @@ func AllMigrations() migration.Migrations {
 }
 
 func isDuplicateColumnError(err error) bool {
-	switch err.(type) {
+	switch e := err.(type) {
 	case *mysql.MySQLError:
-		if err.(*mysql.MySQLError).Number == 1060 {
+		if e.Number == 1060 {
 			return true
 		}
 	case pgx.PgError:
-		if err.(pgx.PgError).Code == "42701" {
+		if e.Code == "42701" {
 			return true
 		}
 	}

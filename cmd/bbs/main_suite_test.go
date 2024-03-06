@@ -3,8 +3,7 @@ package main_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"log"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -83,7 +82,7 @@ var _ = SynchronizedBeforeSuite(
 		return []byte(strings.Join([]string{bbsPath, locketPath}, ","))
 	},
 	func(binPaths []byte) {
-		grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
+		grpclog.SetLoggerV2(grpclog.NewLoggerV2(io.Discard, io.Discard, io.Discard))
 		startPort := 1050 * GinkgoParallelProcess()
 		portRange := 1000
 		var err error

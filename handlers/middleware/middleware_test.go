@@ -23,7 +23,7 @@ var _ = Describe("Middleware", func() {
 
 		BeforeEach(func() {
 			emitter = &fakes.FakeEmitter{}
-			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10) }
+			handler = func(w http.ResponseWriter, r *http.Request) { time.Sleep(10 * time.Nanosecond) }
 			handler = middleware.RecordRequestCount(handler, emitter)
 		})
 

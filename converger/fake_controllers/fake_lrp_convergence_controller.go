@@ -6,31 +6,28 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/bbs/converger"
-	lager "code.cloudfoundry.org/lager/v3"
 )
 
 type FakeLrpConvergenceController struct {
-	ConvergeLRPsStub        func(context.Context, lager.Logger)
+	ConvergeLRPsStub        func(context.Context)
 	convergeLRPsMutex       sync.RWMutex
 	convergeLRPsArgsForCall []struct {
 		arg1 context.Context
-		arg2 lager.Logger
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeLrpConvergenceController) ConvergeLRPs(arg1 context.Context, arg2 lager.Logger) {
+func (fake *FakeLrpConvergenceController) ConvergeLRPs(arg1 context.Context) {
 	fake.convergeLRPsMutex.Lock()
 	fake.convergeLRPsArgsForCall = append(fake.convergeLRPsArgsForCall, struct {
 		arg1 context.Context
-		arg2 lager.Logger
-	}{arg1, arg2})
+	}{arg1})
 	stub := fake.ConvergeLRPsStub
-	fake.recordInvocation("ConvergeLRPs", []interface{}{arg1, arg2})
+	fake.recordInvocation("ConvergeLRPs", []interface{}{arg1})
 	fake.convergeLRPsMutex.Unlock()
 	if stub != nil {
-		fake.ConvergeLRPsStub(arg1, arg2)
+		fake.ConvergeLRPsStub(arg1)
 	}
 }
 
@@ -40,17 +37,17 @@ func (fake *FakeLrpConvergenceController) ConvergeLRPsCallCount() int {
 	return len(fake.convergeLRPsArgsForCall)
 }
 
-func (fake *FakeLrpConvergenceController) ConvergeLRPsCalls(stub func(context.Context, lager.Logger)) {
+func (fake *FakeLrpConvergenceController) ConvergeLRPsCalls(stub func(context.Context)) {
 	fake.convergeLRPsMutex.Lock()
 	defer fake.convergeLRPsMutex.Unlock()
 	fake.ConvergeLRPsStub = stub
 }
 
-func (fake *FakeLrpConvergenceController) ConvergeLRPsArgsForCall(i int) (context.Context, lager.Logger) {
+func (fake *FakeLrpConvergenceController) ConvergeLRPsArgsForCall(i int) context.Context {
 	fake.convergeLRPsMutex.RLock()
 	defer fake.convergeLRPsMutex.RUnlock()
 	argsForCall := fake.convergeLRPsArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1
 }
 
 func (fake *FakeLrpConvergenceController) Invocations() map[string][][]interface{} {

@@ -197,7 +197,9 @@ func main() {
 		logger.Fatal("tls-configuration-failed", err)
 	}
 	// the BBS server performs requests as a client
-	tlsConfig.RootCAs = tlsConfig.ClientCAs
+	if tlsConfig.ClientCAs != nil {
+		tlsConfig.RootCAs = tlsConfig.ClientCAs
+	}
 
 	cbWorkPool := taskworkpool.New(logger,
 		bbsConfig.TaskCallbackWorkers,

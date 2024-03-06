@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/tedsuo/ifrit"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
@@ -162,7 +161,7 @@ var _ = Describe("ConvergerProcess", func() {
 
 		BeforeEach(func() {
 			finishChan = make(chan struct{})
-			fakeLrpConvergenceController.ConvergeLRPsStub = func(context.Context, lager.Logger) {
+			fakeLrpConvergenceController.ConvergeLRPsStub = func(context.Context) {
 				<-finishChan
 			}
 		})

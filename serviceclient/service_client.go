@@ -3,8 +3,8 @@ package serviceclient
 import (
 	"encoding/json"
 
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/v3"
@@ -66,7 +66,7 @@ func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.Ce
 	})
 	if locketErr != nil {
 		logger.Error("failed-to-fetch-presence-from-locket", locketErr)
-		if grpc.Code(locketErr) == codes.NotFound {
+		if status.Code(locketErr) == codes.NotFound {
 			return nil, models.ErrResourceNotFound
 		}
 		return nil, locketErr

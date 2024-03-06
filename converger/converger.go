@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager/v3"
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
@@ -18,7 +18,7 @@ import (
 
 //counterfeiter:generate -o fake_controllers/fake_lrp_convergence_controller.go . LrpConvergenceController
 type LrpConvergenceController interface {
-	ConvergeLRPs(ctx context.Context, logger lager.Logger)
+	ConvergeLRPs(ctx context.Context)
 }
 
 //counterfeiter:generate -o fake_controllers/fake_task_controller.go . TaskController
@@ -148,7 +148,7 @@ func (c *Converger) converge(convergeChan chan struct{}) {
 		logger.Info("converge-lrps-started")
 		defer logger.Info("converge-lrps-done")
 
-		c.lrpConvergenceController.ConvergeLRPs(context.Background(), c.logger)
+		c.lrpConvergenceController.ConvergeLRPs(context.Background())
 
 		convergeChan <- struct{}{}
 	}()

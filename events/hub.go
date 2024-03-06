@@ -85,7 +85,7 @@ func (hub *hub) Emit(event models.Event) {
 	hub.lock.Lock()
 	size := len(hub.subscribers)
 
-	for sub, _ := range hub.subscribers {
+	for sub := range hub.subscribers {
 		err := sub.send(event)
 		if err != nil {
 			hub.logger.Error("got-error-sending-event", err)
@@ -122,7 +122,7 @@ func (hub *hub) Close() error {
 }
 
 func (hub *hub) closeSubscribers() {
-	for sub, _ := range hub.subscribers {
+	for sub := range hub.subscribers {
 		_ = sub.Close()
 	}
 	hub.subscribers = nil

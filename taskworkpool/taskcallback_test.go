@@ -3,7 +3,7 @@ package taskworkpool_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -144,7 +144,7 @@ var _ = Describe("TaskWorker", func() {
 					BeforeEach(func() {
 						fakeServer.RouteToHandler("POST", "/the-callback/url", func(w http.ResponseWriter, req *http.Request) {
 							w.WriteHeader(<-statusCodes)
-							data, err := ioutil.ReadAll(req.Body)
+							data, err := io.ReadAll(req.Body)
 							Expect(err).NotTo(HaveOccurred())
 
 							var response models.TaskCallbackResponse

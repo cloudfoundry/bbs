@@ -114,6 +114,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 
 		var statusCode int
 
+		retriableErrRegexp := regexp.MustCompile("Client.Timeout|use of closed network connection")
 		for i := 0; i < MAX_CB_RETRIES; i++ {
 			request, err := http.NewRequest("POST", task.CompletionCallbackUrl, bytes.NewReader(json))
 			if err != nil {
@@ -124,8 +125,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 			request.Header.Set("Content-Type", "application/json")
 			response, err := httpClient.Do(request)
 			if err != nil {
-				matched, _ := regexp.MatchString("Client.Timeout|use of closed network connection", err.Error())
-				if matched {
+				if retriableErrRegexp.MatchString(err.Error()) {
 					continue
 				}
 				logger.Error("doing-request-failed", err)
@@ -146,7 +146,6 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 
 		logger.Info("callback-failed", lager.Data{"status_code": statusCode})
 	}
-	return
 }
 
 func shouldResolve(status int) bool {
