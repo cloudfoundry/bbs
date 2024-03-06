@@ -18,21 +18,21 @@ import "sidecar.proto";
 import "log_rate_limit.proto";
 
 message DesiredLRPSchedulingInfo {
-  DesiredLRPKey desired_lrp_key = 1 [json_name = ""];
+  DesiredLRPKey desired_lrp_key = 1;
 
   string annotation = 2 [json_name = "annotation"];
   int32 instances = 3 [json_name = "instances"];
 
-  DesiredLRPResource desired_lrp_resource = 4 [json_name = ""];
+  DesiredLRPResource desired_lrp_resource = 4;
 
   ProtoRoutes routes = 5;
-  ModificationTag modification_tag = 6 [json_name = ""];
+  ModificationTag modification_tag = 6;
   VolumePlacement volume_placement = 7;
   repeated string PlacementTags = 8 [json_name ="placement_tags,omitempty"];
 }
 
 message DesiredLRPRunInfo {
-  DesiredLRPKey desired_lrp_key = 1 [json_name = ""];
+  DesiredLRPKey desired_lrp_key = 1;
 
   repeated EnvironmentVariable environment_variables = 2 [json_name = "env"];
   Action setup = 3;
@@ -57,7 +57,7 @@ message DesiredLRPRunInfo {
 
   int64 start_timeout_ms = 19 [json_name = "start_timeout_ms"];
 
-  CertificateProperties certificate_properties = 20 [optional];
+  optional CertificateProperties certificate_properties = 20;
 
   string image_username = 21;
   string image_password = 22;
@@ -81,7 +81,7 @@ message DesiredLRPUpdate {
   oneof optional_instances {
     int32 instances = 1;
   }
-  ProtoRoutes routes = 2 [optional];
+  optional ProtoRoutes routes = 2;
   oneof optional_annotation {
     string annotation = 3;
   }
@@ -119,7 +119,7 @@ message DesiredLRP {
   uint32 cpu_weight = 12 [json_name = "cpu_weight"];
   bool privileged = 13 [json_name = "privileged"];
   repeated uint32 ports = 14 [packed = false];
-  ProtoRoutes routes = 15 [optional];
+  optional ProtoRoutes routes = 15;
   string log_source = 16 [json_name = "log_source"];
   string log_guid = 17 [json_name = "log_guid"];
   string metrics_guid = 18 [deprecated=true, json_name = "metrics_guid"];
@@ -134,7 +134,7 @@ message DesiredLRP {
   repeated string PlacementTags = 28 [json_name ="placement_tags,omitempty"];
   int32 max_pids = 29 [json_name = "max_pids"];
 
-  CertificateProperties certificate_properties = 30 [optional];
+  optional CertificateProperties certificate_properties = 30;
 
   string image_username = 31;
   string image_password = 32;
