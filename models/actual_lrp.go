@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -41,23 +42,23 @@ type ActualLRPFilter struct {
 }
 
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
-	return ActualLRPKey{processGuid, index, domain}
+	return ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
 }
 
 func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstanceKey {
-	return ActualLRPInstanceKey{instanceGuid, cellId}
+	return ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: cellId}
 }
 
 func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddress ActualLRPNetInfo_PreferredAddress, ports ...*PortMapping) ActualLRPNetInfo {
-	return ActualLRPNetInfo{address, ports, instanceAddress, preferredAddress}
+	return ActualLRPNetInfo{Address: address, Ports: ports, InstanceAddress: instanceAddress, PreferredAddress: preferredAddress}
 }
 
 func EmptyActualLRPNetInfo() ActualLRPNetInfo {
-	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_PreferredAddressUnknown)
+	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_UNKNOWN)
 }
 
 func (info ActualLRPNetInfo) Empty() bool {
-	return info.Address == "" && len(info.Ports) == 0 && info.PreferredAddress == ActualLRPNetInfo_PreferredAddressUnknown
+	return info.Address == "" && len(info.Ports) == 0 && info.PreferredAddress == ActualLRPNetInfo_UNKNOWN
 }
 
 func (*ActualLRPNetInfo) Version() format.Version {
@@ -125,7 +126,7 @@ func (actual ActualLRP) CellIsMissing(cellSet CellSet) bool {
 		return false
 	}
 
-	return !cellSet.HasCellID(actual.CellId)
+	return !cellSet.HasCellID(actual.GetActualLrpInstanceKey().CellId)
 }
 
 func (actual ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
@@ -156,11 +157,13 @@ func (actual *ActualLRP) RoutableExists() bool {
 }
 
 func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
-	if !before.ActualLRPKey.Equal(lrpKey) {
+	if !proto.Equal(before.ActualLrpKey, lrpKey) {
 		return false
 	}
 
 	var valid bool
+	beforeInstanceKey := before.GetActualLrpInstanceKey()
+
 	switch before.State {
 	case ActualLRPStateUnclaimed:
 		valid = newState == ActualLRPStateUnclaimed ||
@@ -168,18 +171,18 @@ func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *Ac
 			newState == ActualLRPStateRunning
 	case ActualLRPStateClaimed:
 		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
-			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateClaimed && proto.Equal(beforeInstanceKey, instanceKey) ||
 			newState == ActualLRPStateRunning ||
-			newState == ActualLRPStateCrashed && before.ActualLRPInstanceKey.Equal(instanceKey)
+			newState == ActualLRPStateCrashed && proto.Equal(beforeInstanceKey, instanceKey)
 	case ActualLRPStateRunning:
 		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
-			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
-			newState == ActualLRPStateRunning && before.ActualLRPInstanceKey.Equal(instanceKey) ||
-			newState == ActualLRPStateCrashed && before.ActualLRPInstanceKey.Equal(instanceKey)
+			newState == ActualLRPStateClaimed && proto.Equal(beforeInstanceKey, instanceKey) ||
+			newState == ActualLRPStateRunning && proto.Equal(beforeInstanceKey, instanceKey) ||
+			newState == ActualLRPStateCrashed && proto.Equal(beforeInstanceKey, instanceKey)
 	case ActualLRPStateCrashed:
 		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
-			newState == ActualLRPStateClaimed && before.ActualLRPInstanceKey.Equal(instanceKey) ||
-			newState == ActualLRPStateRunning && before.ActualLRPInstanceKey.Equal(instanceKey)
+			newState == ActualLRPStateClaimed && proto.Equal(beforeInstanceKey, instanceKey) ||
+			newState == ActualLRPStateRunning && proto.Equal(beforeInstanceKey, instanceKey)
 	}
 
 	return valid
@@ -238,7 +241,7 @@ func (group ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
 
 func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLRPKey: lrpKey,
+		ActualLrpKey: &lrpKey,
 		State:        ActualLRPStateUnclaimed,
 		Since:        since,
 	}
@@ -246,8 +249,8 @@ func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
 
 func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLRPKey:         lrpKey,
-		ActualLRPInstanceKey: instanceKey,
+		ActualLrpKey:         &lrpKey,
+		ActualLrpInstanceKey: &instanceKey,
 		State:                ActualLRPStateClaimed,
 		Since:                since,
 	}
@@ -255,9 +258,9 @@ func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, 
 
 func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, netInfo ActualLRPNetInfo, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLRPKey:         lrpKey,
-		ActualLRPInstanceKey: instanceKey,
-		ActualLRPNetInfo:     netInfo,
+		ActualLrpKey:         &lrpKey,
+		ActualLrpInstanceKey: &instanceKey,
+		ActualLrpNetInfo:     &netInfo,
 		State:                ActualLRPStateRunning,
 		Since:                since,
 	}
@@ -272,9 +275,9 @@ func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstance
 		return nil
 	}
 	lrp := ActualLRP{
-		ActualLRPKey:         lrpKey,
-		ActualLRPInstanceKey: lrpInstanceKey,
-		ActualLRPNetInfo:     actualLRPInfo.ActualLRPNetInfo,
+		ActualLrpKey:         &lrpKey,
+		ActualLrpInstanceKey: &lrpInstanceKey,
+		ActualLrpNetInfo:     actualLRPInfo.ActualLrpNetInfo,
 		AvailabilityZone:     actualLRPInfo.AvailabilityZone,
 		CrashCount:           actualLRPInfo.CrashCount,
 		CrashReason:          actualLRPInfo.CrashReason,
@@ -297,7 +300,7 @@ func (actual *ActualLRP) ToActualLRPInfo() *ActualLRPInfo {
 		return nil
 	}
 	info := ActualLRPInfo{
-		ActualLRPNetInfo: actual.ActualLRPNetInfo,
+		ActualLrpNetInfo: actual.ActualLrpNetInfo,
 		AvailabilityZone: actual.AvailabilityZone,
 		CrashCount:       actual.CrashCount,
 		CrashReason:      actual.CrashReason,
@@ -321,7 +324,7 @@ func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
 	}
 
 	switch actual.Presence {
-	case ActualLRP_Evacuating:
+	case ActualLRP_EVACUATING:
 		return &ActualLRPGroup{Evacuating: actual}
 	default:
 		return &ActualLRPGroup{Instance: actual}
@@ -331,7 +334,7 @@ func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
 func (actual ActualLRP) Validate() error {
 	var validationError ValidationError
 
-	err := actual.ActualLRPKey.Validate()
+	err := actual.ActualLrpKey.Validate()
 	if err != nil {
 		validationError = validationError.Append(err)
 	}
@@ -342,21 +345,21 @@ func (actual ActualLRP) Validate() error {
 
 	switch actual.State {
 	case ActualLRPStateUnclaimed:
-		if !actual.ActualLRPInstanceKey.Empty() {
+		if !actual.ActualLrpInstanceKey.Empty() {
 			validationError = validationError.Append(errors.New("instance key cannot be set when state is unclaimed"))
 		}
-		if !actual.ActualLRPNetInfo.Empty() {
+		if !actual.ActualLrpNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is unclaimed"))
 		}
-		if actual.Presence != ActualLRP_Ordinary {
+		if actual.Presence != ActualLRP_ORDINARY {
 			validationError = validationError.Append(errors.New("presence cannot be set when state is unclaimed"))
 		}
 
 	case ActualLRPStateClaimed:
-		if err := actual.ActualLRPInstanceKey.Validate(); err != nil {
+		if err := actual.ActualLrpInstanceKey.Validate(); err != nil {
 			validationError = validationError.Append(err)
 		}
-		if !actual.ActualLRPNetInfo.Empty() {
+		if !actual.ActualLrpNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is claimed"))
 		}
 		if strings.TrimSpace(actual.PlacementError) != "" {
@@ -364,10 +367,10 @@ func (actual ActualLRP) Validate() error {
 		}
 
 	case ActualLRPStateRunning:
-		if err := actual.ActualLRPInstanceKey.Validate(); err != nil {
+		if err := actual.ActualLrpInstanceKey.Validate(); err != nil {
 			validationError = validationError.Append(err)
 		}
-		if err := actual.ActualLRPNetInfo.Validate(); err != nil {
+		if err := actual.ActualLrpNetInfo.Validate(); err != nil {
 			validationError = validationError.Append(err)
 		}
 		if strings.TrimSpace(actual.PlacementError) != "" {
@@ -375,10 +378,10 @@ func (actual ActualLRP) Validate() error {
 		}
 
 	case ActualLRPStateCrashed:
-		if !actual.ActualLRPInstanceKey.Empty() {
+		if !actual.ActualLrpInstanceKey.Empty() {
 			validationError = validationError.Append(errors.New("instance key cannot be set when state is crashed"))
 		}
-		if !actual.ActualLRPNetInfo.Empty() {
+		if !actual.ActualLrpNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is crashed"))
 		}
 		if strings.TrimSpace(actual.PlacementError) != "" {
@@ -456,14 +459,14 @@ func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
 		return true
 	}
 
-	if lrp1.Presence == ActualLRP_Ordinary {
+	if lrp1.Presence == ActualLRP_ORDINARY {
 		switch lrp1.State {
 		case ActualLRPStateRunning:
 			return true
 		case ActualLRPStateClaimed:
 			return lrp2.State != ActualLRPStateRunning && lrp2.State != ActualLRPStateClaimed
 		}
-	} else if lrp1.Presence == ActualLRP_Suspect {
+	} else if lrp1.Presence == ActualLRP_SUSPECT {
 		switch lrp1.State {
 		case ActualLRPStateRunning:
 			return lrp2.State != ActualLRPStateRunning
@@ -482,21 +485,22 @@ func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
 // precendence over an Ordinary instance if it is Running.  Otherwise, the
 // Ordinary instance is returned in the Instance field of the ActualLRPGroup.
 func ResolveActualLRPGroups(lrps []*ActualLRP) []*ActualLRPGroup {
-	mapOfGroups := map[ActualLRPKey]*ActualLRPGroup{}
+	mapOfGroups := map[string]*ActualLRPGroup{}
 	result := []*ActualLRPGroup{}
 	for _, actualLRP := range lrps {
+		key := actualLRP.GetActualLrpKey().String()
 		// Every actual LRP has potentially 2 rows in the database: one for the instance
 		// one for the evacuating.  When building the list of actual LRP groups (where
 		// a group is the instance and corresponding evacuating), make sure we don't add the same
 		// actual lrp twice.
-		if mapOfGroups[actualLRP.ActualLRPKey] == nil {
-			mapOfGroups[actualLRP.ActualLRPKey] = &ActualLRPGroup{}
-			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
+		if mapOfGroups[key] == nil {
+			mapOfGroups[key] = &ActualLRPGroup{}
+			result = append(result, mapOfGroups[key])
 		}
-		if actualLRP.Presence == ActualLRP_Evacuating {
-			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
-		} else if hasHigherPriority(actualLRP, mapOfGroups[actualLRP.ActualLRPKey].Instance) {
-			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
+		if actualLRP.Presence == ActualLRP_EVACUATING {
+			mapOfGroups[key].Evacuating = actualLRP
+		} else if hasHigherPriority(actualLRP, mapOfGroups[key].Instance) {
+			mapOfGroups[key].Instance = actualLRP
 		}
 	}
 

@@ -7,10 +7,11 @@
 package models
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -800,7 +801,7 @@ func (x *ActualLRPsResponse) GetActualLrps() []*ActualLRP {
 	return nil
 }
 
-type ActualLRPsRequest struct {
+type ActualLRPsReques struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
