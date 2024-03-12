@@ -8,8 +8,7 @@ import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"github.com/jackc/pgx"
-	_ "github.com/jackc/pgx/stdlib"
+	"github.com/jackc/pgx/v5/pgconn"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -142,7 +141,7 @@ func (p *PostgresRunner) ResetTables(tables []string) {
 		result, err := p.db.Exec(query)
 
 		switch err := err.(type) {
-		case pgx.PgError:
+		case *pgconn.PgError:
 			if err.Code == "42P01" {
 				// missing table error, it's fine because we're trying to truncate it
 				continue
