@@ -9,7 +9,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/migration"
 	"github.com/go-sql-driver/mysql"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 var migrationsRegistry = migration.Migrations{}
@@ -44,7 +44,7 @@ func isDuplicateColumnError(err error) bool {
 		if e.Number == 1060 {
 			return true
 		}
-	case pgx.PgError:
+	case *pgconn.PgError:
 		if e.Code == "42701" {
 			return true
 		}
