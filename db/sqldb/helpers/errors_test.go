@@ -3,7 +3,7 @@ package helpers_test
 import (
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"github.com/go-sql-driver/mysql"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5/pgconn"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -19,7 +19,7 @@ var _ = Describe("SQL Helpers Errors", func() {
 
 	Describe("ConvertSQLError", func() {
 		It("returns a descriptive error for unknown postgres SQL errors", func() {
-			err := helper.ConvertSQLError(pgx.PgError{Code: "foo"})
+			err := helper.ConvertSQLError(&pgconn.PgError{Code: "foo"})
 			Expect(err).To(MatchError("sql-unknown, error code: foo, flavor: postgres"))
 		})
 
