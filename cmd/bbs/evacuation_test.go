@@ -55,7 +55,7 @@ var _ = Describe("Evacuation API", func() {
 				err error
 			)
 			It("returns an error", func() {
-				es, err = client.SubscribeToEventsByCellID(logger, "some-cell")
+				es, err = client.SubscribeToInstanceEventsByCellID(logger, "some-cell")
 				Expect(err).NotTo(HaveOccurred())
 				ch := make(chan models.Event, 10)
 				go func() {
