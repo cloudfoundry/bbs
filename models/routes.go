@@ -7,7 +7,7 @@ import (
 
 type Routes map[string]*json.RawMessage
 
-func (r *Routes) protoRoutes() *ProtoRoutes {
+func (r *Routes) ProtoRoutes() *ProtoRoutes {
 	pr := &ProtoRoutes{
 		Routes: map[string][]byte{},
 	}
@@ -20,11 +20,11 @@ func (r *Routes) protoRoutes() *ProtoRoutes {
 }
 
 func (r *Routes) Marshal() ([]byte, error) {
-	return r.protoRoutes().Marshal()
+	return r.ProtoRoutes().Marshal()
 }
 
 func (r *Routes) MarshalTo(data []byte) (n int, err error) {
-	return r.protoRoutes().MarshalTo(data)
+	return r.ProtoRoutes().MarshalTo(data)
 }
 
 func (r *Routes) Unmarshal(data []byte) error {
@@ -53,7 +53,7 @@ func (r *Routes) Size() int {
 		return 0
 	}
 
-	return r.protoRoutes().Size()
+	return r.ProtoRoutes().Size()
 }
 
 func (r *Routes) Equal(other Routes) bool {

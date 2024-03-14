@@ -489,7 +489,7 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 	if update.Instances != nil {
 		desired.SetInstances(*update.Instances)
 	}
-	desired.Routes = update.Routes.protoRoutes()
+	desired.Routes = update.Routes.ProtoRoutes()
 	if update.Annotation != nil {
 		desired.SetAnnotation(*update.Annotation)
 	}
@@ -549,7 +549,7 @@ func NewDesiredLRPSchedulingInfo(
 		Annotation:         annotation,
 		Instances:          instances,
 		DesiredLrpResource: resource,
-		Routes:             routes.protoRoutes(),
+		Routes:             routes.ProtoRoutes(),
 		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
 		PlacementTags:      placementTags,
@@ -568,7 +568,7 @@ func NewDesiredLRPRoutingInfo(
 		Domain:          key.Domain,
 		LogGuid:         key.LogGuid,
 		Instances:       instances,
-		Routes:          routes.protoRoutes(),
+		Routes:          routes.ProtoRoutes(),
 		ModificationTag: modTag,
 		MetricTags:      metrTags,
 	}
