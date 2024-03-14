@@ -26,16 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type SharedDevice struct {
-	VolumeId    string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id"`
-	MountConfig string `protobuf:"bytes,2,opt,name=mount_config,json=mountConfig,proto3" json:"mount_config"`
-}
-
-func (m *SharedDevice) Reset()      { *m = SharedDevice{} }
-func (*SharedDevice) ProtoMessage() {}
-func (*SharedDevice) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bbde336a4634d84f, []int{0}
-}
 func (m *SharedDevice) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -63,33 +53,6 @@ func (m *SharedDevice) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SharedDevice proto.InternalMessageInfo
 
-func (m *SharedDevice) GetVolumeId() string {
-	if m != nil {
-		return m.VolumeId
-	}
-	return ""
-}
-
-func (m *SharedDevice) GetMountConfig() string {
-	if m != nil {
-		return m.MountConfig
-	}
-	return ""
-}
-
-type VolumeMount struct {
-	Driver       string `protobuf:"bytes,1,opt,name=driver,proto3" json:"driver"`
-	ContainerDir string `protobuf:"bytes,3,opt,name=container_dir,json=containerDir,proto3" json:"container_dir"`
-	Mode         string `protobuf:"bytes,6,opt,name=mode,proto3" json:"mode"`
-	// oneof device {
-	Shared *SharedDevice `protobuf:"bytes,7,opt,name=shared,proto3" json:"shared"`
-}
-
-func (m *VolumeMount) Reset()      { *m = VolumeMount{} }
-func (*VolumeMount) ProtoMessage() {}
-func (*VolumeMount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bbde336a4634d84f, []int{1}
-}
 func (m *VolumeMount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -117,43 +80,6 @@ func (m *VolumeMount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VolumeMount proto.InternalMessageInfo
 
-func (m *VolumeMount) GetDriver() string {
-	if m != nil {
-		return m.Driver
-	}
-	return ""
-}
-
-func (m *VolumeMount) GetContainerDir() string {
-	if m != nil {
-		return m.ContainerDir
-	}
-	return ""
-}
-
-func (m *VolumeMount) GetMode() string {
-	if m != nil {
-		return m.Mode
-	}
-	return ""
-}
-
-func (m *VolumeMount) GetShared() *SharedDevice {
-	if m != nil {
-		return m.Shared
-	}
-	return nil
-}
-
-type VolumePlacement struct {
-	DriverNames []string `protobuf:"bytes,1,rep,name=driver_names,json=driverNames,proto3" json:"driver_names"`
-}
-
-func (m *VolumePlacement) Reset()      { *m = VolumePlacement{} }
-func (*VolumePlacement) ProtoMessage() {}
-func (*VolumePlacement) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bbde336a4634d84f, []int{2}
-}
 func (m *VolumePlacement) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -180,13 +106,6 @@ func (m *VolumePlacement) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_VolumePlacement proto.InternalMessageInfo
-
-func (m *VolumePlacement) GetDriverNames() []string {
-	if m != nil {
-		return m.DriverNames
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*SharedDevice)(nil), "models.SharedDevice")
@@ -231,9 +150,9 @@ func (this *SharedDevice) Equal(that interface{}) bool {
 
 	that1, ok := that.(*SharedDevice)
 	if !ok {
-		that2, ok := that.(SharedDevice)
+		that2, ok := that.(*SharedDevice)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -258,9 +177,9 @@ func (this *VolumeMount) Equal(that interface{}) bool {
 
 	that1, ok := that.(*VolumeMount)
 	if !ok {
-		that2, ok := that.(VolumeMount)
+		that2, ok := that.(*VolumeMount)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -291,9 +210,9 @@ func (this *VolumePlacement) Equal(that interface{}) bool {
 
 	that1, ok := that.(*VolumePlacement)
 	if !ok {
-		that2, ok := that.(VolumePlacement)
+		that2, ok := that.(*VolumePlacement)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -555,40 +474,6 @@ func sovVolumeMount(x uint64) (n int) {
 }
 func sozVolumeMount(x uint64) (n int) {
 	return sovVolumeMount(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *SharedDevice) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SharedDevice{`,
-		`VolumeId:` + fmt.Sprintf("%v", this.VolumeId) + `,`,
-		`MountConfig:` + fmt.Sprintf("%v", this.MountConfig) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *VolumeMount) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&VolumeMount{`,
-		`Driver:` + fmt.Sprintf("%v", this.Driver) + `,`,
-		`ContainerDir:` + fmt.Sprintf("%v", this.ContainerDir) + `,`,
-		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
-		`Shared:` + strings.Replace(this.Shared.String(), "SharedDevice", "SharedDevice", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *VolumePlacement) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&VolumePlacement{`,
-		`DriverNames:` + fmt.Sprintf("%v", this.DriverNames) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringVolumeMount(v interface{}) string {
 	rv := reflect.ValueOf(v)

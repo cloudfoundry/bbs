@@ -413,11 +413,11 @@ func (m *ActualLRPsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_ActualLRPsRequest proto.InternalMessageInfo
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*ActualLRPsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ActualLRPsRequest_Index)(nil),
-	}
-}
+// func (*ActualLRPsRequest) XXX_OneofWrappers() []interface{} {
+// 	return []interface{}{
+// 		(*ActualLRPsRequest_Index)(nil),
+// 	}
+// }
 
 func init() {
 	proto.RegisterType((*ActualLRPLifecycleResponse)(nil), "models.ActualLRPLifecycleResponse")
@@ -941,41 +941,36 @@ func (this *ActualLRPsRequest) Equal(that interface{}) bool {
 	if this.ProcessGuid != that1.ProcessGuid {
 		return false
 	}
-	if that1.OptionalIndex == nil {
-		if this.OptionalIndex != nil {
-			return false
-		}
-	} else if this.OptionalIndex == nil {
-		return false
-	} else if !this.OptionalIndex.Equal(that1.OptionalIndex) {
-		return false
-	}
-	return true
-}
-func (this *ActualLRPsRequest_Index) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ActualLRPsRequest_Index)
-	if !ok {
-		that2, ok := that.(ActualLRPsRequest_Index)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
 	if this.Index != that1.Index {
 		return false
 	}
 	return true
 }
+
+// func (this *ActualLRPsRequest_Index) Equal(that interface{}) bool {
+// 	if that == nil {
+// 		return this == nil
+// 	}
+
+//		that1, ok := that.(*ActualLRPsRequest_Index)
+//		if !ok {
+//			that2, ok := that.(ActualLRPsRequest_Index)
+//			if ok {
+//				that1 = &that2
+//			} else {
+//				return false
+//			}
+//		}
+//		if that1 == nil {
+//			return this == nil
+//		} else if this == nil {
+//			return false
+//		}
+//		if this.Index != that1.Index {
+//			return false
+//		}
+//		return true
+//	}
 func (this *ActualLRPLifecycleResponse) GoString() string {
 	if this == nil {
 		return "nil"
@@ -1189,20 +1184,21 @@ func (this *ActualLRPsRequest) GoString() string {
 	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
 	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
 	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
-	if this.OptionalIndex != nil {
-		s = append(s, "OptionalIndex: "+fmt.Sprintf("%#v", this.OptionalIndex)+",\n")
+	if this.Index != nil {
+		s = append(s, "Index: "+fmt.Sprintf("%#v", this.Index)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *ActualLRPsRequest_Index) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRPsRequest_Index{` +
-		`Index:` + fmt.Sprintf("%#v", this.Index) + `}`}, ", ")
-	return s
-}
+
+//	func (this *ActualLRPsRequest_Index) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.ActualLRPsRequest_Index{` +
+//			`Index:` + fmt.Sprintf("%#v", this.Index) + `}`}, ", ")
+//		return s
+//	}
 func valueToGoStringActualLrpRequests(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1863,11 +1859,11 @@ func (m *ActualLRPsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.OptionalIndex != nil {
+	if m.Index != nil {
 		{
-			size := m.OptionalIndex.Size()
+			size := int(reflect.TypeOf(m.Index).Size())
 			i -= size
-			if _, err := m.OptionalIndex.MarshalTo(dAtA[i:]); err != nil {
+			if _, err := m.Index.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
 		}
@@ -1896,18 +1892,18 @@ func (m *ActualLRPsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ActualLRPsRequest_Index) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *ActualLRPsRequest_Index) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *ActualLRPsRequest_Index) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintActualLrpRequests(dAtA, i, uint64(m.Index))
-	i--
-	dAtA[i] = 0x20
-	return len(dAtA) - i, nil
-}
+//	func (m *ActualLRPsRequest_Index) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+//		i := len(dAtA)
+//		i = encodeVarintActualLrpRequests(dAtA, i, uint64(m.Index))
+//		i--
+//		dAtA[i] = 0x20
+//		return len(dAtA) - i, nil
+//	}
 func encodeVarintActualLrpRequests(dAtA []byte, offset int, v uint64) int {
 	offset -= sovActualLrpRequests(v)
 	base := offset
@@ -2193,139 +2189,27 @@ func (m *ActualLRPsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovActualLrpRequests(uint64(l))
 	}
-	if m.OptionalIndex != nil {
-		n += m.OptionalIndex.Size()
+	if m.Index != nil {
+		n += int(reflect.TypeOf(m.Index).Size())
 	}
 	return n
 }
 
-func (m *ActualLRPsRequest_Index) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovActualLrpRequests(uint64(m.Index))
-	return n
-}
+// func (m *ActualLRPsRequest_Index) Size() (n int) {
+// 	if m == nil {
+// 		return 0
+// 	}
+// 	var l int
+// 	_ = l
+// 	n += 1 + sovActualLrpRequests(uint64(m.Index))
+// 	return n
+// }
 
 func sovActualLrpRequests(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozActualLrpRequests(x uint64) (n int) {
 	return sovActualLrpRequests(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *ActualLRPLifecycleResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPLifecycleResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPGroupsResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForActualLrpGroups := "[]*ActualLRPGroup{"
-	for _, f := range this.ActualLrpGroups {
-		repeatedStringForActualLrpGroups += strings.Replace(fmt.Sprintf("%v", f), "ActualLRPGroup", "ActualLRPGroup", 1) + ","
-	}
-	repeatedStringForActualLrpGroups += "}"
-	s := strings.Join([]string{`&ActualLRPGroupsResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`ActualLrpGroups:` + repeatedStringForActualLrpGroups + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPGroupResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPGroupResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPGroupsRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPGroupsRequest{`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPGroupsByProcessGuidRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPGroupsByProcessGuidRequest{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPGroupByProcessGuidAndIndexRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPGroupByProcessGuidAndIndexRequest{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ClaimActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ClaimActualLRPRequest{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *StartActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForActualLrpInternalRoutes := "[]*ActualLRPInternalRoute{"
-	for _, f := range this.ActualLrpInternalRoutes {
-		repeatedStringForActualLrpInternalRoutes += strings.Replace(fmt.Sprintf("%v", f), "ActualLRPInternalRoute", "ActualLRPInternalRoute", 1) + ","
-	}
-	repeatedStringForActualLrpInternalRoutes += "}"
-	keysForMetricTags := make([]string, 0, len(this.MetricTags))
-	for k, _ := range this.MetricTags {
-		keysForMetricTags = append(keysForMetricTags, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
-	mapStringForMetricTags := "map[string]string{"
-	for _, k := range keysForMetricTags {
-		mapStringForMetricTags += fmt.Sprintf("%v: %v,", k, this.MetricTags[k])
-	}
-	mapStringForMetricTags += "}"
-	s := strings.Join([]string{`&StartActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`ActualLrpNetInfo:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpNetInfo), "ActualLRPNetInfo", "ActualLRPNetInfo", 1) + `,`,
-		`ActualLrpInternalRoutes:` + repeatedStringForActualLrpInternalRoutes + `,`,
-		`MetricTags:` + mapStringForMetricTags + `,`,
-		`OptionalRoutable:` + fmt.Sprintf("%v", this.OptionalRoutable) + `,`,
-		`AvailabilityZone:` + fmt.Sprintf("%v", this.AvailabilityZone) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func (this *StartActualLRPRequest_Routable) String() string {
 	if this == nil {
@@ -2337,90 +2221,17 @@ func (this *StartActualLRPRequest_Routable) String() string {
 	}, "")
 	return s
 }
-func (this *CrashActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CrashActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`ErrorMessage:` + fmt.Sprintf("%v", this.ErrorMessage) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *FailActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&FailActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ErrorMessage:` + fmt.Sprintf("%v", this.ErrorMessage) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RetireActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RetireActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RemoveActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RemoveActualLRPRequest{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPsResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForActualLrps := "[]*ActualLRP{"
-	for _, f := range this.ActualLrps {
-		repeatedStringForActualLrps += strings.Replace(fmt.Sprintf("%v", f), "ActualLRP", "ActualLRP", 1) + ","
-	}
-	repeatedStringForActualLrps += "}"
-	s := strings.Join([]string{`&ActualLRPsResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`ActualLrps:` + repeatedStringForActualLrps + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPsRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPsRequest{`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`OptionalIndex:` + fmt.Sprintf("%v", this.OptionalIndex) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPsRequest_Index) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPsRequest_Index{`,
-		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
-		`}`,
-	}, "")
-	return s
-}
+
+//	func (this *ActualLRPsRequest_Index) String() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&ActualLRPsRequest_Index{`,
+//			`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+//			`}`,
+//		}, "")
+//		return s
+//	}
 func valueToStringActualLrpRequests(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -4322,7 +4133,7 @@ func (m *ActualLRPsRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.OptionalIndex = &ActualLRPsRequest_Index{v}
+			m.Index = &v
 		default:
 			iNdEx = preIndex
 			skippy, err := skipActualLrpRequests(dAtA[iNdEx:])

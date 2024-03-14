@@ -26,15 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type TaskLifecycleResponse struct {
-	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-}
-
-func (m *TaskLifecycleResponse) Reset()      { *m = TaskLifecycleResponse{} }
-func (*TaskLifecycleResponse) ProtoMessage() {}
-func (*TaskLifecycleResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{0}
-}
 func (m *TaskLifecycleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -62,24 +53,6 @@ func (m *TaskLifecycleResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TaskLifecycleResponse proto.InternalMessageInfo
 
-func (m *TaskLifecycleResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-type DesireTaskRequest struct {
-	TaskDefinition *TaskDefinition `protobuf:"bytes,1,opt,name=task_definition,json=taskDefinition,proto3" json:"task_definition"`
-	TaskGuid       string          `protobuf:"bytes,2,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-	Domain         string          `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain"`
-}
-
-func (m *DesireTaskRequest) Reset()      { *m = DesireTaskRequest{} }
-func (*DesireTaskRequest) ProtoMessage() {}
-func (*DesireTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{1}
-}
 func (m *DesireTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -107,37 +80,6 @@ func (m *DesireTaskRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesireTaskRequest proto.InternalMessageInfo
 
-func (m *DesireTaskRequest) GetTaskDefinition() *TaskDefinition {
-	if m != nil {
-		return m.TaskDefinition
-	}
-	return nil
-}
-
-func (m *DesireTaskRequest) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-func (m *DesireTaskRequest) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-type StartTaskRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-	CellId   string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
-}
-
-func (m *StartTaskRequest) Reset()      { *m = StartTaskRequest{} }
-func (*StartTaskRequest) ProtoMessage() {}
-func (*StartTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{2}
-}
 func (m *StartTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -165,30 +107,6 @@ func (m *StartTaskRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StartTaskRequest proto.InternalMessageInfo
 
-func (m *StartTaskRequest) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-func (m *StartTaskRequest) GetCellId() string {
-	if m != nil {
-		return m.CellId
-	}
-	return ""
-}
-
-type StartTaskResponse struct {
-	Error       *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	ShouldStart bool   `protobuf:"varint,2,opt,name=should_start,json=shouldStart,proto3" json:"should_start"`
-}
-
-func (m *StartTaskResponse) Reset()      { *m = StartTaskResponse{} }
-func (*StartTaskResponse) ProtoMessage() {}
-func (*StartTaskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{3}
-}
 func (m *StartTaskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -216,31 +134,7 @@ func (m *StartTaskResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StartTaskResponse proto.InternalMessageInfo
 
-func (m *StartTaskResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *StartTaskResponse) GetShouldStart() bool {
-	if m != nil {
-		return m.ShouldStart
-	}
-	return false
-}
-
 // Deprecated: Do not use.
-type FailTaskRequest struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-	FailureReason string `protobuf:"bytes,2,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason"`
-}
-
-func (m *FailTaskRequest) Reset()      { *m = FailTaskRequest{} }
-func (*FailTaskRequest) ProtoMessage() {}
-func (*FailTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{4}
-}
 func (m *FailTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -268,30 +162,6 @@ func (m *FailTaskRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_FailTaskRequest proto.InternalMessageInfo
 
-func (m *FailTaskRequest) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-func (m *FailTaskRequest) GetFailureReason() string {
-	if m != nil {
-		return m.FailureReason
-	}
-	return ""
-}
-
-type RejectTaskRequest struct {
-	TaskGuid        string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-	RejectionReason string `protobuf:"bytes,2,opt,name=rejection_reason,json=rejectionReason,proto3" json:"rejection_reason"`
-}
-
-func (m *RejectTaskRequest) Reset()      { *m = RejectTaskRequest{} }
-func (*RejectTaskRequest) ProtoMessage() {}
-func (*RejectTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{5}
-}
 func (m *RejectTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -319,29 +189,6 @@ func (m *RejectTaskRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RejectTaskRequest proto.InternalMessageInfo
 
-func (m *RejectTaskRequest) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-func (m *RejectTaskRequest) GetRejectionReason() string {
-	if m != nil {
-		return m.RejectionReason
-	}
-	return ""
-}
-
-type TaskGuidRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-}
-
-func (m *TaskGuidRequest) Reset()      { *m = TaskGuidRequest{} }
-func (*TaskGuidRequest) ProtoMessage() {}
-func (*TaskGuidRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{6}
-}
 func (m *TaskGuidRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -369,26 +216,6 @@ func (m *TaskGuidRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TaskGuidRequest proto.InternalMessageInfo
 
-func (m *TaskGuidRequest) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-type CompleteTaskRequest struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-	CellId        string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
-	Failed        bool   `protobuf:"varint,3,opt,name=failed,proto3" json:"failed"`
-	FailureReason string `protobuf:"bytes,4,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason"`
-	Result        string `protobuf:"bytes,5,opt,name=result,proto3" json:"result"`
-}
-
-func (m *CompleteTaskRequest) Reset()      { *m = CompleteTaskRequest{} }
-func (*CompleteTaskRequest) ProtoMessage() {}
-func (*CompleteTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{7}
-}
 func (m *CompleteTaskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -416,55 +243,6 @@ func (m *CompleteTaskRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CompleteTaskRequest proto.InternalMessageInfo
 
-func (m *CompleteTaskRequest) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-func (m *CompleteTaskRequest) GetCellId() string {
-	if m != nil {
-		return m.CellId
-	}
-	return ""
-}
-
-func (m *CompleteTaskRequest) GetFailed() bool {
-	if m != nil {
-		return m.Failed
-	}
-	return false
-}
-
-func (m *CompleteTaskRequest) GetFailureReason() string {
-	if m != nil {
-		return m.FailureReason
-	}
-	return ""
-}
-
-func (m *CompleteTaskRequest) GetResult() string {
-	if m != nil {
-		return m.Result
-	}
-	return ""
-}
-
-type TaskCallbackResponse struct {
-	TaskGuid      string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-	Failed        bool   `protobuf:"varint,2,opt,name=failed,proto3" json:"failed"`
-	FailureReason string `protobuf:"bytes,3,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason"`
-	Result        string `protobuf:"bytes,4,opt,name=result,proto3" json:"result"`
-	Annotation    string `protobuf:"bytes,5,opt,name=annotation,proto3" json:"annotation,omitempty"`
-	CreatedAt     int64  `protobuf:"varint,6,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
-}
-
-func (m *TaskCallbackResponse) Reset()      { *m = TaskCallbackResponse{} }
-func (*TaskCallbackResponse) ProtoMessage() {}
-func (*TaskCallbackResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{8}
-}
 func (m *TaskCallbackResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -492,58 +270,6 @@ func (m *TaskCallbackResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TaskCallbackResponse proto.InternalMessageInfo
 
-func (m *TaskCallbackResponse) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-func (m *TaskCallbackResponse) GetFailed() bool {
-	if m != nil {
-		return m.Failed
-	}
-	return false
-}
-
-func (m *TaskCallbackResponse) GetFailureReason() string {
-	if m != nil {
-		return m.FailureReason
-	}
-	return ""
-}
-
-func (m *TaskCallbackResponse) GetResult() string {
-	if m != nil {
-		return m.Result
-	}
-	return ""
-}
-
-func (m *TaskCallbackResponse) GetAnnotation() string {
-	if m != nil {
-		return m.Annotation
-	}
-	return ""
-}
-
-func (m *TaskCallbackResponse) GetCreatedAt() int64 {
-	if m != nil {
-		return m.CreatedAt
-	}
-	return 0
-}
-
-type TasksRequest struct {
-	Domain string `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain"`
-	CellId string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
-}
-
-func (m *TasksRequest) Reset()      { *m = TasksRequest{} }
-func (*TasksRequest) ProtoMessage() {}
-func (*TasksRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{9}
-}
 func (m *TasksRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -571,30 +297,6 @@ func (m *TasksRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TasksRequest proto.InternalMessageInfo
 
-func (m *TasksRequest) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *TasksRequest) GetCellId() string {
-	if m != nil {
-		return m.CellId
-	}
-	return ""
-}
-
-type TasksResponse struct {
-	Error *Error  `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	Tasks []*Task `protobuf:"bytes,2,rep,name=tasks,proto3" json:"tasks,omitempty"`
-}
-
-func (m *TasksResponse) Reset()      { *m = TasksResponse{} }
-func (*TasksResponse) ProtoMessage() {}
-func (*TasksResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{10}
-}
 func (m *TasksResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -622,29 +324,6 @@ func (m *TasksResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TasksResponse proto.InternalMessageInfo
 
-func (m *TasksResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *TasksResponse) GetTasks() []*Task {
-	if m != nil {
-		return m.Tasks
-	}
-	return nil
-}
-
-type TaskByGuidRequest struct {
-	TaskGuid string `protobuf:"bytes,1,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-}
-
-func (m *TaskByGuidRequest) Reset()      { *m = TaskByGuidRequest{} }
-func (*TaskByGuidRequest) ProtoMessage() {}
-func (*TaskByGuidRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{11}
-}
 func (m *TaskByGuidRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -672,23 +351,6 @@ func (m *TaskByGuidRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TaskByGuidRequest proto.InternalMessageInfo
 
-func (m *TaskByGuidRequest) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-type TaskResponse struct {
-	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	Task  *Task  `protobuf:"bytes,2,opt,name=task,proto3" json:"task,omitempty"`
-}
-
-func (m *TaskResponse) Reset()      { *m = TaskResponse{} }
-func (*TaskResponse) ProtoMessage() {}
-func (*TaskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_13f778b8a0251259, []int{12}
-}
 func (m *TaskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -715,20 +377,6 @@ func (m *TaskResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_TaskResponse proto.InternalMessageInfo
-
-func (m *TaskResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *TaskResponse) GetTask() *Task {
-	if m != nil {
-		return m.Task
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*TaskLifecycleResponse)(nil), "models.TaskLifecycleResponse")
@@ -801,9 +449,9 @@ func (this *TaskLifecycleResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskLifecycleResponse)
 	if !ok {
-		that2, ok := that.(TaskLifecycleResponse)
+		that2, ok := that.(*TaskLifecycleResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -825,9 +473,9 @@ func (this *DesireTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesireTaskRequest)
 	if !ok {
-		that2, ok := that.(DesireTaskRequest)
+		that2, ok := that.(*DesireTaskRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -855,9 +503,9 @@ func (this *StartTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*StartTaskRequest)
 	if !ok {
-		that2, ok := that.(StartTaskRequest)
+		that2, ok := that.(*StartTaskRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -882,9 +530,9 @@ func (this *StartTaskResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*StartTaskResponse)
 	if !ok {
-		that2, ok := that.(StartTaskResponse)
+		that2, ok := that.(*StartTaskResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -909,9 +557,9 @@ func (this *FailTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*FailTaskRequest)
 	if !ok {
-		that2, ok := that.(FailTaskRequest)
+		that2, ok := that.(*FailTaskRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -936,9 +584,9 @@ func (this *RejectTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*RejectTaskRequest)
 	if !ok {
-		that2, ok := that.(RejectTaskRequest)
+		that2, ok := that.(*RejectTaskRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -963,9 +611,9 @@ func (this *TaskGuidRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskGuidRequest)
 	if !ok {
-		that2, ok := that.(TaskGuidRequest)
+		that2, ok := that.(*TaskGuidRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -987,9 +635,9 @@ func (this *CompleteTaskRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CompleteTaskRequest)
 	if !ok {
-		that2, ok := that.(CompleteTaskRequest)
+		that2, ok := that.(*CompleteTaskRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1023,9 +671,9 @@ func (this *TaskCallbackResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskCallbackResponse)
 	if !ok {
-		that2, ok := that.(TaskCallbackResponse)
+		that2, ok := that.(*TaskCallbackResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1062,9 +710,9 @@ func (this *TasksRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TasksRequest)
 	if !ok {
-		that2, ok := that.(TasksRequest)
+		that2, ok := that.(*TasksRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1089,9 +737,9 @@ func (this *TasksResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TasksResponse)
 	if !ok {
-		that2, ok := that.(TasksResponse)
+		that2, ok := that.(*TasksResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1121,9 +769,9 @@ func (this *TaskByGuidRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskByGuidRequest)
 	if !ok {
-		that2, ok := that.(TaskByGuidRequest)
+		that2, ok := that.(*TaskByGuidRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1145,9 +793,9 @@ func (this *TaskResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskResponse)
 	if !ok {
-		that2, ok := that.(TaskResponse)
+		that2, ok := that.(*TaskResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -2150,159 +1798,6 @@ func sovTaskRequests(x uint64) (n int) {
 }
 func sozTaskRequests(x uint64) (n int) {
 	return sovTaskRequests(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *TaskLifecycleResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskLifecycleResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesireTaskRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesireTaskRequest{`,
-		`TaskDefinition:` + strings.Replace(fmt.Sprintf("%v", this.TaskDefinition), "TaskDefinition", "TaskDefinition", 1) + `,`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *StartTaskRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&StartTaskRequest{`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *StartTaskResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&StartTaskResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`ShouldStart:` + fmt.Sprintf("%v", this.ShouldStart) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *FailTaskRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&FailTaskRequest{`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RejectTaskRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RejectTaskRequest{`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`RejectionReason:` + fmt.Sprintf("%v", this.RejectionReason) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TaskGuidRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskGuidRequest{`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *CompleteTaskRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CompleteTaskRequest{`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`Failed:` + fmt.Sprintf("%v", this.Failed) + `,`,
-		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
-		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TaskCallbackResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskCallbackResponse{`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`Failed:` + fmt.Sprintf("%v", this.Failed) + `,`,
-		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
-		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
-		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
-		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TasksRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TasksRequest{`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TasksResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForTasks := "[]*Task{"
-	for _, f := range this.Tasks {
-		repeatedStringForTasks += strings.Replace(fmt.Sprintf("%v", f), "Task", "Task", 1) + ","
-	}
-	repeatedStringForTasks += "}"
-	s := strings.Join([]string{`&TasksResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`Tasks:` + repeatedStringForTasks + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TaskByGuidRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskByGuidRequest{`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TaskResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`Task:` + strings.Replace(fmt.Sprintf("%v", this.Task), "Task", "Task", 1) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringTaskRequests(v interface{}) string {
 	rv := reflect.ValueOf(v)

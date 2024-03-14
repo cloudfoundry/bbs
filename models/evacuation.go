@@ -1,12 +1,14 @@
 package models
 
 func (request *EvacuateRunningActualLRPRequest) SetRoutable(routable bool) {
-	request.OptionalRoutable = &EvacuateRunningActualLRPRequest_Routable{
-		Routable: routable,
-	}
+	request.Routable = &routable
+}
+
+func (request *EvacuateRunningActualLRPRequest) GetRoutablePtr() *bool {
+	return request.Routable
 }
 
 func (request *EvacuateRunningActualLRPRequest) RoutableExists() bool {
-	_, ok := request.GetOptionalRoutable().(*EvacuateRunningActualLRPRequest_Routable)
-	return ok
+	ptr := request.GetRoutablePtr()
+	return ptr != nil
 }

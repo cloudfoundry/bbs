@@ -27,15 +27,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type Network struct {
-	Properties map[string]string `protobuf:"bytes,1,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (m *Network) Reset()      { *m = Network{} }
-func (*Network) ProtoMessage() {}
-func (*Network) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8571034d60397816, []int{0}
-}
 func (m *Network) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -62,13 +53,6 @@ func (m *Network) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Network proto.InternalMessageInfo
-
-func (m *Network) GetProperties() map[string]string {
-	if m != nil {
-		return m.Properties
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*Network)(nil), "models.Network")
@@ -104,9 +88,9 @@ func (this *Network) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Network)
 	if !ok {
-		that2, ok := that.(Network)
+		that2, ok := that.(*Network)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -231,26 +215,6 @@ func sovNetwork(x uint64) (n int) {
 }
 func sozNetwork(x uint64) (n int) {
 	return sovNetwork(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *Network) String() string {
-	if this == nil {
-		return "nil"
-	}
-	keysForProperties := make([]string, 0, len(this.Properties))
-	for k, _ := range this.Properties {
-		keysForProperties = append(keysForProperties, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForProperties)
-	mapStringForProperties := "map[string]string{"
-	for _, k := range keysForProperties {
-		mapStringForProperties += fmt.Sprintf("%v: %v,", k, this.Properties[k])
-	}
-	mapStringForProperties += "}"
-	s := strings.Join([]string{`&Network{`,
-		`Properties:` + mapStringForProperties + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringNetwork(v interface{}) string {
 	rv := reflect.ValueOf(v)

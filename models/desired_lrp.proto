@@ -78,13 +78,13 @@ message ProtoRoutes {
 }
 
 message DesiredLRPUpdate {
-  oneof optional_instances {
-    int32 instances = 1;
-  }
+  //oneof optional_instances {
+  optional int32 instances = 1;
+  //}
   optional ProtoRoutes routes = 2;
-  oneof optional_annotation {
-    string annotation = 3;
-  }
+  //oneof optional_annotation {
+  optional string annotation = 3;
+  //}
   map<string, MetricTagValue> metric_tags = 4;
 }
 

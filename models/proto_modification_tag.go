@@ -26,16 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type ModificationTag struct {
-	Epoch string `protobuf:"bytes,1,opt,name=epoch,proto3" json:"epoch"`
-	Index uint32 `protobuf:"varint,2,opt,name=index,proto3" json:"index"`
-}
-
-func (m *ModificationTag) Reset()      { *m = ModificationTag{} }
-func (*ModificationTag) ProtoMessage() {}
-func (*ModificationTag) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b84c9c806e96b4e3, []int{0}
-}
 func (m *ModificationTag) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -62,20 +52,6 @@ func (m *ModificationTag) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_ModificationTag proto.InternalMessageInfo
-
-func (m *ModificationTag) GetEpoch() string {
-	if m != nil {
-		return m.Epoch
-	}
-	return ""
-}
-
-func (m *ModificationTag) GetIndex() uint32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
 
 func init() {
 	proto.RegisterType((*ModificationTag)(nil), "models.ModificationTag")
@@ -107,9 +83,9 @@ func (this *ModificationTag) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ModificationTag)
 	if !ok {
-		that2, ok := that.(ModificationTag)
+		that2, ok := that.(*ModificationTag)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -213,17 +189,6 @@ func sovModificationTag(x uint64) (n int) {
 }
 func sozModificationTag(x uint64) (n int) {
 	return sovModificationTag(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *ModificationTag) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ModificationTag{`,
-		`Epoch:` + fmt.Sprintf("%v", this.Epoch) + `,`,
-		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringModificationTag(v interface{}) string {
 	rv := reflect.ValueOf(v)

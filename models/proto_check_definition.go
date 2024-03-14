@@ -26,17 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type CheckDefinition struct {
-	Checks          []*Check `protobuf:"bytes,1,rep,name=checks,proto3" json:"checks,omitempty"`
-	LogSource       string   `protobuf:"bytes,2,opt,name=log_source,json=logSource,proto3" json:"log_source"`
-	ReadinessChecks []*Check `protobuf:"bytes,3,rep,name=readiness_checks,json=readinessChecks,proto3" json:"readiness_checks,omitempty"`
-}
-
-func (m *CheckDefinition) Reset()      { *m = CheckDefinition{} }
-func (*CheckDefinition) ProtoMessage() {}
-func (*CheckDefinition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_048a62b88ce7913d, []int{0}
-}
 func (m *CheckDefinition) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -64,39 +53,6 @@ func (m *CheckDefinition) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CheckDefinition proto.InternalMessageInfo
 
-func (m *CheckDefinition) GetChecks() []*Check {
-	if m != nil {
-		return m.Checks
-	}
-	return nil
-}
-
-func (m *CheckDefinition) GetLogSource() string {
-	if m != nil {
-		return m.LogSource
-	}
-	return ""
-}
-
-func (m *CheckDefinition) GetReadinessChecks() []*Check {
-	if m != nil {
-		return m.ReadinessChecks
-	}
-	return nil
-}
-
-type Check struct {
-	// oneof is hard to use right now, instead we can do this check in validation
-	// oneof check {
-	TcpCheck  *TCPCheck  `protobuf:"bytes,1,opt,name=tcp_check,json=tcpCheck,proto3" json:"tcp_check,omitempty"`
-	HttpCheck *HTTPCheck `protobuf:"bytes,2,opt,name=http_check,json=httpCheck,proto3" json:"http_check,omitempty"`
-}
-
-func (m *Check) Reset()      { *m = Check{} }
-func (*Check) ProtoMessage() {}
-func (*Check) Descriptor() ([]byte, []int) {
-	return fileDescriptor_048a62b88ce7913d, []int{1}
-}
 func (m *Check) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -124,31 +80,6 @@ func (m *Check) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Check proto.InternalMessageInfo
 
-func (m *Check) GetTcpCheck() *TCPCheck {
-	if m != nil {
-		return m.TcpCheck
-	}
-	return nil
-}
-
-func (m *Check) GetHttpCheck() *HTTPCheck {
-	if m != nil {
-		return m.HttpCheck
-	}
-	return nil
-}
-
-type TCPCheck struct {
-	Port             uint32 `protobuf:"varint,1,opt,name=port,proto3" json:"port"`
-	ConnectTimeoutMs uint64 `protobuf:"varint,2,opt,name=connect_timeout_ms,json=connectTimeoutMs,proto3" json:"connect_timeout_ms,omitempty"`
-	IntervalMs       uint64 `protobuf:"varint,3,opt,name=interval_ms,json=intervalMs,proto3" json:"interval_ms,omitempty"`
-}
-
-func (m *TCPCheck) Reset()      { *m = TCPCheck{} }
-func (*TCPCheck) ProtoMessage() {}
-func (*TCPCheck) Descriptor() ([]byte, []int) {
-	return fileDescriptor_048a62b88ce7913d, []int{2}
-}
 func (m *TCPCheck) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -176,39 +107,6 @@ func (m *TCPCheck) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TCPCheck proto.InternalMessageInfo
 
-func (m *TCPCheck) GetPort() uint32 {
-	if m != nil {
-		return m.Port
-	}
-	return 0
-}
-
-func (m *TCPCheck) GetConnectTimeoutMs() uint64 {
-	if m != nil {
-		return m.ConnectTimeoutMs
-	}
-	return 0
-}
-
-func (m *TCPCheck) GetIntervalMs() uint64 {
-	if m != nil {
-		return m.IntervalMs
-	}
-	return 0
-}
-
-type HTTPCheck struct {
-	Port             uint32 `protobuf:"varint,1,opt,name=port,proto3" json:"port"`
-	RequestTimeoutMs uint64 `protobuf:"varint,2,opt,name=request_timeout_ms,json=requestTimeoutMs,proto3" json:"request_timeout_ms,omitempty"`
-	Path             string `protobuf:"bytes,3,opt,name=path,proto3" json:"path"`
-	IntervalMs       uint64 `protobuf:"varint,4,opt,name=interval_ms,json=intervalMs,proto3" json:"interval_ms,omitempty"`
-}
-
-func (m *HTTPCheck) Reset()      { *m = HTTPCheck{} }
-func (*HTTPCheck) ProtoMessage() {}
-func (*HTTPCheck) Descriptor() ([]byte, []int) {
-	return fileDescriptor_048a62b88ce7913d, []int{3}
-}
 func (m *HTTPCheck) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -235,34 +133,6 @@ func (m *HTTPCheck) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_HTTPCheck proto.InternalMessageInfo
-
-func (m *HTTPCheck) GetPort() uint32 {
-	if m != nil {
-		return m.Port
-	}
-	return 0
-}
-
-func (m *HTTPCheck) GetRequestTimeoutMs() uint64 {
-	if m != nil {
-		return m.RequestTimeoutMs
-	}
-	return 0
-}
-
-func (m *HTTPCheck) GetPath() string {
-	if m != nil {
-		return m.Path
-	}
-	return ""
-}
-
-func (m *HTTPCheck) GetIntervalMs() uint64 {
-	if m != nil {
-		return m.IntervalMs
-	}
-	return 0
-}
 
 func init() {
 	proto.RegisterType((*CheckDefinition)(nil), "models.CheckDefinition")
@@ -310,9 +180,9 @@ func (this *CheckDefinition) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CheckDefinition)
 	if !ok {
-		that2, ok := that.(CheckDefinition)
+		that2, ok := that.(*CheckDefinition)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -350,9 +220,9 @@ func (this *Check) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Check)
 	if !ok {
-		that2, ok := that.(Check)
+		that2, ok := that.(*Check)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -377,9 +247,9 @@ func (this *TCPCheck) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TCPCheck)
 	if !ok {
-		that2, ok := that.(TCPCheck)
+		that2, ok := that.(*TCPCheck)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -407,9 +277,9 @@ func (this *HTTPCheck) Equal(that interface{}) bool {
 
 	that1, ok := that.(*HTTPCheck)
 	if !ok {
-		that2, ok := that.(HTTPCheck)
+		that2, ok := that.(*HTTPCheck)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -783,64 +653,6 @@ func sovCheckDefinition(x uint64) (n int) {
 }
 func sozCheckDefinition(x uint64) (n int) {
 	return sovCheckDefinition(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *CheckDefinition) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForChecks := "[]*Check{"
-	for _, f := range this.Checks {
-		repeatedStringForChecks += strings.Replace(f.String(), "Check", "Check", 1) + ","
-	}
-	repeatedStringForChecks += "}"
-	repeatedStringForReadinessChecks := "[]*Check{"
-	for _, f := range this.ReadinessChecks {
-		repeatedStringForReadinessChecks += strings.Replace(f.String(), "Check", "Check", 1) + ","
-	}
-	repeatedStringForReadinessChecks += "}"
-	s := strings.Join([]string{`&CheckDefinition{`,
-		`Checks:` + repeatedStringForChecks + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`ReadinessChecks:` + repeatedStringForReadinessChecks + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Check) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Check{`,
-		`TcpCheck:` + strings.Replace(this.TcpCheck.String(), "TCPCheck", "TCPCheck", 1) + `,`,
-		`HttpCheck:` + strings.Replace(this.HttpCheck.String(), "HTTPCheck", "HTTPCheck", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TCPCheck) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TCPCheck{`,
-		`Port:` + fmt.Sprintf("%v", this.Port) + `,`,
-		`ConnectTimeoutMs:` + fmt.Sprintf("%v", this.ConnectTimeoutMs) + `,`,
-		`IntervalMs:` + fmt.Sprintf("%v", this.IntervalMs) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *HTTPCheck) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&HTTPCheck{`,
-		`Port:` + fmt.Sprintf("%v", this.Port) + `,`,
-		`RequestTimeoutMs:` + fmt.Sprintf("%v", this.RequestTimeoutMs) + `,`,
-		`Path:` + fmt.Sprintf("%v", this.Path) + `,`,
-		`IntervalMs:` + fmt.Sprintf("%v", this.IntervalMs) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringCheckDefinition(v interface{}) string {
 	rv := reflect.ValueOf(v)

@@ -9,7 +9,6 @@ import (
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
-	strconv "strconv"
 	strings "strings"
 
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -27,96 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type ImageLayer_DigestAlgorithm int32
-
-const (
-	DigestAlgorithmInvalid ImageLayer_DigestAlgorithm = 0
-	DigestAlgorithmSha256  ImageLayer_DigestAlgorithm = 1
-	DigestAlgorithmSha512  ImageLayer_DigestAlgorithm = 2 // Deprecated: Do not use.
-)
-
-var ImageLayer_DigestAlgorithm_name = map[int32]string{
-	0: "DigestAlgorithmInvalid",
-	1: "SHA256",
-	2: "SHA512",
-}
-
-var ImageLayer_DigestAlgorithm_value = map[string]int32{
-	"DigestAlgorithmInvalid": 0,
-	"SHA256":                 1,
-	"SHA512":                 2,
-}
-
-func (ImageLayer_DigestAlgorithm) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_c089288d9f3c46a0, []int{0, 0}
-}
-
-type ImageLayer_MediaType int32
-
-const (
-	MediaTypeInvalid ImageLayer_MediaType = 0
-	MediaTypeTgz     ImageLayer_MediaType = 1
-	MediaTypeTar     ImageLayer_MediaType = 2
-	MediaTypeZip     ImageLayer_MediaType = 3
-)
-
-var ImageLayer_MediaType_name = map[int32]string{
-	0: "MediaTypeInvalid",
-	1: "TGZ",
-	2: "TAR",
-	3: "ZIP",
-}
-
-var ImageLayer_MediaType_value = map[string]int32{
-	"MediaTypeInvalid": 0,
-	"TGZ":              1,
-	"TAR":              2,
-	"ZIP":              3,
-}
-
-func (ImageLayer_MediaType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_c089288d9f3c46a0, []int{0, 1}
-}
-
-type ImageLayer_Type int32
-
-const (
-	LayerTypeInvalid   ImageLayer_Type = 0
-	LayerTypeShared    ImageLayer_Type = 1
-	LayerTypeExclusive ImageLayer_Type = 2
-)
-
-var ImageLayer_Type_name = map[int32]string{
-	0: "LayerTypeInvalid",
-	1: "SHARED",
-	2: "EXCLUSIVE",
-}
-
-var ImageLayer_Type_value = map[string]int32{
-	"LayerTypeInvalid": 0,
-	"SHARED":           1,
-	"EXCLUSIVE":        2,
-}
-
-func (ImageLayer_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_c089288d9f3c46a0, []int{0, 2}
-}
-
-type ImageLayer struct {
-	Name            string                     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Url             string                     `protobuf:"bytes,2,opt,name=url,proto3" json:"url"`
-	DestinationPath string                     `protobuf:"bytes,3,opt,name=destination_path,json=destinationPath,proto3" json:"destination_path"`
-	LayerType       ImageLayer_Type            `protobuf:"varint,4,opt,name=layer_type,json=layerType,proto3,enum=models.ImageLayer_Type" json:"layer_type"`
-	MediaType       ImageLayer_MediaType       `protobuf:"varint,5,opt,name=media_type,json=mediaType,proto3,enum=models.ImageLayer_MediaType" json:"media_type"`
-	DigestAlgorithm ImageLayer_DigestAlgorithm `protobuf:"varint,6,opt,name=digest_algorithm,json=digestAlgorithm,proto3,enum=models.ImageLayer_DigestAlgorithm" json:"digest_algorithm,omitempty"`
-	DigestValue     string                     `protobuf:"bytes,7,opt,name=digest_value,json=digestValue,proto3" json:"digest_value,omitempty"`
-}
-
-func (m *ImageLayer) Reset()      { *m = ImageLayer{} }
-func (*ImageLayer) ProtoMessage() {}
-func (*ImageLayer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c089288d9f3c46a0, []int{0}
-}
 func (m *ImageLayer) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -143,55 +52,6 @@ func (m *ImageLayer) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_ImageLayer proto.InternalMessageInfo
-
-func (m *ImageLayer) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *ImageLayer) GetUrl() string {
-	if m != nil {
-		return m.Url
-	}
-	return ""
-}
-
-func (m *ImageLayer) GetDestinationPath() string {
-	if m != nil {
-		return m.DestinationPath
-	}
-	return ""
-}
-
-func (m *ImageLayer) GetLayerType() ImageLayer_Type {
-	if m != nil {
-		return m.LayerType
-	}
-	return LayerTypeInvalid
-}
-
-func (m *ImageLayer) GetMediaType() ImageLayer_MediaType {
-	if m != nil {
-		return m.MediaType
-	}
-	return MediaTypeInvalid
-}
-
-func (m *ImageLayer) GetDigestAlgorithm() ImageLayer_DigestAlgorithm {
-	if m != nil {
-		return m.DigestAlgorithm
-	}
-	return DigestAlgorithmInvalid
-}
-
-func (m *ImageLayer) GetDigestValue() string {
-	if m != nil {
-		return m.DigestValue
-	}
-	return ""
-}
 
 func init() {
 	proto.RegisterEnum("models.ImageLayer_DigestAlgorithm", ImageLayer_DigestAlgorithm_name, ImageLayer_DigestAlgorithm_value)
@@ -240,27 +100,6 @@ var fileDescriptor_c089288d9f3c46a0 = []byte{
 	0x42, 0x67, 0x03, 0x00, 0x00,
 }
 
-func (x ImageLayer_DigestAlgorithm) String() string {
-	s, ok := ImageLayer_DigestAlgorithm_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
-func (x ImageLayer_MediaType) String() string {
-	s, ok := ImageLayer_MediaType_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
-func (x ImageLayer_Type) String() string {
-	s, ok := ImageLayer_Type_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
 func (this *ImageLayer) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -268,9 +107,9 @@ func (this *ImageLayer) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ImageLayer)
 	if !ok {
-		that2, ok := that.(ImageLayer)
+		that2, ok := that.(*ImageLayer)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -443,22 +282,6 @@ func sovImageLayer(x uint64) (n int) {
 }
 func sozImageLayer(x uint64) (n int) {
 	return sovImageLayer(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *ImageLayer) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageLayer{`,
-		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
-		`Url:` + fmt.Sprintf("%v", this.Url) + `,`,
-		`DestinationPath:` + fmt.Sprintf("%v", this.DestinationPath) + `,`,
-		`LayerType:` + fmt.Sprintf("%v", this.LayerType) + `,`,
-		`MediaType:` + fmt.Sprintf("%v", this.MediaType) + `,`,
-		`DigestAlgorithm:` + fmt.Sprintf("%v", this.DigestAlgorithm) + `,`,
-		`DigestValue:` + fmt.Sprintf("%v", this.DigestValue) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringImageLayer(v interface{}) string {
 	rv := reflect.ValueOf(v)

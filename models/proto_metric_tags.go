@@ -9,7 +9,6 @@ import (
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
-	strconv "strconv"
 	strings "strings"
 
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -27,42 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type MetricTagValue_DynamicValue int32
-
-const (
-	DynamicValueInvalid               MetricTagValue_DynamicValue = 0
-	MetricTagDynamicValueIndex        MetricTagValue_DynamicValue = 1
-	MetricTagDynamicValueInstanceGuid MetricTagValue_DynamicValue = 2
-)
-
-var MetricTagValue_DynamicValue_name = map[int32]string{
-	0: "DynamicValueInvalid",
-	1: "INDEX",
-	2: "INSTANCE_GUID",
-}
-
-var MetricTagValue_DynamicValue_value = map[string]int32{
-	"DynamicValueInvalid": 0,
-	"INDEX":               1,
-	"INSTANCE_GUID":       2,
-}
-
-func (MetricTagValue_DynamicValue) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_6fa2ee0541447d5e, []int{0, 0}
-}
-
-type MetricTagValue struct {
-	// Note: we only expect one of the following set of fields to be
-	// set.
-	Static  string                      `protobuf:"bytes,1,opt,name=static,proto3" json:"static,omitempty"`
-	Dynamic MetricTagValue_DynamicValue `protobuf:"varint,2,opt,name=dynamic,proto3,enum=models.MetricTagValue_DynamicValue" json:"dynamic,omitempty"`
-}
-
-func (m *MetricTagValue) Reset()      { *m = MetricTagValue{} }
-func (*MetricTagValue) ProtoMessage() {}
-func (*MetricTagValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6fa2ee0541447d5e, []int{0}
-}
 func (m *MetricTagValue) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -89,20 +52,6 @@ func (m *MetricTagValue) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_MetricTagValue proto.InternalMessageInfo
-
-func (m *MetricTagValue) GetStatic() string {
-	if m != nil {
-		return m.Static
-	}
-	return ""
-}
-
-func (m *MetricTagValue) GetDynamic() MetricTagValue_DynamicValue {
-	if m != nil {
-		return m.Dynamic
-	}
-	return DynamicValueInvalid
-}
 
 func init() {
 	proto.RegisterEnum("models.MetricTagValue_DynamicValue", MetricTagValue_DynamicValue_name, MetricTagValue_DynamicValue_value)
@@ -134,13 +83,6 @@ var fileDescriptor_6fa2ee0541447d5e = []byte{
 	0x9b, 0x83, 0x77, 0xc8, 0x81, 0x01, 0x00, 0x00,
 }
 
-func (x MetricTagValue_DynamicValue) String() string {
-	s, ok := MetricTagValue_DynamicValue_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
 func (this *MetricTagValue) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -148,9 +90,9 @@ func (this *MetricTagValue) Equal(that interface{}) bool {
 
 	that1, ok := that.(*MetricTagValue)
 	if !ok {
-		that2, ok := that.(MetricTagValue)
+		that2, ok := that.(*MetricTagValue)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -254,17 +196,6 @@ func sovMetricTags(x uint64) (n int) {
 }
 func sozMetricTags(x uint64) (n int) {
 	return sovMetricTags(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *MetricTagValue) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&MetricTagValue{`,
-		`Static:` + fmt.Sprintf("%v", this.Static) + `,`,
-		`Dynamic:` + fmt.Sprintf("%v", this.Dynamic) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringMetricTags(v interface{}) string {
 	rv := reflect.ValueOf(v)

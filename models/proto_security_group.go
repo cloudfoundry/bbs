@@ -26,16 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type PortRange struct {
-	Start uint32 `protobuf:"varint,1,opt,name=start,proto3" json:"start"`
-	End   uint32 `protobuf:"varint,2,opt,name=end,proto3" json:"end"`
-}
-
-func (m *PortRange) Reset()      { *m = PortRange{} }
-func (*PortRange) ProtoMessage() {}
-func (*PortRange) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ff465b8f55f128fd, []int{0}
-}
 func (m *PortRange) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -63,30 +53,6 @@ func (m *PortRange) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PortRange proto.InternalMessageInfo
 
-func (m *PortRange) GetStart() uint32 {
-	if m != nil {
-		return m.Start
-	}
-	return 0
-}
-
-func (m *PortRange) GetEnd() uint32 {
-	if m != nil {
-		return m.End
-	}
-	return 0
-}
-
-type ICMPInfo struct {
-	Type int32 `protobuf:"varint,1,opt,name=type,proto3" json:"type"`
-	Code int32 `protobuf:"varint,2,opt,name=code,proto3" json:"code"`
-}
-
-func (m *ICMPInfo) Reset()      { *m = ICMPInfo{} }
-func (*ICMPInfo) ProtoMessage() {}
-func (*ICMPInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ff465b8f55f128fd, []int{1}
-}
 func (m *ICMPInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -114,35 +80,6 @@ func (m *ICMPInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ICMPInfo proto.InternalMessageInfo
 
-func (m *ICMPInfo) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *ICMPInfo) GetCode() int32 {
-	if m != nil {
-		return m.Code
-	}
-	return 0
-}
-
-type SecurityGroupRule struct {
-	Protocol     string     `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
-	Destinations []string   `protobuf:"bytes,2,rep,name=destinations,proto3" json:"destinations,omitempty"`
-	Ports        []uint32   `protobuf:"varint,3,rep,name=ports,proto3" json:"ports,omitempty"`
-	PortRange    *PortRange `protobuf:"bytes,4,opt,name=port_range,json=portRange,proto3" json:"port_range,omitempty"`
-	IcmpInfo     *ICMPInfo  `protobuf:"bytes,5,opt,name=icmp_info,json=icmpInfo,proto3" json:"icmp_info,omitempty"`
-	Log          bool       `protobuf:"varint,6,opt,name=log,proto3" json:"log"`
-	Annotations  []string   `protobuf:"bytes,7,rep,name=annotations,proto3" json:"annotations,omitempty"`
-}
-
-func (m *SecurityGroupRule) Reset()      { *m = SecurityGroupRule{} }
-func (*SecurityGroupRule) ProtoMessage() {}
-func (*SecurityGroupRule) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ff465b8f55f128fd, []int{2}
-}
 func (m *SecurityGroupRule) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -169,55 +106,6 @@ func (m *SecurityGroupRule) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_SecurityGroupRule proto.InternalMessageInfo
-
-func (m *SecurityGroupRule) GetProtocol() string {
-	if m != nil {
-		return m.Protocol
-	}
-	return ""
-}
-
-func (m *SecurityGroupRule) GetDestinations() []string {
-	if m != nil {
-		return m.Destinations
-	}
-	return nil
-}
-
-func (m *SecurityGroupRule) GetPorts() []uint32 {
-	if m != nil {
-		return m.Ports
-	}
-	return nil
-}
-
-func (m *SecurityGroupRule) GetPortRange() *PortRange {
-	if m != nil {
-		return m.PortRange
-	}
-	return nil
-}
-
-func (m *SecurityGroupRule) GetIcmpInfo() *ICMPInfo {
-	if m != nil {
-		return m.IcmpInfo
-	}
-	return nil
-}
-
-func (m *SecurityGroupRule) GetLog() bool {
-	if m != nil {
-		return m.Log
-	}
-	return false
-}
-
-func (m *SecurityGroupRule) GetAnnotations() []string {
-	if m != nil {
-		return m.Annotations
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*PortRange)(nil), "models.PortRange")
@@ -264,9 +152,9 @@ func (this *PortRange) Equal(that interface{}) bool {
 
 	that1, ok := that.(*PortRange)
 	if !ok {
-		that2, ok := that.(PortRange)
+		that2, ok := that.(*PortRange)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -291,9 +179,9 @@ func (this *ICMPInfo) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ICMPInfo)
 	if !ok {
-		that2, ok := that.(ICMPInfo)
+		that2, ok := that.(*ICMPInfo)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -318,9 +206,9 @@ func (this *SecurityGroupRule) Equal(that interface{}) bool {
 
 	that1, ok := that.(*SecurityGroupRule)
 	if !ok {
-		that2, ok := that.(SecurityGroupRule)
+		that2, ok := that.(*SecurityGroupRule)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -660,44 +548,6 @@ func sovSecurityGroup(x uint64) (n int) {
 }
 func sozSecurityGroup(x uint64) (n int) {
 	return sovSecurityGroup(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *PortRange) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&PortRange{`,
-		`Start:` + fmt.Sprintf("%v", this.Start) + `,`,
-		`End:` + fmt.Sprintf("%v", this.End) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ICMPInfo) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ICMPInfo{`,
-		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
-		`Code:` + fmt.Sprintf("%v", this.Code) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *SecurityGroupRule) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SecurityGroupRule{`,
-		`Protocol:` + fmt.Sprintf("%v", this.Protocol) + `,`,
-		`Destinations:` + fmt.Sprintf("%v", this.Destinations) + `,`,
-		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
-		`PortRange:` + strings.Replace(this.PortRange.String(), "PortRange", "PortRange", 1) + `,`,
-		`IcmpInfo:` + strings.Replace(this.IcmpInfo.String(), "ICMPInfo", "ICMPInfo", 1) + `,`,
-		`Log:` + fmt.Sprintf("%v", this.Log) + `,`,
-		`Annotations:` + fmt.Sprintf("%v", this.Annotations) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringSecurityGroup(v interface{}) string {
 	rv := reflect.ValueOf(v)

@@ -108,7 +108,7 @@ func (a *DownloadAction) ActionType() string {
 	return ActionTypeDownload
 }
 
-func (a DownloadAction) Validate() error {
+func (a *DownloadAction) Validate() error {
 	var validationError ValidationError
 
 	if a.GetFrom() == "" {
@@ -157,7 +157,7 @@ func (a *UploadAction) ActionType() string {
 	return ActionTypeUpload
 }
 
-func (a UploadAction) Validate() error {
+func (a *UploadAction) Validate() error {
 	var validationError ValidationError
 
 	if a.GetTo() == "" {
@@ -183,7 +183,7 @@ func (a *RunAction) ActionType() string {
 	return ActionTypeRun
 }
 
-func (a RunAction) Validate() error {
+func (a *RunAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Path == "" {
@@ -205,7 +205,7 @@ func (a *TimeoutAction) ActionType() string {
 	return ActionTypeTimeout
 }
 
-func (a TimeoutAction) Validate() error {
+func (a *TimeoutAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Action == nil {
@@ -232,7 +232,7 @@ func (a *TryAction) ActionType() string {
 	return ActionTypeTry
 }
 
-func (a TryAction) Validate() error {
+func (a *TryAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Action == nil {
@@ -259,7 +259,7 @@ func (a *ParallelAction) ActionType() string {
 	return ActionTypeParallel
 }
 
-func (a ParallelAction) Validate() error {
+func (a *ParallelAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Actions == nil || len(a.Actions) == 0 {
@@ -289,7 +289,7 @@ func (a *CodependentAction) ActionType() string {
 	return ActionTypeCodependent
 }
 
-func (a CodependentAction) Validate() error {
+func (a *CodependentAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Actions == nil || len(a.Actions) == 0 {
@@ -327,7 +327,7 @@ func (a *SerialAction) ActionType() string {
 	return ActionTypeSerial
 }
 
-func (a SerialAction) Validate() error {
+func (a *SerialAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Actions == nil || len(a.Actions) == 0 {
@@ -357,7 +357,7 @@ func (a *EmitProgressAction) ActionType() string {
 	return ActionTypeEmitProgress
 }
 
-func (a EmitProgressAction) Validate() error {
+func (a *EmitProgressAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Action == nil {
@@ -450,9 +450,9 @@ func (action *Action) SetDeprecatedTimeoutNs() *Action {
 		return action
 
 	case *TimeoutAction:
-		timeoutAction := *actionModel
+		timeoutAction := actionModel
 		timeoutAction.DeprecatedTimeoutNs = timeoutAction.TimeoutMs * int64(time.Millisecond)
-		return WrapAction(&timeoutAction)
+		return WrapAction(timeoutAction)
 
 	case *EmitProgressAction:
 		return actionModel.Action.SetDeprecatedTimeoutNs()
@@ -465,27 +465,27 @@ func (action *Action) SetDeprecatedTimeoutNs() *Action {
 		for _, subaction := range actionModel.Actions {
 			newActions = append(newActions, subaction.SetDeprecatedTimeoutNs())
 		}
-		parallelAction := *actionModel
+		parallelAction := actionModel
 		parallelAction.Actions = newActions
-		return WrapAction(&parallelAction)
+		return WrapAction(parallelAction)
 
 	case *SerialAction:
 		newActions := []*Action{}
 		for _, subaction := range actionModel.Actions {
 			newActions = append(newActions, subaction.SetDeprecatedTimeoutNs())
 		}
-		serialAction := *actionModel
+		serialAction := actionModel
 		serialAction.Actions = newActions
-		return WrapAction(&serialAction)
+		return WrapAction(serialAction)
 
 	case *CodependentAction:
 		newActions := []*Action{}
 		for _, subaction := range actionModel.Actions {
 			newActions = append(newActions, subaction.SetDeprecatedTimeoutNs())
 		}
-		codependentAction := *actionModel
+		codependentAction := actionModel
 		codependentAction.Actions = newActions
-		return WrapAction(&codependentAction)
+		return WrapAction(codependentAction)
 	}
 
 	return action
@@ -549,7 +549,7 @@ func (l *ResourceLimits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (l ResourceLimits) MarshalJSON() ([]byte, error) {
+func (l *ResourceLimits) MarshalJSON() ([]byte, error) {
 	var limit internalResourceLimits
 	if l.NofileExists() {
 		n := l.GetNofile()
@@ -563,30 +563,27 @@ func (l ResourceLimits) MarshalJSON() ([]byte, error) {
 }
 
 func (l *ResourceLimits) SetNofile(nofile uint64) {
-	l.OptionalNofile = &ResourceLimits_Nofile{
-		Nofile: nofile,
-	}
+	l.Nofile = &nofile
 }
 
 func (m *ResourceLimits) GetNofilePtr() *uint64 {
-	if x, ok := m.GetOptionalNofile().(*ResourceLimits_Nofile); ok {
-		return &x.Nofile
-	}
-	return nil
+	return m.Nofile
 }
 
 func (l *ResourceLimits) NofileExists() bool {
-	_, ok := l.GetOptionalNofile().(*ResourceLimits_Nofile)
-	return ok
+	ptr := l.GetNofilePtr()
+	return ptr != nil
 }
 
 func (l *ResourceLimits) SetNproc(nproc uint64) {
-	l.OptionalNproc = &ResourceLimits_Nproc{
-		Nproc: nproc,
-	}
+	l.Nproc = &nproc
+}
+
+func (m *ResourceLimits) GetNprocPtr() *uint64 {
+	return m.Nproc
 }
 
 func (l *ResourceLimits) NprocExists() bool {
-	_, ok := l.GetOptionalNproc().(*ResourceLimits_Nproc)
-	return ok
+	ptr := l.GetNprocPtr()
+	return ptr != nil
 }

@@ -26,15 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type PingResponse struct {
-	Available bool `protobuf:"varint,1,opt,name=available,proto3" json:"available"`
-}
-
-func (m *PingResponse) Reset()      { *m = PingResponse{} }
-func (*PingResponse) ProtoMessage() {}
-func (*PingResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6d51d96c3ad891f5, []int{0}
-}
 func (m *PingResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -61,13 +52,6 @@ func (m *PingResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_PingResponse proto.InternalMessageInfo
-
-func (m *PingResponse) GetAvailable() bool {
-	if m != nil {
-		return m.Available
-	}
-	return false
-}
 
 func init() {
 	proto.RegisterType((*PingResponse)(nil), "models.PingResponse")
@@ -98,9 +82,9 @@ func (this *PingResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*PingResponse)
 	if !ok {
-		that2, ok := that.(PingResponse)
+		that2, ok := that.(*PingResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -194,16 +178,6 @@ func sovPing(x uint64) (n int) {
 }
 func sozPing(x uint64) (n int) {
 	return sovPing(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *PingResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&PingResponse{`,
-		`Available:` + fmt.Sprintf("%v", this.Available) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringPing(v interface{}) string {
 	rv := reflect.ValueOf(v)

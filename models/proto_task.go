@@ -9,7 +9,6 @@ import (
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
-	strconv "strconv"
 	strings "strings"
 
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -28,71 +27,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type Task_State int32
-
-const (
-	Task_Invalid   Task_State = 0
-	Task_Pending   Task_State = 1
-	Task_Running   Task_State = 2
-	Task_Completed Task_State = 3
-	Task_Resolving Task_State = 4
-)
-
-var Task_State_name = map[int32]string{
-	0: "Invalid",
-	1: "Pending",
-	2: "Running",
-	3: "Completed",
-	4: "Resolving",
-}
-
-var Task_State_value = map[string]int32{
-	"Invalid":   0,
-	"Pending":   1,
-	"Running":   2,
-	"Completed": 3,
-	"Resolving": 4,
-}
-
-func (Task_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ce5d8dd45b4a91ff, []int{1, 0}
-}
-
-type TaskDefinition struct {
-	RootFs                        string                     `protobuf:"bytes,1,opt,name=root_fs,json=rootFs,proto3" json:"rootfs"`
-	EnvironmentVariables          []*EnvironmentVariable     `protobuf:"bytes,2,rep,name=environment_variables,json=environmentVariables,proto3" json:"env,omitempty"`
-	Action                        *Action                    `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
-	DiskMb                        int32                      `protobuf:"varint,4,opt,name=disk_mb,json=diskMb,proto3" json:"disk_mb"`
-	MemoryMb                      int32                      `protobuf:"varint,5,opt,name=memory_mb,json=memoryMb,proto3" json:"memory_mb"`
-	CpuWeight                     uint32                     `protobuf:"varint,6,opt,name=cpu_weight,json=cpuWeight,proto3" json:"cpu_weight"`
-	Privileged                    bool                       `protobuf:"varint,7,opt,name=privileged,proto3" json:"privileged"`
-	LogSource                     string                     `protobuf:"bytes,8,opt,name=log_source,json=logSource,proto3" json:"log_source"`
-	LogGuid                       string                     `protobuf:"bytes,9,opt,name=log_guid,json=logGuid,proto3" json:"log_guid"`
-	MetricsGuid                   string                     `protobuf:"bytes,10,opt,name=metrics_guid,json=metricsGuid,proto3" json:"metrics_guid"`
-	ResultFile                    string                     `protobuf:"bytes,11,opt,name=result_file,json=resultFile,proto3" json:"result_file"`
-	CompletionCallbackUrl         string                     `protobuf:"bytes,12,opt,name=completion_callback_url,json=completionCallbackUrl,proto3" json:"completion_callback_url,omitempty"`
-	Annotation                    string                     `protobuf:"bytes,13,opt,name=annotation,proto3" json:"annotation,omitempty"`
-	EgressRules                   []*SecurityGroupRule       `protobuf:"bytes,14,rep,name=egress_rules,json=egressRules,proto3" json:"egress_rules,omitempty"`
-	CachedDependencies            []*CachedDependency        `protobuf:"bytes,15,rep,name=cached_dependencies,json=cachedDependencies,proto3" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                     `protobuf:"bytes,16,opt,name=legacy_download_user,json=legacyDownloadUser,proto3" json:"legacy_download_user,omitempty"` // Deprecated: Do not use.
-	TrustedSystemCertificatesPath string                     `protobuf:"bytes,17,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath,proto3" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount             `protobuf:"bytes,18,rep,name=volume_mounts,json=volumeMounts,proto3" json:"volume_mounts,omitempty"`
-	Network                       *Network                   `protobuf:"bytes,19,opt,name=network,proto3" json:"network,omitempty"`
-	PlacementTags                 []string                   `protobuf:"bytes,20,rep,name=placement_tags,json=placementTags,proto3" json:"placement_tags,omitempty"`
-	MaxPids                       int32                      `protobuf:"varint,21,opt,name=max_pids,json=maxPids,proto3" json:"max_pids"`
-	CertificateProperties         *CertificateProperties     `protobuf:"bytes,22,opt,name=certificate_properties,json=certificateProperties,proto3" json:"certificate_properties,omitempty"`
-	ImageUsername                 string                     `protobuf:"bytes,23,opt,name=image_username,json=imageUsername,proto3" json:"image_username"`
-	ImagePassword                 string                     `protobuf:"bytes,24,opt,name=image_password,json=imagePassword,proto3" json:"image_password"`
-	ImageLayers                   []*ImageLayer              `protobuf:"bytes,25,rep,name=image_layers,json=imageLayers,proto3" json:"image_layers,omitempty"`
-	LogRateLimit                  *LogRateLimit              `protobuf:"bytes,26,opt,name=log_rate_limit,json=logRateLimit,proto3" json:"log_rate_limit,omitempty"`
-	MetricTags                    map[string]*MetricTagValue `protobuf:"bytes,27,rep,name=metric_tags,json=metricTags,proto3" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (m *TaskDefinition) Reset()      { *m = TaskDefinition{} }
-func (*TaskDefinition) ProtoMessage() {}
-func (*TaskDefinition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce5d8dd45b4a91ff, []int{0}
-}
 func (m *TaskDefinition) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -120,217 +54,6 @@ func (m *TaskDefinition) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TaskDefinition proto.InternalMessageInfo
 
-func (m *TaskDefinition) GetRootFs() string {
-	if m != nil {
-		return m.RootFs
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetEnvironmentVariables() []*EnvironmentVariable {
-	if m != nil {
-		return m.EnvironmentVariables
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetAction() *Action {
-	if m != nil {
-		return m.Action
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetDiskMb() int32 {
-	if m != nil {
-		return m.DiskMb
-	}
-	return 0
-}
-
-func (m *TaskDefinition) GetMemoryMb() int32 {
-	if m != nil {
-		return m.MemoryMb
-	}
-	return 0
-}
-
-func (m *TaskDefinition) GetCpuWeight() uint32 {
-	if m != nil {
-		return m.CpuWeight
-	}
-	return 0
-}
-
-func (m *TaskDefinition) GetPrivileged() bool {
-	if m != nil {
-		return m.Privileged
-	}
-	return false
-}
-
-func (m *TaskDefinition) GetLogSource() string {
-	if m != nil {
-		return m.LogSource
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetLogGuid() string {
-	if m != nil {
-		return m.LogGuid
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetMetricsGuid() string {
-	if m != nil {
-		return m.MetricsGuid
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetResultFile() string {
-	if m != nil {
-		return m.ResultFile
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetCompletionCallbackUrl() string {
-	if m != nil {
-		return m.CompletionCallbackUrl
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetAnnotation() string {
-	if m != nil {
-		return m.Annotation
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetEgressRules() []*SecurityGroupRule {
-	if m != nil {
-		return m.EgressRules
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetCachedDependencies() []*CachedDependency {
-	if m != nil {
-		return m.CachedDependencies
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-func (m *TaskDefinition) GetLegacyDownloadUser() string {
-	if m != nil {
-		return m.LegacyDownloadUser
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetTrustedSystemCertificatesPath() string {
-	if m != nil {
-		return m.TrustedSystemCertificatesPath
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetVolumeMounts() []*VolumeMount {
-	if m != nil {
-		return m.VolumeMounts
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetNetwork() *Network {
-	if m != nil {
-		return m.Network
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetPlacementTags() []string {
-	if m != nil {
-		return m.PlacementTags
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetMaxPids() int32 {
-	if m != nil {
-		return m.MaxPids
-	}
-	return 0
-}
-
-func (m *TaskDefinition) GetCertificateProperties() *CertificateProperties {
-	if m != nil {
-		return m.CertificateProperties
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetImageUsername() string {
-	if m != nil {
-		return m.ImageUsername
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetImagePassword() string {
-	if m != nil {
-		return m.ImagePassword
-	}
-	return ""
-}
-
-func (m *TaskDefinition) GetImageLayers() []*ImageLayer {
-	if m != nil {
-		return m.ImageLayers
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetLogRateLimit() *LogRateLimit {
-	if m != nil {
-		return m.LogRateLimit
-	}
-	return nil
-}
-
-func (m *TaskDefinition) GetMetricTags() map[string]*MetricTagValue {
-	if m != nil {
-		return m.MetricTags
-	}
-	return nil
-}
-
-type Task struct {
-	*TaskDefinition  `protobuf:"bytes,1,opt,name=task_definition,json=taskDefinition,proto3,embedded=task_definition" json:""`
-	TaskGuid         string     `protobuf:"bytes,2,opt,name=task_guid,json=taskGuid,proto3" json:"task_guid"`
-	Domain           string     `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain"`
-	CreatedAt        int64      `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
-	UpdatedAt        int64      `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at"`
-	FirstCompletedAt int64      `protobuf:"varint,6,opt,name=first_completed_at,json=firstCompletedAt,proto3" json:"first_completed_at"`
-	State            Task_State `protobuf:"varint,7,opt,name=state,proto3,enum=models.Task_State" json:"state"`
-	CellId           string     `protobuf:"bytes,8,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
-	Result           string     `protobuf:"bytes,9,opt,name=result,proto3" json:"result"`
-	Failed           bool       `protobuf:"varint,10,opt,name=failed,proto3" json:"failed"`
-	FailureReason    string     `protobuf:"bytes,11,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason"`
-	RejectionCount   int32      `protobuf:"varint,12,opt,name=rejection_count,json=rejectionCount,proto3" json:"rejection_count"`
-	RejectionReason  string     `protobuf:"bytes,13,opt,name=rejection_reason,json=rejectionReason,proto3" json:"rejection_reason"`
-}
-
-func (m *Task) Reset()      { *m = Task{} }
-func (*Task) ProtoMessage() {}
-func (*Task) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce5d8dd45b4a91ff, []int{1}
-}
 func (m *Task) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -357,90 +80,6 @@ func (m *Task) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Task proto.InternalMessageInfo
-
-func (m *Task) GetTaskGuid() string {
-	if m != nil {
-		return m.TaskGuid
-	}
-	return ""
-}
-
-func (m *Task) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *Task) GetCreatedAt() int64 {
-	if m != nil {
-		return m.CreatedAt
-	}
-	return 0
-}
-
-func (m *Task) GetUpdatedAt() int64 {
-	if m != nil {
-		return m.UpdatedAt
-	}
-	return 0
-}
-
-func (m *Task) GetFirstCompletedAt() int64 {
-	if m != nil {
-		return m.FirstCompletedAt
-	}
-	return 0
-}
-
-func (m *Task) GetState() Task_State {
-	if m != nil {
-		return m.State
-	}
-	return Task_Invalid
-}
-
-func (m *Task) GetCellId() string {
-	if m != nil {
-		return m.CellId
-	}
-	return ""
-}
-
-func (m *Task) GetResult() string {
-	if m != nil {
-		return m.Result
-	}
-	return ""
-}
-
-func (m *Task) GetFailed() bool {
-	if m != nil {
-		return m.Failed
-	}
-	return false
-}
-
-func (m *Task) GetFailureReason() string {
-	if m != nil {
-		return m.FailureReason
-	}
-	return ""
-}
-
-func (m *Task) GetRejectionCount() int32 {
-	if m != nil {
-		return m.RejectionCount
-	}
-	return 0
-}
-
-func (m *Task) GetRejectionReason() string {
-	if m != nil {
-		return m.RejectionReason
-	}
-	return ""
-}
 
 func init() {
 	proto.RegisterEnum("models.Task_State", Task_State_name, Task_State_value)
@@ -540,13 +179,6 @@ var fileDescriptor_ce5d8dd45b4a91ff = []byte{
 	0x48, 0xdf, 0x94, 0x75, 0x0a, 0x00, 0x00,
 }
 
-func (x Task_State) String() string {
-	s, ok := Task_State_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
 func (this *TaskDefinition) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -554,9 +186,9 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskDefinition)
 	if !ok {
-		that2, ok := that.(TaskDefinition)
+		that2, ok := that.(*TaskDefinition)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -691,9 +323,9 @@ func (this *Task) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Task)
 	if !ok {
-		that2, ok := that.(Task)
+		that2, ok := that.(*Task)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1465,99 +1097,6 @@ func sovTask(x uint64) (n int) {
 }
 func sozTask(x uint64) (n int) {
 	return sovTask(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *TaskDefinition) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForEnvironmentVariables := "[]*EnvironmentVariable{"
-	for _, f := range this.EnvironmentVariables {
-		repeatedStringForEnvironmentVariables += strings.Replace(fmt.Sprintf("%v", f), "EnvironmentVariable", "EnvironmentVariable", 1) + ","
-	}
-	repeatedStringForEnvironmentVariables += "}"
-	repeatedStringForEgressRules := "[]*SecurityGroupRule{"
-	for _, f := range this.EgressRules {
-		repeatedStringForEgressRules += strings.Replace(fmt.Sprintf("%v", f), "SecurityGroupRule", "SecurityGroupRule", 1) + ","
-	}
-	repeatedStringForEgressRules += "}"
-	repeatedStringForCachedDependencies := "[]*CachedDependency{"
-	for _, f := range this.CachedDependencies {
-		repeatedStringForCachedDependencies += strings.Replace(fmt.Sprintf("%v", f), "CachedDependency", "CachedDependency", 1) + ","
-	}
-	repeatedStringForCachedDependencies += "}"
-	repeatedStringForVolumeMounts := "[]*VolumeMount{"
-	for _, f := range this.VolumeMounts {
-		repeatedStringForVolumeMounts += strings.Replace(fmt.Sprintf("%v", f), "VolumeMount", "VolumeMount", 1) + ","
-	}
-	repeatedStringForVolumeMounts += "}"
-	repeatedStringForImageLayers := "[]*ImageLayer{"
-	for _, f := range this.ImageLayers {
-		repeatedStringForImageLayers += strings.Replace(fmt.Sprintf("%v", f), "ImageLayer", "ImageLayer", 1) + ","
-	}
-	repeatedStringForImageLayers += "}"
-	keysForMetricTags := make([]string, 0, len(this.MetricTags))
-	for k, _ := range this.MetricTags {
-		keysForMetricTags = append(keysForMetricTags, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
-	mapStringForMetricTags := "map[string]*MetricTagValue{"
-	for _, k := range keysForMetricTags {
-		mapStringForMetricTags += fmt.Sprintf("%v: %v,", k, this.MetricTags[k])
-	}
-	mapStringForMetricTags += "}"
-	s := strings.Join([]string{`&TaskDefinition{`,
-		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
-		`EnvironmentVariables:` + repeatedStringForEnvironmentVariables + `,`,
-		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
-		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
-		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
-		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`LogGuid:` + fmt.Sprintf("%v", this.LogGuid) + `,`,
-		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
-		`ResultFile:` + fmt.Sprintf("%v", this.ResultFile) + `,`,
-		`CompletionCallbackUrl:` + fmt.Sprintf("%v", this.CompletionCallbackUrl) + `,`,
-		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
-		`EgressRules:` + repeatedStringForEgressRules + `,`,
-		`CachedDependencies:` + repeatedStringForCachedDependencies + `,`,
-		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
-		`VolumeMounts:` + repeatedStringForVolumeMounts + `,`,
-		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
-		`PlacementTags:` + fmt.Sprintf("%v", this.PlacementTags) + `,`,
-		`MaxPids:` + fmt.Sprintf("%v", this.MaxPids) + `,`,
-		`CertificateProperties:` + strings.Replace(fmt.Sprintf("%v", this.CertificateProperties), "CertificateProperties", "CertificateProperties", 1) + `,`,
-		`ImageUsername:` + fmt.Sprintf("%v", this.ImageUsername) + `,`,
-		`ImagePassword:` + fmt.Sprintf("%v", this.ImagePassword) + `,`,
-		`ImageLayers:` + repeatedStringForImageLayers + `,`,
-		`LogRateLimit:` + strings.Replace(fmt.Sprintf("%v", this.LogRateLimit), "LogRateLimit", "LogRateLimit", 1) + `,`,
-		`MetricTags:` + mapStringForMetricTags + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Task) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Task{`,
-		`TaskDefinition:` + strings.Replace(this.TaskDefinition.String(), "TaskDefinition", "TaskDefinition", 1) + `,`,
-		`TaskGuid:` + fmt.Sprintf("%v", this.TaskGuid) + `,`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
-		`UpdatedAt:` + fmt.Sprintf("%v", this.UpdatedAt) + `,`,
-		`FirstCompletedAt:` + fmt.Sprintf("%v", this.FirstCompletedAt) + `,`,
-		`State:` + fmt.Sprintf("%v", this.State) + `,`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
-		`Failed:` + fmt.Sprintf("%v", this.Failed) + `,`,
-		`FailureReason:` + fmt.Sprintf("%v", this.FailureReason) + `,`,
-		`RejectionCount:` + fmt.Sprintf("%v", this.RejectionCount) + `,`,
-		`RejectionReason:` + fmt.Sprintf("%v", this.RejectionReason) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringTask(v interface{}) string {
 	rv := reflect.ValueOf(v)

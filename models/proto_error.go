@@ -9,7 +9,6 @@ import (
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
-	strconv "strconv"
 	strings "strings"
 
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -27,106 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type Error_Type int32
-
-const (
-	Error_UnknownError               Error_Type = 0
-	Error_InvalidRecord              Error_Type = 3
-	Error_InvalidRequest             Error_Type = 4
-	Error_InvalidResponse            Error_Type = 5
-	Error_InvalidProtobufMessage     Error_Type = 6
-	Error_InvalidJSON                Error_Type = 7
-	Error_FailedToOpenEnvelope       Error_Type = 8
-	Error_InvalidStateTransition     Error_Type = 9
-	Error_ResourceConflict           Error_Type = 11
-	Error_ResourceExists             Error_Type = 12
-	Error_ResourceNotFound           Error_Type = 13
-	Error_RouterError                Error_Type = 14
-	Error_ActualLRPCannotBeClaimed   Error_Type = 15
-	Error_ActualLRPCannotBeStarted   Error_Type = 16
-	Error_ActualLRPCannotBeCrashed   Error_Type = 17
-	Error_ActualLRPCannotBeFailed    Error_Type = 18
-	Error_ActualLRPCannotBeRemoved   Error_Type = 19
-	Error_ActualLRPCannotBeUnclaimed Error_Type = 21
-	Error_RunningOnDifferentCell     Error_Type = 24
-	Error_GUIDGeneration             Error_Type = 26
-	Error_Deserialize                Error_Type = 27
-	Error_Deadlock                   Error_Type = 28
-	Error_Unrecoverable              Error_Type = 29
-	Error_LockCollision              Error_Type = 30
-	Error_Timeout                    Error_Type = 31
-)
-
-var Error_Type_name = map[int32]string{
-	0:  "UnknownError",
-	3:  "InvalidRecord",
-	4:  "InvalidRequest",
-	5:  "InvalidResponse",
-	6:  "InvalidProtobufMessage",
-	7:  "InvalidJSON",
-	8:  "FailedToOpenEnvelope",
-	9:  "InvalidStateTransition",
-	11: "ResourceConflict",
-	12: "ResourceExists",
-	13: "ResourceNotFound",
-	14: "RouterError",
-	15: "ActualLRPCannotBeClaimed",
-	16: "ActualLRPCannotBeStarted",
-	17: "ActualLRPCannotBeCrashed",
-	18: "ActualLRPCannotBeFailed",
-	19: "ActualLRPCannotBeRemoved",
-	21: "ActualLRPCannotBeUnclaimed",
-	24: "RunningOnDifferentCell",
-	26: "GUIDGeneration",
-	27: "Deserialize",
-	28: "Deadlock",
-	29: "Unrecoverable",
-	30: "LockCollision",
-	31: "Timeout",
-}
-
-var Error_Type_value = map[string]int32{
-	"UnknownError":               0,
-	"InvalidRecord":              3,
-	"InvalidRequest":             4,
-	"InvalidResponse":            5,
-	"InvalidProtobufMessage":     6,
-	"InvalidJSON":                7,
-	"FailedToOpenEnvelope":       8,
-	"InvalidStateTransition":     9,
-	"ResourceConflict":           11,
-	"ResourceExists":             12,
-	"ResourceNotFound":           13,
-	"RouterError":                14,
-	"ActualLRPCannotBeClaimed":   15,
-	"ActualLRPCannotBeStarted":   16,
-	"ActualLRPCannotBeCrashed":   17,
-	"ActualLRPCannotBeFailed":    18,
-	"ActualLRPCannotBeRemoved":   19,
-	"ActualLRPCannotBeUnclaimed": 21,
-	"RunningOnDifferentCell":     24,
-	"GUIDGeneration":             26,
-	"Deserialize":                27,
-	"Deadlock":                   28,
-	"Unrecoverable":              29,
-	"LockCollision":              30,
-	"Timeout":                    31,
-}
-
-func (Error_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_0579b252106fcf4a, []int{0, 0}
-}
-
-type Error struct {
-	Type    Error_Type `protobuf:"varint,1,opt,name=type,proto3,enum=models.Error_Type" json:"type"`
-	Message string     `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
-}
-
-func (m *Error) Reset()      { *m = Error{} }
-func (*Error) ProtoMessage() {}
-func (*Error) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0579b252106fcf4a, []int{0}
-}
 func (m *Error) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -153,20 +52,6 @@ func (m *Error) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Error proto.InternalMessageInfo
-
-func (m *Error) GetType() Error_Type {
-	if m != nil {
-		return m.Type
-	}
-	return Error_UnknownError
-}
-
-func (m *Error) GetMessage() string {
-	if m != nil {
-		return m.Message
-	}
-	return ""
-}
 
 func init() {
 	proto.RegisterEnum("models.Error_Type", Error_Type_name, Error_Type_value)
@@ -216,13 +101,6 @@ var fileDescriptor_0579b252106fcf4a = []byte{
 	0xff, 0xf2, 0xb4, 0xa0, 0xf2, 0x51, 0x03, 0x00, 0x00,
 }
 
-func (x Error_Type) String() string {
-	s, ok := Error_Type_name[int32(x)]
-	if ok {
-		return s
-	}
-	return strconv.Itoa(int(x))
-}
 func (this *Error) GoString() string {
 	if this == nil {
 		return "nil"
@@ -309,17 +187,6 @@ func sovError(x uint64) (n int) {
 }
 func sozError(x uint64) (n int) {
 	return sovError(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *Error) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Error{`,
-		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
-		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringError(v interface{}) string {
 	rv := reflect.ValueOf(v)

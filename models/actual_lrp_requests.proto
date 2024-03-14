@@ -87,8 +87,8 @@ message ActualLRPsRequest {
   string domain = 1 [json_name = "domain"];
   string cell_id = 2 [json_name = "cell_id"];
   string process_guid = 3 [json_name = "process_guid"];
-  oneof optional_index {
-    int32 index = 4 [json_name = "index"];
-  }
+  //oneof optional_index {
+  optional int32 index = 4 [json_name = "index"];
+  //}
 }
 

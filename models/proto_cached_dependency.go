@@ -26,21 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type CachedDependency struct {
-	Name              string `protobuf:"bytes,1,opt,name=name,proto3" json:"name"`
-	From              string `protobuf:"bytes,2,opt,name=from,proto3" json:"from"`
-	To                string `protobuf:"bytes,3,opt,name=to,proto3" json:"to"`
-	CacheKey          string `protobuf:"bytes,4,opt,name=cache_key,json=cacheKey,proto3" json:"cache_key"`
-	LogSource         string `protobuf:"bytes,5,opt,name=log_source,json=logSource,proto3" json:"log_source"`
-	ChecksumAlgorithm string `protobuf:"bytes,6,opt,name=checksum_algorithm,json=checksumAlgorithm,proto3" json:"checksum_algorithm,omitempty"`
-	ChecksumValue     string `protobuf:"bytes,7,opt,name=checksum_value,json=checksumValue,proto3" json:"checksum_value,omitempty"`
-}
-
-func (m *CachedDependency) Reset()      { *m = CachedDependency{} }
-func (*CachedDependency) ProtoMessage() {}
-func (*CachedDependency) Descriptor() ([]byte, []int) {
-	return fileDescriptor_936e0e6e1c3697fa, []int{0}
-}
 func (m *CachedDependency) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -67,55 +52,6 @@ func (m *CachedDependency) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_CachedDependency proto.InternalMessageInfo
-
-func (m *CachedDependency) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *CachedDependency) GetFrom() string {
-	if m != nil {
-		return m.From
-	}
-	return ""
-}
-
-func (m *CachedDependency) GetTo() string {
-	if m != nil {
-		return m.To
-	}
-	return ""
-}
-
-func (m *CachedDependency) GetCacheKey() string {
-	if m != nil {
-		return m.CacheKey
-	}
-	return ""
-}
-
-func (m *CachedDependency) GetLogSource() string {
-	if m != nil {
-		return m.LogSource
-	}
-	return ""
-}
-
-func (m *CachedDependency) GetChecksumAlgorithm() string {
-	if m != nil {
-		return m.ChecksumAlgorithm
-	}
-	return ""
-}
-
-func (m *CachedDependency) GetChecksumValue() string {
-	if m != nil {
-		return m.ChecksumValue
-	}
-	return ""
-}
 
 func init() {
 	proto.RegisterType((*CachedDependency)(nil), "models.CachedDependency")
@@ -339,22 +275,6 @@ func sovCachedDependency(x uint64) (n int) {
 }
 func sozCachedDependency(x uint64) (n int) {
 	return sovCachedDependency(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *CachedDependency) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CachedDependency{`,
-		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
-		`From:` + fmt.Sprintf("%v", this.From) + `,`,
-		`To:` + fmt.Sprintf("%v", this.To) + `,`,
-		`CacheKey:` + fmt.Sprintf("%v", this.CacheKey) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`ChecksumAlgorithm:` + fmt.Sprintf("%v", this.ChecksumAlgorithm) + `,`,
-		`ChecksumValue:` + fmt.Sprintf("%v", this.ChecksumValue) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringCachedDependency(v interface{}) string {
 	rv := reflect.ValueOf(v)

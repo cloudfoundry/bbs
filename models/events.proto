@@ -38,9 +38,9 @@ message ActualLRPInfo {
   int64 since = 8 [json_name =  "since"];
   ModificationTag modification_tag = 9 [json_name = "modification_tag"];
   ActualLRP.Presence presence = 10 [json_name = "presence"];
-  oneof optional_routable {
-    bool Routable = 11;
-  }
+  //oneof optional_routable {
+  optional bool Routable = 11;
+  //}
   string availability_zone = 12 [json_name = "availability_zone"];
 }
 

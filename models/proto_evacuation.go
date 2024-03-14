@@ -27,16 +27,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type EvacuationResponse struct {
-	Error         *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	KeepContainer bool   `protobuf:"varint,2,opt,name=keep_container,json=keepContainer,proto3" json:"keep_container"`
-}
-
-func (m *EvacuationResponse) Reset()      { *m = EvacuationResponse{} }
-func (*EvacuationResponse) ProtoMessage() {}
-func (*EvacuationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5cec7f656fd69c9d, []int{0}
-}
 func (m *EvacuationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -64,30 +54,6 @@ func (m *EvacuationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EvacuationResponse proto.InternalMessageInfo
 
-func (m *EvacuationResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *EvacuationResponse) GetKeepContainer() bool {
-	if m != nil {
-		return m.KeepContainer
-	}
-	return false
-}
-
-type EvacuateClaimedActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3" json:"actual_lrp_key,omitempty"`
-	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3" json:"actual_lrp_instance_key,omitempty"`
-}
-
-func (m *EvacuateClaimedActualLRPRequest) Reset()      { *m = EvacuateClaimedActualLRPRequest{} }
-func (*EvacuateClaimedActualLRPRequest) ProtoMessage() {}
-func (*EvacuateClaimedActualLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5cec7f656fd69c9d, []int{1}
-}
 func (m *EvacuateClaimedActualLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -115,37 +81,6 @@ func (m *EvacuateClaimedActualLRPRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EvacuateClaimedActualLRPRequest proto.InternalMessageInfo
 
-func (m *EvacuateClaimedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-
-func (m *EvacuateClaimedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-
-type EvacuateRunningActualLRPRequest struct {
-	ActualLrpKey            *ActualLRPKey             `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3" json:"actual_lrp_key,omitempty"`
-	ActualLrpInstanceKey    *ActualLRPInstanceKey     `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3" json:"actual_lrp_instance_key,omitempty"`
-	ActualLrpNetInfo        *ActualLRPNetInfo         `protobuf:"bytes,3,opt,name=actual_lrp_net_info,json=actualLrpNetInfo,proto3" json:"actual_lrp_net_info,omitempty"`
-	ActualLrpInternalRoutes []*ActualLRPInternalRoute `protobuf:"bytes,5,rep,name=actual_lrp_internal_routes,json=actualLrpInternalRoutes,proto3" json:"actual_lrp_internal_routes,omitempty"`
-	MetricTags              map[string]string         `protobuf:"bytes,6,rep,name=metric_tags,json=metricTags,proto3" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// Types that are valid to be assigned to OptionalRoutable:
-	//	*EvacuateRunningActualLRPRequest_Routable
-	OptionalRoutable isEvacuateRunningActualLRPRequest_OptionalRoutable `protobuf_oneof:"optional_routable"`
-	AvailabilityZone string                                             `protobuf:"bytes,8,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone"`
-}
-
-func (m *EvacuateRunningActualLRPRequest) Reset()      { *m = EvacuateRunningActualLRPRequest{} }
-func (*EvacuateRunningActualLRPRequest) ProtoMessage() {}
-func (*EvacuateRunningActualLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5cec7f656fd69c9d, []int{2}
-}
 func (m *EvacuateRunningActualLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -173,92 +108,19 @@ func (m *EvacuateRunningActualLRPRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EvacuateRunningActualLRPRequest proto.InternalMessageInfo
 
-type isEvacuateRunningActualLRPRequest_OptionalRoutable interface {
-	isEvacuateRunningActualLRPRequest_OptionalRoutable()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type EvacuateRunningActualLRPRequest_Routable struct {
-	Routable bool `protobuf:"varint,7,opt,name=Routable,proto3,oneof" json:"Routable,omitempty"`
-}
-
-func (*EvacuateRunningActualLRPRequest_Routable) isEvacuateRunningActualLRPRequest_OptionalRoutable() {
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetOptionalRoutable() isEvacuateRunningActualLRPRequest_OptionalRoutable {
-	if m != nil {
-		return m.OptionalRoutable
-	}
-	return nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpNetInfo() *ActualLRPNetInfo {
-	if m != nil {
-		return m.ActualLrpNetInfo
-	}
-	return nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpInternalRoutes() []*ActualLRPInternalRoute {
-	if m != nil {
-		return m.ActualLrpInternalRoutes
-	}
-	return nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetMetricTags() map[string]string {
-	if m != nil {
-		return m.MetricTags
-	}
-	return nil
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetRoutable() bool {
-	if x, ok := m.GetOptionalRoutable().(*EvacuateRunningActualLRPRequest_Routable); ok {
-		return x.Routable
-	}
-	return false
-}
-
-func (m *EvacuateRunningActualLRPRequest) GetAvailabilityZone() string {
-	if m != nil {
-		return m.AvailabilityZone
-	}
-	return ""
-}
+// type isEvacuateRunningActualLRPRequest_OptionalRoutable_proto interface {
+// 	isEvacuateRunningActualLRPRequest_OptionalRoutable
+// 	MarshalTo([]byte) (int, error)
+// 	Size() int
+// }
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*EvacuateRunningActualLRPRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*EvacuateRunningActualLRPRequest_Routable)(nil),
-	}
-}
+// func (*EvacuateRunningActualLRPRequest) XXX_OneofWrappers() []interface{} {
+// 	return []interface{}{
+// 		(*EvacuateRunningActualLRPRequest_Routable)(nil),
+// 	}
+// }
 
-type EvacuateStoppedActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3" json:"actual_lrp_key,omitempty"`
-	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3" json:"actual_lrp_instance_key,omitempty"`
-}
-
-func (m *EvacuateStoppedActualLRPRequest) Reset()      { *m = EvacuateStoppedActualLRPRequest{} }
-func (*EvacuateStoppedActualLRPRequest) ProtoMessage() {}
-func (*EvacuateStoppedActualLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5cec7f656fd69c9d, []int{3}
-}
 func (m *EvacuateStoppedActualLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -286,31 +148,6 @@ func (m *EvacuateStoppedActualLRPRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EvacuateStoppedActualLRPRequest proto.InternalMessageInfo
 
-func (m *EvacuateStoppedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-
-func (m *EvacuateStoppedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-
-type EvacuateCrashedActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3" json:"actual_lrp_key,omitempty"`
-	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3" json:"actual_lrp_instance_key,omitempty"`
-	ErrorMessage         string                `protobuf:"bytes,3,opt,name=error_message,json=errorMessage,proto3" json:"error_message"`
-}
-
-func (m *EvacuateCrashedActualLRPRequest) Reset()      { *m = EvacuateCrashedActualLRPRequest{} }
-func (*EvacuateCrashedActualLRPRequest) ProtoMessage() {}
-func (*EvacuateCrashedActualLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5cec7f656fd69c9d, []int{4}
-}
 func (m *EvacuateCrashedActualLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -338,37 +175,6 @@ func (m *EvacuateCrashedActualLRPRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EvacuateCrashedActualLRPRequest proto.InternalMessageInfo
 
-func (m *EvacuateCrashedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-
-func (m *EvacuateCrashedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-
-func (m *EvacuateCrashedActualLRPRequest) GetErrorMessage() string {
-	if m != nil {
-		return m.ErrorMessage
-	}
-	return ""
-}
-
-type RemoveEvacuatingActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3" json:"actual_lrp_key,omitempty"`
-	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3" json:"actual_lrp_instance_key,omitempty"`
-}
-
-func (m *RemoveEvacuatingActualLRPRequest) Reset()      { *m = RemoveEvacuatingActualLRPRequest{} }
-func (*RemoveEvacuatingActualLRPRequest) ProtoMessage() {}
-func (*RemoveEvacuatingActualLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5cec7f656fd69c9d, []int{5}
-}
 func (m *RemoveEvacuatingActualLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -396,29 +202,6 @@ func (m *RemoveEvacuatingActualLRPRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RemoveEvacuatingActualLRPRequest proto.InternalMessageInfo
 
-func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-
-func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-
-type RemoveEvacuatingActualLRPResponse struct {
-	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-}
-
-func (m *RemoveEvacuatingActualLRPResponse) Reset()      { *m = RemoveEvacuatingActualLRPResponse{} }
-func (*RemoveEvacuatingActualLRPResponse) ProtoMessage() {}
-func (*RemoveEvacuatingActualLRPResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5cec7f656fd69c9d, []int{6}
-}
 func (m *RemoveEvacuatingActualLRPResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -445,13 +228,6 @@ func (m *RemoveEvacuatingActualLRPResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_RemoveEvacuatingActualLRPResponse proto.InternalMessageInfo
-
-func (m *RemoveEvacuatingActualLRPResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*EvacuationResponse)(nil), "models.EvacuationResponse")
@@ -569,21 +345,22 @@ func (this *EvacuateRunningActualLRPRequest) GoString() string {
 	if this.MetricTags != nil {
 		s = append(s, "MetricTags: "+mapStringForMetricTags+",\n")
 	}
-	if this.OptionalRoutable != nil {
-		s = append(s, "OptionalRoutable: "+fmt.Sprintf("%#v", this.OptionalRoutable)+",\n")
+	if this.Routable != nil {
+		s = append(s, "Routable: "+fmt.Sprintf("%#v", this.Routable)+",\n")
 	}
 	s = append(s, "AvailabilityZone: "+fmt.Sprintf("%#v", this.AvailabilityZone)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *EvacuateRunningActualLRPRequest_Routable) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.EvacuateRunningActualLRPRequest_Routable{` +
-		`Routable:` + fmt.Sprintf("%#v", this.Routable) + `}`}, ", ")
-	return s
-}
+
+//	func (this *EvacuateRunningActualLRPRequest_Routable) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.EvacuateRunningActualLRPRequest_Routable{` +
+//			`Routable:` + fmt.Sprintf("%#v", this.Routable) + `}`}, ", ")
+//		return s
+//	}
 func (this *EvacuateStoppedActualLRPRequest) GoString() string {
 	if this == nil {
 		return "nil"
@@ -850,23 +627,23 @@ func (m *EvacuateRunningActualLRPRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *EvacuateRunningActualLRPRequest_Routable) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *EvacuateRunningActualLRPRequest_Routable) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *EvacuateRunningActualLRPRequest_Routable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i--
-	if m.Routable {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x38
-	return len(dAtA) - i, nil
-}
+//	func (m *EvacuateRunningActualLRPRequest_Routable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+//		i := len(dAtA)
+//		i--
+//		if m.Routable {
+//			dAtA[i] = 1
+//		} else {
+//			dAtA[i] = 0
+//		}
+//		i--
+//		dAtA[i] = 0x38
+//		return len(dAtA) - i, nil
+//	}
 func (m *EvacuateStoppedActualLRPRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1126,8 +903,8 @@ func (m *EvacuateRunningActualLRPRequest) Size() (n int) {
 			n += mapEntrySize + 1 + sovEvacuation(uint64(mapEntrySize))
 		}
 	}
-	if m.OptionalRoutable != nil {
-		n += m.OptionalRoutable.Size()
+	if m.Routable != nil {
+		n += int(reflect.TypeOf(m.Routable).Size())
 	}
 	l = len(m.AvailabilityZone)
 	if l > 0 {
@@ -1136,15 +913,15 @@ func (m *EvacuateRunningActualLRPRequest) Size() (n int) {
 	return n
 }
 
-func (m *EvacuateRunningActualLRPRequest_Routable) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 2
-	return n
-}
+//	func (m *EvacuateRunningActualLRPRequest_Routable) Size() (n int) {
+//		if m == nil {
+//			return 0
+//		}
+//		var l int
+//		_ = l
+//		n += 2
+//		return n
+//	}
 func (m *EvacuateStoppedActualLRPRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1219,113 +996,17 @@ func sovEvacuation(x uint64) (n int) {
 func sozEvacuation(x uint64) (n int) {
 	return sovEvacuation(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (this *EvacuationResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuationResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`KeepContainer:` + fmt.Sprintf("%v", this.KeepContainer) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateClaimedActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateClaimedActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateRunningActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForActualLrpInternalRoutes := "[]*ActualLRPInternalRoute{"
-	for _, f := range this.ActualLrpInternalRoutes {
-		repeatedStringForActualLrpInternalRoutes += strings.Replace(fmt.Sprintf("%v", f), "ActualLRPInternalRoute", "ActualLRPInternalRoute", 1) + ","
-	}
-	repeatedStringForActualLrpInternalRoutes += "}"
-	keysForMetricTags := make([]string, 0, len(this.MetricTags))
-	for k, _ := range this.MetricTags {
-		keysForMetricTags = append(keysForMetricTags, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
-	mapStringForMetricTags := "map[string]string{"
-	for _, k := range keysForMetricTags {
-		mapStringForMetricTags += fmt.Sprintf("%v: %v,", k, this.MetricTags[k])
-	}
-	mapStringForMetricTags += "}"
-	s := strings.Join([]string{`&EvacuateRunningActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`ActualLrpNetInfo:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpNetInfo), "ActualLRPNetInfo", "ActualLRPNetInfo", 1) + `,`,
-		`ActualLrpInternalRoutes:` + repeatedStringForActualLrpInternalRoutes + `,`,
-		`MetricTags:` + mapStringForMetricTags + `,`,
-		`OptionalRoutable:` + fmt.Sprintf("%v", this.OptionalRoutable) + `,`,
-		`AvailabilityZone:` + fmt.Sprintf("%v", this.AvailabilityZone) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateRunningActualLRPRequest_Routable) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateRunningActualLRPRequest_Routable{`,
-		`Routable:` + fmt.Sprintf("%v", this.Routable) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateStoppedActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateStoppedActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EvacuateCrashedActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EvacuateCrashedActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`ErrorMessage:` + fmt.Sprintf("%v", this.ErrorMessage) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RemoveEvacuatingActualLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RemoveEvacuatingActualLRPRequest{`,
-		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
-		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RemoveEvacuatingActualLRPResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RemoveEvacuatingActualLRPResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
+
+//	func (this *EvacuateRunningActualLRPRequest_Routable) String() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&EvacuateRunningActualLRPRequest_Routable{`,
+//			`Routable:` + fmt.Sprintf("%v", this.Routable) + `,`,
+//			`}`,
+//		}, "")
+//		return s
+//	}
 func valueToStringEvacuation(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1880,7 +1561,7 @@ func (m *EvacuateRunningActualLRPRequest) Unmarshal(dAtA []byte) error {
 				}
 			}
 			b := bool(v != 0)
-			m.OptionalRoutable = &EvacuateRunningActualLRPRequest_Routable{b}
+			m.Routable = &b
 		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AvailabilityZone", wireType)

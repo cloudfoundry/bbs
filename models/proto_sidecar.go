@@ -26,17 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type Sidecar struct {
-	Action   *Action `protobuf:"bytes,1,opt,name=action,proto3" json:"action,omitempty"`
-	DiskMb   int32   `protobuf:"varint,2,opt,name=disk_mb,json=diskMb,proto3" json:"disk_mb"`
-	MemoryMb int32   `protobuf:"varint,3,opt,name=memory_mb,json=memoryMb,proto3" json:"memory_mb"`
-}
-
-func (m *Sidecar) Reset()      { *m = Sidecar{} }
-func (*Sidecar) ProtoMessage() {}
-func (*Sidecar) Descriptor() ([]byte, []int) {
-	return fileDescriptor_179ad3b13e6397ec, []int{0}
-}
 func (m *Sidecar) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -63,27 +52,6 @@ func (m *Sidecar) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Sidecar proto.InternalMessageInfo
-
-func (m *Sidecar) GetAction() *Action {
-	if m != nil {
-		return m.Action
-	}
-	return nil
-}
-
-func (m *Sidecar) GetDiskMb() int32 {
-	if m != nil {
-		return m.DiskMb
-	}
-	return 0
-}
-
-func (m *Sidecar) GetMemoryMb() int32 {
-	if m != nil {
-		return m.MemoryMb
-	}
-	return 0
-}
 
 func init() {
 	proto.RegisterType((*Sidecar)(nil), "models.Sidecar")
@@ -117,9 +85,9 @@ func (this *Sidecar) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Sidecar)
 	if !ok {
-		that2, ok := that.(Sidecar)
+		that2, ok := that.(*Sidecar)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -242,18 +210,6 @@ func sovSidecar(x uint64) (n int) {
 }
 func sozSidecar(x uint64) (n int) {
 	return sovSidecar(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *Sidecar) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Sidecar{`,
-		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
-		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringSidecar(v interface{}) string {
 	rv := reflect.ValueOf(v)

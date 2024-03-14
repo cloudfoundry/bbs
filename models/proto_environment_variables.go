@@ -26,16 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type EnvironmentVariable struct {
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name"`
-	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value"`
-}
-
-func (m *EnvironmentVariable) Reset()      { *m = EnvironmentVariable{} }
-func (*EnvironmentVariable) ProtoMessage() {}
-func (*EnvironmentVariable) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8938dda491bd78a1, []int{0}
-}
 func (m *EnvironmentVariable) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -62,20 +52,6 @@ func (m *EnvironmentVariable) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_EnvironmentVariable proto.InternalMessageInfo
-
-func (m *EnvironmentVariable) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *EnvironmentVariable) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
 
 func init() {
 	proto.RegisterType((*EnvironmentVariable)(nil), "models.EnvironmentVariable")
@@ -108,9 +84,9 @@ func (this *EnvironmentVariable) Equal(that interface{}) bool {
 
 	that1, ok := that.(*EnvironmentVariable)
 	if !ok {
-		that2, ok := that.(EnvironmentVariable)
+		that2, ok := that.(*EnvironmentVariable)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -217,17 +193,6 @@ func sovEnvironmentVariables(x uint64) (n int) {
 }
 func sozEnvironmentVariables(x uint64) (n int) {
 	return sovEnvironmentVariables(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *EnvironmentVariable) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EnvironmentVariable{`,
-		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
-		`Value:` + fmt.Sprintf("%v", this.Value) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringEnvironmentVariables(v interface{}) string {
 	rv := reflect.ValueOf(v)

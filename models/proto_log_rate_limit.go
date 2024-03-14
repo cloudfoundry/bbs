@@ -25,15 +25,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type LogRateLimit struct {
-	BytesPerSecond int64 `protobuf:"varint,1,opt,name=bytes_per_second,json=bytesPerSecond,proto3" json:"bytes_per_second,omitempty"`
-}
-
-func (m *LogRateLimit) Reset()      { *m = LogRateLimit{} }
-func (*LogRateLimit) ProtoMessage() {}
-func (*LogRateLimit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bfeb7b5141d983ba, []int{0}
-}
 func (m *LogRateLimit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -60,13 +51,6 @@ func (m *LogRateLimit) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_LogRateLimit proto.InternalMessageInfo
-
-func (m *LogRateLimit) GetBytesPerSecond() int64 {
-	if m != nil {
-		return m.BytesPerSecond
-	}
-	return 0
-}
 
 func init() {
 	proto.RegisterType((*LogRateLimit)(nil), "models.LogRateLimit")
@@ -96,9 +80,9 @@ func (this *LogRateLimit) Equal(that interface{}) bool {
 
 	that1, ok := that.(*LogRateLimit)
 	if !ok {
-		that2, ok := that.(LogRateLimit)
+		that2, ok := that.(*LogRateLimit)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -187,16 +171,6 @@ func sovLogRateLimit(x uint64) (n int) {
 }
 func sozLogRateLimit(x uint64) (n int) {
 	return sovLogRateLimit(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *LogRateLimit) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&LogRateLimit{`,
-		`BytesPerSecond:` + fmt.Sprintf("%v", this.BytesPerSecond) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringLogRateLimit(v interface{}) string {
 	rv := reflect.ValueOf(v)

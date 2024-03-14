@@ -26,15 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type DesiredLRPLifecycleResponse struct {
-	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-}
-
-func (m *DesiredLRPLifecycleResponse) Reset()      { *m = DesiredLRPLifecycleResponse{} }
-func (*DesiredLRPLifecycleResponse) ProtoMessage() {}
-func (*DesiredLRPLifecycleResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{0}
-}
 func (m *DesiredLRPLifecycleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -62,23 +53,6 @@ func (m *DesiredLRPLifecycleResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPLifecycleResponse proto.InternalMessageInfo
 
-func (m *DesiredLRPLifecycleResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-type DesiredLRPsResponse struct {
-	Error       *Error        `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	DesiredLrps []*DesiredLRP `protobuf:"bytes,2,rep,name=desired_lrps,json=desiredLrps,proto3" json:"desired_lrps,omitempty"`
-}
-
-func (m *DesiredLRPsResponse) Reset()      { *m = DesiredLRPsResponse{} }
-func (*DesiredLRPsResponse) ProtoMessage() {}
-func (*DesiredLRPsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{1}
-}
 func (m *DesiredLRPsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -106,30 +80,6 @@ func (m *DesiredLRPsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPsResponse proto.InternalMessageInfo
 
-func (m *DesiredLRPsResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *DesiredLRPsResponse) GetDesiredLrps() []*DesiredLRP {
-	if m != nil {
-		return m.DesiredLrps
-	}
-	return nil
-}
-
-type DesiredLRPsRequest struct {
-	Domain       string   `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain"`
-	ProcessGuids []string `protobuf:"bytes,2,rep,name=process_guids,json=processGuids,proto3" json:"process_guids,omitempty"`
-}
-
-func (m *DesiredLRPsRequest) Reset()      { *m = DesiredLRPsRequest{} }
-func (*DesiredLRPsRequest) ProtoMessage() {}
-func (*DesiredLRPsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{2}
-}
 func (m *DesiredLRPsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -157,30 +107,6 @@ func (m *DesiredLRPsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPsRequest proto.InternalMessageInfo
 
-func (m *DesiredLRPsRequest) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *DesiredLRPsRequest) GetProcessGuids() []string {
-	if m != nil {
-		return m.ProcessGuids
-	}
-	return nil
-}
-
-type DesiredLRPResponse struct {
-	Error      *Error      `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	DesiredLrp *DesiredLRP `protobuf:"bytes,2,opt,name=desired_lrp,json=desiredLrp,proto3" json:"desired_lrp,omitempty"`
-}
-
-func (m *DesiredLRPResponse) Reset()      { *m = DesiredLRPResponse{} }
-func (*DesiredLRPResponse) ProtoMessage() {}
-func (*DesiredLRPResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{3}
-}
 func (m *DesiredLRPResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -208,30 +134,6 @@ func (m *DesiredLRPResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPResponse proto.InternalMessageInfo
 
-func (m *DesiredLRPResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *DesiredLRPResponse) GetDesiredLrp() *DesiredLRP {
-	if m != nil {
-		return m.DesiredLrp
-	}
-	return nil
-}
-
-type DesiredLRPSchedulingInfosResponse struct {
-	Error                     *Error                      `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	DesiredLrpSchedulingInfos []*DesiredLRPSchedulingInfo `protobuf:"bytes,2,rep,name=desired_lrp_scheduling_infos,json=desiredLrpSchedulingInfos,proto3" json:"desired_lrp_scheduling_infos,omitempty"`
-}
-
-func (m *DesiredLRPSchedulingInfosResponse) Reset()      { *m = DesiredLRPSchedulingInfosResponse{} }
-func (*DesiredLRPSchedulingInfosResponse) ProtoMessage() {}
-func (*DesiredLRPSchedulingInfosResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{4}
-}
 func (m *DesiredLRPSchedulingInfosResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -259,32 +161,6 @@ func (m *DesiredLRPSchedulingInfosResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPSchedulingInfosResponse proto.InternalMessageInfo
 
-func (m *DesiredLRPSchedulingInfosResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *DesiredLRPSchedulingInfosResponse) GetDesiredLrpSchedulingInfos() []*DesiredLRPSchedulingInfo {
-	if m != nil {
-		return m.DesiredLrpSchedulingInfos
-	}
-	return nil
-}
-
-type DesiredLRPSchedulingInfoByProcessGuidResponse struct {
-	Error                    *Error                    `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	DesiredLrpSchedulingInfo *DesiredLRPSchedulingInfo `protobuf:"bytes,2,opt,name=desired_lrp_scheduling_info,json=desiredLrpSchedulingInfo,proto3" json:"desired_lrp_scheduling_info,omitempty"`
-}
-
-func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) Reset() {
-	*m = DesiredLRPSchedulingInfoByProcessGuidResponse{}
-}
-func (*DesiredLRPSchedulingInfoByProcessGuidResponse) ProtoMessage() {}
-func (*DesiredLRPSchedulingInfoByProcessGuidResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{5}
-}
 func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -312,29 +188,6 @@ func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPSchedulingInfoByProcessGuidResponse proto.InternalMessageInfo
 
-func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) GetDesiredLrpSchedulingInfo() *DesiredLRPSchedulingInfo {
-	if m != nil {
-		return m.DesiredLrpSchedulingInfo
-	}
-	return nil
-}
-
-type DesiredLRPByProcessGuidRequest struct {
-	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid"`
-}
-
-func (m *DesiredLRPByProcessGuidRequest) Reset()      { *m = DesiredLRPByProcessGuidRequest{} }
-func (*DesiredLRPByProcessGuidRequest) ProtoMessage() {}
-func (*DesiredLRPByProcessGuidRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{6}
-}
 func (m *DesiredLRPByProcessGuidRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -362,22 +215,6 @@ func (m *DesiredLRPByProcessGuidRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPByProcessGuidRequest proto.InternalMessageInfo
 
-func (m *DesiredLRPByProcessGuidRequest) GetProcessGuid() string {
-	if m != nil {
-		return m.ProcessGuid
-	}
-	return ""
-}
-
-type DesireLRPRequest struct {
-	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp,json=desiredLrp,proto3" json:"desired_lrp,omitempty"`
-}
-
-func (m *DesireLRPRequest) Reset()      { *m = DesireLRPRequest{} }
-func (*DesireLRPRequest) ProtoMessage() {}
-func (*DesireLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{7}
-}
 func (m *DesireLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -405,23 +242,6 @@ func (m *DesireLRPRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesireLRPRequest proto.InternalMessageInfo
 
-func (m *DesireLRPRequest) GetDesiredLrp() *DesiredLRP {
-	if m != nil {
-		return m.DesiredLrp
-	}
-	return nil
-}
-
-type UpdateDesiredLRPRequest struct {
-	ProcessGuid string            `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid"`
-	Update      *DesiredLRPUpdate `protobuf:"bytes,2,opt,name=update,proto3" json:"update,omitempty"`
-}
-
-func (m *UpdateDesiredLRPRequest) Reset()      { *m = UpdateDesiredLRPRequest{} }
-func (*UpdateDesiredLRPRequest) ProtoMessage() {}
-func (*UpdateDesiredLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{8}
-}
 func (m *UpdateDesiredLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -449,29 +269,6 @@ func (m *UpdateDesiredLRPRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UpdateDesiredLRPRequest proto.InternalMessageInfo
 
-func (m *UpdateDesiredLRPRequest) GetProcessGuid() string {
-	if m != nil {
-		return m.ProcessGuid
-	}
-	return ""
-}
-
-func (m *UpdateDesiredLRPRequest) GetUpdate() *DesiredLRPUpdate {
-	if m != nil {
-		return m.Update
-	}
-	return nil
-}
-
-type RemoveDesiredLRPRequest struct {
-	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid"`
-}
-
-func (m *RemoveDesiredLRPRequest) Reset()      { *m = RemoveDesiredLRPRequest{} }
-func (*RemoveDesiredLRPRequest) ProtoMessage() {}
-func (*RemoveDesiredLRPRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7235cc1a84e38c85, []int{9}
-}
 func (m *RemoveDesiredLRPRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -498,13 +295,6 @@ func (m *RemoveDesiredLRPRequest) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_RemoveDesiredLRPRequest proto.InternalMessageInfo
-
-func (m *RemoveDesiredLRPRequest) GetProcessGuid() string {
-	if m != nil {
-		return m.ProcessGuid
-	}
-	return ""
-}
 
 func init() {
 	proto.RegisterType((*DesiredLRPLifecycleResponse)(nil), "models.DesiredLRPLifecycleResponse")
@@ -563,9 +353,9 @@ func (this *DesiredLRPLifecycleResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPLifecycleResponse)
 	if !ok {
-		that2, ok := that.(DesiredLRPLifecycleResponse)
+		that2, ok := that.(*DesiredLRPLifecycleResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -587,9 +377,9 @@ func (this *DesiredLRPsResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPsResponse)
 	if !ok {
-		that2, ok := that.(DesiredLRPsResponse)
+		that2, ok := that.(*DesiredLRPsResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -619,9 +409,9 @@ func (this *DesiredLRPsRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPsRequest)
 	if !ok {
-		that2, ok := that.(DesiredLRPsRequest)
+		that2, ok := that.(*DesiredLRPsRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -651,9 +441,9 @@ func (this *DesiredLRPResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPResponse)
 	if !ok {
-		that2, ok := that.(DesiredLRPResponse)
+		that2, ok := that.(*DesiredLRPResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -678,9 +468,9 @@ func (this *DesiredLRPSchedulingInfosResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPSchedulingInfosResponse)
 	if !ok {
-		that2, ok := that.(DesiredLRPSchedulingInfosResponse)
+		that2, ok := that.(*DesiredLRPSchedulingInfosResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -710,9 +500,9 @@ func (this *DesiredLRPSchedulingInfoByProcessGuidResponse) Equal(that interface{
 
 	that1, ok := that.(*DesiredLRPSchedulingInfoByProcessGuidResponse)
 	if !ok {
-		that2, ok := that.(DesiredLRPSchedulingInfoByProcessGuidResponse)
+		that2, ok := that.(*DesiredLRPSchedulingInfoByProcessGuidResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -737,9 +527,9 @@ func (this *DesiredLRPByProcessGuidRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPByProcessGuidRequest)
 	if !ok {
-		that2, ok := that.(DesiredLRPByProcessGuidRequest)
+		that2, ok := that.(*DesiredLRPByProcessGuidRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -761,9 +551,9 @@ func (this *DesireLRPRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesireLRPRequest)
 	if !ok {
-		that2, ok := that.(DesireLRPRequest)
+		that2, ok := that.(*DesireLRPRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -785,9 +575,9 @@ func (this *UpdateDesiredLRPRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*UpdateDesiredLRPRequest)
 	if !ok {
-		that2, ok := that.(UpdateDesiredLRPRequest)
+		that2, ok := that.(*UpdateDesiredLRPRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -812,9 +602,9 @@ func (this *RemoveDesiredLRPRequest) Equal(that interface{}) bool {
 
 	that1, ok := that.(*RemoveDesiredLRPRequest)
 	if !ok {
-		that2, ok := that.(RemoveDesiredLRPRequest)
+		that2, ok := that.(*RemoveDesiredLRPRequest)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1544,122 +1334,6 @@ func sovDesiredLrpRequests(x uint64) (n int) {
 }
 func sozDesiredLrpRequests(x uint64) (n int) {
 	return sovDesiredLrpRequests(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *DesiredLRPLifecycleResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPLifecycleResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPsResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForDesiredLrps := "[]*DesiredLRP{"
-	for _, f := range this.DesiredLrps {
-		repeatedStringForDesiredLrps += strings.Replace(fmt.Sprintf("%v", f), "DesiredLRP", "DesiredLRP", 1) + ","
-	}
-	repeatedStringForDesiredLrps += "}"
-	s := strings.Join([]string{`&DesiredLRPsResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`DesiredLrps:` + repeatedStringForDesiredLrps + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPsRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPsRequest{`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`ProcessGuids:` + fmt.Sprintf("%v", this.ProcessGuids) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPSchedulingInfosResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForDesiredLrpSchedulingInfos := "[]*DesiredLRPSchedulingInfo{"
-	for _, f := range this.DesiredLrpSchedulingInfos {
-		repeatedStringForDesiredLrpSchedulingInfos += strings.Replace(fmt.Sprintf("%v", f), "DesiredLRPSchedulingInfo", "DesiredLRPSchedulingInfo", 1) + ","
-	}
-	repeatedStringForDesiredLrpSchedulingInfos += "}"
-	s := strings.Join([]string{`&DesiredLRPSchedulingInfosResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`DesiredLrpSchedulingInfos:` + repeatedStringForDesiredLrpSchedulingInfos + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPSchedulingInfoByProcessGuidResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPSchedulingInfoByProcessGuidResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`DesiredLrpSchedulingInfo:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrpSchedulingInfo), "DesiredLRPSchedulingInfo", "DesiredLRPSchedulingInfo", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPByProcessGuidRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPByProcessGuidRequest{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesireLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesireLRPRequest{`,
-		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *UpdateDesiredLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&UpdateDesiredLRPRequest{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`Update:` + strings.Replace(fmt.Sprintf("%v", this.Update), "DesiredLRPUpdate", "DesiredLRPUpdate", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RemoveDesiredLRPRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RemoveDesiredLRPRequest{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringDesiredLrpRequests(v interface{}) string {
 	rv := reflect.ValueOf(v)

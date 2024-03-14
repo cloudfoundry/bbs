@@ -315,12 +315,14 @@ func (event *TaskRemovedEvent) Key() string {
 }
 
 func (info *ActualLRPInfo) SetRoutable(routable bool) {
-	info.OptionalRoutable = &ActualLRPInfo_Routable{
-		Routable: routable,
-	}
+	info.Routable = &routable
+}
+
+func (info *ActualLRPInfo) GetRoutablePtr() *bool {
+	return info.Routable
 }
 
 func (info *ActualLRPInfo) RoutableExists() bool {
-	_, ok := info.GetOptionalRoutable().(*ActualLRPInfo_Routable)
-	return ok
+	ptr := info.GetRoutablePtr()
+	return ptr != nil
 }

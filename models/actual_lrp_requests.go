@@ -7,12 +7,16 @@ func (request *ActualLRPsRequest) Validate() error {
 }
 
 func (request *ActualLRPsRequest) SetIndex(index int32) {
-	request.OptionalIndex = &ActualLRPsRequest_Index{Index: index}
+	request.Index = &index
 }
 
-func (request ActualLRPsRequest) IndexExists() bool {
-	_, ok := request.GetOptionalIndex().(*ActualLRPsRequest_Index)
-	return ok
+func (request *ActualLRPsRequest) GetIndexPtr() *int32 {
+	return request.Index
+}
+
+func (request *ActualLRPsRequest) IndexExists() bool {
+	ptr := request.GetIndexPtr()
+	return ptr != nil
 }
 
 type internalActualLRPsRequest struct {

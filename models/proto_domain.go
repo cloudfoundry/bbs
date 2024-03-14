@@ -26,16 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type DomainsResponse struct {
-	Error   *Error   `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	Domains []string `protobuf:"bytes,2,rep,name=domains,proto3" json:"domains,omitempty"`
-}
-
-func (m *DomainsResponse) Reset()      { *m = DomainsResponse{} }
-func (*DomainsResponse) ProtoMessage() {}
-func (*DomainsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73e6234e76dbdb84, []int{0}
-}
 func (m *DomainsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -63,29 +53,6 @@ func (m *DomainsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DomainsResponse proto.InternalMessageInfo
 
-func (m *DomainsResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *DomainsResponse) GetDomains() []string {
-	if m != nil {
-		return m.Domains
-	}
-	return nil
-}
-
-type UpsertDomainResponse struct {
-	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-}
-
-func (m *UpsertDomainResponse) Reset()      { *m = UpsertDomainResponse{} }
-func (*UpsertDomainResponse) ProtoMessage() {}
-func (*UpsertDomainResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73e6234e76dbdb84, []int{1}
-}
 func (m *UpsertDomainResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -113,23 +80,6 @@ func (m *UpsertDomainResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UpsertDomainResponse proto.InternalMessageInfo
 
-func (m *UpsertDomainResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-type UpsertDomainRequest struct {
-	Domain string `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain"`
-	Ttl    uint32 `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl"`
-}
-
-func (m *UpsertDomainRequest) Reset()      { *m = UpsertDomainRequest{} }
-func (*UpsertDomainRequest) ProtoMessage() {}
-func (*UpsertDomainRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73e6234e76dbdb84, []int{2}
-}
 func (m *UpsertDomainRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -156,20 +106,6 @@ func (m *UpsertDomainRequest) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_UpsertDomainRequest proto.InternalMessageInfo
-
-func (m *UpsertDomainRequest) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *UpsertDomainRequest) GetTtl() uint32 {
-	if m != nil {
-		return m.Ttl
-	}
-	return 0
-}
 
 func init() {
 	proto.RegisterType((*DomainsResponse)(nil), "models.DomainsResponse")
@@ -422,38 +358,6 @@ func sovDomain(x uint64) (n int) {
 }
 func sozDomain(x uint64) (n int) {
 	return sovDomain(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *DomainsResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DomainsResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`Domains:` + fmt.Sprintf("%v", this.Domains) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *UpsertDomainResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&UpsertDomainResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *UpsertDomainRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&UpsertDomainRequest{`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`Ttl:` + fmt.Sprintf("%v", this.Ttl) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringDomain(v interface{}) string {
 	rv := reflect.ValueOf(v)

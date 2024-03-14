@@ -224,11 +224,11 @@ type isStartActualLRPRequest_OptionalRoutable_proto interface {
 }
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*ActualLRP) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ActualLRP_Routable)(nil),
-	}
-}
+// func (*ActualLRP) XXX_OneofWrappers() []interface{} {
+// 	return []interface{}{
+// 		(*ActualLRP_Routable)(nil),
+// 	}
+// }
 
 func init() {
 	proto.RegisterEnum("models.ActualLRPNetInfo_PreferredAddress", ActualLRPNetInfo_PreferredAddress_name, ActualLRPNetInfo_PreferredAddress_value)
@@ -568,13 +568,7 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if that1.OptionalRoutable == nil {
-		if this.OptionalRoutable != nil {
-			return false
-		}
-	} else if this.OptionalRoutable == nil {
-		return false
-	} else if !this.OptionalRoutable.Equal(that1.OptionalRoutable) {
+	if this.Routable != that1.Routable {
 		return false
 	}
 	if this.AvailabilityZone != that1.AvailabilityZone {
@@ -582,30 +576,31 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *ActualLRP_Routable) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
 
-	that1, ok := that.(*ActualLRP_Routable)
-	if !ok {
-		that2, ok := that.(ActualLRP_Routable)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Routable != that1.Routable {
-		return false
-	}
-	return true
-}
+// func (this *ActualLRP_Routable) Equal(that interface{}) bool {
+// 	if that == nil {
+// 		return this == nil
+// 	}
+
+//		that1, ok := that.(*ActualLRP_Routable)
+//		if !ok {
+//			that2, ok := that.(ActualLRP_Routable)
+//			if ok {
+//				that1 = &that2
+//			} else {
+//				return false
+//			}
+//		}
+//		if that1 == nil {
+//			return this == nil
+//		} else if this == nil {
+//			return false
+//		}
+//		if this.Routable != that1.Routable {
+//			return false
+//		}
+//		return true
+//	}
 func (this *ActualLRPGroup) GoString() string {
 	if this == nil {
 		return "nil"
@@ -714,21 +709,22 @@ func (this *ActualLRP) GoString() string {
 	if this.MetricTags != nil {
 		s = append(s, "MetricTags: "+mapStringForMetricTags+",\n")
 	}
-	if this.OptionalRoutable != nil {
-		s = append(s, "OptionalRoutable: "+fmt.Sprintf("%#v", this.OptionalRoutable)+",\n")
+	if *this.Routable {
+		s = append(s, "Routable: "+fmt.Sprintf("%#v", this.Routable)+",\n")
 	}
 	s = append(s, "AvailabilityZone: "+fmt.Sprintf("%#v", this.AvailabilityZone)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *ActualLRP_Routable) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRP_Routable{` +
-		`Routable:` + fmt.Sprintf("%#v", this.Routable) + `}`}, ", ")
-	return s
-}
+
+//	func (this *ActualLRP_Routable) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.ActualLRP_Routable{` +
+//			`Routable:` + fmt.Sprintf("%#v", this.Routable) + `}`}, ", ")
+//		return s
+//	}
 func valueToGoStringActualLrp(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1019,14 +1015,15 @@ func (m *ActualLRP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x72
 	}
-	if m.OptionalRoutable != nil {
-		{
-			size := m.OptionalRoutable.Size()
-			i -= size
-			if _, err := m.OptionalRoutable.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
+	if *m.Routable {
+		i--
+		if *m.Routable {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
 		}
+		i--
+		dAtA[i] = 0x30
 	}
 	if len(m.MetricTags) > 0 {
 		for k := range m.MetricTags {
@@ -1140,23 +1137,23 @@ func (m *ActualLRP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ActualLRP_Routable) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *ActualLRP_Routable) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *ActualLRP_Routable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i--
-	if m.Routable {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x68
-	return len(dAtA) - i, nil
-}
+//	func (m *ActualLRP_Routable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+//		i := len(dAtA)
+//		i--
+//		if m.Routable {
+//			dAtA[i] = 1
+//		} else {
+//			dAtA[i] = 0
+//		}
+//		i--
+//		dAtA[i] = 0x68
+//		return len(dAtA) - i, nil
+//	}
 func encodeVarintActualLrp(dAtA []byte, offset int, v uint64) int {
 	offset -= sovActualLrp(v)
 	base := offset
@@ -1341,15 +1338,15 @@ func (m *ActualLRP) Size() (n int) {
 	return n
 }
 
-func (m *ActualLRP_Routable) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 2
-	return n
-}
+// func (m *ActualLRP_Routable) Size() (n int) {
+// 	if m == nil {
+// 		return 0
+// 	}
+// 	var l int
+// 	_ = l
+// 	n += 2
+// 	return n
+// }
 
 func sovActualLrp(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
@@ -2604,7 +2601,7 @@ func (m *ActualLRP) Unmarshal(dAtA []byte) error {
 				}
 			}
 			b := bool(v != 0)
-			m.OptionalRoutable = &ActualLRP_Routable{b}
+			m.Routable = &b
 		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AvailabilityZone", wireType)

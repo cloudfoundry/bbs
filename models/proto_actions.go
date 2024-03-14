@@ -324,12 +324,12 @@ func (m *ResourceLimits) XXX_DiscardUnknown() {
 var xxx_messageInfo_ResourceLimits proto.InternalMessageInfo
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*ResourceLimits) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ResourceLimits_Nofile)(nil),
-		(*ResourceLimits_Nproc)(nil),
-	}
-}
+// func (*ResourceLimits) XXX_OneofWrappers() []interface{} {
+// 	return []interface{}{
+// 		(*ResourceLimits_Nofile)(nil),
+// 		(*ResourceLimits_Nproc)(nil),
+// 	}
+// }
 
 func init() {
 	proto.RegisterType((*Action)(nil), "models.Action")
@@ -679,9 +679,9 @@ func (this *TryAction) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TryAction)
 	if !ok {
-		that2, ok := that.(TryAction)
+		that2, ok := that.(*TryAction)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -814,74 +814,75 @@ func (this *ResourceLimits) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if that1.OptionalNofile == nil {
-		if this.OptionalNofile != nil {
+	if that1.Nofile == nil {
+		if this.Nofile != nil {
 			return false
 		}
-	} else if this.OptionalNofile == nil {
+	} else if this.Nofile == nil {
 		return false
-	} else if !this.OptionalNofile.Equal(that1.OptionalNofile) {
+	} else if this.Nofile != that1.Nofile {
 		return false
 	}
-	if that1.OptionalNproc == nil {
-		if this.OptionalNproc != nil {
+	if that1.Nproc == nil {
+		if this.Nproc != nil {
 			return false
 		}
-	} else if this.OptionalNproc == nil {
+	} else if this.Nproc == nil {
 		return false
-	} else if !this.OptionalNproc.Equal(that1.OptionalNproc) {
+	} else if this.Nproc != that1.Nproc {
 		return false
 	}
 	return true
 }
-func (this *ResourceLimits_Nofile) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
 
-	that1, ok := that.(*ResourceLimits_Nofile)
-	if !ok {
-		that2, ok := that.(ResourceLimits_Nofile)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Nofile != that1.Nofile {
-		return false
-	}
-	return true
-}
-func (this *ResourceLimits_Nproc) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
+// func (this *ResourceLimits_Nofile) Equal(that interface{}) bool {
+// 	if that == nil {
+// 		return this == nil
+// 	}
 
-	that1, ok := that.(*ResourceLimits_Nproc)
-	if !ok {
-		that2, ok := that.(ResourceLimits_Nproc)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Nproc != that1.Nproc {
-		return false
-	}
-	return true
-}
+// 	that1, ok := that.(*ResourceLimits_Nofile)
+// 	if !ok {
+// 		that2, ok := that.(ResourceLimits_Nofile)
+// 		if ok {
+// 			that1 = &that2
+// 		} else {
+// 			return false
+// 		}
+// 	}
+// 	if that1 == nil {
+// 		return this == nil
+// 	} else if this == nil {
+// 		return false
+// 	}
+// 	if this.Nofile != that1.Nofile {
+// 		return false
+// 	}
+// 	return true
+// }
+// func (this *ResourceLimits_Nproc) Equal(that interface{}) bool {
+// 	if that == nil {
+// 		return this == nil
+// 	}
+
+//		that1, ok := that.(*ResourceLimits_Nproc)
+//		if !ok {
+//			that2, ok := that.(ResourceLimits_Nproc)
+//			if ok {
+//				that1 = &that2
+//			} else {
+//				return false
+//			}
+//		}
+//		if that1 == nil {
+//			return this == nil
+//		} else if this == nil {
+//			return false
+//		}
+//		if this.Nproc != that1.Nproc {
+//			return false
+//		}
+//		return true
+//	}
 func (this *Action) GoString() string {
 	if this == nil {
 		return "nil"
@@ -1059,31 +1060,33 @@ func (this *ResourceLimits) GoString() string {
 	}
 	s := make([]string, 0, 6)
 	s = append(s, "&models.ResourceLimits{")
-	if this.OptionalNofile != nil {
-		s = append(s, "OptionalNofile: "+fmt.Sprintf("%#v", this.OptionalNofile)+",\n")
+	if this.Nofile != nil {
+		s = append(s, "Nofile: "+fmt.Sprintf("%#v", this.Nofile)+",\n")
 	}
-	if this.OptionalNproc != nil {
-		s = append(s, "OptionalNproc: "+fmt.Sprintf("%#v", this.OptionalNproc)+",\n")
+	if this.Nproc != nil {
+		s = append(s, "Nproc: "+fmt.Sprintf("%#v", this.Nproc)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *ResourceLimits_Nofile) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ResourceLimits_Nofile{` +
-		`Nofile:` + fmt.Sprintf("%#v", this.Nofile) + `}`}, ", ")
-	return s
-}
-func (this *ResourceLimits_Nproc) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ResourceLimits_Nproc{` +
-		`Nproc:` + fmt.Sprintf("%#v", this.Nproc) + `}`}, ", ")
-	return s
-}
+
+//	func (this *ResourceLimits_Nofile) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.ResourceLimits_Nofile{` +
+//			`Nofile:` + fmt.Sprintf("%#v", this.Nofile) + `}`}, ", ")
+//		return s
+//	}
+//
+//	func (this *ResourceLimits_Nproc) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.ResourceLimits_Nproc{` +
+//			`Nproc:` + fmt.Sprintf("%#v", this.Nproc) + `}`}, ", ")
+//		return s
+//	}
 func valueToGoStringActions(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -1765,20 +1768,22 @@ func (m *ResourceLimits) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.OptionalNproc != nil {
+	if m.Nproc != nil {
 		{
-			size := m.OptionalNproc.Size()
+			// like: proto_check_definition.go ConnectTimeoutMs (line 500)
+			size := int(reflect.TypeOf(m.Nproc).Size())
 			i -= size
-			if _, err := m.OptionalNproc.MarshalTo(dAtA[i:]); err != nil {
+			if _, err := m.Nproc.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
 		}
 	}
-	if m.OptionalNofile != nil {
+	if m.Nofile != nil {
 		{
-			size := m.OptionalNofile.Size()
+			// like: proto_check_definition.go ConnectTimeoutMs (line 500)
+			size := int(reflect.TypeOf(m.Nofile).Size())
 			i -= size
-			if _, err := m.OptionalNofile.MarshalTo(dAtA[i:]); err != nil {
+			if _, err := m.Nofile.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
 		}
@@ -1786,30 +1791,30 @@ func (m *ResourceLimits) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ResourceLimits_Nofile) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *ResourceLimits_Nofile) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *ResourceLimits_Nofile) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintActions(dAtA, i, uint64(m.Nofile))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-func (m *ResourceLimits_Nproc) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *ResourceLimits_Nofile) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+// 	i := len(dAtA)
+// 	i = encodeVarintActions(dAtA, i, uint64(m.Nofile))
+// 	i--
+// 	dAtA[i] = 0x8
+// 	return len(dAtA) - i, nil
+// }
+// func (m *ResourceLimits_Nproc) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *ResourceLimits_Nproc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintActions(dAtA, i, uint64(m.Nproc))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
+//	func (m *ResourceLimits_Nproc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+//		i := len(dAtA)
+//		i = encodeVarintActions(dAtA, i, uint64(m.Nproc))
+//		i--
+//		dAtA[i] = 0x10
+//		return len(dAtA) - i, nil
+//	}
 func encodeVarintActions(dAtA []byte, offset int, v uint64) int {
 	offset -= sovActions(v)
 	base := offset
@@ -2112,33 +2117,33 @@ func (m *ResourceLimits) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.OptionalNofile != nil {
-		n += m.OptionalNofile.Size()
+	if m.Nofile != nil {
+		n += int(reflect.TypeOf(m.Nofile).Size())
 	}
-	if m.OptionalNproc != nil {
-		n += m.OptionalNproc.Size()
+	if m.Nproc != nil {
+		n += int(reflect.TypeOf(m.Nproc).Size())
 	}
 	return n
 }
 
-func (m *ResourceLimits_Nofile) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovActions(uint64(m.Nofile))
-	return n
-}
-func (m *ResourceLimits_Nproc) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovActions(uint64(m.Nproc))
-	return n
-}
+// func (m *ResourceLimits_Nofile) Size() (n int) {
+// 	if m == nil {
+// 		return 0
+// 	}
+// 	var l int
+// 	_ = l
+// 	n += 1 + sovActions(uint64(m.Nofile))
+// 	return n
+// }
+// func (m *ResourceLimits_Nproc) Size() (n int) {
+// 	if m == nil {
+// 		return 0
+// 	}
+// 	var l int
+// 	_ = l
+// 	n += 1 + sovActions(uint64(m.Nproc))
+// 	return n
+// }
 
 func sovActions(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
@@ -2146,194 +2151,28 @@ func sovActions(x uint64) (n int) {
 func sozActions(x uint64) (n int) {
 	return sovActions(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (this *Action) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Action{`,
-		`DownloadAction:` + strings.Replace(this.DownloadAction.String(), "DownloadAction", "DownloadAction", 1) + `,`,
-		`UploadAction:` + strings.Replace(this.UploadAction.String(), "UploadAction", "UploadAction", 1) + `,`,
-		`RunAction:` + strings.Replace(this.RunAction.String(), "RunAction", "RunAction", 1) + `,`,
-		`TimeoutAction:` + strings.Replace(this.TimeoutAction.String(), "TimeoutAction", "TimeoutAction", 1) + `,`,
-		`EmitProgressAction:` + strings.Replace(this.EmitProgressAction.String(), "EmitProgressAction", "EmitProgressAction", 1) + `,`,
-		`TryAction:` + strings.Replace(this.TryAction.String(), "TryAction", "TryAction", 1) + `,`,
-		`ParallelAction:` + strings.Replace(this.ParallelAction.String(), "ParallelAction", "ParallelAction", 1) + `,`,
-		`SerialAction:` + strings.Replace(this.SerialAction.String(), "SerialAction", "SerialAction", 1) + `,`,
-		`CodependentAction:` + strings.Replace(this.CodependentAction.String(), "CodependentAction", "CodependentAction", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DownloadAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DownloadAction{`,
-		`Artifact:` + fmt.Sprintf("%v", this.Artifact) + `,`,
-		`From:` + fmt.Sprintf("%v", this.From) + `,`,
-		`To:` + fmt.Sprintf("%v", this.To) + `,`,
-		`CacheKey:` + fmt.Sprintf("%v", this.CacheKey) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`User:` + fmt.Sprintf("%v", this.User) + `,`,
-		`ChecksumAlgorithm:` + fmt.Sprintf("%v", this.ChecksumAlgorithm) + `,`,
-		`ChecksumValue:` + fmt.Sprintf("%v", this.ChecksumValue) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *UploadAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&UploadAction{`,
-		`Artifact:` + fmt.Sprintf("%v", this.Artifact) + `,`,
-		`From:` + fmt.Sprintf("%v", this.From) + `,`,
-		`To:` + fmt.Sprintf("%v", this.To) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`User:` + fmt.Sprintf("%v", this.User) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RunAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForEnv := "[]*EnvironmentVariable{"
-	for _, f := range this.Env {
-		repeatedStringForEnv += strings.Replace(fmt.Sprintf("%v", f), "EnvironmentVariable", "EnvironmentVariable", 1) + ","
-	}
-	repeatedStringForEnv += "}"
-	s := strings.Join([]string{`&RunAction{`,
-		`Path:` + fmt.Sprintf("%v", this.Path) + `,`,
-		`Args:` + fmt.Sprintf("%v", this.Args) + `,`,
-		`Dir:` + fmt.Sprintf("%v", this.Dir) + `,`,
-		`Env:` + repeatedStringForEnv + `,`,
-		`ResourceLimits:` + strings.Replace(this.ResourceLimits.String(), "ResourceLimits", "ResourceLimits", 1) + `,`,
-		`User:` + fmt.Sprintf("%v", this.User) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`SuppressLogOutput:` + fmt.Sprintf("%v", this.SuppressLogOutput) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TimeoutAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TimeoutAction{`,
-		`Action:` + strings.Replace(this.Action.String(), "Action", "Action", 1) + `,`,
-		`DeprecatedTimeoutNs:` + fmt.Sprintf("%v", this.DeprecatedTimeoutNs) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`TimeoutMs:` + fmt.Sprintf("%v", this.TimeoutMs) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EmitProgressAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EmitProgressAction{`,
-		`Action:` + strings.Replace(this.Action.String(), "Action", "Action", 1) + `,`,
-		`StartMessage:` + fmt.Sprintf("%v", this.StartMessage) + `,`,
-		`SuccessMessage:` + fmt.Sprintf("%v", this.SuccessMessage) + `,`,
-		`FailureMessagePrefix:` + fmt.Sprintf("%v", this.FailureMessagePrefix) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TryAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TryAction{`,
-		`Action:` + strings.Replace(this.Action.String(), "Action", "Action", 1) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ParallelAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForActions := "[]*Action{"
-	for _, f := range this.Actions {
-		repeatedStringForActions += strings.Replace(f.String(), "Action", "Action", 1) + ","
-	}
-	repeatedStringForActions += "}"
-	s := strings.Join([]string{`&ParallelAction{`,
-		`Actions:` + repeatedStringForActions + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *SerialAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForActions := "[]*Action{"
-	for _, f := range this.Actions {
-		repeatedStringForActions += strings.Replace(f.String(), "Action", "Action", 1) + ","
-	}
-	repeatedStringForActions += "}"
-	s := strings.Join([]string{`&SerialAction{`,
-		`Actions:` + repeatedStringForActions + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *CodependentAction) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForActions := "[]*Action{"
-	for _, f := range this.Actions {
-		repeatedStringForActions += strings.Replace(f.String(), "Action", "Action", 1) + ","
-	}
-	repeatedStringForActions += "}"
-	s := strings.Join([]string{`&CodependentAction{`,
-		`Actions:` + repeatedStringForActions + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ResourceLimits) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ResourceLimits{`,
-		`OptionalNofile:` + fmt.Sprintf("%v", this.OptionalNofile) + `,`,
-		`OptionalNproc:` + fmt.Sprintf("%v", this.OptionalNproc) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ResourceLimits_Nofile) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ResourceLimits_Nofile{`,
-		`Nofile:` + fmt.Sprintf("%v", this.Nofile) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ResourceLimits_Nproc) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ResourceLimits_Nproc{`,
-		`Nproc:` + fmt.Sprintf("%v", this.Nproc) + `,`,
-		`}`,
-	}, "")
-	return s
-}
+
+//	func (this *ResourceLimits_Nofile) String() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&ResourceLimits_Nofile{`,
+//			`Nofile:` + fmt.Sprintf("%v", this.Nofile) + `,`,
+//			`}`,
+//		}, "")
+//		return s
+//	}
+//
+//	func (this *ResourceLimits_Nproc) String() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&ResourceLimits_Nproc{`,
+//			`Nproc:` + fmt.Sprintf("%v", this.Nproc) + `,`,
+//			`}`,
+//		}, "")
+//		return s
+//	}
 func valueToStringActions(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -4416,7 +4255,7 @@ func (m *ResourceLimits) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.OptionalNofile = &ResourceLimits_Nofile{v}
+			m.Nofile = &v
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Nproc", wireType)
@@ -4436,7 +4275,7 @@ func (m *ResourceLimits) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.OptionalNproc = &ResourceLimits_Nproc{v}
+			m.Nproc = &v
 		default:
 			iNdEx = preIndex
 			skippy, err := skipActions(dAtA[iNdEx:])

@@ -26,17 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type CellCapacity struct {
-	MemoryMb   int32 `protobuf:"varint,1,opt,name=memory_mb,json=memoryMb,proto3" json:"memory_mb"`
-	DiskMb     int32 `protobuf:"varint,2,opt,name=disk_mb,json=diskMb,proto3" json:"disk_mb"`
-	Containers int32 `protobuf:"varint,3,opt,name=containers,proto3" json:"containers"`
-}
-
-func (m *CellCapacity) Reset()      { *m = CellCapacity{} }
-func (*CellCapacity) ProtoMessage() {}
-func (*CellCapacity) Descriptor() ([]byte, []int) {
-	return fileDescriptor_842e821272d22ff7, []int{0}
-}
 func (m *CellCapacity) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -64,43 +53,6 @@ func (m *CellCapacity) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CellCapacity proto.InternalMessageInfo
 
-func (m *CellCapacity) GetMemoryMb() int32 {
-	if m != nil {
-		return m.MemoryMb
-	}
-	return 0
-}
-
-func (m *CellCapacity) GetDiskMb() int32 {
-	if m != nil {
-		return m.DiskMb
-	}
-	return 0
-}
-
-func (m *CellCapacity) GetContainers() int32 {
-	if m != nil {
-		return m.Containers
-	}
-	return 0
-}
-
-type CellPresence struct {
-	CellId                string        `protobuf:"bytes,1,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
-	RepAddress            string        `protobuf:"bytes,2,opt,name=rep_address,json=repAddress,proto3" json:"rep_address"`
-	Zone                  string        `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone"`
-	Capacity              *CellCapacity `protobuf:"bytes,4,opt,name=capacity,proto3" json:"capacity,omitempty"`
-	RootfsProviders       []*Provider   `protobuf:"bytes,5,rep,name=rootfs_providers,json=rootfsProviders,proto3" json:"rootfs_provider_list,omitempty"`
-	PlacementTags         []string      `protobuf:"bytes,6,rep,name=placement_tags,json=placementTags,proto3" json:"placement_tags,omitempty"`
-	OptionalPlacementTags []string      `protobuf:"bytes,7,rep,name=optional_placement_tags,json=optionalPlacementTags,proto3" json:"optional_placement_tags,omitempty"`
-	RepUrl                string        `protobuf:"bytes,8,opt,name=rep_url,json=repUrl,proto3" json:"rep_url"`
-}
-
-func (m *CellPresence) Reset()      { *m = CellPresence{} }
-func (*CellPresence) ProtoMessage() {}
-func (*CellPresence) Descriptor() ([]byte, []int) {
-	return fileDescriptor_842e821272d22ff7, []int{1}
-}
 func (m *CellPresence) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -128,72 +80,6 @@ func (m *CellPresence) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CellPresence proto.InternalMessageInfo
 
-func (m *CellPresence) GetCellId() string {
-	if m != nil {
-		return m.CellId
-	}
-	return ""
-}
-
-func (m *CellPresence) GetRepAddress() string {
-	if m != nil {
-		return m.RepAddress
-	}
-	return ""
-}
-
-func (m *CellPresence) GetZone() string {
-	if m != nil {
-		return m.Zone
-	}
-	return ""
-}
-
-func (m *CellPresence) GetCapacity() *CellCapacity {
-	if m != nil {
-		return m.Capacity
-	}
-	return nil
-}
-
-func (m *CellPresence) GetRootfsProviders() []*Provider {
-	if m != nil {
-		return m.RootfsProviders
-	}
-	return nil
-}
-
-func (m *CellPresence) GetPlacementTags() []string {
-	if m != nil {
-		return m.PlacementTags
-	}
-	return nil
-}
-
-func (m *CellPresence) GetOptionalPlacementTags() []string {
-	if m != nil {
-		return m.OptionalPlacementTags
-	}
-	return nil
-}
-
-func (m *CellPresence) GetRepUrl() string {
-	if m != nil {
-		return m.RepUrl
-	}
-	return ""
-}
-
-type Provider struct {
-	Name       string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name"`
-	Properties []string `protobuf:"bytes,2,rep,name=properties,proto3" json:"properties,omitempty"`
-}
-
-func (m *Provider) Reset()      { *m = Provider{} }
-func (*Provider) ProtoMessage() {}
-func (*Provider) Descriptor() ([]byte, []int) {
-	return fileDescriptor_842e821272d22ff7, []int{2}
-}
 func (m *Provider) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -221,30 +107,6 @@ func (m *Provider) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Provider proto.InternalMessageInfo
 
-func (m *Provider) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *Provider) GetProperties() []string {
-	if m != nil {
-		return m.Properties
-	}
-	return nil
-}
-
-type CellsResponse struct {
-	Error *Error          `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
-	Cells []*CellPresence `protobuf:"bytes,2,rep,name=cells,proto3" json:"cells,omitempty"`
-}
-
-func (m *CellsResponse) Reset()      { *m = CellsResponse{} }
-func (*CellsResponse) ProtoMessage() {}
-func (*CellsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_842e821272d22ff7, []int{3}
-}
 func (m *CellsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -271,20 +133,6 @@ func (m *CellsResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_CellsResponse proto.InternalMessageInfo
-
-func (m *CellsResponse) GetError() *Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *CellsResponse) GetCells() []*CellPresence {
-	if m != nil {
-		return m.Cells
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*CellCapacity)(nil), "models.CellCapacity")
@@ -431,7 +279,7 @@ func (this *Provider) Equal(that interface{}) bool {
 
 	that1, ok := that.(*Provider)
 	if !ok {
-		that2, ok := that.(Provider)
+		that2, ok := that.(*Provider)
 		if ok {
 			that1 = &that2
 		} else {
@@ -463,7 +311,7 @@ func (this *CellsResponse) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CellsResponse)
 	if !ok {
-		that2, ok := that.(CellsResponse)
+		that2, ok := that.(*CellsResponse)
 		if ok {
 			that1 = &that2
 		} else {
@@ -895,67 +743,6 @@ func sovCells(x uint64) (n int) {
 }
 func sozCells(x uint64) (n int) {
 	return sovCells(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *CellCapacity) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CellCapacity{`,
-		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
-		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
-		`Containers:` + fmt.Sprintf("%v", this.Containers) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *CellPresence) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForRootfsProviders := "[]*Provider{"
-	for _, f := range this.RootfsProviders {
-		repeatedStringForRootfsProviders += strings.Replace(f.String(), "Provider", "Provider", 1) + ","
-	}
-	repeatedStringForRootfsProviders += "}"
-	s := strings.Join([]string{`&CellPresence{`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`RepAddress:` + fmt.Sprintf("%v", this.RepAddress) + `,`,
-		`Zone:` + fmt.Sprintf("%v", this.Zone) + `,`,
-		`Capacity:` + strings.Replace(this.Capacity.String(), "CellCapacity", "CellCapacity", 1) + `,`,
-		`RootfsProviders:` + repeatedStringForRootfsProviders + `,`,
-		`PlacementTags:` + fmt.Sprintf("%v", this.PlacementTags) + `,`,
-		`OptionalPlacementTags:` + fmt.Sprintf("%v", this.OptionalPlacementTags) + `,`,
-		`RepUrl:` + fmt.Sprintf("%v", this.RepUrl) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Provider) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Provider{`,
-		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
-		`Properties:` + fmt.Sprintf("%v", this.Properties) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *CellsResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForCells := "[]*CellPresence{"
-	for _, f := range this.Cells {
-		repeatedStringForCells += strings.Replace(f.String(), "CellPresence", "CellPresence", 1) + ","
-	}
-	repeatedStringForCells += "}"
-	s := strings.Join([]string{`&CellsResponse{`,
-		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
-		`Cells:` + repeatedStringForCells + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringCells(v interface{}) string {
 	rv := reflect.ValueOf(v)

@@ -25,15 +25,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type CertificateProperties struct {
-	OrganizationalUnit []string `protobuf:"bytes,1,rep,name=organizational_unit,json=organizationalUnit,proto3" json:"organizational_unit,omitempty"`
-}
-
-func (m *CertificateProperties) Reset()      { *m = CertificateProperties{} }
-func (*CertificateProperties) ProtoMessage() {}
-func (*CertificateProperties) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9291b57c1fe01997, []int{0}
-}
 func (m *CertificateProperties) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -60,13 +51,6 @@ func (m *CertificateProperties) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_CertificateProperties proto.InternalMessageInfo
-
-func (m *CertificateProperties) GetOrganizationalUnit() []string {
-	if m != nil {
-		return m.OrganizationalUnit
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*CertificateProperties)(nil), "models.CertificateProperties")
@@ -199,16 +183,6 @@ func sovCertificateProperties(x uint64) (n int) {
 }
 func sozCertificateProperties(x uint64) (n int) {
 	return sovCertificateProperties(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *CertificateProperties) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CertificateProperties{`,
-		`OrganizationalUnit:` + fmt.Sprintf("%v", this.OrganizationalUnit) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func valueToStringCertificateProperties(v interface{}) string {
 	rv := reflect.ValueOf(v)

@@ -407,25 +407,29 @@ func (desired *DesiredLRPUpdate) Validate() error {
 }
 
 func (desired *DesiredLRPUpdate) SetInstances(instances int32) {
-	desired.OptionalInstances = &DesiredLRPUpdate_Instances{
-		Instances: instances,
-	}
+	desired.Instances = &instances
+}
+
+func (desired *DesiredLRPUpdate) GetInstancesPtr() *int32 {
+	return desired.Instances
 }
 
 func (desired *DesiredLRPUpdate) InstancesExists() bool {
-	_, ok := desired.GetOptionalInstances().(*DesiredLRPUpdate_Instances)
-	return ok
+	ptr := desired.GetInstancesPtr()
+	return ptr != nil
 }
 
 func (desired *DesiredLRPUpdate) SetAnnotation(annotation string) {
-	desired.OptionalAnnotation = &DesiredLRPUpdate_Annotation{
-		Annotation: annotation,
-	}
+	desired.Annotation = &annotation
+}
+
+func (desired *DesiredLRPUpdate) GetAnnotationPtr() *string {
+	return desired.Annotation
 }
 
 func (desired *DesiredLRPUpdate) AnnotationExists() bool {
-	_, ok := desired.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation)
-	return ok
+	ptr := desired.GetAnnotationPtr()
+	return ptr != nil
 }
 
 func (desired *DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup string) bool {

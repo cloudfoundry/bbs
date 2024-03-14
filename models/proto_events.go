@@ -26,16 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Deprecated: Do not use.
-type ActualLRPCreatedEvent struct {
-	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group,json=actualLrpGroup,proto3" json:"actual_lrp_group,omitempty"`
-}
-
-func (m *ActualLRPCreatedEvent) Reset()      { *m = ActualLRPCreatedEvent{} }
-func (*ActualLRPCreatedEvent) ProtoMessage() {}
-func (*ActualLRPCreatedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{0}
-}
 func (m *ActualLRPCreatedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -63,24 +53,6 @@ func (m *ActualLRPCreatedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPCreatedEvent proto.InternalMessageInfo
 
-func (m *ActualLRPCreatedEvent) GetActualLrpGroup() *ActualLRPGroup {
-	if m != nil {
-		return m.ActualLrpGroup
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-type ActualLRPChangedEvent struct {
-	Before *ActualLRPGroup `protobuf:"bytes,1,opt,name=before,proto3" json:"before,omitempty"`
-	After  *ActualLRPGroup `protobuf:"bytes,2,opt,name=after,proto3" json:"after,omitempty"`
-}
-
-func (m *ActualLRPChangedEvent) Reset()      { *m = ActualLRPChangedEvent{} }
-func (*ActualLRPChangedEvent) ProtoMessage() {}
-func (*ActualLRPChangedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{1}
-}
 func (m *ActualLRPChangedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -108,30 +80,6 @@ func (m *ActualLRPChangedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPChangedEvent proto.InternalMessageInfo
 
-func (m *ActualLRPChangedEvent) GetBefore() *ActualLRPGroup {
-	if m != nil {
-		return m.Before
-	}
-	return nil
-}
-
-func (m *ActualLRPChangedEvent) GetAfter() *ActualLRPGroup {
-	if m != nil {
-		return m.After
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-type ActualLRPRemovedEvent struct {
-	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,1,opt,name=actual_lrp_group,json=actualLrpGroup,proto3" json:"actual_lrp_group,omitempty"`
-}
-
-func (m *ActualLRPRemovedEvent) Reset()      { *m = ActualLRPRemovedEvent{} }
-func (*ActualLRPRemovedEvent) ProtoMessage() {}
-func (*ActualLRPRemovedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{2}
-}
 func (m *ActualLRPRemovedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -159,23 +107,6 @@ func (m *ActualLRPRemovedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPRemovedEvent proto.InternalMessageInfo
 
-func (m *ActualLRPRemovedEvent) GetActualLrpGroup() *ActualLRPGroup {
-	if m != nil {
-		return m.ActualLrpGroup
-	}
-	return nil
-}
-
-type ActualLRPInstanceCreatedEvent struct {
-	ActualLrp *ActualLRP `protobuf:"bytes,1,opt,name=actual_lrp,json=actualLrp,proto3" json:"actual_lrp,omitempty"`
-	TraceId   string     `protobuf:"bytes,2,opt,name=trace_id,json=traceId,proto3" json:"trace_id"`
-}
-
-func (m *ActualLRPInstanceCreatedEvent) Reset()      { *m = ActualLRPInstanceCreatedEvent{} }
-func (*ActualLRPInstanceCreatedEvent) ProtoMessage() {}
-func (*ActualLRPInstanceCreatedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{3}
-}
 func (m *ActualLRPInstanceCreatedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -203,40 +134,6 @@ func (m *ActualLRPInstanceCreatedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPInstanceCreatedEvent proto.InternalMessageInfo
 
-func (m *ActualLRPInstanceCreatedEvent) GetActualLrp() *ActualLRP {
-	if m != nil {
-		return m.ActualLrp
-	}
-	return nil
-}
-
-func (m *ActualLRPInstanceCreatedEvent) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-type ActualLRPInfo struct {
-	ActualLRPNetInfo `protobuf:"bytes,3,opt,name=actual_lrp_net_info,json=actualLrpNetInfo,proto3,embedded=actual_lrp_net_info" json:""`
-	CrashCount       int32              `protobuf:"varint,4,opt,name=crash_count,json=crashCount,proto3" json:"crash_count"`
-	CrashReason      string             `protobuf:"bytes,5,opt,name=crash_reason,json=crashReason,proto3" json:"crash_reason,omitempty"`
-	State            string             `protobuf:"bytes,6,opt,name=state,proto3" json:"state"`
-	PlacementError   string             `protobuf:"bytes,7,opt,name=placement_error,json=placementError,proto3" json:"placement_error,omitempty"`
-	Since            int64              `protobuf:"varint,8,opt,name=since,proto3" json:"since"`
-	ModificationTag  ModificationTag    `protobuf:"bytes,9,opt,name=modification_tag,json=modificationTag,proto3" json:"modification_tag"`
-	Presence         ActualLRP_Presence `protobuf:"varint,10,opt,name=presence,proto3,enum=models.ActualLRP_Presence" json:"presence"`
-	// Types that are valid to be assigned to OptionalRoutable:
-	//	*ActualLRPInfo_Routable
-	OptionalRoutable isActualLRPInfo_OptionalRoutable `protobuf_oneof:"optional_routable"`
-	AvailabilityZone string                           `protobuf:"bytes,12,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone"`
-}
-
-func (m *ActualLRPInfo) Reset()      { *m = ActualLRPInfo{} }
-func (*ActualLRPInfo) ProtoMessage() {}
-func (*ActualLRPInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{4}
-}
 func (m *ActualLRPInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -264,109 +161,20 @@ func (m *ActualLRPInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPInfo proto.InternalMessageInfo
 
-type isActualLRPInfo_OptionalRoutable interface {
-	isActualLRPInfo_OptionalRoutable()
-	Equal(interface{}) bool
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type ActualLRPInfo_Routable struct {
-	Routable bool `protobuf:"varint,11,opt,name=Routable,proto3,oneof" json:"Routable,omitempty"`
-}
-
-func (*ActualLRPInfo_Routable) isActualLRPInfo_OptionalRoutable() {}
-
-func (m *ActualLRPInfo) GetOptionalRoutable() isActualLRPInfo_OptionalRoutable {
-	if m != nil {
-		return m.OptionalRoutable
-	}
-	return nil
-}
-
-func (m *ActualLRPInfo) GetCrashCount() int32 {
-	if m != nil {
-		return m.CrashCount
-	}
-	return 0
-}
-
-func (m *ActualLRPInfo) GetCrashReason() string {
-	if m != nil {
-		return m.CrashReason
-	}
-	return ""
-}
-
-func (m *ActualLRPInfo) GetState() string {
-	if m != nil {
-		return m.State
-	}
-	return ""
-}
-
-func (m *ActualLRPInfo) GetPlacementError() string {
-	if m != nil {
-		return m.PlacementError
-	}
-	return ""
-}
-
-func (m *ActualLRPInfo) GetSince() int64 {
-	if m != nil {
-		return m.Since
-	}
-	return 0
-}
-
-func (m *ActualLRPInfo) GetModificationTag() ModificationTag {
-	if m != nil {
-		return m.ModificationTag
-	}
-	return ModificationTag{}
-}
-
-func (m *ActualLRPInfo) GetPresence() ActualLRP_Presence {
-	if m != nil {
-		return m.Presence
-	}
-	return ActualLRP_Ordinary
-}
-
-func (m *ActualLRPInfo) GetRoutable() bool {
-	if x, ok := m.GetOptionalRoutable().(*ActualLRPInfo_Routable); ok {
-		return x.Routable
-	}
-	return false
-}
-
-func (m *ActualLRPInfo) GetAvailabilityZone() string {
-	if m != nil {
-		return m.AvailabilityZone
-	}
-	return ""
-}
+// type isActualLRPInfo_OptionalRoutable_proto interface {
+// 	isActualLRPInfo_OptionalRoutable
+// 	Equal(interface{}) bool
+// 	MarshalTo([]byte) (int, error)
+// 	Size() int
+// }
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*ActualLRPInfo) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ActualLRPInfo_Routable)(nil),
-	}
-}
+// func (*ActualLRPInfo) XXX_OneofWrappers() []interface{} {
+// 	return []interface{}{
+// 		(*ActualLRPInfo_Routable)(nil),
+// 	}
+// }
 
-type ActualLRPInstanceChangedEvent struct {
-	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3,embedded=actual_lrp_key" json:""`
-	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3,embedded=actual_lrp_instance_key" json:""`
-	Before               *ActualLRPInfo `protobuf:"bytes,3,opt,name=before,proto3" json:"before,omitempty"`
-	After                *ActualLRPInfo `protobuf:"bytes,4,opt,name=after,proto3" json:"after,omitempty"`
-	TraceId              string         `protobuf:"bytes,5,opt,name=trace_id,json=traceId,proto3" json:"trace_id"`
-}
-
-func (m *ActualLRPInstanceChangedEvent) Reset()      { *m = ActualLRPInstanceChangedEvent{} }
-func (*ActualLRPInstanceChangedEvent) ProtoMessage() {}
-func (*ActualLRPInstanceChangedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{5}
-}
 func (m *ActualLRPInstanceChangedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -394,37 +202,6 @@ func (m *ActualLRPInstanceChangedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPInstanceChangedEvent proto.InternalMessageInfo
 
-func (m *ActualLRPInstanceChangedEvent) GetBefore() *ActualLRPInfo {
-	if m != nil {
-		return m.Before
-	}
-	return nil
-}
-
-func (m *ActualLRPInstanceChangedEvent) GetAfter() *ActualLRPInfo {
-	if m != nil {
-		return m.After
-	}
-	return nil
-}
-
-func (m *ActualLRPInstanceChangedEvent) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-type ActualLRPInstanceRemovedEvent struct {
-	ActualLrp *ActualLRP `protobuf:"bytes,1,opt,name=actual_lrp,json=actualLrp,proto3" json:"actual_lrp,omitempty"`
-	TraceId   string     `protobuf:"bytes,2,opt,name=trace_id,json=traceId,proto3" json:"trace_id"`
-}
-
-func (m *ActualLRPInstanceRemovedEvent) Reset()      { *m = ActualLRPInstanceRemovedEvent{} }
-func (*ActualLRPInstanceRemovedEvent) ProtoMessage() {}
-func (*ActualLRPInstanceRemovedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{6}
-}
 func (m *ActualLRPInstanceRemovedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -452,30 +229,6 @@ func (m *ActualLRPInstanceRemovedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPInstanceRemovedEvent proto.InternalMessageInfo
 
-func (m *ActualLRPInstanceRemovedEvent) GetActualLrp() *ActualLRP {
-	if m != nil {
-		return m.ActualLrp
-	}
-	return nil
-}
-
-func (m *ActualLRPInstanceRemovedEvent) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-type DesiredLRPCreatedEvent struct {
-	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp,json=desiredLrp,proto3" json:"desired_lrp,omitempty"`
-	TraceId    string      `protobuf:"bytes,2,opt,name=trace_id,json=traceId,proto3" json:"trace_id"`
-}
-
-func (m *DesiredLRPCreatedEvent) Reset()      { *m = DesiredLRPCreatedEvent{} }
-func (*DesiredLRPCreatedEvent) ProtoMessage() {}
-func (*DesiredLRPCreatedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{7}
-}
 func (m *DesiredLRPCreatedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -503,31 +256,6 @@ func (m *DesiredLRPCreatedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPCreatedEvent proto.InternalMessageInfo
 
-func (m *DesiredLRPCreatedEvent) GetDesiredLrp() *DesiredLRP {
-	if m != nil {
-		return m.DesiredLrp
-	}
-	return nil
-}
-
-func (m *DesiredLRPCreatedEvent) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-type DesiredLRPChangedEvent struct {
-	Before  *DesiredLRP `protobuf:"bytes,1,opt,name=before,proto3" json:"before,omitempty"`
-	After   *DesiredLRP `protobuf:"bytes,2,opt,name=after,proto3" json:"after,omitempty"`
-	TraceId string      `protobuf:"bytes,3,opt,name=trace_id,json=traceId,proto3" json:"trace_id"`
-}
-
-func (m *DesiredLRPChangedEvent) Reset()      { *m = DesiredLRPChangedEvent{} }
-func (*DesiredLRPChangedEvent) ProtoMessage() {}
-func (*DesiredLRPChangedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{8}
-}
 func (m *DesiredLRPChangedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -555,37 +283,6 @@ func (m *DesiredLRPChangedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPChangedEvent proto.InternalMessageInfo
 
-func (m *DesiredLRPChangedEvent) GetBefore() *DesiredLRP {
-	if m != nil {
-		return m.Before
-	}
-	return nil
-}
-
-func (m *DesiredLRPChangedEvent) GetAfter() *DesiredLRP {
-	if m != nil {
-		return m.After
-	}
-	return nil
-}
-
-func (m *DesiredLRPChangedEvent) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-type DesiredLRPRemovedEvent struct {
-	DesiredLrp *DesiredLRP `protobuf:"bytes,1,opt,name=desired_lrp,json=desiredLrp,proto3" json:"desired_lrp,omitempty"`
-	TraceId    string      `protobuf:"bytes,2,opt,name=trace_id,json=traceId,proto3" json:"trace_id"`
-}
-
-func (m *DesiredLRPRemovedEvent) Reset()      { *m = DesiredLRPRemovedEvent{} }
-func (*DesiredLRPRemovedEvent) ProtoMessage() {}
-func (*DesiredLRPRemovedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{9}
-}
 func (m *DesiredLRPRemovedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -613,33 +310,6 @@ func (m *DesiredLRPRemovedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPRemovedEvent proto.InternalMessageInfo
 
-func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
-	if m != nil {
-		return m.DesiredLrp
-	}
-	return nil
-}
-
-func (m *DesiredLRPRemovedEvent) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-type ActualLRPCrashedEvent struct {
-	ActualLRPKey         `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3,embedded=actual_lrp_key" json:""`
-	ActualLRPInstanceKey `protobuf:"bytes,2,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3,embedded=actual_lrp_instance_key" json:""`
-	CrashCount           int32  `protobuf:"varint,3,opt,name=crash_count,json=crashCount,proto3" json:"crash_count"`
-	CrashReason          string `protobuf:"bytes,4,opt,name=crash_reason,json=crashReason,proto3" json:"crash_reason,omitempty"`
-	Since                int64  `protobuf:"varint,5,opt,name=since,proto3" json:"since"`
-}
-
-func (m *ActualLRPCrashedEvent) Reset()      { *m = ActualLRPCrashedEvent{} }
-func (*ActualLRPCrashedEvent) ProtoMessage() {}
-func (*ActualLRPCrashedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{10}
-}
 func (m *ActualLRPCrashedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -667,36 +337,6 @@ func (m *ActualLRPCrashedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRPCrashedEvent proto.InternalMessageInfo
 
-func (m *ActualLRPCrashedEvent) GetCrashCount() int32 {
-	if m != nil {
-		return m.CrashCount
-	}
-	return 0
-}
-
-func (m *ActualLRPCrashedEvent) GetCrashReason() string {
-	if m != nil {
-		return m.CrashReason
-	}
-	return ""
-}
-
-func (m *ActualLRPCrashedEvent) GetSince() int64 {
-	if m != nil {
-		return m.Since
-	}
-	return 0
-}
-
-type EventsByCellId struct {
-	CellId string `protobuf:"bytes,1,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
-}
-
-func (m *EventsByCellId) Reset()      { *m = EventsByCellId{} }
-func (*EventsByCellId) ProtoMessage() {}
-func (*EventsByCellId) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{11}
-}
 func (m *EventsByCellId) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -724,22 +364,6 @@ func (m *EventsByCellId) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventsByCellId proto.InternalMessageInfo
 
-func (m *EventsByCellId) GetCellId() string {
-	if m != nil {
-		return m.CellId
-	}
-	return ""
-}
-
-type TaskCreatedEvent struct {
-	Task *Task `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
-}
-
-func (m *TaskCreatedEvent) Reset()      { *m = TaskCreatedEvent{} }
-func (*TaskCreatedEvent) ProtoMessage() {}
-func (*TaskCreatedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{12}
-}
 func (m *TaskCreatedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -767,23 +391,6 @@ func (m *TaskCreatedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TaskCreatedEvent proto.InternalMessageInfo
 
-func (m *TaskCreatedEvent) GetTask() *Task {
-	if m != nil {
-		return m.Task
-	}
-	return nil
-}
-
-type TaskChangedEvent struct {
-	Before *Task `protobuf:"bytes,1,opt,name=before,proto3" json:"before,omitempty"`
-	After  *Task `protobuf:"bytes,2,opt,name=after,proto3" json:"after,omitempty"`
-}
-
-func (m *TaskChangedEvent) Reset()      { *m = TaskChangedEvent{} }
-func (*TaskChangedEvent) ProtoMessage() {}
-func (*TaskChangedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{13}
-}
 func (m *TaskChangedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -811,29 +418,6 @@ func (m *TaskChangedEvent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TaskChangedEvent proto.InternalMessageInfo
 
-func (m *TaskChangedEvent) GetBefore() *Task {
-	if m != nil {
-		return m.Before
-	}
-	return nil
-}
-
-func (m *TaskChangedEvent) GetAfter() *Task {
-	if m != nil {
-		return m.After
-	}
-	return nil
-}
-
-type TaskRemovedEvent struct {
-	Task *Task `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
-}
-
-func (m *TaskRemovedEvent) Reset()      { *m = TaskRemovedEvent{} }
-func (*TaskRemovedEvent) ProtoMessage() {}
-func (*TaskRemovedEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8f22242cb04491f9, []int{14}
-}
 func (m *TaskRemovedEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -860,13 +444,6 @@ func (m *TaskRemovedEvent) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_TaskRemovedEvent proto.InternalMessageInfo
-
-func (m *TaskRemovedEvent) GetTask() *Task {
-	if m != nil {
-		return m.Task
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*ActualLRPCreatedEvent)(nil), "models.ActualLRPCreatedEvent")
@@ -957,9 +534,9 @@ func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPCreatedEvent)
 	if !ok {
-		that2, ok := that.(ActualLRPCreatedEvent)
+		that2, ok := that.(*ActualLRPCreatedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -981,9 +558,9 @@ func (this *ActualLRPChangedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPChangedEvent)
 	if !ok {
-		that2, ok := that.(ActualLRPChangedEvent)
+		that2, ok := that.(*ActualLRPChangedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1008,9 +585,9 @@ func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPRemovedEvent)
 	if !ok {
-		that2, ok := that.(ActualLRPRemovedEvent)
+		that2, ok := that.(*ActualLRPRemovedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1032,9 +609,9 @@ func (this *ActualLRPInstanceCreatedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPInstanceCreatedEvent)
 	if !ok {
-		that2, ok := that.(ActualLRPInstanceCreatedEvent)
+		that2, ok := that.(*ActualLRPInstanceCreatedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1059,9 +636,9 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPInfo)
 	if !ok {
-		that2, ok := that.(ActualLRPInfo)
+		that2, ok := that.(*ActualLRPInfo)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1071,7 +648,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.ActualLRPNetInfo.Equal(&that1.ActualLRPNetInfo) {
+	if !this.ActualLrpNetInfo.Equal(&that1.ActualLrpNetInfo) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -1095,13 +672,13 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	if this.Presence != that1.Presence {
 		return false
 	}
-	if that1.OptionalRoutable == nil {
-		if this.OptionalRoutable != nil {
+	if that1.Routable == nil {
+		if this.Routable != nil {
 			return false
 		}
-	} else if this.OptionalRoutable == nil {
+	} else if this.Routable == nil {
 		return false
-	} else if !this.OptionalRoutable.Equal(that1.OptionalRoutable) {
+	} else if this.Routable != that1.Routable {
 		return false
 	}
 	if this.AvailabilityZone != that1.AvailabilityZone {
@@ -1109,30 +686,31 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *ActualLRPInfo_Routable) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
 
-	that1, ok := that.(*ActualLRPInfo_Routable)
-	if !ok {
-		that2, ok := that.(ActualLRPInfo_Routable)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Routable != that1.Routable {
-		return false
-	}
-	return true
-}
+// func (this *ActualLRPInfo_Routable) Equal(that interface{}) bool {
+// 	if that == nil {
+// 		return this == nil
+// 	}
+
+//		that1, ok := that.(*ActualLRPInfo_Routable)
+//		if !ok {
+//			that2, ok := that.(ActualLRPInfo_Routable)
+//			if ok {
+//				that1 = &that2
+//			} else {
+//				return false
+//			}
+//		}
+//		if that1 == nil {
+//			return this == nil
+//		} else if this == nil {
+//			return false
+//		}
+//		if this.Routable != that1.Routable {
+//			return false
+//		}
+//		return true
+//	}
 func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -1140,9 +718,9 @@ func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPInstanceChangedEvent)
 	if !ok {
-		that2, ok := that.(ActualLRPInstanceChangedEvent)
+		that2, ok := that.(*ActualLRPInstanceChangedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1152,10 +730,10 @@ func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.ActualLRPKey.Equal(&that1.ActualLRPKey) {
+	if !this.ActualLrpKey.Equal(&that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLRPInstanceKey.Equal(&that1.ActualLRPInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(&that1.ActualLrpInstanceKey) {
 		return false
 	}
 	if !this.Before.Equal(that1.Before) {
@@ -1176,9 +754,9 @@ func (this *ActualLRPInstanceRemovedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPInstanceRemovedEvent)
 	if !ok {
-		that2, ok := that.(ActualLRPInstanceRemovedEvent)
+		that2, ok := that.(*ActualLRPInstanceRemovedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1203,9 +781,9 @@ func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPCreatedEvent)
 	if !ok {
-		that2, ok := that.(DesiredLRPCreatedEvent)
+		that2, ok := that.(*DesiredLRPCreatedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1230,9 +808,9 @@ func (this *DesiredLRPChangedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPChangedEvent)
 	if !ok {
-		that2, ok := that.(DesiredLRPChangedEvent)
+		that2, ok := that.(*DesiredLRPChangedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1260,9 +838,9 @@ func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPRemovedEvent)
 	if !ok {
-		that2, ok := that.(DesiredLRPRemovedEvent)
+		that2, ok := that.(*DesiredLRPRemovedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1287,9 +865,9 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ActualLRPCrashedEvent)
 	if !ok {
-		that2, ok := that.(ActualLRPCrashedEvent)
+		that2, ok := that.(*ActualLRPCrashedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1299,10 +877,10 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.ActualLRPKey.Equal(&that1.ActualLRPKey) {
+	if !this.ActualLrpKey.Equal(&that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLRPInstanceKey.Equal(&that1.ActualLRPInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(&that1.ActualLrpInstanceKey) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -1323,9 +901,9 @@ func (this *EventsByCellId) Equal(that interface{}) bool {
 
 	that1, ok := that.(*EventsByCellId)
 	if !ok {
-		that2, ok := that.(EventsByCellId)
+		that2, ok := that.(*EventsByCellId)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1347,9 +925,9 @@ func (this *TaskCreatedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskCreatedEvent)
 	if !ok {
-		that2, ok := that.(TaskCreatedEvent)
+		that2, ok := that.(*TaskCreatedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1371,9 +949,9 @@ func (this *TaskChangedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskChangedEvent)
 	if !ok {
-		that2, ok := that.(TaskChangedEvent)
+		that2, ok := that.(*TaskChangedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1398,9 +976,9 @@ func (this *TaskRemovedEvent) Equal(that interface{}) bool {
 
 	that1, ok := that.(*TaskRemovedEvent)
 	if !ok {
-		that2, ok := that.(TaskRemovedEvent)
+		that2, ok := that.(*TaskRemovedEvent)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1473,7 +1051,7 @@ func (this *ActualLRPInfo) GoString() string {
 	}
 	s := make([]string, 0, 14)
 	s = append(s, "&models.ActualLRPInfo{")
-	s = append(s, "ActualLRPNetInfo: "+strings.Replace(this.ActualLRPNetInfo.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "ActualLRPNetInfo: "+strings.Replace(this.ActualLrpNetInfo.GoString(), `&`, ``, 1)+",\n")
 	s = append(s, "CrashCount: "+fmt.Sprintf("%#v", this.CrashCount)+",\n")
 	s = append(s, "CrashReason: "+fmt.Sprintf("%#v", this.CrashReason)+",\n")
 	s = append(s, "State: "+fmt.Sprintf("%#v", this.State)+",\n")
@@ -1481,29 +1059,30 @@ func (this *ActualLRPInfo) GoString() string {
 	s = append(s, "Since: "+fmt.Sprintf("%#v", this.Since)+",\n")
 	s = append(s, "ModificationTag: "+strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1)+",\n")
 	s = append(s, "Presence: "+fmt.Sprintf("%#v", this.Presence)+",\n")
-	if this.OptionalRoutable != nil {
-		s = append(s, "OptionalRoutable: "+fmt.Sprintf("%#v", this.OptionalRoutable)+",\n")
+	if this.Routable != nil {
+		s = append(s, "Routable: "+fmt.Sprintf("%#v", this.Routable)+",\n")
 	}
 	s = append(s, "AvailabilityZone: "+fmt.Sprintf("%#v", this.AvailabilityZone)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *ActualLRPInfo_Routable) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.ActualLRPInfo_Routable{` +
-		`Routable:` + fmt.Sprintf("%#v", this.Routable) + `}`}, ", ")
-	return s
-}
+
+//	func (this *ActualLRPInfo_Routable) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.ActualLRPInfo_Routable{` +
+//			`Routable:` + fmt.Sprintf("%#v", this.Routable) + `}`}, ", ")
+//		return s
+//	}
 func (this *ActualLRPInstanceChangedEvent) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 9)
 	s = append(s, "&models.ActualLRPInstanceChangedEvent{")
-	s = append(s, "ActualLRPKey: "+strings.Replace(this.ActualLRPKey.GoString(), `&`, ``, 1)+",\n")
-	s = append(s, "ActualLRPInstanceKey: "+strings.Replace(this.ActualLRPInstanceKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "ActualLRPKey: "+strings.Replace(this.ActualLrpKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "ActualLRPInstanceKey: "+strings.Replace(this.ActualLrpInstanceKey.GoString(), `&`, ``, 1)+",\n")
 	if this.Before != nil {
 		s = append(s, "Before: "+fmt.Sprintf("%#v", this.Before)+",\n")
 	}
@@ -1575,8 +1154,8 @@ func (this *ActualLRPCrashedEvent) GoString() string {
 	}
 	s := make([]string, 0, 9)
 	s = append(s, "&models.ActualLRPCrashedEvent{")
-	s = append(s, "ActualLRPKey: "+strings.Replace(this.ActualLRPKey.GoString(), `&`, ``, 1)+",\n")
-	s = append(s, "ActualLRPInstanceKey: "+strings.Replace(this.ActualLRPInstanceKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "ActualLRPKey: "+strings.Replace(this.ActualLrpKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "ActualLRPInstanceKey: "+strings.Replace(this.ActualLrpInstanceKey.GoString(), `&`, ``, 1)+",\n")
 	s = append(s, "CrashCount: "+fmt.Sprintf("%#v", this.CrashCount)+",\n")
 	s = append(s, "CrashReason: "+fmt.Sprintf("%#v", this.CrashReason)+",\n")
 	s = append(s, "Since: "+fmt.Sprintf("%#v", this.Since)+",\n")
@@ -1882,7 +1461,7 @@ func (m *ActualLRPInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x20
 	}
 	{
-		size, err := m.ActualLRPNetInfo.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ActualLrpNetInfo.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1894,23 +1473,23 @@ func (m *ActualLRPInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ActualLRPInfo_Routable) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *ActualLRPInfo_Routable) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *ActualLRPInfo_Routable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i--
-	if m.Routable {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x58
-	return len(dAtA) - i, nil
-}
+//	func (m *ActualLRPInfo_Routable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+//		i := len(dAtA)
+//		i--
+//		if m.Routable {
+//			dAtA[i] = 1
+//		} else {
+//			dAtA[i] = 0
+//		}
+//		i--
+//		dAtA[i] = 0x58
+//		return len(dAtA) - i, nil
+//	}
 func (m *ActualLRPInstanceChangedEvent) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1963,7 +1542,7 @@ func (m *ActualLRPInstanceChangedEvent) MarshalToSizedBuffer(dAtA []byte) (int, 
 		dAtA[i] = 0x1a
 	}
 	{
-		size, err := m.ActualLRPInstanceKey.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ActualLrpInstanceKey.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -2203,7 +1782,7 @@ func (m *ActualLRPCrashedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x18
 	}
 	{
-		size, err := m.ActualLRPInstanceKey.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ActualLrpInstanceKey.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -2213,7 +1792,7 @@ func (m *ActualLRPCrashedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0x12
 	{
-		size, err := m.ActualLRPKey.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ActualLrpKey.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -2449,7 +2028,7 @@ func (m *ActualLRPInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.ActualLRPNetInfo.Size()
+	l = m.ActualLrpNetInfo.Size()
 	n += 1 + l + sovEvents(uint64(l))
 	if m.CrashCount != 0 {
 		n += 1 + sovEvents(uint64(m.CrashCount))
@@ -2474,8 +2053,8 @@ func (m *ActualLRPInfo) Size() (n int) {
 	if m.Presence != 0 {
 		n += 1 + sovEvents(uint64(m.Presence))
 	}
-	if m.OptionalRoutable != nil {
-		n += m.OptionalRoutable.Size()
+	if m.Routable != nil {
+		n += int(reflect.TypeOf(m.Routable).Size())
 	}
 	l = len(m.AvailabilityZone)
 	if l > 0 {
@@ -2484,24 +2063,24 @@ func (m *ActualLRPInfo) Size() (n int) {
 	return n
 }
 
-func (m *ActualLRPInfo_Routable) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 2
-	return n
-}
+//	func (m *ActualLRPInfo_Routable) Size() (n int) {
+//		if m == nil {
+//			return 0
+//		}
+//		var l int
+//		_ = l
+//		n += 2
+//		return n
+//	}
 func (m *ActualLRPInstanceChangedEvent) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.ActualLRPKey.Size()
+	l = m.ActualLrpKey.Size()
 	n += 1 + l + sovEvents(uint64(l))
-	l = m.ActualLRPInstanceKey.Size()
+	l = m.ActualLrpInstanceKey.Size()
 	n += 1 + l + sovEvents(uint64(l))
 	if m.Before != nil {
 		l = m.Before.Size()
@@ -2596,9 +2175,9 @@ func (m *ActualLRPCrashedEvent) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.ActualLRPKey.Size()
+	l = m.ActualLrpKey.Size()
 	n += 1 + l + sovEvents(uint64(l))
-	l = m.ActualLRPInstanceKey.Size()
+	l = m.ActualLrpInstanceKey.Size()
 	n += 1 + l + sovEvents(uint64(l))
 	if m.CrashCount != 0 {
 		n += 1 + sovEvents(uint64(m.CrashCount))
@@ -2675,191 +2254,17 @@ func sovEvents(x uint64) (n int) {
 func sozEvents(x uint64) (n int) {
 	return sovEvents(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (this *ActualLRPCreatedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPCreatedEvent{`,
-		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPChangedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPChangedEvent{`,
-		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPRemovedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPRemovedEvent{`,
-		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPInstanceCreatedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPInstanceCreatedEvent{`,
-		`ActualLrp:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrp), "ActualLRP", "ActualLRP", 1) + `,`,
-		`TraceId:` + fmt.Sprintf("%v", this.TraceId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPInfo) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPInfo{`,
-		`ActualLRPNetInfo:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.ActualLRPNetInfo), "ActualLRPNetInfo", "ActualLRPNetInfo", 1), `&`, ``, 1) + `,`,
-		`CrashCount:` + fmt.Sprintf("%v", this.CrashCount) + `,`,
-		`CrashReason:` + fmt.Sprintf("%v", this.CrashReason) + `,`,
-		`State:` + fmt.Sprintf("%v", this.State) + `,`,
-		`PlacementError:` + fmt.Sprintf("%v", this.PlacementError) + `,`,
-		`Since:` + fmt.Sprintf("%v", this.Since) + `,`,
-		`ModificationTag:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1), `&`, ``, 1) + `,`,
-		`Presence:` + fmt.Sprintf("%v", this.Presence) + `,`,
-		`OptionalRoutable:` + fmt.Sprintf("%v", this.OptionalRoutable) + `,`,
-		`AvailabilityZone:` + fmt.Sprintf("%v", this.AvailabilityZone) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPInfo_Routable) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPInfo_Routable{`,
-		`Routable:` + fmt.Sprintf("%v", this.Routable) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPInstanceChangedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPInstanceChangedEvent{`,
-		`ActualLRPKey:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.ActualLRPKey), "ActualLRPKey", "ActualLRPKey", 1), `&`, ``, 1) + `,`,
-		`ActualLRPInstanceKey:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.ActualLRPInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1), `&`, ``, 1) + `,`,
-		`Before:` + strings.Replace(this.Before.String(), "ActualLRPInfo", "ActualLRPInfo", 1) + `,`,
-		`After:` + strings.Replace(this.After.String(), "ActualLRPInfo", "ActualLRPInfo", 1) + `,`,
-		`TraceId:` + fmt.Sprintf("%v", this.TraceId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPInstanceRemovedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPInstanceRemovedEvent{`,
-		`ActualLrp:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrp), "ActualLRP", "ActualLRP", 1) + `,`,
-		`TraceId:` + fmt.Sprintf("%v", this.TraceId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPCreatedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPCreatedEvent{`,
-		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`TraceId:` + fmt.Sprintf("%v", this.TraceId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPChangedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPChangedEvent{`,
-		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`TraceId:` + fmt.Sprintf("%v", this.TraceId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPRemovedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPRemovedEvent{`,
-		`DesiredLrp:` + strings.Replace(fmt.Sprintf("%v", this.DesiredLrp), "DesiredLRP", "DesiredLRP", 1) + `,`,
-		`TraceId:` + fmt.Sprintf("%v", this.TraceId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ActualLRPCrashedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ActualLRPCrashedEvent{`,
-		`ActualLRPKey:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.ActualLRPKey), "ActualLRPKey", "ActualLRPKey", 1), `&`, ``, 1) + `,`,
-		`ActualLRPInstanceKey:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.ActualLRPInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1), `&`, ``, 1) + `,`,
-		`CrashCount:` + fmt.Sprintf("%v", this.CrashCount) + `,`,
-		`CrashReason:` + fmt.Sprintf("%v", this.CrashReason) + `,`,
-		`Since:` + fmt.Sprintf("%v", this.Since) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *EventsByCellId) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&EventsByCellId{`,
-		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TaskCreatedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskCreatedEvent{`,
-		`Task:` + strings.Replace(fmt.Sprintf("%v", this.Task), "Task", "Task", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TaskChangedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskChangedEvent{`,
-		`Before:` + strings.Replace(fmt.Sprintf("%v", this.Before), "Task", "Task", 1) + `,`,
-		`After:` + strings.Replace(fmt.Sprintf("%v", this.After), "Task", "Task", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TaskRemovedEvent) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TaskRemovedEvent{`,
-		`Task:` + strings.Replace(fmt.Sprintf("%v", this.Task), "Task", "Task", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
+
+//	func (this *ActualLRPInfo_Routable) String() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&ActualLRPInfo_Routable{`,
+//			`Routable:` + fmt.Sprintf("%v", this.Routable) + `,`,
+//			`}`,
+//		}, "")
+//		return s
+//	}
 func valueToStringEvents(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -3338,7 +2743,7 @@ func (m *ActualLRPInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ActualLRPNetInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ActualLrpNetInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3548,7 +2953,7 @@ func (m *ActualLRPInfo) Unmarshal(dAtA []byte) error {
 				}
 			}
 			b := bool(v != 0)
-			m.OptionalRoutable = &ActualLRPInfo_Routable{b}
+			m.Routable = &b
 		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AvailabilityZone", wireType)
@@ -3660,7 +3065,7 @@ func (m *ActualLRPInstanceChangedEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ActualLRPKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ActualLrpKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3693,7 +3098,7 @@ func (m *ActualLRPInstanceChangedEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ActualLRPInstanceKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ActualLrpInstanceKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4388,7 +3793,7 @@ func (m *ActualLRPCrashedEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ActualLRPKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ActualLrpKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4421,7 +3826,7 @@ func (m *ActualLRPCrashedEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ActualLRPInstanceKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ActualLrpInstanceKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

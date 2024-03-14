@@ -93,10 +93,10 @@ message CodependentAction {
 }
 
 message ResourceLimits {
-  oneof optional_nofile {
-    uint64 nofile = 1;
-  }
-  oneof optional_nproc {
-    uint64 nproc = 2 [deprecated=true];
-  }
+  //oneof optional_nofile {
+  optional uint64 nofile = 1;
+    //}
+  //oneof optional_nproc {
+  optional uint64 nproc = 2 [deprecated=true];
+  //}
 }

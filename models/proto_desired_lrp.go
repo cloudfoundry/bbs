@@ -5,6 +5,7 @@ package models
 
 import (
 	bytes "bytes"
+	"encoding/json"
 	fmt "fmt"
 	io "io"
 	math "math"
@@ -28,22 +29,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type DesiredLRPSchedulingInfo struct {
-	DesiredLRPKey      `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,proto3,embedded=desired_lrp_key" json:""`
-	Annotation         string `protobuf:"bytes,2,opt,name=annotation,proto3" json:"annotation"`
-	Instances          int32  `protobuf:"varint,3,opt,name=instances,proto3" json:"instances"`
-	DesiredLRPResource `protobuf:"bytes,4,opt,name=desired_lrp_resource,json=desiredLrpResource,proto3,embedded=desired_lrp_resource" json:""`
-	Routes             Routes `protobuf:"bytes,5,opt,name=routes,proto3,customtype=Routes" json:"routes"`
-	ModificationTag    `protobuf:"bytes,6,opt,name=modification_tag,json=modificationTag,proto3,embedded=modification_tag" json:""`
-	VolumePlacement    *VolumePlacement `protobuf:"bytes,7,opt,name=volume_placement,json=volumePlacement,proto3" json:"volume_placement,omitempty"`
-	PlacementTags      []string         `protobuf:"bytes,8,rep,name=PlacementTags,proto3" json:"placement_tags,omitempty"`
-}
-
-func (m *DesiredLRPSchedulingInfo) Reset()      { *m = DesiredLRPSchedulingInfo{} }
-func (*DesiredLRPSchedulingInfo) ProtoMessage() {}
-func (*DesiredLRPSchedulingInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f592e9299b63d68c, []int{0}
-}
 func (m *DesiredLRPSchedulingInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -71,69 +56,6 @@ func (m *DesiredLRPSchedulingInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPSchedulingInfo proto.InternalMessageInfo
 
-func (m *DesiredLRPSchedulingInfo) GetAnnotation() string {
-	if m != nil {
-		return m.Annotation
-	}
-	return ""
-}
-
-func (m *DesiredLRPSchedulingInfo) GetInstances() int32 {
-	if m != nil {
-		return m.Instances
-	}
-	return 0
-}
-
-func (m *DesiredLRPSchedulingInfo) GetVolumePlacement() *VolumePlacement {
-	if m != nil {
-		return m.VolumePlacement
-	}
-	return nil
-}
-
-func (m *DesiredLRPSchedulingInfo) GetPlacementTags() []string {
-	if m != nil {
-		return m.PlacementTags
-	}
-	return nil
-}
-
-type DesiredLRPRunInfo struct {
-	DesiredLRPKey                 `protobuf:"bytes,1,opt,name=desired_lrp_key,json=desiredLrpKey,proto3,embedded=desired_lrp_key" json:""`
-	EnvironmentVariables          []EnvironmentVariable      `protobuf:"bytes,2,rep,name=environment_variables,json=environmentVariables,proto3" json:"env"`
-	Setup                         *Action                    `protobuf:"bytes,3,opt,name=setup,proto3" json:"setup,omitempty"`
-	Action                        *Action                    `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`
-	Monitor                       *Action                    `protobuf:"bytes,5,opt,name=monitor,proto3" json:"monitor,omitempty"`
-	DeprecatedStartTimeoutS       uint32                     `protobuf:"varint,6,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS,proto3" json:"start_timeout,omitempty"` // Deprecated: Do not use.
-	Privileged                    bool                       `protobuf:"varint,7,opt,name=privileged,proto3" json:"privileged"`
-	CpuWeight                     uint32                     `protobuf:"varint,8,opt,name=cpu_weight,json=cpuWeight,proto3" json:"cpu_weight"`
-	Ports                         []uint32                   `protobuf:"varint,9,rep,name=ports,proto3" json:"ports,omitempty"`
-	EgressRules                   []SecurityGroupRule        `protobuf:"bytes,10,rep,name=egress_rules,json=egressRules,proto3" json:"egress_rules"`
-	LogSource                     string                     `protobuf:"bytes,11,opt,name=log_source,json=logSource,proto3" json:"log_source"`
-	MetricsGuid                   string                     `protobuf:"bytes,12,opt,name=metrics_guid,json=metricsGuid,proto3" json:"metrics_guid"` // Deprecated: Do not use.
-	CreatedAt                     int64                      `protobuf:"varint,13,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
-	CachedDependencies            []*CachedDependency        `protobuf:"bytes,14,rep,name=cached_dependencies,json=cachedDependencies,proto3" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                     `protobuf:"bytes,15,opt,name=legacy_download_user,json=legacyDownloadUser,proto3" json:"legacy_download_user,omitempty"` // Deprecated: Do not use.
-	TrustedSystemCertificatesPath string                     `protobuf:"bytes,16,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath,proto3" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount             `protobuf:"bytes,17,rep,name=volume_mounts,json=volumeMounts,proto3" json:"volume_mounts,omitempty"`
-	Network                       *Network                   `protobuf:"bytes,18,opt,name=network,proto3" json:"network,omitempty"`
-	StartTimeoutMs                int64                      `protobuf:"varint,19,opt,name=start_timeout_ms,json=startTimeoutMs,proto3" json:"start_timeout_ms"`
-	CertificateProperties         *CertificateProperties     `protobuf:"bytes,20,opt,name=certificate_properties,json=certificateProperties,proto3" json:"certificate_properties,omitempty"`
-	ImageUsername                 string                     `protobuf:"bytes,21,opt,name=image_username,json=imageUsername,proto3" json:"image_username,omitempty"`
-	ImagePassword                 string                     `protobuf:"bytes,22,opt,name=image_password,json=imagePassword,proto3" json:"image_password,omitempty"`
-	CheckDefinition               *CheckDefinition           `protobuf:"bytes,23,opt,name=check_definition,json=checkDefinition,proto3" json:"check_definition,omitempty"`
-	ImageLayers                   []*ImageLayer              `protobuf:"bytes,24,rep,name=image_layers,json=imageLayers,proto3" json:"image_layers,omitempty"`
-	MetricTags                    map[string]*MetricTagValue `protobuf:"bytes,25,rep,name=metric_tags,json=metricTags,proto3" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Sidecars                      []*Sidecar                 `protobuf:"bytes,26,rep,name=sidecars,proto3" json:"sidecars,omitempty"`
-	LogRateLimit                  *LogRateLimit              `protobuf:"bytes,27,opt,name=log_rate_limit,json=logRateLimit,proto3" json:"log_rate_limit,omitempty"`
-}
-
-func (m *DesiredLRPRunInfo) Reset()      { *m = DesiredLRPRunInfo{} }
-func (*DesiredLRPRunInfo) ProtoMessage() {}
-func (*DesiredLRPRunInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f592e9299b63d68c, []int{1}
-}
 func (m *DesiredLRPRunInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -161,201 +83,6 @@ func (m *DesiredLRPRunInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPRunInfo proto.InternalMessageInfo
 
-func (m *DesiredLRPRunInfo) GetEnvironmentVariables() []EnvironmentVariable {
-	if m != nil {
-		return m.EnvironmentVariables
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetSetup() *Action {
-	if m != nil {
-		return m.Setup
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetAction() *Action {
-	if m != nil {
-		return m.Action
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetMonitor() *Action {
-	if m != nil {
-		return m.Monitor
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-func (m *DesiredLRPRunInfo) GetDeprecatedStartTimeoutS() uint32 {
-	if m != nil {
-		return m.DeprecatedStartTimeoutS
-	}
-	return 0
-}
-
-func (m *DesiredLRPRunInfo) GetPrivileged() bool {
-	if m != nil {
-		return m.Privileged
-	}
-	return false
-}
-
-func (m *DesiredLRPRunInfo) GetCpuWeight() uint32 {
-	if m != nil {
-		return m.CpuWeight
-	}
-	return 0
-}
-
-func (m *DesiredLRPRunInfo) GetPorts() []uint32 {
-	if m != nil {
-		return m.Ports
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetEgressRules() []SecurityGroupRule {
-	if m != nil {
-		return m.EgressRules
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetLogSource() string {
-	if m != nil {
-		return m.LogSource
-	}
-	return ""
-}
-
-// Deprecated: Do not use.
-func (m *DesiredLRPRunInfo) GetMetricsGuid() string {
-	if m != nil {
-		return m.MetricsGuid
-	}
-	return ""
-}
-
-func (m *DesiredLRPRunInfo) GetCreatedAt() int64 {
-	if m != nil {
-		return m.CreatedAt
-	}
-	return 0
-}
-
-func (m *DesiredLRPRunInfo) GetCachedDependencies() []*CachedDependency {
-	if m != nil {
-		return m.CachedDependencies
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-func (m *DesiredLRPRunInfo) GetLegacyDownloadUser() string {
-	if m != nil {
-		return m.LegacyDownloadUser
-	}
-	return ""
-}
-
-func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatesPath() string {
-	if m != nil {
-		return m.TrustedSystemCertificatesPath
-	}
-	return ""
-}
-
-func (m *DesiredLRPRunInfo) GetVolumeMounts() []*VolumeMount {
-	if m != nil {
-		return m.VolumeMounts
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetNetwork() *Network {
-	if m != nil {
-		return m.Network
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetStartTimeoutMs() int64 {
-	if m != nil {
-		return m.StartTimeoutMs
-	}
-	return 0
-}
-
-func (m *DesiredLRPRunInfo) GetCertificateProperties() *CertificateProperties {
-	if m != nil {
-		return m.CertificateProperties
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetImageUsername() string {
-	if m != nil {
-		return m.ImageUsername
-	}
-	return ""
-}
-
-func (m *DesiredLRPRunInfo) GetImagePassword() string {
-	if m != nil {
-		return m.ImagePassword
-	}
-	return ""
-}
-
-func (m *DesiredLRPRunInfo) GetCheckDefinition() *CheckDefinition {
-	if m != nil {
-		return m.CheckDefinition
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetImageLayers() []*ImageLayer {
-	if m != nil {
-		return m.ImageLayers
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetMetricTags() map[string]*MetricTagValue {
-	if m != nil {
-		return m.MetricTags
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetSidecars() []*Sidecar {
-	if m != nil {
-		return m.Sidecars
-	}
-	return nil
-}
-
-func (m *DesiredLRPRunInfo) GetLogRateLimit() *LogRateLimit {
-	if m != nil {
-		return m.LogRateLimit
-	}
-	return nil
-}
-
-// helper message for marshalling routes
-type ProtoRoutes struct {
-	Routes map[string][]byte `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (m *ProtoRoutes) Reset()      { *m = ProtoRoutes{} }
-func (*ProtoRoutes) ProtoMessage() {}
-func (*ProtoRoutes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f592e9299b63d68c, []int{2}
-}
 func (m *ProtoRoutes) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -383,31 +110,6 @@ func (m *ProtoRoutes) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ProtoRoutes proto.InternalMessageInfo
 
-func (m *ProtoRoutes) GetRoutes() map[string][]byte {
-	if m != nil {
-		return m.Routes
-	}
-	return nil
-}
-
-type DesiredLRPUpdate struct {
-	// Types that are valid to be assigned to OptionalInstances:
-	//
-	//	*DesiredLRPUpdate_Instances
-	OptionalInstances isDesiredLRPUpdate_OptionalInstances `protobuf_oneof:"optional_instances"`
-	Routes            *Routes                              `protobuf:"bytes,2,opt,name=routes,proto3,customtype=Routes" json:"routes,omitempty"`
-	// Types that are valid to be assigned to OptionalAnnotation:
-	//
-	//	*DesiredLRPUpdate_Annotation
-	OptionalAnnotation isDesiredLRPUpdate_OptionalAnnotation `protobuf_oneof:"optional_annotation"`
-	MetricTags         map[string]*MetricTagValue            `protobuf:"bytes,4,rep,name=metric_tags,json=metricTags,proto3" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (m *DesiredLRPUpdate) Reset()      { *m = DesiredLRPUpdate{} }
-func (*DesiredLRPUpdate) ProtoMessage() {}
-func (*DesiredLRPUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f592e9299b63d68c, []int{3}
-}
 func (m *DesiredLRPUpdate) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -435,82 +137,19 @@ func (m *DesiredLRPUpdate) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPUpdate proto.InternalMessageInfo
 
-type isDesiredLRPUpdate_OptionalInstances interface {
-	isDesiredLRPUpdate_OptionalInstances()
-	Equal(interface{}) bool
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-type isDesiredLRPUpdate_OptionalAnnotation interface {
-	isDesiredLRPUpdate_OptionalAnnotation()
-	Equal(interface{}) bool
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
+// type isDesiredLRPUpdate_OptionalInstances_proto interface {
+// 	isDesiredLRPUpdate_OptionalInstances
+// 	Equal(interface{}) bool
+// 	MarshalTo([]byte) (int, error)
+// 	Size() int
+// }
+// type isDesiredLRPUpdate_OptionalAnnotation_proto interface {
+// 	isDesiredLRPUpdate_OptionalAnnotation
+// 	Equal(interface{}) bool
+// 	MarshalTo([]byte) (int, error)
+// 	Size() int
+// }
 
-type DesiredLRPUpdate_Instances struct {
-	Instances int32 `protobuf:"varint,1,opt,name=instances,proto3,oneof" json:"instances,omitempty"`
-}
-type DesiredLRPUpdate_Annotation struct {
-	Annotation string `protobuf:"bytes,3,opt,name=annotation,proto3,oneof" json:"annotation,omitempty"`
-}
-
-func (*DesiredLRPUpdate_Instances) isDesiredLRPUpdate_OptionalInstances()   {}
-func (*DesiredLRPUpdate_Annotation) isDesiredLRPUpdate_OptionalAnnotation() {}
-
-func (m *DesiredLRPUpdate) GetOptionalInstances() isDesiredLRPUpdate_OptionalInstances {
-	if m != nil {
-		return m.OptionalInstances
-	}
-	return nil
-}
-func (m *DesiredLRPUpdate) GetOptionalAnnotation() isDesiredLRPUpdate_OptionalAnnotation {
-	if m != nil {
-		return m.OptionalAnnotation
-	}
-	return nil
-}
-
-func (m *DesiredLRPUpdate) GetInstances() int32 {
-	if x, ok := m.GetOptionalInstances().(*DesiredLRPUpdate_Instances); ok {
-		return x.Instances
-	}
-	return 0
-}
-
-func (m *DesiredLRPUpdate) GetAnnotation() string {
-	if x, ok := m.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation); ok {
-		return x.Annotation
-	}
-	return ""
-}
-
-func (m *DesiredLRPUpdate) GetMetricTags() map[string]*MetricTagValue {
-	if m != nil {
-		return m.MetricTags
-	}
-	return nil
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*DesiredLRPUpdate) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*DesiredLRPUpdate_Instances)(nil),
-		(*DesiredLRPUpdate_Annotation)(nil),
-	}
-}
-
-type DesiredLRPKey struct {
-	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid"`
-	Domain      string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain"`
-	LogGuid     string `protobuf:"bytes,3,opt,name=log_guid,json=logGuid,proto3" json:"log_guid"`
-}
-
-func (m *DesiredLRPKey) Reset()      { *m = DesiredLRPKey{} }
-func (*DesiredLRPKey) ProtoMessage() {}
-func (*DesiredLRPKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f592e9299b63d68c, []int{4}
-}
 func (m *DesiredLRPKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -538,39 +177,6 @@ func (m *DesiredLRPKey) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPKey proto.InternalMessageInfo
 
-func (m *DesiredLRPKey) GetProcessGuid() string {
-	if m != nil {
-		return m.ProcessGuid
-	}
-	return ""
-}
-
-func (m *DesiredLRPKey) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *DesiredLRPKey) GetLogGuid() string {
-	if m != nil {
-		return m.LogGuid
-	}
-	return ""
-}
-
-type DesiredLRPResource struct {
-	MemoryMb int32  `protobuf:"varint,1,opt,name=memory_mb,json=memoryMb,proto3" json:"memory_mb"`
-	DiskMb   int32  `protobuf:"varint,2,opt,name=disk_mb,json=diskMb,proto3" json:"disk_mb"`
-	RootFs   string `protobuf:"bytes,3,opt,name=root_fs,json=rootFs,proto3" json:"rootfs"`
-	MaxPids  int32  `protobuf:"varint,4,opt,name=max_pids,json=maxPids,proto3" json:"max_pids"`
-}
-
-func (m *DesiredLRPResource) Reset()      { *m = DesiredLRPResource{} }
-func (*DesiredLRPResource) ProtoMessage() {}
-func (*DesiredLRPResource) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f592e9299b63d68c, []int{5}
-}
 func (m *DesiredLRPResource) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -598,79 +204,6 @@ func (m *DesiredLRPResource) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DesiredLRPResource proto.InternalMessageInfo
 
-func (m *DesiredLRPResource) GetMemoryMb() int32 {
-	if m != nil {
-		return m.MemoryMb
-	}
-	return 0
-}
-
-func (m *DesiredLRPResource) GetDiskMb() int32 {
-	if m != nil {
-		return m.DiskMb
-	}
-	return 0
-}
-
-func (m *DesiredLRPResource) GetRootFs() string {
-	if m != nil {
-		return m.RootFs
-	}
-	return ""
-}
-
-func (m *DesiredLRPResource) GetMaxPids() int32 {
-	if m != nil {
-		return m.MaxPids
-	}
-	return 0
-}
-
-type DesiredLRP struct {
-	ProcessGuid                   string                     `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid"`
-	Domain                        string                     `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain"`
-	RootFs                        string                     `protobuf:"bytes,3,opt,name=root_fs,json=rootFs,proto3" json:"rootfs"`
-	Instances                     int32                      `protobuf:"varint,4,opt,name=instances,proto3" json:"instances"`
-	EnvironmentVariables          []*EnvironmentVariable     `protobuf:"bytes,5,rep,name=environment_variables,json=environmentVariables,proto3" json:"env"`
-	Setup                         *Action                    `protobuf:"bytes,6,opt,name=setup,proto3" json:"setup,omitempty"`
-	Action                        *Action                    `protobuf:"bytes,7,opt,name=action,proto3" json:"action,omitempty"`
-	StartTimeoutMs                int64                      `protobuf:"varint,27,opt,name=start_timeout_ms,json=startTimeoutMs,proto3" json:"start_timeout_ms"`
-	DeprecatedStartTimeoutS       uint32                     `protobuf:"varint,8,opt,name=deprecated_start_timeout_s,json=deprecatedStartTimeoutS,proto3" json:"deprecated_timeout_ns,omitempty"` // Deprecated: Do not use.
-	Monitor                       *Action                    `protobuf:"bytes,9,opt,name=monitor,proto3" json:"monitor,omitempty"`
-	DiskMb                        int32                      `protobuf:"varint,10,opt,name=disk_mb,json=diskMb,proto3" json:"disk_mb"`
-	MemoryMb                      int32                      `protobuf:"varint,11,opt,name=memory_mb,json=memoryMb,proto3" json:"memory_mb"`
-	CpuWeight                     uint32                     `protobuf:"varint,12,opt,name=cpu_weight,json=cpuWeight,proto3" json:"cpu_weight"`
-	Privileged                    bool                       `protobuf:"varint,13,opt,name=privileged,proto3" json:"privileged"`
-	Ports                         []uint32                   `protobuf:"varint,14,rep,name=ports,proto3" json:"ports,omitempty"`
-	Routes                        *Routes                    `protobuf:"bytes,15,opt,name=routes,proto3,customtype=Routes" json:"routes,omitempty"`
-	LogSource                     string                     `protobuf:"bytes,16,opt,name=log_source,json=logSource,proto3" json:"log_source"`
-	LogGuid                       string                     `protobuf:"bytes,17,opt,name=log_guid,json=logGuid,proto3" json:"log_guid"`
-	MetricsGuid                   string                     `protobuf:"bytes,18,opt,name=metrics_guid,json=metricsGuid,proto3" json:"metrics_guid"` // Deprecated: Do not use.
-	Annotation                    string                     `protobuf:"bytes,19,opt,name=annotation,proto3" json:"annotation"`
-	EgressRules                   []*SecurityGroupRule       `protobuf:"bytes,20,rep,name=egress_rules,json=egressRules,proto3" json:"egress_rules,omitempty"`
-	ModificationTag               *ModificationTag           `protobuf:"bytes,21,opt,name=modification_tag,json=modificationTag,proto3" json:"modification_tag,omitempty"`
-	CachedDependencies            []*CachedDependency        `protobuf:"bytes,22,rep,name=cached_dependencies,json=cachedDependencies,proto3" json:"cached_dependencies,omitempty"`
-	LegacyDownloadUser            string                     `protobuf:"bytes,23,opt,name=legacy_download_user,json=legacyDownloadUser,proto3" json:"legacy_download_user,omitempty"` // Deprecated: Do not use.
-	TrustedSystemCertificatesPath string                     `protobuf:"bytes,24,opt,name=trusted_system_certificates_path,json=trustedSystemCertificatesPath,proto3" json:"trusted_system_certificates_path,omitempty"`
-	VolumeMounts                  []*VolumeMount             `protobuf:"bytes,25,rep,name=volume_mounts,json=volumeMounts,proto3" json:"volume_mounts,omitempty"`
-	Network                       *Network                   `protobuf:"bytes,26,opt,name=network,proto3" json:"network,omitempty"`
-	PlacementTags                 []string                   `protobuf:"bytes,28,rep,name=PlacementTags,proto3" json:"placement_tags,omitempty"`
-	MaxPids                       int32                      `protobuf:"varint,29,opt,name=max_pids,json=maxPids,proto3" json:"max_pids"`
-	CertificateProperties         *CertificateProperties     `protobuf:"bytes,30,opt,name=certificate_properties,json=certificateProperties,proto3" json:"certificate_properties,omitempty"`
-	ImageUsername                 string                     `protobuf:"bytes,31,opt,name=image_username,json=imageUsername,proto3" json:"image_username,omitempty"`
-	ImagePassword                 string                     `protobuf:"bytes,32,opt,name=image_password,json=imagePassword,proto3" json:"image_password,omitempty"`
-	CheckDefinition               *CheckDefinition           `protobuf:"bytes,33,opt,name=check_definition,json=checkDefinition,proto3" json:"check_definition,omitempty"`
-	ImageLayers                   []*ImageLayer              `protobuf:"bytes,34,rep,name=image_layers,json=imageLayers,proto3" json:"image_layers,omitempty"`
-	MetricTags                    map[string]*MetricTagValue `protobuf:"bytes,35,rep,name=metric_tags,json=metricTags,proto3" json:"metric_tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Sidecars                      []*Sidecar                 `protobuf:"bytes,36,rep,name=sidecars,proto3" json:"sidecars,omitempty"`
-	LogRateLimit                  *LogRateLimit              `protobuf:"bytes,37,opt,name=log_rate_limit,json=logRateLimit,proto3" json:"log_rate_limit,omitempty"`
-}
-
-func (m *DesiredLRP) Reset()      { *m = DesiredLRP{} }
-func (*DesiredLRP) ProtoMessage() {}
-func (*DesiredLRP) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f592e9299b63d68c, []int{6}
-}
 func (m *DesiredLRP) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
@@ -697,261 +230,6 @@ func (m *DesiredLRP) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_DesiredLRP proto.InternalMessageInfo
-
-func (m *DesiredLRP) GetProcessGuid() string {
-	if m != nil {
-		return m.ProcessGuid
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetRootFs() string {
-	if m != nil {
-		return m.RootFs
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetInstances() int32 {
-	if m != nil {
-		return m.Instances
-	}
-	return 0
-}
-
-func (m *DesiredLRP) GetEnvironmentVariables() []*EnvironmentVariable {
-	if m != nil {
-		return m.EnvironmentVariables
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetSetup() *Action {
-	if m != nil {
-		return m.Setup
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetAction() *Action {
-	if m != nil {
-		return m.Action
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetStartTimeoutMs() int64 {
-	if m != nil {
-		return m.StartTimeoutMs
-	}
-	return 0
-}
-
-// Deprecated: Do not use.
-func (m *DesiredLRP) GetDeprecatedStartTimeoutS() uint32 {
-	if m != nil {
-		return m.DeprecatedStartTimeoutS
-	}
-	return 0
-}
-
-func (m *DesiredLRP) GetMonitor() *Action {
-	if m != nil {
-		return m.Monitor
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetDiskMb() int32 {
-	if m != nil {
-		return m.DiskMb
-	}
-	return 0
-}
-
-func (m *DesiredLRP) GetMemoryMb() int32 {
-	if m != nil {
-		return m.MemoryMb
-	}
-	return 0
-}
-
-func (m *DesiredLRP) GetCpuWeight() uint32 {
-	if m != nil {
-		return m.CpuWeight
-	}
-	return 0
-}
-
-func (m *DesiredLRP) GetPrivileged() bool {
-	if m != nil {
-		return m.Privileged
-	}
-	return false
-}
-
-func (m *DesiredLRP) GetPorts() []uint32 {
-	if m != nil {
-		return m.Ports
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetLogSource() string {
-	if m != nil {
-		return m.LogSource
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetLogGuid() string {
-	if m != nil {
-		return m.LogGuid
-	}
-	return ""
-}
-
-// Deprecated: Do not use.
-func (m *DesiredLRP) GetMetricsGuid() string {
-	if m != nil {
-		return m.MetricsGuid
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetAnnotation() string {
-	if m != nil {
-		return m.Annotation
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetEgressRules() []*SecurityGroupRule {
-	if m != nil {
-		return m.EgressRules
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetModificationTag() *ModificationTag {
-	if m != nil {
-		return m.ModificationTag
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetCachedDependencies() []*CachedDependency {
-	if m != nil {
-		return m.CachedDependencies
-	}
-	return nil
-}
-
-// Deprecated: Do not use.
-func (m *DesiredLRP) GetLegacyDownloadUser() string {
-	if m != nil {
-		return m.LegacyDownloadUser
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetTrustedSystemCertificatesPath() string {
-	if m != nil {
-		return m.TrustedSystemCertificatesPath
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetVolumeMounts() []*VolumeMount {
-	if m != nil {
-		return m.VolumeMounts
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetNetwork() *Network {
-	if m != nil {
-		return m.Network
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetPlacementTags() []string {
-	if m != nil {
-		return m.PlacementTags
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetMaxPids() int32 {
-	if m != nil {
-		return m.MaxPids
-	}
-	return 0
-}
-
-func (m *DesiredLRP) GetCertificateProperties() *CertificateProperties {
-	if m != nil {
-		return m.CertificateProperties
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetImageUsername() string {
-	if m != nil {
-		return m.ImageUsername
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetImagePassword() string {
-	if m != nil {
-		return m.ImagePassword
-	}
-	return ""
-}
-
-func (m *DesiredLRP) GetCheckDefinition() *CheckDefinition {
-	if m != nil {
-		return m.CheckDefinition
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetImageLayers() []*ImageLayer {
-	if m != nil {
-		return m.ImageLayers
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetMetricTags() map[string]*MetricTagValue {
-	if m != nil {
-		return m.MetricTags
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetSidecars() []*Sidecar {
-	if m != nil {
-		return m.Sidecars
-	}
-	return nil
-}
-
-func (m *DesiredLRP) GetLogRateLimit() *LogRateLimit {
-	if m != nil {
-		return m.LogRateLimit
-	}
-	return nil
-}
 
 func init() {
 	proto.RegisterType((*DesiredLRPSchedulingInfo)(nil), "models.DesiredLRPSchedulingInfo")
@@ -1092,9 +370,9 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPSchedulingInfo)
 	if !ok {
-		that2, ok := that.(DesiredLRPSchedulingInfo)
+		that2, ok := that.(*DesiredLRPSchedulingInfo)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1104,7 +382,7 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.DesiredLRPKey.Equal(&that1.DesiredLRPKey) {
+	if !this.DesiredLrpKey.Equal(&that1.DesiredLrpKey) {
 		return false
 	}
 	if this.Annotation != that1.Annotation {
@@ -1113,7 +391,7 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if this.Instances != that1.Instances {
 		return false
 	}
-	if !this.DesiredLRPResource.Equal(&that1.DesiredLRPResource) {
+	if !this.DesiredLrpResource.Equal(&that1.DesiredLrpResource) {
 		return false
 	}
 	if !this.Routes.Equal(that1.Routes) {
@@ -1142,9 +420,9 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPRunInfo)
 	if !ok {
-		that2, ok := that.(DesiredLRPRunInfo)
+		that2, ok := that.(*DesiredLRPRunInfo)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1154,7 +432,7 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.DesiredLRPKey.Equal(&that1.DesiredLRPKey) {
+	if !this.DesiredLrpKey.Equal(&that1.DesiredLrpKey) {
 		return false
 	}
 	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
@@ -1284,9 +562,9 @@ func (this *ProtoRoutes) Equal(that interface{}) bool {
 
 	that1, ok := that.(*ProtoRoutes)
 	if !ok {
-		that2, ok := that.(ProtoRoutes)
+		that2, ok := that.(*ProtoRoutes)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1313,9 +591,9 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPUpdate)
 	if !ok {
-		that2, ok := that.(DesiredLRPUpdate)
+		that2, ok := that.(*DesiredLRPUpdate)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1325,29 +603,29 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if that1.OptionalInstances == nil {
-		if this.OptionalInstances != nil {
+	if that1.Instances == nil {
+		if this.Instances != nil {
 			return false
 		}
-	} else if this.OptionalInstances == nil {
+	} else if this.Instances == nil {
 		return false
-	} else if !this.OptionalInstances.Equal(that1.OptionalInstances) {
+	} else if this.Instances != that1.Instances {
 		return false
 	}
 	if that1.Routes == nil {
 		if this.Routes != nil {
 			return false
 		}
-	} else if !this.Routes.Equal(*that1.Routes) {
+	} else if !this.Routes.Equal(that1.Routes) {
 		return false
 	}
-	if that1.OptionalAnnotation == nil {
-		if this.OptionalAnnotation != nil {
+	if that1.Annotation == nil {
+		if this.Annotation != nil {
 			return false
 		}
-	} else if this.OptionalAnnotation == nil {
+	} else if this.Annotation == nil {
 		return false
-	} else if !this.OptionalAnnotation.Equal(that1.OptionalAnnotation) {
+	} else if this.Annotation != that1.Annotation {
 		return false
 	}
 	if len(this.MetricTags) != len(that1.MetricTags) {
@@ -1360,54 +638,55 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *DesiredLRPUpdate_Instances) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
 
-	that1, ok := that.(*DesiredLRPUpdate_Instances)
-	if !ok {
-		that2, ok := that.(DesiredLRPUpdate_Instances)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Instances != that1.Instances {
-		return false
-	}
-	return true
-}
-func (this *DesiredLRPUpdate_Annotation) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
+// func (this *DesiredLRPUpdate_Instances) Equal(that interface{}) bool {
+// 	if that == nil {
+// 		return this == nil
+// 	}
 
-	that1, ok := that.(*DesiredLRPUpdate_Annotation)
-	if !ok {
-		that2, ok := that.(DesiredLRPUpdate_Annotation)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Annotation != that1.Annotation {
-		return false
-	}
-	return true
-}
+// 	that1, ok := that.(*DesiredLRPUpdate_Instances)
+// 	if !ok {
+// 		that2, ok := that.(DesiredLRPUpdate_Instances)
+// 		if ok {
+// 			that1 = &that2
+// 		} else {
+// 			return false
+// 		}
+// 	}
+// 	if that1 == nil {
+// 		return this == nil
+// 	} else if this == nil {
+// 		return false
+// 	}
+// 	if this.Instances != that1.Instances {
+// 		return false
+// 	}
+// 	return true
+// }
+// func (this *DesiredLRPUpdate_Annotation) Equal(that interface{}) bool {
+// 	if that == nil {
+// 		return this == nil
+// 	}
+
+//		that1, ok := that.(*DesiredLRPUpdate_Annotation)
+//		if !ok {
+//			that2, ok := that.(DesiredLRPUpdate_Annotation)
+//			if ok {
+//				that1 = &that2
+//			} else {
+//				return false
+//			}
+//		}
+//		if that1 == nil {
+//			return this == nil
+//		} else if this == nil {
+//			return false
+//		}
+//		if this.Annotation != that1.Annotation {
+//			return false
+//		}
+//		return true
+//	}
 func (this *DesiredLRPKey) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -1415,9 +694,9 @@ func (this *DesiredLRPKey) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPKey)
 	if !ok {
-		that2, ok := that.(DesiredLRPKey)
+		that2, ok := that.(*DesiredLRPKey)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1445,9 +724,9 @@ func (this *DesiredLRPResource) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRPResource)
 	if !ok {
-		that2, ok := that.(DesiredLRPResource)
+		that2, ok := that.(*DesiredLRPResource)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1478,9 +757,9 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 
 	that1, ok := that.(*DesiredLRP)
 	if !ok {
-		that2, ok := that.(DesiredLRP)
+		that2, ok := that.(*DesiredLRP)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -1549,7 +828,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 		if this.Routes != nil {
 			return false
 		}
-	} else if !this.Routes.Equal(*that1.Routes) {
+	} else if !this.Routes.Equal(that1.Routes) {
 		return false
 	}
 	if this.LogSource != that1.LogSource {
@@ -1658,10 +937,10 @@ func (this *DesiredLRPSchedulingInfo) GoString() string {
 	}
 	s := make([]string, 0, 12)
 	s = append(s, "&models.DesiredLRPSchedulingInfo{")
-	s = append(s, "DesiredLRPKey: "+strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "DesiredLRPKey: "+strings.Replace(this.DesiredLrpKey.GoString(), `&`, ``, 1)+",\n")
 	s = append(s, "Annotation: "+fmt.Sprintf("%#v", this.Annotation)+",\n")
 	s = append(s, "Instances: "+fmt.Sprintf("%#v", this.Instances)+",\n")
-	s = append(s, "DesiredLRPResource: "+strings.Replace(this.DesiredLRPResource.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "DesiredLRPResource: "+strings.Replace(this.DesiredLrpResource.GoString(), `&`, ``, 1)+",\n")
 	s = append(s, "Routes: "+fmt.Sprintf("%#v", this.Routes)+",\n")
 	s = append(s, "ModificationTag: "+strings.Replace(this.ModificationTag.GoString(), `&`, ``, 1)+",\n")
 	if this.VolumePlacement != nil {
@@ -1677,9 +956,9 @@ func (this *DesiredLRPRunInfo) GoString() string {
 	}
 	s := make([]string, 0, 31)
 	s = append(s, "&models.DesiredLRPRunInfo{")
-	s = append(s, "DesiredLRPKey: "+strings.Replace(this.DesiredLRPKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "DesiredLRPKey: "+strings.Replace(this.DesiredLrpKey.GoString(), `&`, ``, 1)+",\n")
 	if this.EnvironmentVariables != nil {
-		vs := make([]EnvironmentVariable, len(this.EnvironmentVariables))
+		vs := make([]*EnvironmentVariable, len(this.EnvironmentVariables))
 		for i := range vs {
 			vs[i] = this.EnvironmentVariables[i]
 		}
@@ -1699,7 +978,7 @@ func (this *DesiredLRPRunInfo) GoString() string {
 	s = append(s, "CpuWeight: "+fmt.Sprintf("%#v", this.CpuWeight)+",\n")
 	s = append(s, "Ports: "+fmt.Sprintf("%#v", this.Ports)+",\n")
 	if this.EgressRules != nil {
-		vs := make([]SecurityGroupRule, len(this.EgressRules))
+		vs := make([]*SecurityGroupRule, len(this.EgressRules))
 		for i := range vs {
 			vs[i] = this.EgressRules[i]
 		}
@@ -1804,22 +1083,24 @@ func (this *DesiredLRPUpdate) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *DesiredLRPUpdate_Instances) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.DesiredLRPUpdate_Instances{` +
-		`Instances:` + fmt.Sprintf("%#v", this.Instances) + `}`}, ", ")
-	return s
-}
-func (this *DesiredLRPUpdate_Annotation) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&models.DesiredLRPUpdate_Annotation{` +
-		`Annotation:` + fmt.Sprintf("%#v", this.Annotation) + `}`}, ", ")
-	return s
-}
+
+//	func (this *DesiredLRPUpdate_Instances) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.DesiredLRPUpdate_Instances{` +
+//			`Instances:` + fmt.Sprintf("%#v", this.Instances) + `}`}, ", ")
+//		return s
+//	}
+//
+//	func (this *DesiredLRPUpdate_Annotation) GoString() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&models.DesiredLRPUpdate_Annotation{` +
+//			`Annotation:` + fmt.Sprintf("%#v", this.Annotation) + `}`}, ", ")
+//		return s
+//	}
 func (this *DesiredLRPKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -2001,7 +1282,7 @@ func (m *DesiredLRPSchedulingInfo) MarshalToSizedBuffer(dAtA []byte) (int, error
 	i--
 	dAtA[i] = 0x2a
 	{
-		size, err := m.DesiredLRPResource.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.DesiredLrpResource.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -2023,7 +1304,7 @@ func (m *DesiredLRPSchedulingInfo) MarshalToSizedBuffer(dAtA []byte) (int, error
 		dAtA[i] = 0x12
 	}
 	{
-		size, err := m.DesiredLRPKey.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.DesiredLrpKey.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -2353,7 +1634,7 @@ func (m *DesiredLRPRunInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	{
-		size, err := m.DesiredLRPKey.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.DesiredLrpKey.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -2363,6 +1644,18 @@ func (m *DesiredLRPRunInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
+}
+
+func (pr *ProtoRoutes) routes() *Routes {
+	// HACK?
+	r := &Routes{}
+	routes := map[string]*json.RawMessage{}
+	for k, v := range pr.Routes {
+		raw := json.RawMessage(v)
+		routes[k] = &raw
+	}
+	*r = routes
+	return r
 }
 
 func (m *ProtoRoutes) Marshal() (dAtA []byte, err error) {
@@ -2455,11 +1748,11 @@ func (m *DesiredLRPUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x22
 		}
 	}
-	if m.OptionalAnnotation != nil {
+	if m.Annotation != nil {
 		{
-			size := m.OptionalAnnotation.Size()
+			size := m.Annotation.Size()
 			i -= size
-			if _, err := m.OptionalAnnotation.MarshalTo(dAtA[i:]); err != nil {
+			if _, err := m.Annotation.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
 		}
@@ -2476,11 +1769,11 @@ func (m *DesiredLRPUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.OptionalInstances != nil {
+	if m.Instances != nil {
 		{
-			size := m.OptionalInstances.Size()
+			size := int(reflect.TypeOf(m.Instances).Size())
 			i -= size
-			if _, err := m.OptionalInstances.MarshalTo(dAtA[i:]); err != nil {
+			if _, err := m.Instances.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
 		}
@@ -2488,32 +1781,32 @@ func (m *DesiredLRPUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *DesiredLRPUpdate_Instances) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *DesiredLRPUpdate_Instances) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *DesiredLRPUpdate_Instances) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Instances))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-func (m *DesiredLRPUpdate_Annotation) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
+// func (m *DesiredLRPUpdate_Instances) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+// 	i := len(dAtA)
+// 	i = encodeVarintDesiredLrp(dAtA, i, uint64(m.Instances))
+// 	i--
+// 	dAtA[i] = 0x8
+// 	return len(dAtA) - i, nil
+// }
+// func (m *DesiredLRPUpdate_Annotation) MarshalTo(dAtA []byte) (int, error) {
+// 	size := m.Size()
+// 	return m.MarshalToSizedBuffer(dAtA[:size])
+// }
 
-func (m *DesiredLRPUpdate_Annotation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i -= len(m.Annotation)
-	copy(dAtA[i:], m.Annotation)
-	i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Annotation)))
-	i--
-	dAtA[i] = 0x1a
-	return len(dAtA) - i, nil
-}
+//	func (m *DesiredLRPUpdate_Annotation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+//		i := len(dAtA)
+//		i -= len(m.Annotation)
+//		copy(dAtA[i:], m.Annotation)
+//		i = encodeVarintDesiredLrp(dAtA, i, uint64(len(m.Annotation)))
+//		i--
+//		dAtA[i] = 0x1a
+//		return len(dAtA) - i, nil
+//	}
 func (m *DesiredLRPKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3043,7 +2336,7 @@ func (m *DesiredLRPSchedulingInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.DesiredLRPKey.Size()
+	l = m.DesiredLrpKey.Size()
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	l = len(m.Annotation)
 	if l > 0 {
@@ -3052,7 +2345,7 @@ func (m *DesiredLRPSchedulingInfo) Size() (n int) {
 	if m.Instances != 0 {
 		n += 1 + sovDesiredLrp(uint64(m.Instances))
 	}
-	l = m.DesiredLRPResource.Size()
+	l = m.DesiredLrpResource.Size()
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	l = m.Routes.Size()
 	n += 1 + l + sovDesiredLrp(uint64(l))
@@ -3077,7 +2370,7 @@ func (m *DesiredLRPRunInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.DesiredLRPKey.Size()
+	l = m.DesiredLrpKey.Size()
 	n += 1 + l + sovDesiredLrp(uint64(l))
 	if len(m.EnvironmentVariables) > 0 {
 		for _, e := range m.EnvironmentVariables {
@@ -3256,25 +2549,26 @@ func (m *DesiredLRPUpdate) Size() (n int) {
 	return n
 }
 
-func (m *DesiredLRPUpdate_Instances) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovDesiredLrp(uint64(m.Instances))
-	return n
-}
-func (m *DesiredLRPUpdate_Annotation) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Annotation)
-	n += 1 + l + sovDesiredLrp(uint64(l))
-	return n
-}
+//	func (m *DesiredLRPUpdate_Instances) Size() (n int) {
+//		if m == nil {
+//			return 0
+//		}
+//		var l int
+//		_ = l
+//		n += 1 + sovDesiredLrp(uint64(m.Instances))
+//		return n
+//	}
+//
+//	func (m *DesiredLRPUpdate_Annotation) Size() (n int) {
+//		if m == nil {
+//			return 0
+//		}
+//		var l int
+//		_ = l
+//		l = len(m.Annotation)
+//		n += 1 + l + sovDesiredLrp(uint64(l))
+//		return n
+//	}
 func (m *DesiredLRPKey) Size() (n int) {
 	if m == nil {
 		return 0
@@ -3497,273 +2791,28 @@ func sovDesiredLrp(x uint64) (n int) {
 func sozDesiredLrp(x uint64) (n int) {
 	return sovDesiredLrp(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (this *DesiredLRPSchedulingInfo) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPSchedulingInfo{`,
-		`DesiredLRPKey:` + strings.Replace(strings.Replace(this.DesiredLRPKey.String(), "DesiredLRPKey", "DesiredLRPKey", 1), `&`, ``, 1) + `,`,
-		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
-		`Instances:` + fmt.Sprintf("%v", this.Instances) + `,`,
-		`DesiredLRPResource:` + strings.Replace(strings.Replace(this.DesiredLRPResource.String(), "DesiredLRPResource", "DesiredLRPResource", 1), `&`, ``, 1) + `,`,
-		`Routes:` + fmt.Sprintf("%v", this.Routes) + `,`,
-		`ModificationTag:` + strings.Replace(strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1), `&`, ``, 1) + `,`,
-		`VolumePlacement:` + strings.Replace(fmt.Sprintf("%v", this.VolumePlacement), "VolumePlacement", "VolumePlacement", 1) + `,`,
-		`PlacementTags:` + fmt.Sprintf("%v", this.PlacementTags) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPRunInfo) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForEnvironmentVariables := "[]EnvironmentVariable{"
-	for _, f := range this.EnvironmentVariables {
-		repeatedStringForEnvironmentVariables += fmt.Sprintf("%v", f) + ","
-	}
-	repeatedStringForEnvironmentVariables += "}"
-	repeatedStringForEgressRules := "[]SecurityGroupRule{"
-	for _, f := range this.EgressRules {
-		repeatedStringForEgressRules += fmt.Sprintf("%v", f) + ","
-	}
-	repeatedStringForEgressRules += "}"
-	repeatedStringForCachedDependencies := "[]*CachedDependency{"
-	for _, f := range this.CachedDependencies {
-		repeatedStringForCachedDependencies += strings.Replace(fmt.Sprintf("%v", f), "CachedDependency", "CachedDependency", 1) + ","
-	}
-	repeatedStringForCachedDependencies += "}"
-	repeatedStringForVolumeMounts := "[]*VolumeMount{"
-	for _, f := range this.VolumeMounts {
-		repeatedStringForVolumeMounts += strings.Replace(fmt.Sprintf("%v", f), "VolumeMount", "VolumeMount", 1) + ","
-	}
-	repeatedStringForVolumeMounts += "}"
-	repeatedStringForImageLayers := "[]*ImageLayer{"
-	for _, f := range this.ImageLayers {
-		repeatedStringForImageLayers += strings.Replace(fmt.Sprintf("%v", f), "ImageLayer", "ImageLayer", 1) + ","
-	}
-	repeatedStringForImageLayers += "}"
-	repeatedStringForSidecars := "[]*Sidecar{"
-	for _, f := range this.Sidecars {
-		repeatedStringForSidecars += strings.Replace(fmt.Sprintf("%v", f), "Sidecar", "Sidecar", 1) + ","
-	}
-	repeatedStringForSidecars += "}"
-	keysForMetricTags := make([]string, 0, len(this.MetricTags))
-	for k, _ := range this.MetricTags {
-		keysForMetricTags = append(keysForMetricTags, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
-	mapStringForMetricTags := "map[string]*MetricTagValue{"
-	for _, k := range keysForMetricTags {
-		mapStringForMetricTags += fmt.Sprintf("%v: %v,", k, this.MetricTags[k])
-	}
-	mapStringForMetricTags += "}"
-	s := strings.Join([]string{`&DesiredLRPRunInfo{`,
-		`DesiredLRPKey:` + strings.Replace(strings.Replace(this.DesiredLRPKey.String(), "DesiredLRPKey", "DesiredLRPKey", 1), `&`, ``, 1) + `,`,
-		`EnvironmentVariables:` + repeatedStringForEnvironmentVariables + `,`,
-		`Setup:` + strings.Replace(fmt.Sprintf("%v", this.Setup), "Action", "Action", 1) + `,`,
-		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`Monitor:` + strings.Replace(fmt.Sprintf("%v", this.Monitor), "Action", "Action", 1) + `,`,
-		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%v", this.DeprecatedStartTimeoutS) + `,`,
-		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
-		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
-		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
-		`EgressRules:` + repeatedStringForEgressRules + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
-		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
-		`CachedDependencies:` + repeatedStringForCachedDependencies + `,`,
-		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
-		`VolumeMounts:` + repeatedStringForVolumeMounts + `,`,
-		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
-		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
-		`CertificateProperties:` + strings.Replace(fmt.Sprintf("%v", this.CertificateProperties), "CertificateProperties", "CertificateProperties", 1) + `,`,
-		`ImageUsername:` + fmt.Sprintf("%v", this.ImageUsername) + `,`,
-		`ImagePassword:` + fmt.Sprintf("%v", this.ImagePassword) + `,`,
-		`CheckDefinition:` + strings.Replace(fmt.Sprintf("%v", this.CheckDefinition), "CheckDefinition", "CheckDefinition", 1) + `,`,
-		`ImageLayers:` + repeatedStringForImageLayers + `,`,
-		`MetricTags:` + mapStringForMetricTags + `,`,
-		`Sidecars:` + repeatedStringForSidecars + `,`,
-		`LogRateLimit:` + strings.Replace(fmt.Sprintf("%v", this.LogRateLimit), "LogRateLimit", "LogRateLimit", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ProtoRoutes) String() string {
-	if this == nil {
-		return "nil"
-	}
-	keysForRoutes := make([]string, 0, len(this.Routes))
-	for k, _ := range this.Routes {
-		keysForRoutes = append(keysForRoutes, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForRoutes)
-	mapStringForRoutes := "map[string][]byte{"
-	for _, k := range keysForRoutes {
-		mapStringForRoutes += fmt.Sprintf("%v: %v,", k, this.Routes[k])
-	}
-	mapStringForRoutes += "}"
-	s := strings.Join([]string{`&ProtoRoutes{`,
-		`Routes:` + mapStringForRoutes + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPUpdate) String() string {
-	if this == nil {
-		return "nil"
-	}
-	keysForMetricTags := make([]string, 0, len(this.MetricTags))
-	for k, _ := range this.MetricTags {
-		keysForMetricTags = append(keysForMetricTags, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
-	mapStringForMetricTags := "map[string]*MetricTagValue{"
-	for _, k := range keysForMetricTags {
-		mapStringForMetricTags += fmt.Sprintf("%v: %v,", k, this.MetricTags[k])
-	}
-	mapStringForMetricTags += "}"
-	s := strings.Join([]string{`&DesiredLRPUpdate{`,
-		`OptionalInstances:` + fmt.Sprintf("%v", this.OptionalInstances) + `,`,
-		`Routes:` + fmt.Sprintf("%v", this.Routes) + `,`,
-		`OptionalAnnotation:` + fmt.Sprintf("%v", this.OptionalAnnotation) + `,`,
-		`MetricTags:` + mapStringForMetricTags + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPUpdate_Instances) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPUpdate_Instances{`,
-		`Instances:` + fmt.Sprintf("%v", this.Instances) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPUpdate_Annotation) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPUpdate_Annotation{`,
-		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPKey) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPKey{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`LogGuid:` + fmt.Sprintf("%v", this.LogGuid) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRPResource) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&DesiredLRPResource{`,
-		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
-		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
-		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
-		`MaxPids:` + fmt.Sprintf("%v", this.MaxPids) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *DesiredLRP) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForEnvironmentVariables := "[]*EnvironmentVariable{"
-	for _, f := range this.EnvironmentVariables {
-		repeatedStringForEnvironmentVariables += strings.Replace(fmt.Sprintf("%v", f), "EnvironmentVariable", "EnvironmentVariable", 1) + ","
-	}
-	repeatedStringForEnvironmentVariables += "}"
-	repeatedStringForEgressRules := "[]*SecurityGroupRule{"
-	for _, f := range this.EgressRules {
-		repeatedStringForEgressRules += strings.Replace(fmt.Sprintf("%v", f), "SecurityGroupRule", "SecurityGroupRule", 1) + ","
-	}
-	repeatedStringForEgressRules += "}"
-	repeatedStringForCachedDependencies := "[]*CachedDependency{"
-	for _, f := range this.CachedDependencies {
-		repeatedStringForCachedDependencies += strings.Replace(fmt.Sprintf("%v", f), "CachedDependency", "CachedDependency", 1) + ","
-	}
-	repeatedStringForCachedDependencies += "}"
-	repeatedStringForVolumeMounts := "[]*VolumeMount{"
-	for _, f := range this.VolumeMounts {
-		repeatedStringForVolumeMounts += strings.Replace(fmt.Sprintf("%v", f), "VolumeMount", "VolumeMount", 1) + ","
-	}
-	repeatedStringForVolumeMounts += "}"
-	repeatedStringForImageLayers := "[]*ImageLayer{"
-	for _, f := range this.ImageLayers {
-		repeatedStringForImageLayers += strings.Replace(fmt.Sprintf("%v", f), "ImageLayer", "ImageLayer", 1) + ","
-	}
-	repeatedStringForImageLayers += "}"
-	repeatedStringForSidecars := "[]*Sidecar{"
-	for _, f := range this.Sidecars {
-		repeatedStringForSidecars += strings.Replace(fmt.Sprintf("%v", f), "Sidecar", "Sidecar", 1) + ","
-	}
-	repeatedStringForSidecars += "}"
-	keysForMetricTags := make([]string, 0, len(this.MetricTags))
-	for k, _ := range this.MetricTags {
-		keysForMetricTags = append(keysForMetricTags, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
-	mapStringForMetricTags := "map[string]*MetricTagValue{"
-	for _, k := range keysForMetricTags {
-		mapStringForMetricTags += fmt.Sprintf("%v: %v,", k, this.MetricTags[k])
-	}
-	mapStringForMetricTags += "}"
-	s := strings.Join([]string{`&DesiredLRP{`,
-		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
-		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
-		`RootFs:` + fmt.Sprintf("%v", this.RootFs) + `,`,
-		`Instances:` + fmt.Sprintf("%v", this.Instances) + `,`,
-		`EnvironmentVariables:` + repeatedStringForEnvironmentVariables + `,`,
-		`Setup:` + strings.Replace(fmt.Sprintf("%v", this.Setup), "Action", "Action", 1) + `,`,
-		`Action:` + strings.Replace(fmt.Sprintf("%v", this.Action), "Action", "Action", 1) + `,`,
-		`DeprecatedStartTimeoutS:` + fmt.Sprintf("%v", this.DeprecatedStartTimeoutS) + `,`,
-		`Monitor:` + strings.Replace(fmt.Sprintf("%v", this.Monitor), "Action", "Action", 1) + `,`,
-		`DiskMb:` + fmt.Sprintf("%v", this.DiskMb) + `,`,
-		`MemoryMb:` + fmt.Sprintf("%v", this.MemoryMb) + `,`,
-		`CpuWeight:` + fmt.Sprintf("%v", this.CpuWeight) + `,`,
-		`Privileged:` + fmt.Sprintf("%v", this.Privileged) + `,`,
-		`Ports:` + fmt.Sprintf("%v", this.Ports) + `,`,
-		`Routes:` + fmt.Sprintf("%v", this.Routes) + `,`,
-		`LogSource:` + fmt.Sprintf("%v", this.LogSource) + `,`,
-		`LogGuid:` + fmt.Sprintf("%v", this.LogGuid) + `,`,
-		`MetricsGuid:` + fmt.Sprintf("%v", this.MetricsGuid) + `,`,
-		`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
-		`EgressRules:` + repeatedStringForEgressRules + `,`,
-		`ModificationTag:` + strings.Replace(fmt.Sprintf("%v", this.ModificationTag), "ModificationTag", "ModificationTag", 1) + `,`,
-		`CachedDependencies:` + repeatedStringForCachedDependencies + `,`,
-		`LegacyDownloadUser:` + fmt.Sprintf("%v", this.LegacyDownloadUser) + `,`,
-		`TrustedSystemCertificatesPath:` + fmt.Sprintf("%v", this.TrustedSystemCertificatesPath) + `,`,
-		`VolumeMounts:` + repeatedStringForVolumeMounts + `,`,
-		`Network:` + strings.Replace(fmt.Sprintf("%v", this.Network), "Network", "Network", 1) + `,`,
-		`StartTimeoutMs:` + fmt.Sprintf("%v", this.StartTimeoutMs) + `,`,
-		`PlacementTags:` + fmt.Sprintf("%v", this.PlacementTags) + `,`,
-		`MaxPids:` + fmt.Sprintf("%v", this.MaxPids) + `,`,
-		`CertificateProperties:` + strings.Replace(fmt.Sprintf("%v", this.CertificateProperties), "CertificateProperties", "CertificateProperties", 1) + `,`,
-		`ImageUsername:` + fmt.Sprintf("%v", this.ImageUsername) + `,`,
-		`ImagePassword:` + fmt.Sprintf("%v", this.ImagePassword) + `,`,
-		`CheckDefinition:` + strings.Replace(fmt.Sprintf("%v", this.CheckDefinition), "CheckDefinition", "CheckDefinition", 1) + `,`,
-		`ImageLayers:` + repeatedStringForImageLayers + `,`,
-		`MetricTags:` + mapStringForMetricTags + `,`,
-		`Sidecars:` + repeatedStringForSidecars + `,`,
-		`LogRateLimit:` + strings.Replace(fmt.Sprintf("%v", this.LogRateLimit), "LogRateLimit", "LogRateLimit", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
+
+//	func (this *DesiredLRPUpdate_Instances) String() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&DesiredLRPUpdate_Instances{`,
+//			`Instances:` + fmt.Sprintf("%v", this.Instances) + `,`,
+//			`}`,
+//		}, "")
+//		return s
+//	}
+//
+//	func (this *DesiredLRPUpdate_Annotation) String() string {
+//		if this == nil {
+//			return "nil"
+//		}
+//		s := strings.Join([]string{`&DesiredLRPUpdate_Annotation{`,
+//			`Annotation:` + fmt.Sprintf("%v", this.Annotation) + `,`,
+//			`}`,
+//		}, "")
+//		return s
+//	}
 func valueToStringDesiredLrp(v interface{}) string {
 	rv := reflect.ValueOf(v)
 	if rv.IsNil() {
@@ -3830,7 +2879,7 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.DesiredLRPKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DesiredLrpKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3914,7 +2963,7 @@ func (m *DesiredLRPSchedulingInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.DesiredLRPResource.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DesiredLrpResource.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4131,7 +3180,7 @@ func (m *DesiredLRPRunInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.DesiredLRPKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DesiredLrpKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4164,7 +3213,7 @@ func (m *DesiredLRPRunInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.EnvironmentVariables = append(m.EnvironmentVariables, EnvironmentVariable{})
+			m.EnvironmentVariables = append(m.EnvironmentVariables, &EnvironmentVariable{})
 			if err := m.EnvironmentVariables[len(m.EnvironmentVariables)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4440,7 +3489,7 @@ func (m *DesiredLRPRunInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.EgressRules = append(m.EgressRules, SecurityGroupRule{})
+			m.EgressRules = append(m.EgressRules, &SecurityGroupRule{})
 			if err := m.EgressRules[len(m.EgressRules)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -5331,7 +4380,7 @@ func (m *DesiredLRPUpdate) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.OptionalInstances = &DesiredLRPUpdate_Instances{v}
+			m.Instances = &v
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Routes", wireType)
@@ -5362,7 +4411,7 @@ func (m *DesiredLRPUpdate) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Routes == nil {
-				m.Routes = &Routes{}
+				m.Routes = &ProtoRoutes{}
 			}
 			if err := m.Routes.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6323,7 +5372,7 @@ func (m *DesiredLRP) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Routes == nil {
-				m.Routes = &Routes{}
+				m.Routes = &ProtoRoutes{}
 			}
 			if err := m.Routes.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
