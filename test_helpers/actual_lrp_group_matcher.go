@@ -8,18 +8,18 @@ import (
 
 func MatchActualLRPGroup(expected *models.ActualLRPGroup) types.GomegaMatcher {
 	removeUntestedLRPFields := func(lrp *models.ActualLRPGroup) *models.ActualLRPGroup {
-		newLRP := *lrp
+		newLRP := lrp
 
 		if newLRP.Instance != nil {
 			newLRP.Instance.Since = 0
-			newLRP.Instance.ModificationTag = models.ModificationTag{}
+			newLRP.Instance.ModificationTag = &models.ModificationTag{}
 		}
 
 		if newLRP.Evacuating != nil {
 			newLRP.Evacuating.Since = 0
-			newLRP.Evacuating.ModificationTag = models.ModificationTag{}
+			newLRP.Evacuating.ModificationTag = &models.ModificationTag{}
 		}
-		return &newLRP
+		return newLRP
 	}
 
 	expected = removeUntestedLRPFields(expected)
