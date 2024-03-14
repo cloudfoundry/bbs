@@ -228,8 +228,8 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
 		ImageLayers: []*models.ImageLayer{
-			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
-			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
+			{Name: "shared layer", LayerType: models.ImageLayer_SHARED, Url: "some-url", DestinationPath: "/tmp", MediaType: models.ImageLayer_TGZ},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_EXCLUSIVE, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.ImageLayer_MediaType(models.ImageLayer_SHA256), DigestAlgorithm: models.ImageLayer_SHA256, DigestValue: "some-sha256"},
 		},
 		MetricTags: map[string]*models.MetricTagValue{
 			"source_id": {Static: "some-metrics-guid"},
