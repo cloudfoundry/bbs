@@ -1405,13 +1405,16 @@ func (m *ActualLRPInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x62
 	}
-	if m.OptionalRoutable != nil {
-		{
-			size := m.OptionalRoutable.Size()
-			i -= size
-			if _, err := m.OptionalRoutable.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
+	if m.Routable != nil {
+		if *m.Routable {
+			i--
+			if *m.Routable {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
 			}
+			i--
+			dAtA[i] = 0x58
 		}
 	}
 	if m.Presence != 0 {
@@ -1552,7 +1555,7 @@ func (m *ActualLRPInstanceChangedEvent) MarshalToSizedBuffer(dAtA []byte) (int, 
 	i--
 	dAtA[i] = 0x12
 	{
-		size, err := m.ActualLRPKey.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ActualLrpKey.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}

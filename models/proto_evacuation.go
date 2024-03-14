@@ -546,13 +546,16 @@ func (m *EvacuateRunningActualLRPRequest) MarshalToSizedBuffer(dAtA []byte) (int
 		i--
 		dAtA[i] = 0x42
 	}
-	if m.OptionalRoutable != nil {
-		{
-			size := m.OptionalRoutable.Size()
-			i -= size
-			if _, err := m.OptionalRoutable.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
+	if m.Routable != nil {
+		if *m.Routable {
+			i--
+			if *m.Routable {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
 			}
+			i--
+			dAtA[i] = 0x68
 		}
 	}
 	if len(m.MetricTags) > 0 {

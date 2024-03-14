@@ -1,6 +1,6 @@
 package models
 
-func (s Sidecar) Validate() error {
+func (s *Sidecar) Validate() error {
 	var validationError ValidationError
 
 	if s.Action == nil {

@@ -1770,22 +1770,18 @@ func (m *ResourceLimits) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = l
 	if m.Nproc != nil {
 		{
-			// like: proto_check_definition.go ConnectTimeoutMs (line 500)
-			size := int(reflect.TypeOf(m.Nproc).Size())
-			i -= size
-			if _, err := m.Nproc.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
+			if *m.Nproc != 0 {
+				i = encodeVarintActions(dAtA, i, uint64(*m.Nproc))
+				i--
+				dAtA[i] = 0x10
 			}
 		}
 	}
 	if m.Nofile != nil {
-		{
-			// like: proto_check_definition.go ConnectTimeoutMs (line 500)
-			size := int(reflect.TypeOf(m.Nofile).Size())
-			i -= size
-			if _, err := m.Nofile.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
+		if *m.Nofile != 0 {
+			i = encodeVarintActions(dAtA, i, uint64(*m.Nofile))
+			i--
+			dAtA[i] = 0x8
 		}
 	}
 	return len(dAtA) - i, nil

@@ -189,9 +189,9 @@ func (this *CellCapacity) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CellCapacity)
 	if !ok {
-		that2, ok := that.(CellCapacity)
+		that2, ok := that.(*CellCapacity)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -219,9 +219,9 @@ func (this *CellPresence) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CellPresence)
 	if !ok {
-		that2, ok := that.(CellPresence)
+		that2, ok := that.(*CellPresence)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -281,7 +281,7 @@ func (this *Provider) Equal(that interface{}) bool {
 	if !ok {
 		that2, ok := that.(*Provider)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}
@@ -313,7 +313,7 @@ func (this *CellsResponse) Equal(that interface{}) bool {
 	if !ok {
 		that2, ok := that.(*CellsResponse)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}

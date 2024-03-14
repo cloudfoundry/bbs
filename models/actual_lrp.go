@@ -57,7 +57,7 @@ func EmptyActualLRPNetInfo() ActualLRPNetInfo {
 	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_UNKNOWN)
 }
 
-func (info ActualLRPNetInfo) Empty() bool {
+func (info *ActualLRPNetInfo) Empty() bool {
 	return info.Address == "" && len(info.Ports) == 0 && info.PreferredAddress == ActualLRPNetInfo_UNKNOWN
 }
 
@@ -217,7 +217,7 @@ func NewEvacuatingActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
 }
 
 // DEPRECATED
-func (group ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
+func (group *ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
 	switch {
 	case group.Instance == nil && group.Evacuating == nil:
 		return nil, false, ErrActualLRPGroupInvalid
@@ -236,28 +236,28 @@ func (group ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
 	}
 }
 
-func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
+func NewUnclaimedActualLRP(lrpKey *ActualLRPKey, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLrpKey: &lrpKey,
+		ActualLrpKey: lrpKey,
 		State:        ActualLRPStateUnclaimed,
 		Since:        since,
 	}
 }
 
-func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, since int64) *ActualLRP {
+func NewClaimedActualLRP(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLrpKey:         &lrpKey,
-		ActualLrpInstanceKey: &instanceKey,
+		ActualLrpKey:         lrpKey,
+		ActualLrpInstanceKey: instanceKey,
 		State:                ActualLRPStateClaimed,
 		Since:                since,
 	}
 }
 
-func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, netInfo ActualLRPNetInfo, since int64) *ActualLRP {
+func NewRunningActualLRP(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, netInfo *ActualLRPNetInfo, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLrpKey:         &lrpKey,
-		ActualLrpInstanceKey: &instanceKey,
-		ActualLrpNetInfo:     &netInfo,
+		ActualLrpKey:         lrpKey,
+		ActualLrpInstanceKey: instanceKey,
+		ActualLrpNetInfo:     netInfo,
 		State:                ActualLRPStateRunning,
 		Since:                since,
 	}
@@ -267,13 +267,13 @@ func (*ActualLRP) Version() format.Version {
 	return format.V0
 }
 
-func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstanceKey ActualLRPInstanceKey) *ActualLRP {
+func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey *ActualLRPKey, lrpInstanceKey *ActualLRPInstanceKey) *ActualLRP {
 	if actualLRPInfo == nil {
 		return nil
 	}
 	lrp := ActualLRP{
-		ActualLrpKey:         &lrpKey,
-		ActualLrpInstanceKey: &lrpInstanceKey,
+		ActualLrpKey:         lrpKey,
+		ActualLrpInstanceKey: lrpInstanceKey,
 		ActualLrpNetInfo:     actualLRPInfo.ActualLrpNetInfo,
 		AvailabilityZone:     actualLRPInfo.AvailabilityZone,
 		CrashCount:           actualLRPInfo.CrashCount,
@@ -328,7 +328,7 @@ func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
 	}
 }
 
-func (actual ActualLRP) Validate() error {
+func (actual *ActualLRP) Validate() error {
 	var validationError ValidationError
 
 	err := actual.ActualLrpKey.Validate()

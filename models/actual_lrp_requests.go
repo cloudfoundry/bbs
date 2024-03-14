@@ -42,7 +42,7 @@ func (request *ActualLRPsRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
+func (request *ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	internalRequest := internalActualLRPsRequest{
 		Domain:      request.Domain,
 		CellId:      request.CellId,
@@ -162,14 +162,16 @@ func (request *StartActualLRPRequest) Validate() error {
 }
 
 func (request *StartActualLRPRequest) SetRoutable(routable bool) {
-	request.OptionalRoutable = &StartActualLRPRequest_Routable{
-		Routable: routable,
-	}
+	request.Routable = &routable
+}
+
+func (request *StartActualLRPRequest) GetRoutablePtr() *bool {
+	return request.Routable
 }
 
 func (request *StartActualLRPRequest) RoutableExists() bool {
-	_, ok := request.GetOptionalRoutable().(*StartActualLRPRequest_Routable)
-	return ok
+	ptr := request.GetRoutablePtr()
+	return ptr != nil
 }
 
 func (request *CrashActualLRPRequest) Validate() error {

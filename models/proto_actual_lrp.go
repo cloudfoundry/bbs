@@ -216,12 +216,12 @@ func (m *ActualLRP) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActualLRP proto.InternalMessageInfo
 
-type isStartActualLRPRequest_OptionalRoutable_proto interface {
-	isStartActualLRPRequest_OptionalRoutable
-	Equal(interface{}) bool
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
+// type isStartActualLRPRequest_OptionalRoutable_proto interface {
+// 	isStartActualLRPRequest_OptionalRoutable
+// 	Equal(interface{}) bool
+// 	MarshalTo([]byte) (int, error)
+// 	Size() int
+// }
 
 // XXX_OneofWrappers is for the internal use of the proto package.
 // func (*ActualLRP) XXX_OneofWrappers() []interface{} {
@@ -1328,8 +1328,10 @@ func (m *ActualLRP) Size() (n int) {
 			n += mapEntrySize + 1 + sovActualLrp(uint64(mapEntrySize))
 		}
 	}
-	if m.OptionalRoutable != nil {
-		n += m.OptionalRoutable.Size()
+	if m.Routable != nil {
+		if *m.Routable {
+			n += 2
+		}
 	}
 	l = len(m.AvailabilityZone)
 	if l > 0 {
@@ -2164,7 +2166,7 @@ func (m *ActualLRP) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ActualLRPKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ActualLrpKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

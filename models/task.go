@@ -56,9 +56,9 @@ func (task *Task) Validate() error {
 }
 
 func (t *Task) Copy() *Task {
-	newTask := *t
+	newTask := t
 	newTask.TaskDefinition = t.TaskDefinition.Copy()
-	return &newTask
+	return newTask
 }
 
 func (t *Task) ValidateTransitionTo(to Task_State) error {
@@ -87,8 +87,8 @@ func (t *TaskDefinition) Copy() *TaskDefinition {
 	if t == nil {
 		return &TaskDefinition{}
 	}
-	newTaskDef := *t
-	return &newTaskDef
+	newTaskDef := t
+	return newTaskDef
 }
 
 func (def *TaskDefinition) Validate() error {

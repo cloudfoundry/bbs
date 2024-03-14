@@ -15,7 +15,7 @@ const (
 
 var errInvalidIP = errors.New("Invalid IP")
 
-func (rule SecurityGroupRule) Validate() error {
+func (rule *SecurityGroupRule) Validate() error {
 	var validationError ValidationError
 
 	switch rule.GetProtocol() {
@@ -64,7 +64,7 @@ func (rule SecurityGroupRule) Validate() error {
 	return nil
 }
 
-func (rule SecurityGroupRule) validatePorts() ValidationError {
+func (rule *SecurityGroupRule) validatePorts() ValidationError {
 	var validationError ValidationError
 
 	if rule.PortRange == nil && rule.Ports == nil {
@@ -102,7 +102,7 @@ func (rule SecurityGroupRule) validatePorts() ValidationError {
 	return validationError
 }
 
-func (rule SecurityGroupRule) validateDestinations() error {
+func (rule *SecurityGroupRule) validateDestinations() error {
 	if len(rule.Destinations) == 0 {
 		return errors.New("Must have at least 1 destination")
 	}

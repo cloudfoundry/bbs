@@ -91,9 +91,9 @@ func (this *CachedDependency) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CachedDependency)
 	if !ok {
-		that2, ok := that.(CachedDependency)
+		that2, ok := that.(*CachedDependency)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}

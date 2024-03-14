@@ -80,9 +80,9 @@ func (this *CertificateProperties) Equal(that interface{}) bool {
 
 	that1, ok := that.(*CertificateProperties)
 	if !ok {
-		that2, ok := that.(CertificateProperties)
+		that2, ok := that.(*CertificateProperties)
 		if ok {
-			that1 = &that2
+			that1 = that2
 		} else {
 			return false
 		}

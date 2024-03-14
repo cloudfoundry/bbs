@@ -1060,12 +1060,12 @@ func (this *DesiredLRPUpdate) GoString() string {
 	}
 	s := make([]string, 0, 8)
 	s = append(s, "&models.DesiredLRPUpdate{")
-	if this.OptionalInstances != nil {
-		s = append(s, "OptionalInstances: "+fmt.Sprintf("%#v", this.OptionalInstances)+",\n")
+	if this.Instances != nil {
+		s = append(s, "Instances: "+fmt.Sprintf("%#v", this.Instances)+",\n")
 	}
 	s = append(s, "Routes: "+fmt.Sprintf("%#v", this.Routes)+",\n")
-	if this.OptionalAnnotation != nil {
-		s = append(s, "OptionalAnnotation: "+fmt.Sprintf("%#v", this.OptionalAnnotation)+",\n")
+	if this.Annotation != nil {
+		s = append(s, "Annotation: "+fmt.Sprintf("%#v", this.Annotation)+",\n")
 	}
 	keysForMetricTags := make([]string, 0, len(this.MetricTags))
 	for k, _ := range this.MetricTags {
@@ -1749,12 +1749,12 @@ func (m *DesiredLRPUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	if m.Annotation != nil {
-		{
-			size := m.Annotation.Size()
-			i -= size
-			if _, err := m.Annotation.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
+		if len(*m.Annotation) > 0 {
+			i -= len(*m.Annotation)
+			copy(dAtA[i:], *m.Annotation)
+			i = encodeVarintDesiredLrp(dAtA, i, uint64(len(*m.Annotation)))
+			i--
+			dAtA[i] = 0x1a
 		}
 	}
 	if m.Routes != nil {
@@ -1770,12 +1770,10 @@ func (m *DesiredLRPUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 	}
 	if m.Instances != nil {
-		{
-			size := int(reflect.TypeOf(m.Instances).Size())
-			i -= size
-			if _, err := m.Instances.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
+		if *m.Instances != 0 {
+			i = encodeVarintDesiredLrp(dAtA, i, uint64(*m.Instances))
+			i--
+			dAtA[i] = 0x8
 		}
 	}
 	return len(dAtA) - i, nil
@@ -2523,15 +2521,20 @@ func (m *DesiredLRPUpdate) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.OptionalInstances != nil {
-		n += m.OptionalInstances.Size()
+	if m.Instances != nil {
+		if *m.Instances != 0 {
+			n += 1 + sovDesiredLrp(uint64(*m.Instances))
+		}
 	}
 	if m.Routes != nil {
 		l = m.Routes.Size()
 		n += 1 + l + sovDesiredLrp(uint64(l))
 	}
-	if m.OptionalAnnotation != nil {
-		n += m.OptionalAnnotation.Size()
+	if m.Annotation != nil {
+		l = len(*m.Annotation)
+		if l > 0 {
+			n += 1 + l + sovDesiredLrp(uint64(l))
+		}
 	}
 	if len(m.MetricTags) > 0 {
 		for k, v := range m.MetricTags {
@@ -4447,7 +4450,8 @@ func (m *DesiredLRPUpdate) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OptionalAnnotation = &DesiredLRPUpdate_Annotation{string(dAtA[iNdEx:postIndex])}
+			annotation := string(dAtA[iNdEx:postIndex])
+			m.Annotation = &annotation
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
