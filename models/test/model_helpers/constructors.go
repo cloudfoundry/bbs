@@ -11,9 +11,9 @@ import (
 func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 
 	actualLRP := &models.ActualLRP{
-		ActualLrpKey:            NewActualLRPKey(guid, index),
+		ActualLrpKey:            NewActualLRPKey(guid, index, "some-domain"),
 		ActualLrpInstanceKey:    NewActualLRPInstanceKey("some-guid", "some-cell"),
-		ActualLrpNetInfo:        NewActualLRPNetInfo(),
+		ActualLrpNetInfo:        NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(2222, 4444)),
 		ActualLrpInternalRoutes: NewActualLRPInternalRoutes(),
 		MetricTags:              NewActualLRPMetricTags(),
 		AvailabilityZone:        "some-zone",
@@ -33,8 +33,8 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	return actualLRP
 }
 
-func NewActualLRPKey(guid string, index int32) *models.ActualLRPKey {
-	actualLrpKey := models.NewActualLRPKey(guid, index, "some-domain")
+func NewActualLRPKey(guid string, index int32, domain string) *models.ActualLRPKey {
+	actualLrpKey := models.NewActualLRPKey(guid, index, domain)
 	return &actualLrpKey
 }
 
@@ -43,8 +43,9 @@ func NewActualLRPInstanceKey(instanceGuid string, cellId string) *models.ActualL
 	return &actualLrpInstanceKey
 }
 
-func NewActualLRPNetInfo() *models.ActualLRPNetInfo {
-	actualLrpNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(2222, 4444))
+func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddress models.ActualLRPNetInfo_PreferredAddress, ports ...*models.PortMapping) *models.ActualLRPNetInfo {
+	//	actualLrpNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(2222, 4444))
+	actualLrpNetInfo := models.NewActualLRPNetInfo(address, instanceAddress, preferredAddress, ports...)
 	return &actualLrpNetInfo
 }
 

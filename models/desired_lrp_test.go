@@ -339,7 +339,7 @@ var _ = Describe("DesiredLRP", func() {
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := json.Marshal(desiredLRP)
+			jsonSerialization, err := json.Marshal(&desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(jsonDesiredLRP))
 
@@ -350,12 +350,12 @@ var _ = Describe("DesiredLRP", func() {
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredRoutes := *desiredLRP.Routes
-			deserializedRoutes := *protoDeserialization.Routes
+			desiredRoutes := desiredLRP.Routes.Routes
+			deserializedRoutes := protoDeserialization.Routes.Routes
 
 			Expect(deserializedRoutes).To(HaveLen(len(desiredRoutes)))
 			for k := range desiredRoutes {
-				Expect(string(*deserializedRoutes[k])).To(MatchJSON(string(*desiredRoutes[k])))
+				Expect(string(deserializedRoutes[k])).To(MatchJSON(string(desiredRoutes[k])))
 			}
 
 			desiredLRP.Routes = nil
@@ -371,12 +371,12 @@ var _ = Describe("DesiredLRP", func() {
 			update.SetInstances(instances)
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
-			expectedSchedulingInfo := schedulingInfo
+			expectedSchedulingInfo := &schedulingInfo
 			expectedSchedulingInfo.Instances = instances
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
-			Expect(schedulingInfo).To(Equal(expectedSchedulingInfo))
+			Expect(&schedulingInfo).To(Equal(expectedSchedulingInfo))
 		})
 
 		It("allows empty routes to be set", func() {
