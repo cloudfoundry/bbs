@@ -105,6 +105,11 @@ func listTableNames(db *sql.DB) []string {
 
 func getTableSchema(db *sql.DB, tableName string) []*sql.ColumnType {
 	rows, err := db.Query("SELECT * FROM " + tableName)
+
+	//retry if failing https://github.com/jackc/pgx/issues/927
+	if err != nil {
+		rows, err = db.Query("SELECT * FROM " + tableName)
+	}
 	Expect(err).NotTo(HaveOccurred())
 	columnTypes, err := rows.ColumnTypes()
 	Expect(err).NotTo(HaveOccurred())
