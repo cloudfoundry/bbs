@@ -269,6 +269,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("emits an LRPChanged event", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 			event := actualHub.EmitArgsForCall(0)
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			Expect(event).To(Equal(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup())))
 		})
 
@@ -368,6 +369,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("emits a LPRCreated event", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 			event := actualHub.EmitArgsForCall(0)
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			Expect(event).To(Equal(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup())))
 		})
 
@@ -661,6 +663,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			It("emits an ActualLRPRemovedEvent containing the suspect LRP", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				Expect(event).To(Equal(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup())))
 			})
 
@@ -733,6 +736,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		BeforeEach(func() {
 			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			group1 := &models.ActualLRPGroup{Instance: model_helpers.NewValidActualLRP("evacuating-lrp", 0)}
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			expectedRemovedEvent = models.NewActualLRPRemovedEvent(group1)
 
 			lrp := model_helpers.NewValidActualLRP("evacuating-lrp", 0)

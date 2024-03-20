@@ -94,6 +94,7 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(actualLRPs).To(HaveLen(1))
 
 				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, cellSet)
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				Expect(result.Events).To(ContainElement(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
 				Expect(result.InstanceEvents).To(ContainElement(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId)))
 			})
@@ -221,6 +222,7 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(actualLRPs).To(HaveLen(1))
 
 				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, cellSet)
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
 				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId)))
 			})
@@ -650,7 +652,9 @@ var _ = Describe("LRPConvergence", func() {
 
 				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, cellSet)
 				Expect(result.Events).To(ConsistOf(
+					//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
+					//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
 				))
 				Expect(result.InstanceEvents).To(ConsistOf(
@@ -1170,7 +1174,9 @@ var _ = Describe("LRPConvergence", func() {
 
 				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, cellSet)
 				Expect(result.Events).To(ConsistOf(
+					//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 					models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup()),
+					//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 					models.NewActualLRPRemovedEvent(actualLRPs[1].ToActualLRPGroup()),
 				))
 				Expect(result.InstanceEvents).To(ConsistOf(
@@ -1377,6 +1383,7 @@ var _ = Describe("LRPConvergence", func() {
 				Expect(actualLRPs).To(HaveLen(1))
 
 				result := sqlDB.ConvergeLRPs(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, cellSet)
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				Expect(result.Events).To(ConsistOf(models.NewActualLRPRemovedEvent(actualLRPs[0].ToActualLRPGroup())))
 				Expect(result.InstanceEvents).To(ConsistOf(models.NewActualLRPInstanceRemovedEvent(actualLRPs[0], traceId)))
 			})

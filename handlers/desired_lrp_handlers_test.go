@@ -1947,6 +1947,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(ok).To(BeTrue())
 					removedGroups = append(removedGroups, removedEvent.ActualLrpGroup)
 
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(removedGroups).To(ConsistOf(unclaimedActualLRP3.ToActualLRPGroup(), crashedActualLRP4.ToActualLRPGroup()))
 				})
 

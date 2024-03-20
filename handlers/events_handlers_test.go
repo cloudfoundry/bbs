@@ -286,6 +286,7 @@ var _ = Describe("Event Handlers", func() {
 
 					BeforeEach(func() {
 						actualLRP := models.NewUnclaimedActualLRP(models.NewActualLRPKey("guid", 0, "some-domain"), 1)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						actualLRPGroupBefore := models.NewRunningActualLRPGroup(actualLRP)
 
 						actualLRP = models.NewClaimedActualLRP(
@@ -293,11 +294,15 @@ var _ = Describe("Event Handlers", func() {
 							models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
 							1,
 						)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						actualLRPGroupAfter := models.NewRunningActualLRPGroup(actualLRP)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
 
 						actualLRP = models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						unclaimedActualLRPGroupAgain := models.NewRunningActualLRPGroup(actualLRP)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						expectedActualLRPAfterEvent = models.NewActualLRPChangedEvent(actualLRPGroupAfter, unclaimedActualLRPGroupAgain)
 					})
 
@@ -321,6 +326,7 @@ var _ = Describe("Event Handlers", func() {
 									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
 									1,
 								)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								actualLRPGroupBefore := models.NewRunningActualLRPGroup(actualLRP)
 
 								actualLRP = models.NewClaimedActualLRP(
@@ -328,8 +334,10 @@ var _ = Describe("Event Handlers", func() {
 									models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
 									1,
 								)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								actualLRPGroupAfter := models.NewEvacuatingActualLRPGroup(actualLRP)
 
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
 							})
 
@@ -345,6 +353,7 @@ var _ = Describe("Event Handlers", func() {
 									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
 									1,
 								)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								actualLRPGroupBefore := models.NewEvacuatingActualLRPGroup(actualLRP)
 
 								actualLRP = models.NewClaimedActualLRP(
@@ -352,7 +361,9 @@ var _ = Describe("Event Handlers", func() {
 									models.NewActualLRPInstanceKey("instance-guid-1", "another-cell-id"),
 									1,
 								)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								actualLRPGroupAfter := models.NewRunningActualLRPGroup(actualLRP)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
 							})
 
@@ -398,7 +409,9 @@ var _ = Describe("Event Handlers", func() {
 							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
 							1,
 						)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						actualLRPGroup := models.NewRunningActualLRPGroup(actualLRP)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						expectedEvent = models.NewActualLRPCreatedEvent(actualLRPGroup)
 					})
 
@@ -419,7 +432,9 @@ var _ = Describe("Event Handlers", func() {
 									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
 									1,
 								)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								actualLRPGroup := models.NewEvacuatingActualLRPGroup(actualLRP)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								expectedEvent = models.NewActualLRPCreatedEvent(actualLRPGroup)
 							})
 
@@ -457,7 +472,9 @@ var _ = Describe("Event Handlers", func() {
 							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
 							1,
 						)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						actualLRPGroup := models.NewRunningActualLRPGroup(actualLRP)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						expectedEvent = models.NewActualLRPRemovedEvent(actualLRPGroup)
 					})
 
@@ -478,7 +495,9 @@ var _ = Describe("Event Handlers", func() {
 									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
 									1,
 								)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								actualLRPGroup := models.NewEvacuatingActualLRPGroup(actualLRP)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 								expectedEvent = models.NewActualLRPRemovedEvent(actualLRPGroup)
 							})
 

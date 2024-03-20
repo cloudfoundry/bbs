@@ -15,7 +15,7 @@ type EventController interface {
 	Subscribe_r1(logger lager.Logger, w http.ResponseWriter, req *http.Request)
 }
 
-// DEPRECATED
+// Deprecated: use LRPInstanceEventHandler instead
 type LRPGroupEventsHandler struct {
 	desiredHub events.Hub
 	actualHub  events.Hub
@@ -30,7 +30,7 @@ type LRPInstanceEventHandler struct {
 	lrpInstanceHub events.Hub
 }
 
-// DEPRECATED
+// Deprecated: use LRPInstanceEventHandler instead
 func NewLRPGroupEventsHandler(desiredHub, actualHub events.Hub) *LRPGroupEventsHandler {
 	return &LRPGroupEventsHandler{
 		desiredHub: desiredHub,

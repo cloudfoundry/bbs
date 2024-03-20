@@ -165,6 +165,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrp.ToActualLRPGroup()))
 			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(lrp, traceId))
 
@@ -184,6 +185,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			} else if !after.Equal(before) {
 				logger.Info("emitting-changed-event", lager.Data{"before": before, "after": after})
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				go h.actualHub.Emit(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 				go func() {
 					h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(after, traceId))
@@ -266,6 +268,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 			if removedLRP != nil {
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				go h.actualHub.Emit(models.NewActualLRPRemovedEvent(removedLRP.ToActualLRPGroup()))
 				go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(removedLRP, traceId))
 
@@ -284,6 +287,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			go h.actualHub.Emit(models.NewActualLRPRemovedEvent(suspectLRP.ToActualLRPGroup()))
 			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(suspectLRP, traceId))
 		})

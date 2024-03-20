@@ -199,6 +199,7 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 	switch x := bbsEvent.(type) {
 	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPCreatedEvent:
+		//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 		lrp, _, resolveError := x.ActualLrpGroup.Resolve()
 		if resolveError != nil {
 			return false, resolveError
@@ -210,10 +211,12 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 
 	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPChangedEvent:
+		//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 		beforeLRP, _, beforeResolveError := x.Before.Resolve()
 		if beforeResolveError != nil {
 			return false, beforeResolveError
 		}
+		//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 		afterLRP, _, afterResolveError := x.After.Resolve()
 		if afterResolveError != nil {
 			return false, afterResolveError
@@ -224,6 +227,7 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 
 	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPRemovedEvent:
+		//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 		lrp, _, resolveError := x.ActualLrpGroup.Resolve()
 		if resolveError != nil {
 			return false, resolveError
