@@ -124,8 +124,10 @@ var _ = Describe("Evacuation Controller", func() {
 			It("emits events to the hub", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingLRP}))
 			})
 
@@ -157,8 +159,10 @@ var _ = Describe("Evacuation Controller", func() {
 				It("emits event with the evacuating instance only", func() {
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingLRP}))
 				})
 
@@ -275,9 +279,13 @@ var _ = Describe("Evacuation Controller", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 
 			event := actualHub.EmitArgsForCall(0)
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			che := event.(*models.ActualLRPChangedEvent)
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: afterActualLRP}))
 		})
 
@@ -404,8 +412,10 @@ var _ = Describe("Evacuation Controller", func() {
 			It("emits an ActualLRPRemovedEvent", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actualLRP}))
 			})
 
@@ -459,8 +469,10 @@ var _ = Describe("Evacuation Controller", func() {
 			It("emits an ActualLRPRemovedEvent", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actualLRP}))
 			})
 
@@ -496,7 +508,9 @@ var _ = Describe("Evacuation Controller", func() {
 					events := []models.Event{}
 					events = append(events, actualHub.EmitArgsForCall(0), actualHub.EmitArgsForCall(1))
 					Expect(events).To(ConsistOf(
+						//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 						models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actualLRP}),
+						//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 						models.NewActualLRPCreatedEvent(&models.ActualLRPGroup{Instance: ordinaryActualLRP}),
 					))
 				})
@@ -631,8 +645,10 @@ var _ = Describe("Evacuation Controller", func() {
 			It("emits events to the hub", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: actualLRP}))
 			})
 
@@ -679,6 +695,7 @@ var _ = Describe("Evacuation Controller", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				events := []models.Event{}
 				events = append(events, actualHub.EmitArgsForCall(0))
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actualLRP})))
 			})
 
@@ -779,9 +796,11 @@ var _ = Describe("Evacuation Controller", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
 			})
 
@@ -885,8 +904,11 @@ var _ = Describe("Evacuation Controller", func() {
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					ce := event.(*models.ActualLRPCreatedEvent)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 				})
 
@@ -1038,14 +1060,21 @@ var _ = Describe("Evacuation Controller", func() {
 						Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 						event := actualHub.EmitArgsForCall(0)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						ce := event.(*models.ActualLRPCreatedEvent)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 
 						event = actualHub.EmitArgsForCall(1)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						che := event.(*models.ActualLRPChangedEvent)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
 					})
 
@@ -1160,8 +1189,11 @@ var _ = Describe("Evacuation Controller", func() {
 						Consistently(actualHub.EmitCallCount).Should(Equal(2))
 
 						event := actualHub.EmitArgsForCall(0)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						ce := event.(*models.ActualLRPCreatedEvent)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 
 						event = actualHub.EmitArgsForCall(1)
@@ -1196,18 +1228,27 @@ var _ = Describe("Evacuation Controller", func() {
 							Consistently(actualHub.EmitCallCount).Should(Equal(3))
 
 							event := actualHub.EmitArgsForCall(0)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							ce := event.(*models.ActualLRPCreatedEvent)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 
 							event = actualHub.EmitArgsForCall(1)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							ce = event.(*models.ActualLRPCreatedEvent)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: replacementActual}))
 
 							event = actualHub.EmitArgsForCall(2)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							re := event.(*models.ActualLRPRemovedEvent)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
 						})
 
@@ -1244,14 +1285,21 @@ var _ = Describe("Evacuation Controller", func() {
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					ce := event.(*models.ActualLRPCreatedEvent)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 
 					event = actualHub.EmitArgsForCall(1)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					che := event.(*models.ActualLRPChangedEvent)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
 				})
 
@@ -1320,8 +1368,10 @@ var _ = Describe("Evacuation Controller", func() {
 				It("emits events to the hub", func() {
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
 				})
 
@@ -1458,6 +1508,7 @@ var _ = Describe("Evacuation Controller", func() {
 			events = append(events, actualHub.EmitArgsForCall(0))
 
 			Expect(events).To(ConsistOf(
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual}),
 			))
 		})
@@ -1518,6 +1569,7 @@ var _ = Describe("Evacuation Controller", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				events := []models.Event{}
 				events = append(events, actualHub.EmitArgsForCall(0))
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Instance: actual})))
 			})
 
@@ -1575,6 +1627,7 @@ var _ = Describe("Evacuation Controller", func() {
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				events := []models.Event{}
 				events = append(events, actualHub.EmitArgsForCall(0))
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				Expect(events).To(ConsistOf(models.NewActualLRPRemovedEvent(&models.ActualLRPGroup{Evacuating: evacuating})))
 
 			})

@@ -349,7 +349,9 @@ var _ = Describe("Client", func() {
 					func(w http.ResponseWriter, req *http.Request) {
 						<-blockCh
 					},
+					//lint:ignore SA1019 - testing of deprecated code
 					ghttp.RespondWithProto(200, &models.ActualLRPGroupsResponse{
+						//lint:ignore SA1019 - testing of deprecated code
 						ActualLrpGroups: []*models.ActualLRPGroup{
 							{
 								Instance: &models.ActualLRP{
@@ -372,6 +374,7 @@ var _ = Describe("Client", func() {
 
 			lrps, err := client.ActualLRPGroups(logger, "some-trace-id", models.ActualLRPFilter{})
 			Expect(err).ToNot(HaveOccurred())
+			//lint:ignore SA1019 - testing of deprecated code
 			Expect(lrps).To(ConsistOf(&models.ActualLRPGroup{
 				Instance: &models.ActualLRP{
 					State: "running",

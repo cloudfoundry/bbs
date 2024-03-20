@@ -725,11 +725,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 	Context("when the db returns events", func() {
 		var (
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			expectedRemovedEvent         *models.ActualLRPRemovedEvent
 			expectedInstanceRemovedEvent *models.ActualLRPInstanceRemovedEvent
 		)
 
 		BeforeEach(func() {
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			group1 := &models.ActualLRPGroup{Instance: model_helpers.NewValidActualLRP("evacuating-lrp", 0)}
 			expectedRemovedEvent = models.NewActualLRPRemovedEvent(group1)
 
@@ -747,6 +749,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("emits those events", func() {
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 			event := actualHub.EmitArgsForCall(0)
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 			Expect(ok).To(BeTrue())
 			Expect(removedEvent).To(Equal(expectedRemovedEvent))

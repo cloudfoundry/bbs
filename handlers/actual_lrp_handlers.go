@@ -51,7 +51,9 @@ func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseW
 	var err error
 	logger = logger.Session("actual-lrp-groups").WithTraceInfo(req)
 
+	//lint:ignore SA1019 - calling deprecated model from inside deprecated function
 	request := &models.ActualLRPGroupsRequest{}
+	//lint:ignore SA1019 - calling deprecated model from inside deprecated function
 	response := &models.ActualLRPGroupsResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
@@ -76,7 +78,9 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w h
 	var err error
 	logger = logger.Session("actual-lrp-groups-by-process-guid").WithTraceInfo(req)
 
+	//lint:ignore SA1019 - calling deprecated model from inside deprecated function
 	request := &models.ActualLRPGroupsByProcessGuidRequest{}
+	//lint:ignore SA1019 - calling deprecated model from inside deprecated function
 	response := &models.ActualLRPGroupsResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)
@@ -100,7 +104,9 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logg
 	var err error
 	logger = logger.Session("actual-lrp-group-by-process-guid-and-index").WithTraceInfo(req)
 
+	//lint:ignore SA1019 - calling deprecated model from inside deprecated function
 	request := &models.ActualLRPGroupByProcessGuidAndIndexRequest{}
+	//lint:ignore SA1019 - calling deprecated model from inside deprecated function
 	response := &models.ActualLRPGroupResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response)

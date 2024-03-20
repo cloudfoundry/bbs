@@ -174,6 +174,7 @@ func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req
 	response.Error = models.ConvertError(err)
 }
 
+// Deprecated: do not use
 func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("fail-task").WithTraceInfo(req)

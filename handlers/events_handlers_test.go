@@ -278,8 +278,10 @@ var _ = Describe("Event Handlers", func() {
 
 				Context("ActualLRPChangedEvent", func() {
 					var (
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						expectedActualLRPBeforeEvent *models.ActualLRPChangedEvent
-						expectedActualLRPAfterEvent  *models.ActualLRPChangedEvent
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+						expectedActualLRPAfterEvent *models.ActualLRPChangedEvent
 					)
 
 					BeforeEach(func() {
@@ -387,6 +389,7 @@ var _ = Describe("Event Handlers", func() {
 
 				Context("ActualLRPCreatedEvent", func() {
 					var (
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						expectedEvent *models.ActualLRPCreatedEvent
 					)
 
@@ -445,6 +448,7 @@ var _ = Describe("Event Handlers", func() {
 
 				Context("ActualLRPRemovedEvent", func() {
 					var (
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						expectedEvent *models.ActualLRPRemovedEvent
 					)
 

@@ -6,7 +6,9 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
+//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 func MatchActualLRPGroup(expected *models.ActualLRPGroup) types.GomegaMatcher {
+	//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 	removeUntestedLRPFields := func(lrp *models.ActualLRPGroup) *models.ActualLRPGroup {
 		newLRP := *lrp
 

@@ -1027,6 +1027,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					_, _, actualLRPKey := fakeActualLRPDB.CreateUnclaimedActualLRPArgsForCall(i)
 					Expect(expectedLRPKeys).To(ContainElement(actualLRPKey))
 					event := actualHub.EmitArgsForCall(i)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(createdActualLRPs).To(ContainElement(createdEvent.ActualLrpGroup.Instance))
@@ -1931,14 +1932,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				It("emits an ActualLRPRemovedEvent per unclaimed or crashed actual lrp", func() {
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					removedGroups := []*models.ActualLRPGroup{}
 
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
 					removedGroups = append(removedGroups, removedEvent.ActualLrpGroup)
 
 					event = actualHub.EmitArgsForCall(1)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					removedEvent, ok = event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
 					removedGroups = append(removedGroups, removedEvent.ActualLrpGroup)

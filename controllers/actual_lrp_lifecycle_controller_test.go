@@ -147,6 +147,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			err = controller.ClaimActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 			Eventually(actualHub.EmitCallCount).Should(Equal(1))
 			event := actualHub.EmitArgsForCall(0)
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			changedEvent, ok := event.(*models.ActualLRPChangedEvent)
 			Expect(ok).To(BeTrue())
 			Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -499,6 +500,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					createdEvent, ok := event.(*models.ActualLRPCreatedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(createdEvent.ActualLrpGroup).To(Equal(afterActualLRP.ToActualLRPGroup()))
@@ -521,6 +523,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					changedEvent, ok := event.(*models.ActualLRPChangedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -541,6 +544,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, false, availabilityZone)
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					changedEvent, ok := event.(*models.ActualLRPChangedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -655,6 +659,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				CrashCount:           1,
 				CrashReason:          errorMessage,
 			},
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				&models.ActualLRPChangedEvent{
 					Before: actualLRP.ToActualLRPGroup(),
 					After:  afterActualLRP.ToActualLRPGroup(),
@@ -837,6 +842,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Consistently(actualHub.EmitCallCount).Should(Equal(1))
 
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -918,8 +924,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					var createdEvent *models.ActualLRPChangedEvent
 					Expect(event).To(BeAssignableToTypeOf(createdEvent))
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					createdEvent = event.(*models.ActualLRPChangedEvent)
 					Expect(createdEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
 					Expect(createdEvent.After).To(Equal(replacementLRP.ToActualLRPGroup()))
@@ -960,14 +968,18 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 					event := actualHub.EmitArgsForCall(0)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					var createdEvent *models.ActualLRPCreatedEvent
 					Expect(event).To(BeAssignableToTypeOf(createdEvent))
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					createdEvent = event.(*models.ActualLRPCreatedEvent)
 					Expect(createdEvent.ActualLrpGroup).To(Equal(replacementLRP.ToActualLRPGroup()))
 
 					event = actualHub.EmitArgsForCall(1)
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					var removedEvent *models.ActualLRPRemovedEvent
 					Expect(event).To(BeAssignableToTypeOf(removedEvent))
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					removedEvent = event.(*models.ActualLRPRemovedEvent)
 					Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
 				})
@@ -1179,6 +1191,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				controller.RemoveActualLRP(ctx, logger, processGuid, index, &afterInstanceKey)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -1351,6 +1364,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -1412,6 +1426,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 				Eventually(actualHub.EmitCallCount).Should(Equal(1))
 				event := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 				Expect(ok).To(BeTrue())
 				Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -1499,6 +1514,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 						Eventually(actualHub.EmitCallCount).Should(Equal(1))
 						event := actualHub.EmitArgsForCall(0)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 						removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 						Expect(ok).To(BeTrue())
 						Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))
@@ -1581,6 +1597,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 							err = controller.RetireActualLRP(ctx, logger, &actualLRPKey)
 							Eventually(actualHub.EmitCallCount).Should(Equal(1))
 							event := actualHub.EmitArgsForCall(0)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							removedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 							Expect(ok).To(BeTrue())
 							Expect(removedEvent.ActualLrpGroup).To(Equal(actualLRP.ToActualLRPGroup()))

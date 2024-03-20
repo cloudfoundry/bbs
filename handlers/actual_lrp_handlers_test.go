@@ -262,6 +262,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		var requestBody interface{}
 
 		BeforeEach(func() {
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			requestBody = &models.ActualLRPGroupsRequest{}
 		})
 
@@ -272,6 +273,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 
 		Context("when reading actual lrps from DB succeeds", func() {
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			var actualLRPGroups []*models.ActualLRPGroup
 
 			BeforeEach(func() {
@@ -283,14 +285,18 @@ var _ = Describe("ActualLRP Handlers", func() {
 					}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				actualLRPGroups = []*models.ActualLRPGroup{
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					&models.ActualLRPGroup{Instance: &actualLRP1},
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					&models.ActualLRPGroup{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
 				}
 			})
 
 			It("returns a list of actual lrp groups", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				response := models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -309,6 +315,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by domain", func() {
 				BeforeEach(func() {
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					requestBody = &models.ActualLRPGroupsRequest{Domain: "domain-1"}
 				})
 
@@ -321,6 +328,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by cellId", func() {
 				BeforeEach(func() {
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					requestBody = &models.ActualLRPGroupsRequest{CellId: "cellid-1"}
 				})
 
@@ -333,6 +341,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by cellId and domain", func() {
 				BeforeEach(func() {
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					requestBody = &models.ActualLRPGroupsRequest{Domain: "potato", CellId: "cellid-1"}
 				})
 
@@ -352,6 +361,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				response := &models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -380,6 +390,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				response := &models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -396,6 +407,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		)
 
 		BeforeEach(func() {
+			//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 			requestBody = &models.ActualLRPGroupsByProcessGuidRequest{
 				ProcessGuid: processGuid,
 			}
@@ -409,10 +421,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when reading actual lrps from DB succeeds", func() {
 			var actualLRPs []*models.ActualLRP
+			//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 			var actualLRPGroups []*models.ActualLRPGroup
 
 			BeforeEach(func() {
 				actualLRPGroups =
+					//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 					[]*models.ActualLRPGroup{
 						{Instance: &actualLRP1},
 						{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
@@ -437,6 +451,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("returns a list of actual lrp groups", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				response := &models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -453,6 +468,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				response := &models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -481,6 +497,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				response := &models.ActualLRPGroupsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -499,6 +516,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		)
 
 		BeforeEach(func() {
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			requestBody = &models.ActualLRPGroupByProcessGuidAndIndexRequest{
 				ProcessGuid: processGuid,
 				Index:       index,
@@ -512,10 +530,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 
 		Context("when reading actual lrps from DB succeeds", func() {
+			//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 			var actualLRPGroup *models.ActualLRPGroup
 			var actualLRPs []*models.ActualLRP
 
 			BeforeEach(func() {
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				actualLRPGroup = &models.ActualLRPGroup{Instance: &actualLRP1}
 				actualLRPs = []*models.ActualLRP{&actualLRP1}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
@@ -531,6 +551,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("returns an actual lrp group", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				response := &models.ActualLRPGroupResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -541,12 +562,14 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("when there is also an evacuating LRP", func() {
 				BeforeEach(func() {
+					//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 					actualLRPGroup = &models.ActualLRPGroup{Instance: &actualLRP2, Evacuating: &evacuatingLRP2}
 					actualLRPs = []*models.ActualLRP{&actualLRP2, &evacuatingLRP2}
 					fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 				})
 
 				It("returns both LRPs in the group", func() {
+					//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 					response := &models.ActualLRPGroupResponse{}
 					err := response.Unmarshal(responseRecorder.Body.Bytes())
 					Expect(err).NotTo(HaveOccurred())
@@ -564,6 +587,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				response := &models.ActualLRPGroupResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -591,6 +615,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 				response := &models.ActualLRPGroupResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())

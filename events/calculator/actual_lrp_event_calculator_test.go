@@ -58,6 +58,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 
 				Expect(actualHub.EmitCallCount()).To(Equal(1))
 				lrpGroupEvent := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				Expect(lrpGroupEvent).To(Equal(&models.ActualLRPCreatedEvent{ActualLrpGroup: newLRP.ToActualLRPGroup()}))
 			})
 
@@ -85,6 +86,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 
 				Expect(actualHub.EmitCallCount()).To(Equal(1))
 				lrpGroupEvent := actualHub.EmitArgsForCall(0)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				Expect(lrpGroupEvent).To(Equal(&models.ActualLRPRemovedEvent{ActualLrpGroup: deletedLRP.ToActualLRPGroup()}))
 			})
 
@@ -744,6 +746,7 @@ var _ = Describe("EventScore", func() {
 	})
 
 	Context("for ActualLRPChangedEvent", func() {
+		//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 		var beforeActualLRPGroup *models.ActualLRPGroup
 		BeforeEach(func() {
 			beforeActualLRPGroup = model_helpers.NewValidActualLRP("some-guid", 0).ToActualLRPGroup()
