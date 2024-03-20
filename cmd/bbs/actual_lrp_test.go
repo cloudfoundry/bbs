@@ -44,18 +44,10 @@ var _ = Describe("ActualLRP API", func() {
 		retiredProcessGuid  = "retired-process-guid"
 		retiredDomain       = "retired-domain"
 		retiredInstanceGuid = "retired-instance-guid"
-
-		baseIndex       = 0
-		otherIndex0     = 0
-		otherIndex1     = 1
-		evacuatingIndex = 0
-		unclaimedIndex  = 0
-		crashingIndex   = 0
-		retiredIndex    = 0
 	)
 
 	var (
-		actualActualLRPGroups []*models.ActualLRPGroup
+		actualActualLRPGroups []*models.ActualLRP
 
 		baseLRP               *models.ActualLRP
 		otherLRP0             *models.ActualLRP
@@ -91,6 +83,14 @@ var _ = Describe("ActualLRP API", func() {
 		filter models.ActualLRPFilter
 
 		getErr error
+
+		baseIndex       = int32(0)
+		otherIndex0     = int32(0)
+		otherIndex1     = int32(1)
+		evacuatingIndex = int32(0)
+		unclaimedIndex  = int32(0)
+		crashingIndex   = int32(0)
+		retiredIndex    = int32(0)
 	)
 
 	BeforeEach(func() {
@@ -101,7 +101,7 @@ var _ = Describe("ActualLRP API", func() {
 		bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 		bbsProcess = ginkgomon.Invoke(bbsRunner)
 
-		actualActualLRPGroups = []*models.ActualLRPGroup{}
+		actualActualLRPGroups = []*models.ActualLRP{}
 
 		baseLRPKey = models.NewActualLRPKey(baseProcessGuid, baseIndex, baseDomain)
 		baseLRPInstanceKey = models.NewActualLRPInstanceKey(baseInstanceGuid, cellID)
@@ -408,22 +408,23 @@ var _ = Describe("ActualLRP API", func() {
 
 	Describe("ActualLRPGroups", func() {
 		It("responds without error", func() {
-			actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, "some-trace-id", filter)
+			actualActualLRPGroups, getErr = client.ActualLRPs(logger, "some-trace-id", filter)
 			Expect(getErr).NotTo(HaveOccurred())
 		})
 
 		Context("when not filtering", func() {
 			It("returns all actual lrps from the bbs", func() {
-				actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, "some-trace-id", filter)
+				actualActualLRPGroups, getErr = client.ActualLRPs(logger, "some-trace-id", filter)
 				Expect(getErr).NotTo(HaveOccurred())
 
 				Expect(actualActualLRPGroups).To(ConsistOf(
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: baseLRP}),
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: evacuatingInstanceLRP, Evacuating: evacuatingLRP}),
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: otherLRP0}),
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: otherLRP1}),
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: unclaimedLRP}),
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: crashingLRP}),
+					test_helpers.MatchActualLRP(baseLRP),
+					test_helpers.MatchActualLRP(evacuatingLRP),
+					test_helpers.MatchActualLRP(evacuatingInstanceLRP),
+					test_helpers.MatchActualLRP(otherLRP0),
+					test_helpers.MatchActualLRP(otherLRP1),
+					test_helpers.MatchActualLRP(unclaimedLRP),
+					test_helpers.MatchActualLRP(crashingLRP),
 				))
 			})
 		})
@@ -434,11 +435,10 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested domain", func() {
-				actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, "some-trace-id", filter)
+				actualActualLRPGroups, getErr = client.ActualLRPs(logger, "some-trace-id", filter)
 				Expect(getErr).NotTo(HaveOccurred())
 
-				expectedActualLRPGroup := &models.ActualLRPGroup{Instance: baseLRP}
-				Expect(actualActualLRPGroups).To(ConsistOf(test_helpers.MatchActualLRPGroup(expectedActualLRPGroup)))
+				Expect(actualActualLRPGroups).To(ConsistOf(test_helpers.MatchActualLRP(baseLRP)))
 			})
 		})
 
@@ -448,11 +448,11 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns actual lrps from the requested cell", func() {
-				actualActualLRPGroups, getErr = client.ActualLRPGroups(logger, "some-trace-id", filter)
+				actualActualLRPGroups, getErr = client.ActualLRPs(logger, "some-trace-id", filter)
 				Expect(getErr).NotTo(HaveOccurred())
 				Expect(actualActualLRPGroups).To(ConsistOf(
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: baseLRP}),
-					test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Evacuating: evacuatingLRP}),
+					test_helpers.MatchActualLRP(baseLRP),
+					test_helpers.MatchActualLRP(evacuatingLRP),
 				))
 			})
 		})
@@ -497,18 +497,17 @@ var _ = Describe("ActualLRP API", func() {
 			})
 
 			It("returns the TLS host and container port", func() {
-				actualLRPGroups, err := client.ActualLRPGroups(logger, "some-trace-id", filter)
+				actualLRPGroups, err := client.ActualLRPs(logger, "some-trace-id", filter)
 				Expect(err).NotTo(HaveOccurred())
 
-				tlsGroup := &models.ActualLRPGroup{Instance: tlsEnabledLRP}
-				Expect(actualLRPGroups).To(ContainElement(test_helpers.MatchActualLRPGroup(tlsGroup)))
+				Expect(actualLRPGroups).To(ContainElement(test_helpers.MatchActualLRP(tlsEnabledLRP)))
 			})
 		})
 	})
 
 	Describe("ActualLRPGroupsByProcessGuid", func() {
 		JustBeforeEach(func() {
-			actualActualLRPGroups, getErr = client.ActualLRPGroupsByProcessGuid(logger, "some-trace-id", baseProcessGuid)
+			actualActualLRPGroups, getErr = client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: baseProcessGuid})
 		})
 
 		It("returns the specific actual lrp from the bbs", func() {
@@ -517,32 +516,31 @@ var _ = Describe("ActualLRP API", func() {
 
 			fetchedActualLRPGroup := actualActualLRPGroups[0]
 			Expect(fetchedActualLRPGroup).To(
-				test_helpers.MatchActualLRPGroup(&models.ActualLRPGroup{Instance: baseLRP}),
+				test_helpers.MatchActualLRP(baseLRP),
 			)
 		})
 	})
 
 	Describe("ActualLRPGroupByProcessGuidAndIndex", func() {
 		var (
-			actualLRPGroup         *models.ActualLRPGroup
-			expectedActualLRPGroup *models.ActualLRPGroup
+			actualLRPs []*models.ActualLRP
 		)
 
 		It("responds without error", func() {
-			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", baseProcessGuid, baseIndex)
+			actualLRPs, getErr = client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: baseProcessGuid, Index: &baseIndex})
 			Expect(getErr).NotTo(HaveOccurred())
 		})
 
 		It("returns all actual lrps from the bbs", func() {
-			actualLRPGroup, getErr = client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", baseProcessGuid, baseIndex)
-			expectedActualLRPGroup = &models.ActualLRPGroup{Instance: baseLRP}
-			Expect(actualLRPGroup).To(test_helpers.MatchActualLRPGroup(expectedActualLRPGroup))
+			actualLRPs, getErr = client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: baseProcessGuid, Index: &baseIndex})
+			Expect(actualLRPs).To(ConsistOf(test_helpers.MatchActualLRP(baseLRP)))
 		})
 
 		Context("when no ActualLRP group matches the process guid and index", func() {
 			It("returns an error", func() {
-				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", retiredProcessGuid, retiredIndex)
-				Expect(err).To(Equal(models.ErrResourceNotFound))
+				actualLRPs, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: retiredProcessGuid, Index: &retiredIndex})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualLRPs).To(BeEmpty())
 			})
 		})
 	})
@@ -568,12 +566,10 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.State = models.ActualLRPStateClaimed
 			expectedActualLRP.ActualLRPInstanceKey = instanceKey
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", unclaimedProcessGuid, unclaimedIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: unclaimedProcessGuid, Index: &unclaimedIndex})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fetchedActualLRPGroup).To(test_helpers.MatchActualLRPGroup(
-				&models.ActualLRPGroup{Instance: &expectedActualLRP}),
-			)
+			Expect(fetchedActualLRPGroup).To(ConsistOf(test_helpers.MatchActualLRP(&expectedActualLRP)))
 		})
 	})
 
@@ -603,12 +599,10 @@ var _ = Describe("ActualLRP API", func() {
 			expectedActualLRP.SetRoutable(true)
 			expectedActualLRP.AvailabilityZone = availabilityZone
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", unclaimedProcessGuid, unclaimedIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: unclaimedProcessGuid, Index: &unclaimedIndex})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fetchedActualLRPGroup).To(test_helpers.MatchActualLRPGroup(
-				&models.ActualLRPGroup{Instance: &expectedActualLRP}),
-			)
+			Expect(fetchedActualLRPGroup).To(ConsistOf(test_helpers.MatchActualLRP(&expectedActualLRP)))
 		})
 	})
 
@@ -626,12 +620,10 @@ var _ = Describe("ActualLRP API", func() {
 		It("fails the actual_lrp", func() {
 			Expect(failErr).NotTo(HaveOccurred())
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", unclaimedProcessGuid, unclaimedIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: unclaimedProcessGuid, Index: &unclaimedIndex})
 			Expect(err).NotTo(HaveOccurred())
 
-			fetchedActualLRP, _, resolveError := fetchedActualLRPGroup.Resolve()
-			Expect(resolveError).NotTo(HaveOccurred())
-			Expect(fetchedActualLRP.PlacementError).To(Equal(errorMessage))
+			Expect(fetchedActualLRPGroup[0].PlacementError).To(Equal(errorMessage))
 		})
 	})
 
@@ -649,14 +641,12 @@ var _ = Describe("ActualLRP API", func() {
 		It("crashes the actual_lrp", func() {
 			Expect(crashErr).NotTo(HaveOccurred())
 
-			fetchedActualLRPGroup, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", baseProcessGuid, baseIndex)
+			fetchedActualLRPGroup, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: baseProcessGuid, Index: &baseIndex})
 			Expect(err).NotTo(HaveOccurred())
 
-			fetchedActualLRP, _, resolveError := fetchedActualLRPGroup.Resolve()
-			Expect(resolveError).NotTo(HaveOccurred())
-			Expect(fetchedActualLRP.State).To(Equal(models.ActualLRPStateUnclaimed))
-			Expect(fetchedActualLRP.CrashCount).To(Equal(int32(1)))
-			Expect(fetchedActualLRP.CrashReason).To(Equal(errorMessage))
+			Expect(fetchedActualLRPGroup[0].State).To(Equal(models.ActualLRPStateUnclaimed))
+			Expect(fetchedActualLRPGroup[0].CrashCount).To(Equal(int32(1)))
+			Expect(fetchedActualLRPGroup[0].CrashReason).To(Equal(errorMessage))
 		})
 	})
 
@@ -672,8 +662,9 @@ var _ = Describe("ActualLRP API", func() {
 		It("retires the actual_lrp", func() {
 			Expect(retireErr).NotTo(HaveOccurred())
 
-			_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", unclaimedProcessGuid, unclaimedIndex)
-			Expect(err).To(Equal(models.ErrResourceNotFound))
+			actualLRPs, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: unclaimedProcessGuid, Index: &unclaimedIndex})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actualLRPs).To(BeEmpty())
 		})
 
 		Context("when using locket cell presences", func() {
@@ -706,8 +697,9 @@ var _ = Describe("ActualLRP API", func() {
 				retireErr = client.RetireActualLRP(logger, "some-trace-id", &baseLRPKey)
 				Expect(retireErr).NotTo(HaveOccurred())
 
-				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", baseProcessGuid, baseIndex)
-				Expect(err).To(Equal(models.ErrResourceNotFound))
+				actualLRPs, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: baseProcessGuid, Index: &baseIndex})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualLRPs).To(BeEmpty())
 			})
 		})
 	})
@@ -730,9 +722,9 @@ var _ = Describe("ActualLRP API", func() {
 			It("removes the actual_lrp", func() {
 				Expect(removeErr).NotTo(HaveOccurred())
 
-				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", otherProcessGuid, otherIndex0)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(models.ErrResourceNotFound))
+				actualLRPs, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: otherProcessGuid, Index: &otherIndex0})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualLRPs).To(BeEmpty())
 			})
 		})
 
@@ -744,9 +736,9 @@ var _ = Describe("ActualLRP API", func() {
 			It("removes the actual_lrp", func() {
 				Expect(removeErr).NotTo(HaveOccurred())
 
-				_, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", otherProcessGuid, otherIndex0)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(models.ErrResourceNotFound))
+				actualLRPs, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: otherProcessGuid, Index: &otherIndex0})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(actualLRPs).To(BeEmpty())
 			})
 		})
 
