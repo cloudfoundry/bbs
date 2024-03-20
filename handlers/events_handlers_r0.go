@@ -197,6 +197,7 @@ func (h *TaskEventHandler) Subscribe_r1(logger lager.Logger, w http.ResponseWrit
 
 func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, error) {
 	switch x := bbsEvent.(type) {
+	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPCreatedEvent:
 		lrp, _, resolveError := x.ActualLrpGroup.Resolve()
 		if resolveError != nil {
@@ -207,6 +208,7 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 			return false, nil
 		}
 
+	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPChangedEvent:
 		beforeLRP, _, beforeResolveError := x.Before.Resolve()
 		if beforeResolveError != nil {
@@ -220,6 +222,7 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 			return false, nil
 		}
 
+	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPRemovedEvent:
 		lrp, _, resolveError := x.ActualLrpGroup.Resolve()
 		if resolveError != nil {

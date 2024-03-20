@@ -347,9 +347,11 @@ func generateLRPInstanceGroupEvents(before, after *models.ActualLRP) []models.Ev
 // crashed and removed events.  Returns true iff this is a crashed event.
 func getEventLRP(e models.Event) (*models.ActualLRP, bool) {
 	switch x := e.(type) {
+	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPCreatedEvent:
 		lrp, _, _ := x.ActualLrpGroup.Resolve()
 		return lrp, false
+	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPChangedEvent:
 		lrp, _, _ := x.After.Resolve()
 		return lrp, false
@@ -390,6 +392,7 @@ func EventScore(e models.Event) int {
 	return 0
 }
 
+//lint:ignore SA1019 - deprecated model used in support of deprecated code until it gets deleted
 func generateLRPGroupEvents(before, after *models.ActualLRPGroup) []models.Event {
 	events := generateLRPInstanceGroupEvents(before.Instance, after.Instance)
 	events = append(events, generateLRPInstanceGroupEvents(before.Evacuating, after.Evacuating)...)

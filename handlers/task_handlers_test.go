@@ -750,6 +750,7 @@ var _ = Describe("Task Handlers", func() {
 
 			controller.FailTaskReturns(nil)
 
+			//lint:ignore SA1019 - testing deprecated code
 			requestBody = &models.FailTaskRequest{
 				TaskGuid:      taskGuid,
 				FailureReason: failureReason,

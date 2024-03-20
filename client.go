@@ -142,14 +142,17 @@ type ExternalActualLRPClient interface {
 
 	// DEPRECATED
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	ActualLRPGroups(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 
 	// DEPRECATED
 	// Returns all ActualLRPGroups that have the given process guid
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	ActualLRPGroupsByProcessGuid(logger lager.Logger, traceID string, processGuid string) ([]*models.ActualLRPGroup, error)
 
 	// DEPRECATED
 	// Returns the ActualLRPGroup with the given process guid and instance index
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, traceID string, processGuid string, index int) (*models.ActualLRPGroup, error)
 
 	// Shuts down the ActualLRP matching the given ActualLRPKey, but does not modify the desired state
@@ -372,11 +375,15 @@ func (c *client) ActualLRPs(logger lager.Logger, traceID string, filter models.A
 }
 
 // DEPRECATED
+//
+//lint:ignore SA1019 - deprecated function returning deprecated data
 func (c *client) ActualLRPGroups(logger lager.Logger, traceID string, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.ActualLRPGroupsRequest{
 		Domain: filter.Domain,
 		CellId: filter.CellID,
 	}
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	response := models.ActualLRPGroupsResponse{}
 	err := c.doRequest(logger, traceID, ActualLRPGroupsRoute_r0, nil, nil, &request, &response)
 	if err != nil {
@@ -387,10 +394,14 @@ func (c *client) ActualLRPGroups(logger lager.Logger, traceID string, filter mod
 }
 
 // DEPRECATED
+//
+//lint:ignore SA1019 - deprecated function returning deprecated data
 func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, traceID string, processGuid string) ([]*models.ActualLRPGroup, error) {
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.ActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: processGuid,
 	}
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	response := models.ActualLRPGroupsResponse{}
 	err := c.doRequest(logger, traceID, ActualLRPGroupsByProcessGuidRoute_r0, nil, nil, &request, &response)
 	if err != nil {
@@ -401,11 +412,15 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, traceID strin
 }
 
 // DEPRECATED
+//
+//lint:ignore SA1019 - deprecated function returning deprecated data
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, traceID string, processGuid string, index int) (*models.ActualLRPGroup, error) {
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.ActualLRPGroupByProcessGuidAndIndexRequest{
 		ProcessGuid: processGuid,
 		Index:       int32(index),
 	}
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	response := models.ActualLRPGroupResponse{}
 	err := c.doRequest(logger, traceID, ActualLRPGroupByProcessGuidAndIndexRoute_r0, nil, nil, &request, &response)
 	if err != nil {
@@ -798,7 +813,9 @@ func (c *client) DeleteTask(logger lager.Logger, traceID string, taskGuid string
 	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
 }
 
+// DEPRECATED
 func (c *client) FailTask(logger lager.Logger, traceID string, taskGuid string, failureReason string) error {
+	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.FailTaskRequest{
 		TaskGuid:      taskGuid,
 		FailureReason: failureReason,

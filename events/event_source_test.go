@@ -129,6 +129,7 @@ var _ = Describe("EventSource", func() {
 		})
 
 		Describe("Actual LRP Events", func() {
+			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 			var actualLRPGroup *models.ActualLRPGroup
 			var actualLRP *models.ActualLRP
 
@@ -138,6 +139,7 @@ var _ = Describe("EventSource", func() {
 			})
 
 			Context("when receiving a ActualLRPCreatedEvent", func() {
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				var expectedEvent *models.ActualLRPCreatedEvent
 
 				BeforeEach(func() {
@@ -160,6 +162,7 @@ var _ = Describe("EventSource", func() {
 					event, err := eventSource.Next()
 					Expect(err).NotTo(HaveOccurred())
 
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					actualLRPCreatedEvent, ok := event.(*models.ActualLRPCreatedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(actualLRPCreatedEvent).To(Equal(expectedEvent))
@@ -167,6 +170,7 @@ var _ = Describe("EventSource", func() {
 			})
 
 			Context("when receiving a ActualLRPChangedEvent", func() {
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				var expectedEvent *models.ActualLRPChangedEvent
 
 				BeforeEach(func() {
@@ -189,6 +193,7 @@ var _ = Describe("EventSource", func() {
 					event, err := eventSource.Next()
 					Expect(err).NotTo(HaveOccurred())
 
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					actualLRPChangedEvent, ok := event.(*models.ActualLRPChangedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(actualLRPChangedEvent).To(Equal(expectedEvent))
@@ -196,6 +201,7 @@ var _ = Describe("EventSource", func() {
 			})
 
 			Context("when receiving a ActualLRPRemovedEvent", func() {
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				var expectedEvent *models.ActualLRPRemovedEvent
 
 				BeforeEach(func() {
@@ -218,6 +224,7 @@ var _ = Describe("EventSource", func() {
 					event, err := eventSource.Next()
 					Expect(err).NotTo(HaveOccurred())
 
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					actualLRPRemovedEvent, ok := event.(*models.ActualLRPRemovedEvent)
 					Expect(ok).To(BeTrue())
 					Expect(actualLRPRemovedEvent).To(Equal(expectedEvent))
