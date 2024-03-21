@@ -406,6 +406,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 					if err != nil {
 						logger.Error("failed-removing-lrp-instance", err)
 					} else {
+						//lint:ignore SA1019 - implementing deprecated logic until it is removed
 						go h.actualHub.Emit(models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
 						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp, trace.RequestIdFromContext(ctx)))
 					}

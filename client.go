@@ -140,19 +140,19 @@ type ExternalActualLRPClient interface {
 	// Returns all ActualLRPs matching the given ActualLRPFilter
 	ActualLRPs(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRP, error)
 
-	// DEPRECATED
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
 	//lint:ignore SA1019 - deprecated function returning deprecated data
+	// Deprecated: use ActualLRPs instead
 	ActualLRPGroups(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRPGroup, error)
 
-	// DEPRECATED
 	// Returns all ActualLRPGroups that have the given process guid
 	//lint:ignore SA1019 - deprecated function returning deprecated data
+	// Deprecated: use ActualLRPs instead
 	ActualLRPGroupsByProcessGuid(logger lager.Logger, traceID string, processGuid string) ([]*models.ActualLRPGroup, error)
 
-	// DEPRECATED
 	// Returns the ActualLRPGroup with the given process guid and instance index
 	//lint:ignore SA1019 - deprecated function returning deprecated data
+	// Deprecated: use ActualLRPs instead
 	ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, traceID string, processGuid string, index int) (*models.ActualLRPGroup, error)
 
 	// Shuts down the ActualLRP matching the given ActualLRPKey, but does not modify the desired state
@@ -192,13 +192,13 @@ type ExternalDesiredLRPClient interface {
 The ExternalEventClient is used to subscribe to groups of Events.
 */
 type ExternalEventClient interface {
-	// DEPRECATED
+	// Deprecated: use SubscribeToInstanceEvents instead
 	SubscribeToEvents(logger lager.Logger) (events.EventSource, error)
 
 	SubscribeToInstanceEvents(logger lager.Logger) (events.EventSource, error)
 	SubscribeToTaskEvents(logger lager.Logger) (events.EventSource, error)
 
-	// DEPRECATED
+	// Deprecated: use SubscribeToInstanceEventsByCellID instead
 	SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
 
 	SubscribeToInstanceEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error)
@@ -374,16 +374,12 @@ func (c *client) ActualLRPs(logger lager.Logger, traceID string, filter models.A
 	return response.ActualLrps, response.Error.ToError()
 }
 
-// DEPRECATED
-//
-//lint:ignore SA1019 - deprecated function returning deprecated data
+// Deprecated: use ActualLRPs instead
 func (c *client) ActualLRPGroups(logger lager.Logger, traceID string, filter models.ActualLRPFilter) ([]*models.ActualLRPGroup, error) {
-	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.ActualLRPGroupsRequest{
 		Domain: filter.Domain,
 		CellId: filter.CellID,
 	}
-	//lint:ignore SA1019 - deprecated function returning deprecated data
 	response := models.ActualLRPGroupsResponse{}
 	err := c.doRequest(logger, traceID, ActualLRPGroupsRoute_r0, nil, nil, &request, &response)
 	if err != nil {
@@ -393,15 +389,11 @@ func (c *client) ActualLRPGroups(logger lager.Logger, traceID string, filter mod
 	return response.ActualLrpGroups, response.Error.ToError()
 }
 
-// DEPRECATED
-//
-//lint:ignore SA1019 - deprecated function returning deprecated data
+// Deprecated: use ActaulLRPs instead
 func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, traceID string, processGuid string) ([]*models.ActualLRPGroup, error) {
-	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.ActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: processGuid,
 	}
-	//lint:ignore SA1019 - deprecated function returning deprecated data
 	response := models.ActualLRPGroupsResponse{}
 	err := c.doRequest(logger, traceID, ActualLRPGroupsByProcessGuidRoute_r0, nil, nil, &request, &response)
 	if err != nil {
@@ -411,16 +403,12 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, traceID strin
 	return response.ActualLrpGroups, response.Error.ToError()
 }
 
-// DEPRECATED
-//
-//lint:ignore SA1019 - deprecated function returning deprecated data
+// Deprecated: use ActaulLRPs instead
 func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, traceID string, processGuid string, index int) (*models.ActualLRPGroup, error) {
-	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.ActualLRPGroupByProcessGuidAndIndexRequest{
 		ProcessGuid: processGuid,
 		Index:       int32(index),
 	}
-	//lint:ignore SA1019 - deprecated function returning deprecated data
 	response := models.ActualLRPGroupResponse{}
 	err := c.doRequest(logger, traceID, ActualLRPGroupByProcessGuidAndIndexRoute_r0, nil, nil, &request, &response)
 	if err != nil {
@@ -813,9 +801,8 @@ func (c *client) DeleteTask(logger lager.Logger, traceID string, taskGuid string
 	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
 }
 
-// DEPRECATED
+// Deprecated: use CancelTask instead
 func (c *client) FailTask(logger lager.Logger, traceID string, taskGuid string, failureReason string) error {
-	//lint:ignore SA1019 - deprecated function returning deprecated data
 	request := models.FailTaskRequest{
 		TaskGuid:      taskGuid,
 		FailureReason: failureReason,
@@ -878,7 +865,7 @@ func (c *client) subscribeToEvents(route string, cellId string) (events.EventSou
 	return events.NewEventSource(eventSource), nil
 }
 
-// DEPRECATED
+// Deprecated: use SubscribeToInstanceEvents instead
 func (c *client) SubscribeToEvents(logger lager.Logger) (events.EventSource, error) {
 	return c.subscribeToEvents(LRPGroupEventStreamRoute_r1, "")
 }
@@ -891,7 +878,7 @@ func (c *client) SubscribeToTaskEvents(logger lager.Logger) (events.EventSource,
 	return c.subscribeToEvents(TaskEventStreamRoute_r1, "")
 }
 
-// DEPRECATED
+// Deprecated: use SubscribeToInstanceEventsByCellID instead
 func (c *client) SubscribeToEventsByCellID(logger lager.Logger, cellId string) (events.EventSource, error) {
 	return c.subscribeToEvents(LRPGroupEventStreamRoute_r1, cellId)
 }

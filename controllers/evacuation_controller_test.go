@@ -1197,8 +1197,11 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
 
 						event = actualHub.EmitArgsForCall(1)
+						//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 						Expect(event).To(Equal(models.NewActualLRPChangedEvent(
+							//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 							actual.ToActualLRPGroup(),
+							//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 							ordinary.ToActualLRPGroup(),
 						)))
 					})

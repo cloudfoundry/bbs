@@ -602,6 +602,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(ctx context.Context, logger lager.Log
 	var events []models.Event
 	var instanceEvents []models.Event
 	for _, lrp := range lrpsToDelete {
+		//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 		events = append(events, models.NewActualLRPRemovedEvent(lrp.ToActualLRPGroup()))
 		instanceEvents = append(instanceEvents, models.NewActualLRPInstanceRemovedEvent(lrp, trace.RequestIdFromContext(ctx)))
 	}

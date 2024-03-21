@@ -74,7 +74,8 @@ import (
 //  removed event
 
 type ActualLRPEventCalculator struct {
-	ActualLRPGroupHub    events.Hub // DEPRECATED
+	// Deprecated: use ActualLRPInstanceHub instead
+	ActualLRPGroupHub    events.Hub
 	ActualLRPInstanceHub events.Hub
 }
 
@@ -93,12 +94,15 @@ func (e ActualLRPEventCalculator) EmitCrashEvents(traceId string, beforeSet, aft
 	groupEvents := []models.Event{}
 	if !beforeGroup.Instance.Equal(afterGroup.Instance) {
 		if afterGroup.Instance == nil {
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			groupEvents = append(groupEvents, models.NewActualLRPRemovedEvent(beforeGroup.Instance.ToActualLRPGroup()))
 		} else if beforeGroup.Instance == nil {
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			groupEvents = append(groupEvents, models.NewActualLRPCreatedEvent(afterGroup.Instance.ToActualLRPGroup()))
 		} else {
 			groupEvents = append(groupEvents,
 				models.NewActualLRPCrashedEvent(beforeGroup.Instance, afterGroup.Instance),
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				models.NewActualLRPChangedEvent(beforeGroup, afterGroup),
 			)
 		}
@@ -106,12 +110,15 @@ func (e ActualLRPEventCalculator) EmitCrashEvents(traceId string, beforeSet, aft
 
 	if !beforeGroup.Evacuating.Equal(afterGroup.Evacuating) {
 		if afterGroup.Evacuating == nil {
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			groupEvents = append(groupEvents, models.NewActualLRPRemovedEvent(beforeGroup.Evacuating.ToActualLRPGroup()))
 		} else if beforeGroup.Evacuating == nil {
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			groupEvents = append(groupEvents, models.NewActualLRPCreatedEvent(afterGroup.Evacuating.ToActualLRPGroup()))
 		} else {
 			groupEvents = append(groupEvents,
 				models.NewActualLRPCrashedEvent(beforeGroup.Evacuating, afterGroup.Evacuating),
+				//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 				models.NewActualLRPChangedEvent(beforeGroup, afterGroup),
 			)
 		}
@@ -284,6 +291,7 @@ func generateLRPInstanceEvents(before, after *models.ActualLRP, traceId string) 
 func generateCrashedGroupEvents(before, after *models.ActualLRP) []models.Event {
 	return wrapEvent(
 		models.NewActualLRPCrashedEvent(before, after),
+		//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 		models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()),
 	)
 }
@@ -293,6 +301,7 @@ func generateUnclaimedGroupEvents(before, after *models.ActualLRP) []models.Even
 
 	return append(
 		events,
+		//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 		models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()),
 	)
 }
@@ -302,11 +311,14 @@ func generateUpdateGroupEvents(before, after *models.ActualLRP) []models.Event {
 		!after.ActualLRPInstanceKey.Equal(before.ActualLRPInstanceKey) {
 		// an Ordinary LRP replaced Suspect LRP
 		return wrapEvent(
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()),
+			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 			models.NewActualLRPRemovedEvent(before.ToActualLRPGroup()),
 		)
 	}
 
+	//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 	return wrapEvent(models.NewActualLRPChangedEvent(before.ToActualLRPGroup(), after.ToActualLRPGroup()))
 }
 
@@ -321,10 +333,12 @@ func generateLRPInstanceGroupEvents(before, after *models.ActualLRP) []models.Ev
 	}
 
 	if after == nil {
+		//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 		return wrapEvent(models.NewActualLRPRemovedEvent(before.ToActualLRPGroup()))
 	}
 
 	if before == nil {
+		//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 		return wrapEvent(models.NewActualLRPCreatedEvent(after.ToActualLRPGroup()))
 	}
 
@@ -349,10 +363,12 @@ func getEventLRP(e models.Event) (*models.ActualLRP, bool) {
 	switch x := e.(type) {
 	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPCreatedEvent:
+		//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 		lrp, _, _ := x.ActualLrpGroup.Resolve()
 		return lrp, false
 	//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 	case *models.ActualLRPChangedEvent:
+		//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 		lrp, _, _ := x.After.Resolve()
 		return lrp, false
 	case *models.ActualLRPInstanceCreatedEvent:

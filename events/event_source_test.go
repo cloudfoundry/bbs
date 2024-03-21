@@ -135,6 +135,7 @@ var _ = Describe("EventSource", func() {
 
 			BeforeEach(func() {
 				actualLRP = models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				actualLRPGroup = models.NewRunningActualLRPGroup(actualLRP)
 			})
 
@@ -143,6 +144,7 @@ var _ = Describe("EventSource", func() {
 				var expectedEvent *models.ActualLRPCreatedEvent
 
 				BeforeEach(func() {
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					expectedEvent = models.NewActualLRPCreatedEvent(actualLRPGroup)
 					payload, err := proto.Marshal(expectedEvent)
 					Expect(err).NotTo(HaveOccurred())
@@ -150,7 +152,8 @@ var _ = Describe("EventSource", func() {
 
 					fakeRawEventSource.NextReturns(
 						sse.Event{
-							ID:   "sup",
+							ID: "sup",
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Name: string(expectedEvent.EventType()),
 							Data: payload,
 						},
@@ -174,6 +177,7 @@ var _ = Describe("EventSource", func() {
 				var expectedEvent *models.ActualLRPChangedEvent
 
 				BeforeEach(func() {
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					expectedEvent = models.NewActualLRPChangedEvent(actualLRPGroup, actualLRPGroup)
 					payload, err := proto.Marshal(expectedEvent)
 					Expect(err).NotTo(HaveOccurred())
@@ -181,7 +185,8 @@ var _ = Describe("EventSource", func() {
 
 					fakeRawEventSource.NextReturns(
 						sse.Event{
-							ID:   "sup",
+							ID: "sup",
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Name: string(expectedEvent.EventType()),
 							Data: payload,
 						},
@@ -205,6 +210,7 @@ var _ = Describe("EventSource", func() {
 				var expectedEvent *models.ActualLRPRemovedEvent
 
 				BeforeEach(func() {
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					expectedEvent = models.NewActualLRPRemovedEvent(actualLRPGroup)
 					payload, err := proto.Marshal(expectedEvent)
 					Expect(err).NotTo(HaveOccurred())
@@ -212,7 +218,8 @@ var _ = Describe("EventSource", func() {
 
 					fakeRawEventSource.NextReturns(
 						sse.Event{
-							ID:   "sup",
+							ID: "sup",
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 							Name: string(expectedEvent.EventType()),
 							Data: payload,
 						},
