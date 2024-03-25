@@ -2,21 +2,27 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 )
 
 type ActualLRPHandler struct {
-	db       db.ActualLRPDB
-	exitChan chan<- struct{}
+	db             db.ActualLRPDB
+	exitChan       chan<- struct{}
+	requestMetrics helpers.RequestMetrics
+	metricsGroup   string
 }
 
-func NewActualLRPHandler(db db.ActualLRPDB, exitChan chan<- struct{}) *ActualLRPHandler {
+func NewActualLRPHandler(db db.ActualLRPDB, exitChan chan<- struct{}, requestMetrics helpers.RequestMetrics) *ActualLRPHandler {
 	return &ActualLRPHandler{
-		db:       db,
-		exitChan: exitChan,
+		db:             db,
+		exitChan:       exitChan,
+		requestMetrics: requestMetrics,
+		metricsGroup:   "ActualLRPSEndpoint",
 	}
 }
 
@@ -28,6 +34,10 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 
 	request := &models.ActualLRPsRequest{}
 	response := &models.ActualLRPsResponse{}
+
+	start := time.Now()
+	startMetrics(h.requestMetrics, h.metricsGroup)
+	defer stopMetrics(h.requestMetrics, h.metricsGroup, start, &err)
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
