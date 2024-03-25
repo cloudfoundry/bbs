@@ -238,8 +238,9 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 	}
 }
 
-func NewValidEgressRules() []models.SecurityGroupRule {
-	return []models.SecurityGroupRule{
+func NewValidEgressRules() []*models.SecurityGroupRule {
+
+	validEgressRules := []*models.SecurityGroupRule{
 		{
 			Protocol:     "tcp",
 			Destinations: []string{"0.0.0.0/0"},
@@ -255,6 +256,8 @@ func NewValidEgressRules() []models.SecurityGroupRule {
 			Ports:        []uint32{53},
 		},
 	}
+
+	return validEgressRules
 }
 
 func NewValidTask(guid string) *models.Task {

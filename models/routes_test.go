@@ -18,10 +18,10 @@ var _ = Describe("Routes", func() {
 	itSerializes := func(routes *models.Routes) {
 		BeforeEach(func() {
 			update = models.DesiredLRPUpdate{
-				Routes: routes,
+				Routes: routes.ProtoRoutes(),
 			}
 
-			b, err := json.Marshal(update)
+			b, err := json.Marshal(&update)
 			Expect(err).NotTo(HaveOccurred())
 			err = json.Unmarshal(b, &aJson)
 			Expect(err).NotTo(HaveOccurred())
@@ -34,12 +34,12 @@ var _ = Describe("Routes", func() {
 
 		It("marshals JSON properly", func() {
 			Expect(update.Equal(&aJson)).To(BeTrue())
-			Expect(update).To(Equal(aJson))
+			Expect(&update).To(Equal(&aJson))
 		})
 
 		It("marshals Proto properly", func() {
 			Expect(update.Equal(&aProto)).To(BeTrue())
-			Expect(update).To(Equal(aProto))
+			Expect(&update).To(Equal(&aProto))
 		})
 	}
 

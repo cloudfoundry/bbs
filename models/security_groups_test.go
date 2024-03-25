@@ -103,7 +103,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when it is a valid port range", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{1, 65535}
+						portRange = &models.PortRange{Start: 1, End: 65535}
 					})
 
 					It("passes validation and does not return an error", func() {
@@ -114,7 +114,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				Context("when port range has a start value greater than the end value", func() {
 					BeforeEach(func() {
 						ports = nil
-						portRange = &models.PortRange{1024, 1}
+						portRange = &models.PortRange{Start: 1024, End: 1}
 					})
 
 					It("returns an error", func() {
@@ -125,7 +125,7 @@ var _ = Describe("SecurityGroupRule", func() {
 
 			Context("when ports and port range are provided", func() {
 				BeforeEach(func() {
-					portRange = &models.PortRange{1, 65535}
+					portRange = &models.PortRange{Start: 1, End: 65535}
 					ports = []uint32{1}
 				})
 
@@ -174,7 +174,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			Context("when Port range is provided", func() {
 				BeforeEach(func() {
 					ports = nil
-					portRange = &models.PortRange{1, 65535}
+					portRange = &models.PortRange{Start: 1, End: 65535}
 				})
 
 				It("fails", func() {
@@ -341,11 +341,11 @@ var _ = Describe("SecurityGroupRule", func() {
 			})
 		})
 
-		Context("when thre are multiple field validations", func() {
+		Context("when there are multiple field validations", func() {
 			BeforeEach(func() {
 				protocol = "tcp"
 				destination = "garbage"
-				portRange = &models.PortRange{443, 80}
+				portRange = &models.PortRange{Start: 443, End: 80}
 			})
 
 			It("aggregates validation errors", func() {
@@ -378,7 +378,7 @@ var _ = Describe("SecurityGroupRule", func() {
 		})
 
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := json.Marshal(securityGroup)
+			jsonSerialization, err := json.Marshal(&securityGroup)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 
@@ -389,7 +389,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(protoDeserialization).To(Equal(securityGroup))
+			Expect(&protoDeserialization).To(Equal(&securityGroup))
 		})
 
 		Context("when annotations are empty", func() {
@@ -406,7 +406,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			})
 
 			It("successfully json serializes empty arrays to nil", func() {
-				jsonSerialization, err := json.Marshal(securityGroup)
+				jsonSerialization, err := json.Marshal(&securityGroup)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 			})

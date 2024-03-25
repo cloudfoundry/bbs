@@ -14,7 +14,7 @@ var _ = Describe("Sidecar", func() {
 	})
 
 	Describe("Validate", func() {
-		var assertSidecarValidationFailsWithMessage = func(sidecar models.Sidecar, substring string) {
+		var assertSidecarValidationFailsWithMessage = func(sidecar *models.Sidecar, substring string) {
 			validationErr := sidecar.Validate()
 			ExpectWithOffset(1, validationErr).To(HaveOccurred())
 			ExpectWithOffset(1, validationErr.Error()).To(ContainSubstring(substring))
@@ -32,12 +32,12 @@ var _ = Describe("Sidecar", func() {
 
 		It("requires an action", func() {
 			sidecar.Action = nil
-			assertSidecarValidationFailsWithMessage(sidecar, "action")
+			assertSidecarValidationFailsWithMessage(&sidecar, "action")
 		})
 
 		It("requires an action with an inner action", func() {
 			sidecar.Action = &models.Action{}
-			assertSidecarValidationFailsWithMessage(sidecar, "action")
+			assertSidecarValidationFailsWithMessage(&sidecar, "action")
 		})
 
 		It("requires a valid action", func() {
@@ -46,17 +46,17 @@ var _ = Describe("Sidecar", func() {
 					From: "web_location",
 				},
 			}
-			assertSidecarValidationFailsWithMessage(sidecar, "to")
+			assertSidecarValidationFailsWithMessage(&sidecar, "to")
 		})
 
 		It("requires a valid MemoryMb", func() {
 			sidecar.MemoryMb = -1
-			assertSidecarValidationFailsWithMessage(sidecar, "memory_mb")
+			assertSidecarValidationFailsWithMessage(&sidecar, "memory_mb")
 		})
 
 		It("requires a valid DiskMb", func() {
 			sidecar.DiskMb = -1
-			assertSidecarValidationFailsWithMessage(sidecar, "disk_mb")
+			assertSidecarValidationFailsWithMessage(&sidecar, "disk_mb")
 		})
 	})
 })

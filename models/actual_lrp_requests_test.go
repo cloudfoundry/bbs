@@ -47,11 +47,11 @@ var _ = Describe("ActualLRP Requests", func() {
 			})
 
 			It("can marshal to JSON and back", func() {
-				Expect(json.Marshal(request)).To(MatchJSON(expectedJSON))
+				Expect(json.Marshal(&request)).To(MatchJSON(expectedJSON))
 
 				var testV models.ActualLRPsRequest
 				Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
-				Expect(testV).To(Equal(request))
+				Expect(&testV).To(Equal(&request))
 			})
 		})
 	})
