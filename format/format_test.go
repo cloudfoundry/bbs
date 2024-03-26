@@ -55,7 +55,7 @@ var _ = Describe("Format", func() {
 				var actualTask models.Task
 				err = proto.Unmarshal(unencoded[2:], &actualTask)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualTask).To(Equal(*task))
+				Expect(&actualTask).To(Equal(task))
 			})
 		})
 	})
@@ -69,7 +69,7 @@ var _ = Describe("Format", func() {
 				var decodedTask models.Task
 				err = serializer.Unmarshal(logger, payload, &decodedTask)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(*task).To(Equal(decodedTask))
+				Expect(task).To(Equal(&decodedTask))
 			})
 		})
 	})

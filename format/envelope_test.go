@@ -29,7 +29,7 @@ var _ = Describe("Envelope", func() {
 			modelErr := proto.Unmarshal(encoded[2:], &newTask)
 			Expect(modelErr).To(BeNil())
 
-			Expect(*task).To(Equal(newTask))
+			Expect(task).To(Equal(&newTask))
 		})
 	})
 
@@ -43,7 +43,7 @@ var _ = Describe("Envelope", func() {
 			err = format.UnmarshalEnvelope(logger, payload, resultingTask)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(*resultingTask).To(BeEquivalentTo(*task))
+			Expect(resultingTask).To(BeEquivalentTo(task))
 		})
 
 		It("returns an error when the protobuf payload is invalid", func() {
