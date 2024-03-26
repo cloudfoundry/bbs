@@ -70,7 +70,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeServiceClient.CellByIdReturns(nil, errors.New("hi"))
 		fakeLRPStatMetronNotifier = new(mfakes.FakeLRPStatMetronNotifier)
 
-		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+		cellCapacity := models.CellCapacity{}
+		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", &cellCapacity, nil, nil, nil, nil)
 		cellSet = models.CellSet{"cell-id": &cellPresence}
 		fakeServiceClient.CellsReturns(cellSet, nil)
 
@@ -189,8 +190,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		Context("when there are multiple cells", func() {
 			BeforeEach(func() {
-				presentCellPresence1 := models.NewCellPresence("cell-id-1", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
-				presentCellPresence2 := models.NewCellPresence("cell-id-2", "1.1.1.2", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+				cellCapacity1 := models.CellCapacity{}
+				cellCapacity2 := models.CellCapacity{}
+				presentCellPresence1 := models.NewCellPresence("cell-id-1", "1.1.1.1", "", "z1", &cellCapacity1, nil, nil, nil, nil)
+				presentCellPresence2 := models.NewCellPresence("cell-id-2", "1.1.1.2", "", "z1", &cellCapacity2, nil, nil, nil, nil)
 				cellSet = models.CellSet{"cell-id-1": &presentCellPresence1, "cell-id-2": &presentCellPresence2}
 				fakeServiceClient.CellsReturns(cellSet, nil)
 			})
@@ -244,9 +247,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			before = model_helpers.NewValidActualLRP("some-guid", 0)
 			before.State = models.ActualLRPStateCrashed
-			unclaimedLRP := *before
+			unclaimedLRP := before
 			unclaimedLRP.State = models.ActualLRPStateUnclaimed
-			after = &unclaimedLRP
+			after = unclaimedLRP
 			fakeLRPDB.UnclaimActualLRPReturns(before, after, nil)
 		})
 
@@ -282,7 +285,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		Context("and the LRP isn't changed", func() {
 			BeforeEach(func() {
-				*before = *after
+				before = after
 				before.State = models.ActualLRPStateUnclaimed
 				fakeLRPDB.UnclaimActualLRPReturns(before, after, nil)
 			})
@@ -423,7 +426,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			suspectActualLRP = model_helpers.NewValidActualLRP("to-unclaim-1", 0)
 
 			keysWithMissingCells = []*models.ActualLRPKeyWithSchedulingInfo{
-				{Key: &suspectActualLRP.ActualLRPKey, SchedulingInfo: &desiredLRP1},
+				{Key: suspectActualLRP.ActualLrpKey, SchedulingInfo: &desiredLRP1},
 			}
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				KeysWithMissingCells: keysWithMissingCells,
@@ -434,8 +437,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			var unclaimed *models.ActualLRP
 
 			BeforeEach(func() {
-				before = &models.ActualLRP{Presence: models.ActualLRP_Ordinary}
-				after = &models.ActualLRP{Presence: models.ActualLRP_Suspect}
+				before = &models.ActualLRP{Presence: models.ActualLRP_ORDINARY}
+				after = &models.ActualLRP{Presence: models.ActualLRP_SUSPECT}
 				fakeLRPDB.ChangeActualLRPPresenceReturns(before, after, nil)
 
 				unclaimed = &models.ActualLRP{State: models.ActualLRPStateUnclaimed}
@@ -446,16 +449,16 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Eventually(fakeLRPDB.ChangeActualLRPPresenceCallCount).Should(Equal(1))
 
 				_, _, key, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
-				Expect(from).To(Equal(models.ActualLRP_Ordinary))
-				Expect(to).To(Equal(models.ActualLRP_Suspect))
-				Expect(key).To(Equal(&suspectActualLRP.ActualLRPKey))
+				Expect(from).To(Equal(models.ActualLRP_ORDINARY))
+				Expect(to).To(Equal(models.ActualLRP_SUSPECT))
+				Expect(key).To(Equal(&suspectActualLRP.ActualLrpKey))
 			})
 
 			It("creates a new unclaimed LRP", func() {
 				Expect(fakeLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(1))
 				_, _, lrpKey := fakeLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
 
-				Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
+				Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLrpKey))
 			})
 
 			It("auctions new lrps", func() {
@@ -496,7 +499,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		Context("when there already is a Suspect LRP", func() {
 			BeforeEach(func() {
 				suspectLRPKeys := []*models.ActualLRPKey{
-					&suspectActualLRP.ActualLRPKey,
+					suspectActualLRP.ActualLrpKey,
 				}
 				fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 					KeysWithMissingCells: keysWithMissingCells,
@@ -563,9 +566,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			ordinaryActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
 			suspectActualLRP = model_helpers.NewValidActualLRP("suspect-1", 0)
 			removedActualLRP = model_helpers.NewValidActualLRP("removed-1", 0)
-			suspectActualLRP.Presence = models.ActualLRP_Suspect
+			suspectActualLRP.Presence = models.ActualLRP_SUSPECT
 
-			suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLRPKey}
+			suspectKeysWithExistingCells = []*models.ActualLRPKey{suspectActualLRP.ActualLrpKey}
 
 			fakeLRPDB.ActualLRPsReturns([]*models.ActualLRP{ordinaryActualLRP}, nil)
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
@@ -641,10 +644,10 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			runningLRP = model_helpers.NewValidActualLRP("some-guid", 1)
 			runningLRP.State = models.ActualLRPStateRunning
-			runningLRP.Presence = models.ActualLRP_Ordinary
+			runningLRP.Presence = models.ActualLRP_ORDINARY
 			suspectLRP = model_helpers.NewValidActualLRP("some-guid", 0)
 			suspectLRP.State = models.ActualLRPStateRunning
-			suspectLRP.Presence = models.ActualLRP_Suspect
+			suspectLRP.Presence = models.ActualLRP_SUSPECT
 		})
 
 		Context("when removing a suspect lrp", func() {
@@ -690,7 +693,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		BeforeEach(func() {
 			retiringActualLRP1 = model_helpers.NewValidActualLRP("to-retire-1", 0)
 			retiringActualLRP2 = model_helpers.NewValidActualLRP("to-retire-2", 1)
-			keysToRetire = []*models.ActualLRPKey{&retiringActualLRP1.ActualLRPKey, &retiringActualLRP2.ActualLRPKey}
+			keysToRetire = []*models.ActualLRPKey{retiringActualLRP1.ActualLrpKey, retiringActualLRP2.ActualLrpKey}
 
 			result := db.ConvergenceResult{
 				KeysToRetire: keysToRetire,
@@ -718,8 +721,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				stoppedKeys[i] = key
 			}
 
-			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP1.ActualLRPKey))
-			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP2.ActualLRPKey))
+			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP1.ActualLrpKey))
+			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP2.ActualLrpKey))
 		})
 	})
 
@@ -785,9 +788,12 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				KeysWithInternalRouteChanges: []*db.ActualLRPKeyWithInternalRoutes{&actualLRPKeyWithInternalRoutes1, &actualLRPKeyWithInternalRoutes2, &actualLRPKeyWithInternalRoutes3},
 			})
-			cell1Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
-			cell2Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
-			cell3Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
+			cellCapacity1 := models.CellCapacity{}
+			cellCapacity2 := models.CellCapacity{}
+			cellCapacity3 := models.CellCapacity{}
+			cell1Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", &cellCapacity1, nil, nil, nil, nil)
+			cell2Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", &cellCapacity2, nil, nil, nil, nil)
+			cell3Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", &cellCapacity3, nil, nil, nil, nil)
 			fakeServiceClient.CellByIdCalls(func(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 				switch cellId {
 				case "cell-id-1":
@@ -851,13 +857,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			for i := 0; i < 3; i++ {
 				_, update := fakeRepClient.UpdateLRPInstanceArgsForCall(i)
-				updates[i] = update
+				updates[i] = *update
 			}
 
 			internalRoutes := internalroutes.InternalRoutes{internalroutes.InternalRoute{Hostname: "some-internal-route.apps.internal"}}
-			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes1.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes1.Key, internalRoutes, nil)
-			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes2.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes2.Key, internalRoutes, nil)
-			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes3.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes3.Key, internalRoutes, nil)
+			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes1.InstanceKey.InstanceGuid, actualLRPKeyWithInternalRoutes1.Key, internalRoutes, nil)
+			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes2.InstanceKey.InstanceGuid, actualLRPKeyWithInternalRoutes2.Key, internalRoutes, nil)
+			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes3.InstanceKey.InstanceGuid, actualLRPKeyWithInternalRoutes3.Key, internalRoutes, nil)
 
 			Expect(updates).To(ContainElement(expectedLRP1Update))
 			Expect(updates).To(ContainElement(expectedLRP2Update))
@@ -932,9 +938,12 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				KeysWithMetricTagChanges: []*db.ActualLRPKeyWithMetricTags{&actualLRPKeyWithMetricTags1, &actualLRPKeyWithMetricTags2, &actualLRPKeyWithMetricTags3},
 			})
-			cell1Presence = models.NewCellPresence(actualLRPKeyWithMetricTags1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
-			cell2Presence = models.NewCellPresence(actualLRPKeyWithMetricTags2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
-			cell3Presence = models.NewCellPresence(actualLRPKeyWithMetricTags3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
+			cellCapacity1 := models.CellCapacity{}
+			cellCapacity2 := models.CellCapacity{}
+			cellCapacity3 := models.CellCapacity{}
+			cell1Presence = models.NewCellPresence(actualLRPKeyWithMetricTags1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", &cellCapacity1, nil, nil, nil, nil)
+			cell2Presence = models.NewCellPresence(actualLRPKeyWithMetricTags2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", &cellCapacity2, nil, nil, nil, nil)
+			cell3Presence = models.NewCellPresence(actualLRPKeyWithMetricTags3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", &cellCapacity3, nil, nil, nil, nil)
 			fakeServiceClient.CellByIdCalls(func(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 				switch cellId {
 				case "cell-id-1":
@@ -998,13 +1007,13 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			for i := 0; i < 3; i++ {
 				_, update := fakeRepClient.UpdateLRPInstanceArgsForCall(i)
-				updates[i] = update
+				updates[i] = *update
 			}
 
 			metricTags := map[string]string{"app_name": "some-app-name"}
-			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags1.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags1.Key, nil, metricTags)
-			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags2.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags2.Key, nil, metricTags)
-			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags3.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags3.Key, nil, metricTags)
+			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags1.InstanceKey.InstanceGuid, actualLRPKeyWithMetricTags1.Key, nil, metricTags)
+			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags2.InstanceKey.InstanceGuid, actualLRPKeyWithMetricTags2.Key, nil, metricTags)
+			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags3.InstanceKey.InstanceGuid, actualLRPKeyWithMetricTags3.Key, nil, metricTags)
 
 			Expect(updates).To(ContainElement(expectedLRP1Update))
 			Expect(updates).To(ContainElement(expectedLRP2Update))

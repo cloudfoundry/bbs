@@ -110,9 +110,9 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 	retireLogger := logger.WithData(lager.Data{"retiring_lrp_count": len(keysToRetire)})
 	works := []func(){}
 	for _, key := range keysToRetire {
-		dereferencedKey := *key
+		dereferencedKey := key
 		works = append(works, func() {
-			err := h.retirer.RetireActualLRP(ctx, retireLogger, &dereferencedKey)
+			err := h.retirer.RetireActualLRP(ctx, retireLogger, dereferencedKey)
 			if err != nil {
 				logger.Error("retiring-lrp-failed", err)
 			}
@@ -198,12 +198,12 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 		})
 	}
 
-	suspectKeyMap := map[models.ActualLRPKey]int{}
+	suspectKeyMap := map[*models.ActualLRPKey]int{}
 	for _, suspectKey := range convergenceResult.SuspectRunningKeys {
-		suspectKeyMap[*suspectKey] = 0
+		suspectKeyMap[suspectKey] = 0
 	}
 	for _, suspectKey := range convergenceResult.SuspectClaimedKeys {
-		suspectKeyMap[*suspectKey] = 0
+		suspectKeyMap[suspectKey] = 0
 	}
 
 	for _, key := range convergenceResult.KeysWithMissingCells {
@@ -211,7 +211,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 		handleLRP := func() {
 			logger := logger.Session("keys-with-missing-cells")
 
-			_, existingSuspect := suspectKeyMap[*dereferencedKey.Key]
+			_, existingSuspect := suspectKeyMap[dereferencedKey.Key]
 			if existingSuspect {
 				// there is a Suspect LRP already, unclaim this previously created
 				// replacement and reauction it
@@ -231,7 +231,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 
-			before, after, err := h.lrpDB.ChangeActualLRPPresence(ctx, logger, dereferencedKey.Key, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+			before, after, err := h.lrpDB.ChangeActualLRPPresence(ctx, logger, dereferencedKey.Key, models.ActualLRP_ORDINARY, models.ActualLRP_SUSPECT)
 			if err != nil {
 				logger.Error("cannot-change-lrp-presence", err, lager.Data{"key": dereferencedKey})
 				return
@@ -257,7 +257,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 	}
 
 	for _, key := range convergenceResult.SuspectKeysWithExistingCells {
-		dereferencedKey := *key
+		dereferencedKey := key
 		works = append(works, func() {
 			logger := logger.Session("suspect-keys-with-existing-cells")
 			beforeLRP, afterLRP, removedLRP, err := h.suspectDB.PromoteSuspectActualLRP(ctx, logger, dereferencedKey.ProcessGuid, dereferencedKey.Index)
@@ -275,10 +275,10 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 	}
 
 	for _, key := range convergenceResult.SuspectLRPKeysToRetire {
-		dereferencedKey := *key
+		dereferencedKey := key
 		works = append(works, func() {
 			logger := logger.Session("suspect-keys-to-retire")
-			suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(ctx, logger, &dereferencedKey)
+			suspectLRP, err := h.suspectDB.RemoveSuspectActualLRP(ctx, logger, dereferencedKey)
 			if err != nil {
 				logger.Error("cannot-remove-suspect-lrp", err, lager.Data{"key": dereferencedKey})
 				return
@@ -308,8 +308,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 			for _, ir := range dereferencedLRPKey.DesiredInternalRoutes {
 				internalRoutes = append(internalRoutes, internalroutes.InternalRoute{Hostname: ir.Hostname})
 			}
-			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes, nil)
-			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, dereferencedLRPKey.Key, internalRoutes, nil)
+			err = repClient.UpdateLRPInstance(logger, &lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)
 			}
@@ -332,16 +332,16 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 			}
 
 			metricTags, err := models.ConvertMetricTags(dereferencedLRPKey.DesiredMetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
-				models.MetricTagDynamicValueIndex:        dereferencedLRPKey.Key.Index,
-				models.MetricTagDynamicValueInstanceGuid: dereferencedLRPKey.InstanceKey.InstanceGuid,
+				models.MetricTagValue_INDEX:         dereferencedLRPKey.Key.Index,
+				models.MetricTagValue_INSTANCE_GUID: dereferencedLRPKey.InstanceKey.InstanceGuid,
 			})
 			if err != nil {
 				logger.Error("convert-metric-tags-failed", err)
 				return
 			}
 
-			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, nil, metricTags)
-			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, dereferencedLRPKey.Key, nil, metricTags)
+			err = repClient.UpdateLRPInstance(logger, &lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)
 			}

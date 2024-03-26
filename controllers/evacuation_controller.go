@@ -65,7 +65,7 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(ctx context.Context, lo
 		return models.ErrResourceNotFound
 	}
 
-	if lrp.Presence != models.ActualLRP_Evacuating {
+	if lrp.Presence != models.ActualLRP_EVACUATING {
 		logger.Info("evacuating-lrp-is-empty")
 		return models.ErrResourceNotFound
 	}
@@ -76,9 +76,9 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(ctx context.Context, lo
 		"instance-key": actualLRPInstanceKey,
 	}
 
-	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
+	instance := findWithPresence(actualLRPs, models.ActualLRP_ORDINARY)
 	if instance != nil {
-		evacuatingLRPLogData["replacement-lrp-instance-key"] = instance.ActualLRPInstanceKey
+		evacuatingLRPLogData["replacement-lrp-instance-key"] = instance.ActualLrpInstanceKey
 		evacuatingLRPLogData["replacement-state"] = instance.State
 		evacuatingLRPLogData["replacement-lrp-placement-error"] = instance.PlacementError
 	}
@@ -116,13 +116,13 @@ func (h *EvacuationController) removeEvacuatingOrSuspect(
 	}
 
 	switch lrp.Presence {
-	case models.ActualLRP_Evacuating:
+	case models.ActualLRP_EVACUATING:
 		err := h.db.RemoveEvacuatingActualLRP(ctx, logger, key, instanceKey)
 		if err != nil {
 			logger.Error("failed-removing-evacuating-actual-lrp", err)
 			return false, lrps, err
 		}
-	case models.ActualLRP_Suspect:
+	case models.ActualLRP_SUSPECT:
 		_, err := h.suspectLRPDB.RemoveSuspectActualLRP(ctx, logger, key)
 		if err != nil {
 			logger.Error("failed-removing-suspect-actual-lrp", err)
@@ -277,7 +277,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 	// parameters.
 	targetActualLRP := lookupLRPInSlice(actualLRPs, actualLRPInstanceKey)
 
-	instance := findWithPresence(actualLRPs, models.ActualLRP_Ordinary)
+	instance := findWithPresence(actualLRPs, models.ActualLRP_ORDINARY)
 
 	// `instance == nil' means the DesiredLRP has been removed and
 	// stopInstancesFrom deleted the Ordinary instance.
@@ -298,9 +298,9 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 		return keepContainer, err
 	}
 
-	if targetActualLRP == nil || targetActualLRP.Presence == models.ActualLRP_Evacuating {
+	if targetActualLRP == nil || targetActualLRP.Presence == models.ActualLRP_EVACUATING {
 		// Create a new Evacuating LRP or update an existing one
-		evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
+		evacuating := findWithPresence(actualLRPs, models.ActualLRP_EVACUATING)
 
 		if evacuating != nil && !evacuating.Equal(targetActualLRP) {
 			// There is already another evacuating instance.  Let the Rep know
@@ -404,7 +404,7 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
 
-	evacuating, err := h.db.EvacuateActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+	evacuating, err := h.db.EvacuateActualLRP(ctx, logger, actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 	if err != nil {
 		return err
 	}
@@ -420,8 +420,8 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), allLRPs, newLRPs)
 	}()
 
-	if actualLRP.Presence == models.ActualLRP_Suspect {
-		_, err := h.suspectLRPDB.RemoveSuspectActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+	if actualLRP.Presence == models.ActualLRP_SUSPECT {
+		_, err := h.suspectLRPDB.RemoveSuspectActualLRP(ctx, logger, actualLRP.ActualLrpKey)
 		if err != nil {
 			logger.Error("failed-removing-suspect-actual-lrp", err)
 			return err
@@ -430,7 +430,7 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 		return nil
 	}
 
-	_, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+	_, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, actualLRP.ActualLrpKey)
 	if err != nil {
 		return err
 	}
@@ -441,7 +441,7 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 	// compatible.
 	newLRPs = eventCalculator.RecordChange(nil, after, newLRPs)
 
-	h.requestAuction(ctx, logger, &actualLRP.ActualLRPKey)
+	h.requestAuction(ctx, logger, actualLRP.ActualLrpKey)
 	return nil
 }
 
@@ -450,7 +450,7 @@ func (h *EvacuationController) removeEvacuating(ctx context.Context, logger lage
 		return nil, nil
 	}
 
-	err := h.db.RemoveEvacuatingActualLRP(ctx, logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
+	err := h.db.RemoveEvacuatingActualLRP(ctx, logger, evacuating.ActualLrpKey, evacuating.ActualLrpInstanceKey)
 
 	if err == nil {
 		return evacuating, nil

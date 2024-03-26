@@ -102,22 +102,22 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			"domain-0",
 		)
 
-		presence = models.ActualLRP_Ordinary
-		afterPresence = models.ActualLRP_Ordinary
+		presence = models.ActualLRP_ORDINARY
+		afterPresence = models.ActualLRP_ORDINARY
 	})
 
 	JustBeforeEach(func() {
 		actualLRP = &models.ActualLRP{
-			ActualLRPKey:         actualLRPKey,
-			ActualLRPInstanceKey: beforeInstanceKey,
+			ActualLrpKey:         &actualLRPKey,
+			ActualLrpInstanceKey: &beforeInstanceKey,
 			State:                actualLRPState,
 			Since:                1138,
 			Presence:             presence,
 		}
 
 		afterActualLRP = &models.ActualLRP{
-			ActualLRPKey:         actualLRPKey,
-			ActualLRPInstanceKey: afterInstanceKey,
+			ActualLrpKey:         &actualLRPKey,
+			ActualLrpInstanceKey: &afterInstanceKey,
 			State:                afterActualLRPState,
 			Since:                1140,
 			Presence:             afterPresence,
@@ -178,14 +178,16 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when there is a running Suspect LRP", func() {
 			JustBeforeEach(func() {
+				actualLRPInstanceKey := models.ActualLRPInstanceKey{
+					InstanceGuid: "suspect-ig",
+					CellId:       "suspect-cell-id",
+				}
+
 				suspect := &models.ActualLRP{
-					State:        models.ActualLRPStateRunning,
-					Presence:     models.ActualLRP_Suspect,
-					ActualLRPKey: actualLRPKey,
-					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
-						InstanceGuid: "suspect-ig",
-						CellId:       "suspect-cell-id",
-					},
+					State:                models.ActualLRPStateRunning,
+					Presence:             models.ActualLRP_SUSPECT,
+					ActualLrpKey:         &actualLRPKey,
+					ActualLrpInstanceKey: &actualLRPInstanceKey,
 				}
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspect, afterActualLRP}, nil)
 			})
@@ -207,9 +209,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			BeforeEach(func() {
 				suspectLRP = &models.ActualLRP{
 					State:                models.ActualLRPStateClaimed,
-					Presence:             models.ActualLRP_Suspect,
-					ActualLRPKey:         actualLRPKey,
-					ActualLRPInstanceKey: afterInstanceKey,
+					Presence:             models.ActualLRP_SUSPECT,
+					ActualLrpKey:         &actualLRPKey,
+					ActualLrpInstanceKey: &afterInstanceKey,
 				}
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectLRP}, nil)
 			})
@@ -220,8 +222,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				BeforeEach(func() {
 					unclaimedActualLRP = &models.ActualLRP{
 						State:        models.ActualLRPStateUnclaimed,
-						Presence:     models.ActualLRP_Ordinary,
-						ActualLRPKey: actualLRPKey,
+						Presence:     models.ActualLRP_ORDINARY,
+						ActualLrpKey: &actualLRPKey,
 					}
 				})
 
@@ -263,7 +265,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		)
 
 		BeforeEach(func() {
-			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
+			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(10, 20))
 			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
 			metricTags = map[string]string{"app_name": "some-app-name"}
 			routable = true
@@ -279,18 +281,20 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			)
 
 			BeforeEach(func() {
+				actualLRPInstanceKey := models.ActualLRPInstanceKey{
+					InstanceGuid: "suspect-instance-guid",
+					CellId:       "cell-id-1",
+				}
+				actualLRPKey := models.ActualLRPKey{
+					ProcessGuid: processGuid,
+					Index:       index,
+					Domain:      "domain-0",
+				}
 				suspect = &models.ActualLRP{
-					Presence: models.ActualLRP_Suspect,
-					State:    models.ActualLRPStateRunning,
-					ActualLRPInstanceKey: models.ActualLRPInstanceKey{
-						InstanceGuid: "suspect-instance-guid",
-						CellId:       "cell-id-1",
-					},
-					ActualLRPKey: models.ActualLRPKey{
-						ProcessGuid: processGuid,
-						Index:       index,
-						Domain:      "domain-0",
-					},
+					Presence:             models.ActualLRP_SUSPECT,
+					State:                models.ActualLRPStateRunning,
+					ActualLrpInstanceKey: &actualLRPInstanceKey,
+					ActualLrpKey:         &actualLRPKey,
 				}
 
 				fakeSuspectDB.RemoveSuspectActualLRPReturns(suspect, nil)
@@ -367,7 +371,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			Context("when there is a Running Ordinary LRP", func() {
 				BeforeEach(func() {
 					// the db layer resolution logic will return the Ordinary LRP
-					presence = models.ActualLRP_Ordinary
+					presence = models.ActualLRP_ORDINARY
 				})
 
 				JustBeforeEach(func() {
@@ -383,7 +387,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			Context("and the Ordinary LRP is not running", func() {
 				BeforeEach(func() {
 					// the db layer resolution logic will return the Suspect LRP
-					presence = models.ActualLRP_Suspect
+					presence = models.ActualLRP_SUSPECT
 				})
 
 				JustBeforeEach(func() {
@@ -447,7 +451,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				BeforeEach(func() {
 					evacuating = model_helpers.NewValidEvacuatingActualLRP(processGuid, index)
-					evacuating.ActualLRPKey = actualLRPKey
+					evacuating.ActualLrpKey = &actualLRPKey
 					evacuating.State = models.ActualLRPStateRunning
 				})
 
@@ -459,8 +463,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
 					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 					_, _, lrpKey, lrpInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-					Expect(*lrpKey).To(Equal(evacuating.ActualLRPKey))
-					Expect(*lrpInstanceKey).To(Equal(evacuating.ActualLRPInstanceKey))
+					Expect(lrpKey).To(Equal(evacuating.ActualLrpKey))
+					Expect(lrpInstanceKey).To(Equal(evacuating.ActualLrpInstanceKey))
 				})
 
 				It("should emit an ActualLRPChanged event and an ActualLRPRemoved event", func() {
@@ -530,7 +534,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			Context("when Routable was updated", func() {
 				JustBeforeEach(func() {
-					*actualLRP = *afterActualLRP
+					actualLRP = afterActualLRP
 					actualLRP.SetRoutable(true)
 					afterActualLRP.SetRoutable(false)
 					fakeActualLRPDB.StartActualLRPReturns(actualLRP, afterActualLRP, nil)
@@ -550,7 +554,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 			Context("when there is not change in the actual lrp state", func() {
 				JustBeforeEach(func() {
-					*actualLRP = *afterActualLRP
+					actualLRP = afterActualLRP
 				})
 
 				It("does not emit a change event to the hub", func() {
@@ -632,8 +636,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			err = controller.CrashActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, errorMessage)
 			Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
 			_, _, actualKey, actualInstanceKey, actualErrorMessage := fakeActualLRPDB.CrashActualLRPArgsForCall(0)
-			Expect(*actualKey).To(Equal(actualLRPKey))
-			Expect(*actualInstanceKey).To(Equal(beforeInstanceKey))
+			Expect(actualKey).To(Equal(&actualLRPKey))
+			Expect(actualInstanceKey).To(Equal(&beforeInstanceKey))
 			Expect(actualErrorMessage).To(Equal(errorMessage))
 		})
 
@@ -649,8 +653,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			}
 
 			Expect(events).To(ConsistOf(&models.ActualLRPCrashedEvent{
-				ActualLRPKey:         actualLRP.ActualLRPKey,
-				ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
+				ActualLrpKey:         actualLRP.ActualLrpKey,
+				ActualLrpInstanceKey: actualLRP.ActualLrpInstanceKey,
 				Since:                afterActualLRP.Since,
 				CrashCount:           1,
 				CrashReason:          errorMessage,
@@ -687,8 +691,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
 
 					Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(&models.ActualLRPCrashedEvent{
-						ActualLRPKey:         actualLRP.ActualLRPKey,
-						ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
+						ActualLrpKey:         actualLRP.ActualLrpKey,
+						ActualLrpInstanceKey: actualLRP.ActualLrpInstanceKey,
 						Since:                afterActualLRP.Since,
 						CrashCount:           1,
 						CrashReason:          errorMessage,
@@ -723,8 +727,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 					Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(&models.ActualLRPCrashedEvent{
-						ActualLRPKey:         actualLRP.ActualLRPKey,
-						ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
+						ActualLrpKey:         actualLRP.ActualLrpKey,
+						ActualLrpInstanceKey: actualLRP.ActualLrpInstanceKey,
 						Since:                afterActualLRP.Since,
 						CrashCount:           1,
 						CrashReason:          errorMessage,
@@ -771,10 +775,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			JustBeforeEach(func() {
 				suspectInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1")
 				suspectLRP = &models.ActualLRP{
-					ActualLRPKey:         actualLRPKey,
-					ActualLRPInstanceKey: suspectInstanceKey,
+					ActualLrpKey:         &actualLRPKey,
+					ActualLrpInstanceKey: &suspectInstanceKey,
 					State:                suspectInstanceState,
-					Presence:             models.ActualLRP_Suspect,
+					Presence:             models.ActualLRP_SUSPECT,
 				}
 
 				lrps = []*models.ActualLRP{actualLRP, suspectLRP}
@@ -796,8 +800,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(3))
 
 				Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(&models.ActualLRPCrashedEvent{
-					ActualLRPKey:         actualLRP.ActualLRPKey,
-					ActualLRPInstanceKey: actualLRP.ActualLRPInstanceKey,
+					ActualLrpKey:         actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey: actualLRP.ActualLrpInstanceKey,
 					Since:                afterActualLRP.Since,
 					CrashCount:           1,
 					CrashReason:          errorMessage,
@@ -815,7 +819,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when the LRP being crashed is a Suspect LRP", func() {
 			BeforeEach(func() {
-				presence = models.ActualLRP_Suspect
+				presence = models.ActualLRP_SUSPECT
 			})
 
 			JustBeforeEach(func() {
@@ -874,7 +878,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 						MemoryMb:    128,
 						DiskMb:      512,
 						MaxPids:     100,
-						Routes:      routes,
+						Routes:      routes.ToProtoRoutes(),
 					}
 
 					schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
@@ -902,9 +906,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 				BeforeEach(func() {
 					replacementLRP = &models.ActualLRP{
-						ActualLRPKey: actualLRPKey,
+						ActualLrpKey: &actualLRPKey,
 						State:        models.ActualLRPStateUnclaimed,
-						Presence:     models.ActualLRP_Ordinary,
+						Presence:     models.ActualLRP_ORDINARY,
 					}
 				})
 
@@ -943,10 +947,10 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				BeforeEach(func() {
 					ordinaryInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", "cell-id-1")
 					replacementLRP = &models.ActualLRP{
-						ActualLRPKey:         actualLRPKey,
-						ActualLRPInstanceKey: ordinaryInstanceKey,
+						ActualLrpKey:         &actualLRPKey,
+						ActualLrpInstanceKey: &ordinaryInstanceKey,
 						State:                models.ActualLRPStateClaimed,
-						Presence:             models.ActualLRP_Ordinary,
+						Presence:             models.ActualLRP_ORDINARY,
 					}
 				})
 
@@ -1036,7 +1040,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				err = controller.FailActualLRP(ctx, logger, &actualLRPKey, errorMessage)
 				Expect(fakeActualLRPDB.FailActualLRPCallCount()).To(Equal(1))
 				_, _, actualKey, actualErrorMessage := fakeActualLRPDB.FailActualLRPArgsForCall(0)
-				Expect(*actualKey).To(Equal(actualLRPKey))
+				Expect(actualKey).To(Equal(&actualLRPKey))
 				Expect(actualErrorMessage).To(Equal(errorMessage))
 
 				Expect(err).NotTo(HaveOccurred())
@@ -1063,9 +1067,9 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when there is a Suspect LRP running", func() {
 			JustBeforeEach(func() {
-				suspectLRP := model_helpers.NewValidActualLRP(actualLRP.ProcessGuid, actualLRP.Index)
-				suspectLRP.Domain = actualLRP.Domain
-				suspectLRP.Presence = models.ActualLRP_Suspect
+				suspectLRP := model_helpers.NewValidActualLRP(actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index)
+				suspectLRP.ActualLrpKey.Domain = actualLRP.ActualLrpKey.Domain
+				suspectLRP.Presence = models.ActualLRP_SUSPECT
 
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{suspectLRP, actualLRP}, nil)
 			})
@@ -1217,7 +1221,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 		Context("when there is no ordinary LRP with a matching process guid and index", func() {
 			JustBeforeEach(func() {
-				actualLRP.Presence = models.ActualLRP_Evacuating
+				actualLRP.Presence = models.ActualLRP_EVACUATING
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 			})
 
@@ -1344,7 +1348,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				_, _, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
-				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLRPInstanceKey))
+				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLrpInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
@@ -1405,7 +1409,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				_, _, deletedLRPGuid, deletedLRPIndex, deletedLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 				Expect(deletedLRPGuid).To(Equal(processGuid))
 				Expect(deletedLRPIndex).To(Equal(index))
-				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLRPInstanceKey))
+				Expect(deletedLRPInstanceKey).To(Equal(&actualLRP.ActualLrpInstanceKey))
 			})
 
 			It("emits a removed event to the hub", func() {
@@ -1465,12 +1469,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 			Context("when the cell", func() {
 				Context("is present", func() {
 					BeforeEach(func() {
+						cellCapacity := models.NewCellCapacity(128, 1024, 6)
 						cellPresence = models.NewCellPresence(
 							"cell-id-0",
 							"cell1.addr",
 							"",
 							"the-zone",
-							models.NewCellCapacity(128, 1024, 6),
+							&cellCapacity,
 							[]string{},
 							[]string{},
 							[]string{},
@@ -1491,8 +1496,8 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).Should(Equal(1))
 						_, stoppedKey, stoppedInstanceKey := fakeRepClient.StopLRPInstanceArgsForCall(0)
-						Expect(stoppedKey).To(Equal(actualLRPKey))
-						Expect(stoppedInstanceKey).To(Equal(afterInstanceKey))
+						Expect(stoppedKey).To(Equal(&actualLRPKey))
+						Expect(stoppedInstanceKey).To(Equal(&afterInstanceKey))
 					})
 
 					It("emits a removed event to the hub", func() {
@@ -1506,12 +1511,13 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 
 					Context("when the rep announces a rep url", func() {
 						BeforeEach(func() {
+							cellCapacity := models.NewCellCapacity(128, 1024, 6)
 							cellPresence = models.NewCellPresence(
 								"cell-id-0",
 								"cell1.addr",
 								"http://cell1.addr",
 								"the-zone",
-								models.NewCellCapacity(128, 1024, 6),
+								&cellCapacity,
 								[]string{},
 								[]string{},
 								[]string{},

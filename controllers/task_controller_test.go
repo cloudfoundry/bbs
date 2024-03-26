@@ -438,7 +438,7 @@ var _ = Describe("Task Controller", func() {
 				Context("and the task has a complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						task.CompletionCallbackUrl = "bogus"
+						task.TaskDefinition.CompletionCallbackUrl = "bogus"
 						fakeTaskDB.CancelTaskReturns(nil, task, cellID, nil)
 					})
 
@@ -579,7 +579,7 @@ var _ = Describe("Task Controller", func() {
 			Context("and the task has a complete URL", func() {
 				BeforeEach(func() {
 					task := model_helpers.NewValidTask("hi-bob")
-					task.CompletionCallbackUrl = "bogus"
+					task.TaskDefinition.CompletionCallbackUrl = "bogus"
 					fakeTaskDB.FailTaskReturns(nil, task, nil)
 				})
 
@@ -805,7 +805,7 @@ var _ = Describe("Task Controller", func() {
 				Context("and the task has a complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						task.CompletionCallbackUrl = "bogus"
+						task.TaskDefinition.CompletionCallbackUrl = "bogus"
 						fakeTaskDB.CompleteTaskReturns(nil, task, nil)
 					})
 
@@ -958,7 +958,8 @@ var _ = Describe("Task Controller", func() {
 			)
 
 			BeforeEach(func() {
-				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+				cellCapacity := models.CellCapacity{}
+				cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", &cellCapacity, nil, nil, nil, nil)
 				cellSet = models.CellSet{"cell-id": &cellPresence}
 				fakeServiceClient.CellsReturns(cellSet, nil)
 
