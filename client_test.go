@@ -61,9 +61,9 @@ var _ = Describe("Client", func() {
 			It("populates the request", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				request := models.StartActualLRPRequest{
-					ActualLrpKey:            &actualLRP.ActualLRPKey,
-					ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-					ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+					ActualLrpKey:            actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
 					MetricTags:              actualLRP.MetricTags,
 					AvailabilityZone:        actualLRP.AvailabilityZone,
@@ -78,7 +78,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -107,9 +107,9 @@ var _ = Describe("Client", func() {
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.VerifyProtoRepresenting(&models.StartActualLRPRequest{
-							ActualLrpKey:            &actualLRP.ActualLRPKey,
-							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+							ActualLrpKey:            actualLRP.ActualLrpKey,
+							ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
+							ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
 							ActualLrpInternalRoutes: nil,
 							MetricTags:              nil,
 							AvailabilityZone:        "",
@@ -118,7 +118,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -162,19 +162,19 @@ var _ = Describe("Client", func() {
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
-							ActualLrpKey:            &actualLRP.ActualLRPKey,
-							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+							ActualLrpKey:            actualLRP.ActualLrpKey,
+							ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
+							ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
 							ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
 							MetricTags:              actualLRP.MetricTags,
 							AvailabilityZone:        actualLRP.AvailabilityZone,
-							OptionalRoutable:        &models.EvacuateRunningActualLRPRequest_Routable{Routable: actualLRP.GetRoutable()},
+							Routable:                actualLRP.Routable,
 						}),
 						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 			It("Calls the current endpoint", func() {
@@ -202,19 +202,19 @@ var _ = Describe("Client", func() {
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
 						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
-							ActualLrpKey:            &actualLRP.ActualLRPKey,
-							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+							ActualLrpKey:            actualLRP.ActualLrpKey,
+							ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
+							ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
 							ActualLrpInternalRoutes: nil,
 							MetricTags:              nil,
-							OptionalRoutable:        nil,
+							Routable:                nil,
 							AvailabilityZone:        "",
 						}),
 						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 

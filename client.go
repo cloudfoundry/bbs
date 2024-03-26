@@ -590,7 +590,7 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, traceID string, 
 }
 
 func (c *client) DesiredLRPs(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
-	request := models.DesiredLRPsRequest(filter)
+	request := models.DesiredLRPsRequest{Domain: filter.Domain, ProcessGuids: filter.ProcessGuids}
 	response := models.DesiredLRPsResponse{}
 	err := c.doRequest(logger, traceID, DesiredLRPsRoute_r3, nil, nil, &request, &response)
 	if err != nil {
@@ -614,7 +614,7 @@ func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, traceID string, pr
 }
 
 func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
-	request := models.DesiredLRPsRequest(filter)
+	request := models.DesiredLRPsRequest{Domain: filter.Domain, ProcessGuids: filter.ProcessGuids}
 	response := models.DesiredLRPSchedulingInfosResponse{}
 	err := c.doRequest(logger, traceID, DesiredLRPSchedulingInfosRoute_r0, nil, nil, &request, &response)
 	if err != nil {
@@ -638,7 +638,7 @@ func (c *client) DesiredLRPSchedulingInfoByProcessGuid(logger lager.Logger, trac
 }
 
 func (c *client) DesiredLRPRoutingInfos(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
-	request := models.DesiredLRPsRequest(filter)
+	request := models.DesiredLRPsRequest{Domain: filter.Domain, ProcessGuids: filter.ProcessGuids}
 	response := models.DesiredLRPsResponse{}
 	err := c.doRequest(logger, traceID, DesiredLRPRoutingInfosRoute_r0, nil, nil, &request, &response)
 	if err != nil {
