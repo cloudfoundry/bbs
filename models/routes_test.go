@@ -18,7 +18,7 @@ var _ = Describe("Routes", func() {
 	itSerializes := func(routes *models.Routes) {
 		BeforeEach(func() {
 			update = models.DesiredLRPUpdate{
-				Routes: routes.ProtoRoutes(),
+				Routes: routes.ToProtoRoutes(),
 			}
 
 			b, err := json.Marshal(&update)

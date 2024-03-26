@@ -215,7 +215,7 @@ func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
 func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 	var routes Routes
 	if d.Routes != nil {
-		routes = *d.Routes.routes()
+		routes = *d.Routes.ToRoutes()
 	}
 	var modificationTag *ModificationTag
 	if d.ModificationTag != nil {
@@ -246,7 +246,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
 	var routes Routes
 	if d.Routes != nil {
-		routes = *d.Routes.routes()
+		routes = *d.Routes.ToRoutes()
 	}
 
 	var modificationTag *ModificationTag
@@ -489,7 +489,7 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 	if update.Instances != nil {
 		desired.SetInstances(*update.Instances)
 	}
-	desired.Routes = update.Routes.ProtoRoutes()
+	desired.Routes = update.Routes.ToProtoRoutes()
 	if update.Annotation != nil {
 		desired.SetAnnotation(*update.Annotation)
 	}
@@ -504,7 +504,7 @@ func (desired *DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
 		i := desired.GetInstances()
 		update.Instances = &i
 	}
-	update.Routes = desired.Routes.routes()
+	update.Routes = desired.Routes.ToRoutes()
 	if desired.AnnotationExists() {
 		a := desired.GetAnnotation()
 		update.Annotation = &a
@@ -549,7 +549,7 @@ func NewDesiredLRPSchedulingInfo(
 		Annotation:         annotation,
 		Instances:          instances,
 		DesiredLrpResource: resource,
-		Routes:             routes.ProtoRoutes(),
+		Routes:             routes.ToProtoRoutes(),
 		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
 		PlacementTags:      placementTags,
@@ -568,7 +568,7 @@ func NewDesiredLRPRoutingInfo(
 		Domain:          key.Domain,
 		LogGuid:         key.LogGuid,
 		Instances:       instances,
-		Routes:          routes.ProtoRoutes(),
+		Routes:          routes.ToProtoRoutes(),
 		ModificationTag: modTag,
 		MetricTags:      metrTags,
 	}
@@ -594,7 +594,7 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 func (s *DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, s.Routes.routes())
+	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, s.Routes.ToRoutes())
 
 	if s.GetInstances() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"instances"})

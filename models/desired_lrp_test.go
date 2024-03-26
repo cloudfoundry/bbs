@@ -428,7 +428,7 @@ var _ = Describe("DesiredLRP", func() {
 			rawMessage := json.RawMessage([]byte(`{"port": 8080,"hosts":["new-route-1","new-route-2"]}`))
 			routes := (&models.Routes{
 				"router": &rawMessage,
-			}).ProtoRoutes()
+			}).ToProtoRoutes()
 			update := &models.DesiredLRPUpdate{
 				Routes: routes,
 			}
@@ -469,7 +469,7 @@ var _ = Describe("DesiredLRP", func() {
 
 			Context("when update contains routes", func() {
 				BeforeEach(func() {
-					update.Routes = routes.ProtoRoutes()
+					update.Routes = routes.ToProtoRoutes()
 				})
 
 				It("returns true when provided routes are not set", func() {
@@ -1303,7 +1303,7 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		desiredLRPUpdate.SetInstances(2)
 		desiredLRPUpdate.Routes = (&models.Routes{
 			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
-		}).ProtoRoutes()
+		}).ToProtoRoutes()
 		desiredLRPUpdate.SetAnnotation("some-text")
 		desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
 			"some-tag": {Static: "some-value"},

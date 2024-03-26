@@ -108,7 +108,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		MemoryMb:    1024,
 		CpuWeight:   42,
 		MaxPids:     1024,
-		Routes:      routes.ProtoRoutes(),
+		Routes:      routes.ToProtoRoutes(),
 		LogSource:   "some-log-source",
 		LogGuid:     "some-log-guid",
 		MetricsGuid: "some-metrics-guid",

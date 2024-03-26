@@ -1646,7 +1646,7 @@ func (m *DesiredLRPRunInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (pr *ProtoRoutes) routes() *Routes {
+func (pr *ProtoRoutes) ToRoutes() *Routes {
 	// HACK?
 	r := &Routes{}
 	routes := map[string]*json.RawMessage{}
