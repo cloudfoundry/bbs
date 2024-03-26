@@ -133,7 +133,8 @@ var _ = Describe("EventSource", func() {
 			var actualLRP *models.ActualLRP
 
 			BeforeEach(func() {
-				actualLRP = models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
+				actualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+				actualLRP = models.NewUnclaimedActualLRP(&actualLRPKey, 1)
 				actualLRPGroup = models.NewRunningActualLRPGroup(actualLRP)
 			})
 

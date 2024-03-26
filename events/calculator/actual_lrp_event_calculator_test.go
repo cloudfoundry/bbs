@@ -226,7 +226,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				Context("from UNCLAIMED", func() {
 					BeforeEach(func() {
 						originalLRP.State = models.ActualLRPStateUnclaimed
-						originalLRP.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+						originalLRP.ActualLrpInstanceKey = &models.ActualLRPInstanceKey{}
 					})
 
 					It("emits an ActualLRPChanged event", func() {
@@ -390,13 +390,15 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 
 			BeforeEach(func() {
 				suspectLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)
-				suspectLRP.Presence = models.ActualLRP_Suspect
+				suspectLRP.Presence = models.ActualLRP_SUSPECT
 
 				replacementLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)
-				replacementLRP.ActualLRPInstanceKey = models.NewActualLRPInstanceKey(
+				actualLRPInstanceKey := models.NewActualLRPInstanceKey(
 					"replacement",
 					"replacement-cell",
 				)
+
+				replacementLRP.ActualLrpInstanceKey = &actualLRPInstanceKey
 			})
 
 			JustBeforeEach(func() {
@@ -458,14 +460,14 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 
 			BeforeEach(func() {
 				unclaimedLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)
-				unclaimedLRP.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+				unclaimedLRP.ActualLrpInstanceKey = &models.ActualLRPInstanceKey{}
 				unclaimedLRP.State = models.ActualLRPStateUnclaimed
 
 				originalLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)
 				originalLRP.State = models.ActualLRPStateRunning
 
 				evacuatingLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)
-				evacuatingLRP.Presence = models.ActualLRP_Evacuating
+				evacuatingLRP.Presence = models.ActualLRP_EVACUATING
 				originalLRP.State = models.ActualLRPStateRunning
 			})
 
@@ -611,8 +613,8 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 
 		Context("when instance is evacuating", func() {
 			BeforeEach(func() {
-				originalLRP.Presence = models.ActualLRP_Evacuating
-				updatedLRP.Presence = models.ActualLRP_Evacuating
+				originalLRP.Presence = models.ActualLRP_EVACUATING
+				updatedLRP.Presence = models.ActualLRP_EVACUATING
 			})
 
 			Context("to UNCLAIMED", func() {
