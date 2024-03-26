@@ -89,7 +89,7 @@ func (twp *TaskCompletionWorkPool) Submit(taskDB db.TaskDB, taskHub events.Hub, 
 func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db.TaskDB, taskHub events.Hub, task *models.Task) {
 	logger = logger.Session("handle-completed-task", lager.Data{"task_guid": task.TaskGuid})
 
-	if task.CompletionCallbackUrl != "" {
+	if task.TaskDefinition.CompletionCallbackUrl != "" {
 		before, after, modelErr := taskDB.ResolvingTask(context.Background(), logger, task.TaskGuid)
 		if modelErr != nil {
 			logger.Error("marking-task-as-resolving-failed", modelErr)
@@ -97,14 +97,14 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 		}
 		go taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-		logger = logger.WithData(lager.Data{"callback_url": task.CompletionCallbackUrl})
+		logger = logger.WithData(lager.Data{"callback_url": task.TaskDefinition.CompletionCallbackUrl})
 
 		json, err := json.Marshal(&models.TaskCallbackResponse{
 			TaskGuid:      task.TaskGuid,
 			Failed:        task.Failed,
 			FailureReason: task.FailureReason,
 			Result:        task.Result,
-			Annotation:    task.Annotation,
+			Annotation:    task.TaskDefinition.Annotation,
 			CreatedAt:     task.CreatedAt,
 		})
 		if err != nil {
@@ -116,7 +116,7 @@ func HandleCompletedTask(logger lager.Logger, httpClient *http.Client, taskDB db
 
 		retriableErrRegexp := regexp.MustCompile("Client.Timeout|use of closed network connection")
 		for i := 0; i < MAX_CB_RETRIES; i++ {
-			request, err := http.NewRequest("POST", task.CompletionCallbackUrl, bytes.NewReader(json))
+			request, err := http.NewRequest("POST", task.TaskDefinition.CompletionCallbackUrl, bytes.NewReader(json))
 			if err != nil {
 				logger.Error("building-request-failed", err)
 				return

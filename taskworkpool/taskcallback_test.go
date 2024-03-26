@@ -49,7 +49,7 @@ var _ = Describe("TaskWorker", func() {
 			taskDB        *dbfakes.FakeTaskDB
 			statusCodes   chan int
 			task          *models.Task
-			before, after models.Task
+			before, after *models.Task
 			taskHub       *eventfakes.FakeHub
 
 			httpClient *http.Client
@@ -69,10 +69,10 @@ var _ = Describe("TaskWorker", func() {
 			callbackURL = fakeServer.URL() + "/the-callback/url"
 			taskDB = new(dbfakes.FakeTaskDB)
 			taskDB.ResolvingTaskStub = func(_ context.Context, _ lager.Logger, taskGuidTaskGuid string) (*models.Task, *models.Task, error) {
-				before = *task
-				after = *task
+				before = task
+				after = task
 				after.State = models.Task_Resolving
-				return &before, &after, nil
+				return before, after, nil
 			}
 
 			taskDB.DeleteTaskStub = func(_ context.Context, _ lager.Logger, taskGuid string) (*models.Task, error) {
@@ -83,7 +83,7 @@ var _ = Describe("TaskWorker", func() {
 		simulateTaskCompleting := func(signals <-chan os.Signal, ready chan<- struct{}) error {
 			close(ready)
 			task = model_helpers.NewValidTask("the-task-guid")
-			task.CompletionCallbackUrl = callbackURL
+			task.TaskDefinition.CompletionCallbackUrl = callbackURL
 			taskworkpool.HandleCompletedTask(logger, httpClient, taskDB, taskHub, task)
 			return nil
 		}
