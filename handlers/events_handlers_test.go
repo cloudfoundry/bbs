@@ -283,18 +283,22 @@ var _ = Describe("Event Handlers", func() {
 					)
 
 					BeforeEach(func() {
-						actualLRP := models.NewUnclaimedActualLRP(models.NewActualLRPKey("guid", 0, "some-domain"), 1)
+						unclaimedActualLRPKey := models.NewActualLRPKey("guid", 0, "some-domain")
+						unclaimedActualLRP := models.NewUnclaimedActualLRP(&unclaimedActualLRPKey, 1)
+						actualLRP := unclaimedActualLRP
 						actualLRPGroupBefore := models.NewRunningActualLRPGroup(actualLRP)
 
+						claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+						claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", "cell-id")
 						actualLRP = models.NewClaimedActualLRP(
-							models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
+							&claimedActualLRPKey,
+							&claimedActualLRPInstanceKey,
 							1,
 						)
 						actualLRPGroupAfter := models.NewRunningActualLRPGroup(actualLRP)
 						expectedActualLRPBeforeEvent = models.NewActualLRPChangedEvent(actualLRPGroupBefore, actualLRPGroupAfter)
 
-						actualLRP = models.NewUnclaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"), 1)
+						actualLRP = models.NewUnclaimedActualLRP(&claimedActualLRPKey, 1)
 						unclaimedActualLRPGroupAgain := models.NewRunningActualLRPGroup(actualLRP)
 						expectedActualLRPAfterEvent = models.NewActualLRPChangedEvent(actualLRPGroupAfter, unclaimedActualLRPGroupAgain)
 					})
@@ -314,16 +318,19 @@ var _ = Describe("Event Handlers", func() {
 
 						Context("and an LRP transitions to evacuating", func() {
 							BeforeEach(func() {
+								claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+								claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-0", "cell-id")
 								actualLRP := models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
+									&claimedActualLRPKey,
+									&claimedActualLRPInstanceKey,
 									1,
 								)
 								actualLRPGroupBefore := models.NewRunningActualLRPGroup(actualLRP)
 
+								actualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", "cell-id")
 								actualLRP = models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", "cell-id"),
+									&claimedActualLRPKey,
+									&actualLRPInstanceKey,
 									1,
 								)
 								actualLRPGroupAfter := models.NewEvacuatingActualLRPGroup(actualLRP)
@@ -338,16 +345,19 @@ var _ = Describe("Event Handlers", func() {
 
 						Context("and an evacuating LRP leaves the cell", func() {
 							BeforeEach(func() {
+								claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+								claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-0", "cell-id")
 								actualLRP := models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-0", "cell-id"),
+									&claimedActualLRPKey,
+									&claimedActualLRPInstanceKey,
 									1,
 								)
 								actualLRPGroupBefore := models.NewEvacuatingActualLRPGroup(actualLRP)
 
+								actualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", "cell-id")
 								actualLRP = models.NewClaimedActualLRP(
-									models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", "another-cell-id"),
+									&claimedActualLRPKey,
+									&actualLRPInstanceKey,
 									1,
 								)
 								actualLRPGroupAfter := models.NewRunningActualLRPGroup(actualLRP)
@@ -391,8 +401,11 @@ var _ = Describe("Event Handlers", func() {
 					)
 
 					BeforeEach(func() {
-						actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
+						claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+						claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", cellId)
+						actualLRP := models.NewClaimedActualLRP(
+							&claimedActualLRPKey,
+							&claimedActualLRPInstanceKey,
 							1,
 						)
 						actualLRPGroup := models.NewRunningActualLRPGroup(actualLRP)
@@ -412,8 +425,11 @@ var _ = Describe("Event Handlers", func() {
 
 						Context("and the LRP is in an evacuating state", func() {
 							BeforeEach(func() {
-								actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
+								claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+								claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", cellId)
+								actualLRP := models.NewClaimedActualLRP(
+									&claimedActualLRPKey,
+									&claimedActualLRPInstanceKey,
 									1,
 								)
 								actualLRPGroup := models.NewEvacuatingActualLRPGroup(actualLRP)
@@ -449,8 +465,11 @@ var _ = Describe("Event Handlers", func() {
 					)
 
 					BeforeEach(func() {
-						actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
+						claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+						claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", cellId)
+						actualLRP := models.NewClaimedActualLRP(
+							&claimedActualLRPKey,
+							&claimedActualLRPInstanceKey,
 							1,
 						)
 						actualLRPGroup := models.NewRunningActualLRPGroup(actualLRP)
@@ -470,8 +489,11 @@ var _ = Describe("Event Handlers", func() {
 
 						Context("and the LRP is in an evacuating state", func() {
 							BeforeEach(func() {
-								actualLRP := models.NewClaimedActualLRP(models.NewActualLRPKey("some-guid", 0, "some-domain"),
-									models.NewActualLRPInstanceKey("instance-guid-1", cellId),
+								claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+								claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", cellId)
+								actualLRP := models.NewClaimedActualLRP(
+									&claimedActualLRPKey,
+									&claimedActualLRPInstanceKey,
 									1,
 								)
 								actualLRPGroup := models.NewEvacuatingActualLRPGroup(actualLRP)
@@ -507,12 +529,14 @@ var _ = Describe("Event Handlers", func() {
 					)
 
 					JustBeforeEach(func() {
+						claimedActualLRPKey := models.NewActualLRPKey("some-guid", 0, "some-domain")
+						claimedActualLRPInstanceKey := models.NewActualLRPInstanceKey("instance-guid-1", cellId)
 						actualLRPBefore := models.NewClaimedActualLRP(
-							models.NewActualLRPKey("some-guid", 0, "some-domain"),
-							models.NewActualLRPInstanceKey("instance-guid-1", cellId),
+							&claimedActualLRPKey,
+							&claimedActualLRPInstanceKey,
 							1,
 						)
-						actualLRPAfter := models.NewUnclaimedActualLRP(models.NewActualLRPKey("guid", 0, "some-domain"), 1)
+						actualLRPAfter := models.NewUnclaimedActualLRP(&claimedActualLRPKey, 1)
 
 						expectedEvent = models.NewActualLRPCrashedEvent(actualLRPBefore, actualLRPAfter)
 
@@ -879,7 +903,7 @@ var _ = Describe("Event Handlers", func() {
 
 					downgradedTask = task.VersionDownTo(format.V3)
 					Expect(downgradedTask).To(Equal(task))
-					Expect(downgradedTask.ImageLayers).NotTo(BeNil())
+					Expect(downgradedTask.TaskDefinition.ImageLayers).NotTo(BeNil())
 				})
 
 				JustBeforeEach(func() {

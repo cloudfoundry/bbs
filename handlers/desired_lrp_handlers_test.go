@@ -121,8 +121,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithImageLayers := []*models.DesiredLRP{
-						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
-						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}},
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithImageLayers, nil)
 
@@ -252,8 +252,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 		BeforeEach(func() {
 			requestBody = &models.DesiredLRPsRequest{}
-			desiredLRP1 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}
-			desiredLRP2 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}
+			desiredLRP1 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}}
+			desiredLRP2 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}}
 		})
 
 		JustBeforeEach(func() {
@@ -431,7 +431,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRP := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}},
+					ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP.Copy(), nil)
 
@@ -542,7 +542,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRP = models.DesiredLRP{
 					ProcessGuid: processGuid,
-					ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}},
+					ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP.Copy(), nil)
 			})
@@ -789,7 +789,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				responseSchedInfo := response.DesiredLrpSchedulingInfo
-				Expect(*responseSchedInfo).To(DeepEqual(schedInfo))
+				Expect(responseSchedInfo).To(DeepEqual(&schedInfo))
 			})
 		})
 
@@ -1274,11 +1274,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
 						_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
-						Expect((key0 == actualLRPs[0].ActualLRPKey && key1 == actualLRPs[1].ActualLRPKey) ||
-							(key1 == actualLRPs[0].ActualLRPKey && key0 == actualLRPs[1].ActualLRPKey)).To(BeTrue())
+						Expect((key0 == actualLRPs[0].ActualLrpKey && key1 == actualLRPs[1].ActualLrpKey) ||
+							(key1 == actualLRPs[0].ActualLrpKey && key0 == actualLRPs[1].ActualLrpKey)).To(BeTrue())
 
-						Expect((instanceKey0 == actualLRPs[0].ActualLRPInstanceKey && instanceKey1 == actualLRPs[1].ActualLRPInstanceKey) ||
-							(instanceKey1 == actualLRPs[0].ActualLRPInstanceKey && instanceKey0 == actualLRPs[1].ActualLRPInstanceKey)).To(BeTrue())
+						Expect((instanceKey0 == actualLRPs[0].ActualLrpInstanceKey && instanceKey1 == actualLRPs[1].ActualLrpInstanceKey) ||
+							(instanceKey1 == actualLRPs[0].ActualLrpInstanceKey && instanceKey0 == actualLRPs[1].ActualLrpInstanceKey)).To(BeTrue())
 
 					})
 
@@ -1338,7 +1338,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Context("when stopping the lrp fails", func() {
 						var atomicCallCounter int32
 						BeforeEach(func() {
-							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, models.ActualLRPKey, models.ActualLRPInstanceKey) error {
+							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error {
 								atomic.AddInt32(&atomicCallCounter, 1)
 								if atomic.LoadInt32(&atomicCallCounter) == 1 {
 									return errors.New("ohhhhh nooooo, mr billlll")
@@ -1358,7 +1358,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Context("when stopping of the LRPs takes some time", func() {
 						var atomicCallCounter int32
 						BeforeEach(func() {
-							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, models.ActualLRPKey, models.ActualLRPInstanceKey) error {
+							fakeRepClient.StopLRPInstanceStub = func(lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey) error {
 								atomic.AddInt32(&atomicCallCounter, 1)
 								time.Sleep(1000 * time.Millisecond)
 								atomic.AddInt32(&atomicCallCounter, -1)
@@ -1466,10 +1466,12 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				BeforeEach(func() {
 					cfRouterContent = []byte("[{\"hostname\":\"foo.cf-app.com\"}]")
 					internalRouterContent = []byte("[{\"hostname\":\"foo.apps.internal\"}]")
-					beforeDesiredLRP.Routes = &models.Routes{
+					beforeRoutes := &models.Routes{
 						"cf-router":       (*json.RawMessage)(&cfRouterContent),
 						"internal-router": (*json.RawMessage)(&internalRouterContent),
 					}
+
+					beforeDesiredLRP.Routes = beforeRoutes.ToProtoRoutes()
 					fakeDesiredLRPDB.UpdateDesiredLRPReturns(beforeDesiredLRP, nil)
 
 					fakeServiceClient.CellByIdReturns(&models.CellPresence{
@@ -1481,10 +1483,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Context("when internal routes were changed", func() {
 					BeforeEach(func() {
 						newInternalRouterContent := []byte("[{\"hostname\":\"updated.apps.internal\"}]")
-						update.Routes = &models.Routes{
+						updateRoutes := &models.Routes{
 							"cf-router":       (*json.RawMessage)(&cfRouterContent),
 							"internal-router": (*json.RawMessage)(&newInternalRouterContent),
 						}
+						update.Routes = updateRoutes.ToProtoRoutes()
 						beforeDesiredLRP.MetricTags = map[string]*models.MetricTagValue{
 							"some-tag": {Static: "some-value"},
 						}
@@ -1576,10 +1579,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Context("when internal routes were not changed", func() {
 					BeforeEach(func() {
 						newCfRouterContent := []byte("[{\"hostname\":\"foo.cf-app.com\"},{\"hostname\":\"another.cf-app.com\"}]")
-						update.Routes = &models.Routes{
+						updateRoutes := &models.Routes{
 							"cf-router":       (*json.RawMessage)(&newCfRouterContent),
 							"internal-router": (*json.RawMessage)(&internalRouterContent),
 						}
+						update.Routes = updateRoutes.ToProtoRoutes()
 					})
 
 					It("does not update actual LRPs", func() {
@@ -1652,7 +1656,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Context("when updatwing of the LRPs takes some time", func() {
 							var atomicCallCounter int32
 							BeforeEach(func() {
-								fakeRepClient.UpdateLRPInstanceStub = func(lager.Logger, rep.LRPUpdate) error {
+								fakeRepClient.UpdateLRPInstanceStub = func(lager.Logger, *rep.LRPUpdate) error {
 									atomic.AddInt32(&atomicCallCounter, 1)
 									time.Sleep(1000 * time.Millisecond)
 									atomic.AddInt32(&atomicCallCounter, -1)
@@ -1668,12 +1672,14 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Context("when internal routes are unchanged", func() {
 							BeforeEach(func() {
 								internalRoutes := []byte("[{\"hostname\":\"updated.apps.internal\"}]")
-								beforeDesiredLRP.Routes = &models.Routes{
+								beforeRoutes := &models.Routes{
 									"internal-router": (*json.RawMessage)(&internalRoutes),
 								}
-								update.Routes = &models.Routes{
+								beforeDesiredLRP.Routes = beforeRoutes.ToProtoRoutes()
+								updateRoutes := &models.Routes{
 									"internal-router": (*json.RawMessage)(&internalRoutes),
 								}
+								update.Routes = updateRoutes.ToProtoRoutes()
 							})
 
 							It("does not update actual LRPs with internal routes", func() {
@@ -1902,11 +1908,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
 					_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
 
-					Expect((key0 == runningActualLRP0.ActualLRPKey && key1 == evacuatingActualLRP1.ActualLRPKey) ||
-						(key1 == runningActualLRP0.ActualLRPKey && key0 == evacuatingActualLRP1.ActualLRPKey)).To(BeTrue())
+					Expect((key0 == runningActualLRP0.ActualLrpKey && key1 == evacuatingActualLRP1.ActualLrpKey) ||
+						(key1 == runningActualLRP0.ActualLrpKey && key0 == evacuatingActualLRP1.ActualLrpKey)).To(BeTrue())
 
-					Expect((instanceKey0 == runningActualLRP0.ActualLRPInstanceKey && instanceKey1 == evacuatingActualLRP1.ActualLRPInstanceKey) ||
-						(instanceKey1 == runningActualLRP0.ActualLRPInstanceKey && instanceKey0 == evacuatingActualLRP1.ActualLRPInstanceKey)).To(BeTrue())
+					Expect((instanceKey0 == runningActualLRP0.ActualLrpInstanceKey && instanceKey1 == evacuatingActualLRP1.ActualLrpInstanceKey) ||
+						(instanceKey1 == runningActualLRP0.ActualLrpInstanceKey && instanceKey0 == evacuatingActualLRP1.ActualLrpInstanceKey)).To(BeTrue())
 
 				})
 

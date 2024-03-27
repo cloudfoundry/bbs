@@ -149,7 +149,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				"instance-guid-0",
 				"cell-id-0",
 			)
-			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
+			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(10, 20))
 			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
 			metricTags = map[string]string{"app_name": "some-app-name"}
 			requestBody = models.StartActualLRPRequest{
@@ -291,7 +291,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				"instance-guid-0",
 				"cell-id-0",
 			)
-			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(10, 20))
+			netInfo = models.NewActualLRPNetInfo("1.1.1.1", "2.2.2.2", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(10, 20))
 			internalRoutes = []*models.ActualLRPInternalRoute{{Hostname: "some-internal-route.apps.internal"}}
 			metricTags = map[string]string{"app_name": "some-app-name"}
 			requestBody = models.StartActualLRPRequest{

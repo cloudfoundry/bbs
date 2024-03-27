@@ -109,8 +109,8 @@ var _ = Describe("Task Handlers", func() {
 
 				BeforeEach(func() {
 					tasksWithImageLayers := []*models.Task{
-						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}},
-						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}},
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}}},
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}}},
 					}
 					controller.TasksReturns(tasksWithImageLayers, nil)
 
@@ -194,8 +194,8 @@ var _ = Describe("Task Handlers", func() {
 		)
 
 		BeforeEach(func() {
-			task1 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}}
-			task2 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}}
+			task1 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}}}
+			task2 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_EXCLUSIVE}, {LayerType: models.ImageLayer_SHARED}}}}
 
 			requestBody = &models.TasksRequest{}
 		})
@@ -343,8 +343,8 @@ var _ = Describe("Task Handlers", func() {
 					TaskGuid: taskGuid,
 					TaskDefinition: &models.TaskDefinition{
 						ImageLayers: []*models.ImageLayer{
-							{LayerType: models.LayerTypeExclusive},
-							{LayerType: models.LayerTypeShared},
+							{LayerType: models.ImageLayer_EXCLUSIVE},
+							{LayerType: models.ImageLayer_SHARED},
 						},
 					},
 				}
@@ -360,7 +360,7 @@ var _ = Describe("Task Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
-				Expect(response.Task.ImageLayers).To(BeNil())
+				Expect(response.Task.TaskDefinition.ImageLayers).To(BeNil())
 				Expect(response.Task).To(Equal(downgradedTask))
 			})
 		})
@@ -431,8 +431,8 @@ var _ = Describe("Task Handlers", func() {
 					TaskGuid: taskGuid,
 					TaskDefinition: &models.TaskDefinition{
 						ImageLayers: []*models.ImageLayer{
-							{LayerType: models.LayerTypeExclusive},
-							{LayerType: models.LayerTypeShared},
+							{LayerType: models.ImageLayer_EXCLUSIVE},
+							{LayerType: models.ImageLayer_SHARED},
 						},
 					},
 				}

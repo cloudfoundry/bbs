@@ -161,8 +161,8 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateClaimedActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+					ActualLrpKey:         actual.ActualLrpKey,
+					ActualLrpInstanceKey: actual.ActualLrpInstanceKey,
 				}
 				request = newTestRequest(requestBody)
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
@@ -279,8 +279,8 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateCrashedActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+					ActualLrpKey:         actual.ActualLrpKey,
+					ActualLrpInstanceKey: actual.ActualLrpInstanceKey,
 					ErrorMessage:         "i failed",
 				}
 				request = newTestRequest(requestBody)
@@ -364,9 +364,9 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateRunningActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
-					ActualLrpNetInfo:     &actual.ActualLRPNetInfo,
+					ActualLrpKey:         actual.ActualLrpKey,
+					ActualLrpInstanceKey: actual.ActualLrpInstanceKey,
+					ActualLrpNetInfo:     actual.ActualLrpNetInfo,
 				}
 				request = newTestRequest(requestBody)
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
@@ -483,9 +483,9 @@ var _ = Describe("Evacuation Handlers", func() {
 			BeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateRunningActualLRPRequest{
-					ActualLrpKey:            &actual.ActualLRPKey,
-					ActualLrpInstanceKey:    &actual.ActualLRPInstanceKey,
-					ActualLrpNetInfo:        &actual.ActualLRPNetInfo,
+					ActualLrpKey:            actual.ActualLrpKey,
+					ActualLrpInstanceKey:    actual.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        actual.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: actual.ActualLrpInternalRoutes,
 					MetricTags:              actual.MetricTags,
 					AvailabilityZone:        actual.AvailabilityZone,
@@ -502,9 +502,9 @@ var _ = Describe("Evacuation Handlers", func() {
 			It("calls the controller", func() {
 				Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
 				_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable, availabilityZone := controller.EvacuateRunningActualLRPArgsForCall(0)
-				Expect(actualKey).To(Equal(&actual.ActualLRPKey))
-				Expect(actualInstanceKey).To(Equal(&actual.ActualLRPInstanceKey))
-				Expect(actualNetInfo).To(Equal(&actual.ActualLRPNetInfo))
+				Expect(actualKey).To(Equal(actual.ActualLrpKey))
+				Expect(actualInstanceKey).To(Equal(actual.ActualLrpInstanceKey))
+				Expect(actualNetInfo).To(Equal(actual.ActualLrpNetInfo))
 				Expect(actualInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 				Expect(actualMetricTags).To(Equal(actual.MetricTags))
 				Expect(availabilityZone).To(Equal(actual.AvailabilityZone))
@@ -652,8 +652,8 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateStoppedActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+					ActualLrpKey:         actual.ActualLrpKey,
+					ActualLrpInstanceKey: actual.ActualLrpInstanceKey,
 				}
 				request = newTestRequest(requestBody)
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)

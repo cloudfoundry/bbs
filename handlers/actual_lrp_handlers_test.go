@@ -24,51 +24,56 @@ var _ = Describe("ActualLRP Handlers", func() {
 		handler          *handlers.ActualLRPHandler
 		exitCh           chan struct{}
 
-		actualLRP1     models.ActualLRP
-		actualLRP2     models.ActualLRP
-		evacuatingLRP2 models.ActualLRP
+		actualLRP1     *models.ActualLRP
+		actualLRP2     *models.ActualLRP
+		evacuatingLRP2 *models.ActualLRP
 
 		requestIdHeader   string
 		b3RequestIdHeader string
 	)
 
 	BeforeEach(func() {
-		actualLRP1 = models.ActualLRP{
-			ActualLRPKey: models.NewActualLRPKey(
-				"process-guid-0",
-				1,
-				"domain-0",
-			),
-			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
-				"instance-guid-0",
-				"cell-id-0",
-			),
-			State: models.ActualLRPStateRunning,
-			Since: 1138,
+		actualLRPKey1 := models.NewActualLRPKey(
+			"process-guid-0",
+			1,
+			"domain-0",
+		)
+		actualLRPInstanceKey1 := models.NewActualLRPInstanceKey(
+			"instance-guid-0",
+			"cell-id-0",
+		)
+		actualLRP1 = &models.ActualLRP{
+			ActualLrpKey:         &actualLRPKey1,
+			ActualLrpInstanceKey: &actualLRPInstanceKey1,
+			State:                models.ActualLRPStateRunning,
+			Since:                1138,
 		}
 
-		actualLRP2 = models.ActualLRP{
-			ActualLRPKey: models.NewActualLRPKey(
-				"process-guid-1",
-				2,
-				"domain-1",
-			),
-			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
-				"instance-guid-1",
-				"cell-id-1",
-			),
-			State: models.ActualLRPStateClaimed,
-			Since: 4444,
+		actualLRPKey2 := models.NewActualLRPKey(
+			"process-guid-1",
+			2,
+			"domain-1",
+		)
+		actualLRPInstanceKey2 := models.NewActualLRPInstanceKey(
+			"instance-guid-1",
+			"cell-id-1",
+		)
+		actualLRP2 = &models.ActualLRP{
+			ActualLrpKey:         &actualLRPKey2,
+			ActualLrpInstanceKey: &actualLRPInstanceKey2,
+			State:                models.ActualLRPStateClaimed,
+			Since:                4444,
 		}
 
 		evacuatingLRP2 = actualLRP2
-		evacuatingLRP2.Presence = models.ActualLRP_Evacuating
+		evacuatingLRP2.Presence = models.ActualLRP_EVACUATING
 		evacuatingLRP2.State = models.ActualLRPStateRunning
 		evacuatingLRP2.Since = 3417
-		evacuatingLRP2.ActualLRPInstanceKey = models.NewActualLRPInstanceKey(
+		evacActualLRPInstanceKey := models.NewActualLRPInstanceKey(
 			"instance-guid-1",
 			"cell-id-0",
 		)
+		evacuatingLRP2.ActualLrpInstanceKey = &evacActualLRPInstanceKey
 
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		logger = lagertest.NewTestLogger("test")
@@ -101,23 +106,25 @@ var _ = Describe("ActualLRP Handlers", func() {
 			BeforeEach(func() {
 				actualLRP1.State = models.ActualLRPStateUnclaimed
 
+				suspectActualLRPKey := models.NewActualLRPKey(
+					"process-guid-0",
+					1,
+					"domain-0",
+				)
+				suspectActualLRPInstanceKey := models.NewActualLRPInstanceKey(
+					"instance-guid-0",
+					"cell-id-2",
+				)
 				suspectLRP1 = models.ActualLRP{
-					ActualLRPKey: models.NewActualLRPKey(
-						"process-guid-0",
-						1,
-						"domain-0",
-					),
-					ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
-						"instance-guid-0",
-						"cell-id-2",
-					),
-					State:    models.ActualLRPStateRunning,
-					Since:    2626,
-					Presence: models.ActualLRP_Suspect,
+					ActualLrpKey:         &suspectActualLRPKey,
+					ActualLrpInstanceKey: &suspectActualLRPInstanceKey,
+					State:                models.ActualLRPStateRunning,
+					Since:                2626,
+					Presence:             models.ActualLRP_SUSPECT,
 				}
 				actualLRPs =
 					[]*models.ActualLRP{
-						&suspectLRP1, &actualLRP1, &actualLRP2, &evacuatingLRP2,
+						&suspectLRP1, actualLRP1, actualLRP2, evacuatingLRP2,
 					}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 			})
@@ -277,15 +284,15 @@ var _ = Describe("ActualLRP Handlers", func() {
 			BeforeEach(func() {
 				actualLRPs :=
 					[]*models.ActualLRP{
-						&actualLRP1,
-						&actualLRP2,
-						&evacuatingLRP2,
+						actualLRP1,
+						actualLRP2,
+						evacuatingLRP2,
 					}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 
 				actualLRPGroups = []*models.ActualLRPGroup{
-					&models.ActualLRPGroup{Instance: &actualLRP1},
-					&models.ActualLRPGroup{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
+					&models.ActualLRPGroup{Instance: actualLRP1},
+					&models.ActualLRPGroup{Instance: actualLRP2, Evacuating: evacuatingLRP2},
 				}
 			})
 
@@ -414,15 +421,15 @@ var _ = Describe("ActualLRP Handlers", func() {
 			BeforeEach(func() {
 				actualLRPGroups =
 					[]*models.ActualLRPGroup{
-						{Instance: &actualLRP1},
-						{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
+						{Instance: actualLRP1},
+						{Instance: actualLRP2, Evacuating: evacuatingLRP2},
 					}
 
 				actualLRPs =
 					[]*models.ActualLRP{
-						&actualLRP1,
-						&actualLRP2,
-						&evacuatingLRP2,
+						actualLRP1,
+						actualLRP2,
+						evacuatingLRP2,
 					}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 			})
@@ -516,8 +523,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 			var actualLRPs []*models.ActualLRP
 
 			BeforeEach(func() {
-				actualLRPGroup = &models.ActualLRPGroup{Instance: &actualLRP1}
-				actualLRPs = []*models.ActualLRP{&actualLRP1}
+				actualLRPGroup = &models.ActualLRPGroup{Instance: actualLRP1}
+				actualLRPs = []*models.ActualLRP{actualLRP1}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 			})
 
@@ -541,8 +548,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("when there is also an evacuating LRP", func() {
 				BeforeEach(func() {
-					actualLRPGroup = &models.ActualLRPGroup{Instance: &actualLRP2, Evacuating: &evacuatingLRP2}
-					actualLRPs = []*models.ActualLRP{&actualLRP2, &evacuatingLRP2}
+					actualLRPGroup = &models.ActualLRPGroup{Instance: actualLRP2, Evacuating: evacuatingLRP2}
+					actualLRPs = []*models.ActualLRP{actualLRP2, evacuatingLRP2}
 					fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 				})
 
