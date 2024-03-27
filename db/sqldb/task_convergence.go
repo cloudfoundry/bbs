@@ -118,7 +118,7 @@ func (db *SQLDB) failExpiredPendingTasks(ctx context.Context, logger lager.Logge
 
 	var events []models.Event
 	for _, task := range tasks {
-		afterTask := *task
+		afterTask := task
 		afterTask.Failed = true
 		afterTask.FailureReason = expiredFailureReason
 		afterTask.Result = ""
@@ -126,7 +126,7 @@ func (db *SQLDB) failExpiredPendingTasks(ctx context.Context, logger lager.Logge
 		afterTask.FirstCompletedAt = now.UnixNano()
 		afterTask.UpdatedAt = now.UnixNano()
 
-		events = append(events, models.NewTaskChangedEvent(task, &afterTask))
+		events = append(events, models.NewTaskChangedEvent(task, afterTask))
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -223,7 +223,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(ctx context.Context, logger lager
 
 	var events []models.Event
 	for _, task := range tasks {
-		afterTask := *task
+		afterTask := task
 		afterTask.Failed = true
 		afterTask.FailureReason = cellDisappearedFailureReason
 		afterTask.Result = ""
@@ -231,7 +231,7 @@ func (db *SQLDB) failTasksWithDisappearedCells(ctx context.Context, logger lager
 		afterTask.FirstCompletedAt = now
 		afterTask.UpdatedAt = now
 
-		events = append(events, models.NewTaskChangedEvent(task, &afterTask))
+		events = append(events, models.NewTaskChangedEvent(task, afterTask))
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -284,9 +284,9 @@ func (db *SQLDB) demoteKickableResolvingTasks(ctx context.Context, logger lager.
 
 	var events []models.Event
 	for _, task := range tasks {
-		afterTask := *task
+		afterTask := task
 		afterTask.State = models.Task_Completed
-		events = append(events, models.NewTaskChangedEvent(task, &afterTask))
+		events = append(events, models.NewTaskChangedEvent(task, afterTask))
 	}
 
 	return events, uint64(invalidTasksCount)

@@ -124,7 +124,7 @@ func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, c
 	defer logger.Info("complete")
 
 	var started bool
-	var beforeTask models.Task
+	var beforeTask *models.Task
 	var afterTask *models.Task
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
@@ -135,7 +135,7 @@ func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, c
 			return err
 		}
 
-		beforeTask = *afterTask
+		beforeTask = afterTask
 		if afterTask.State == models.Task_Running && afterTask.CellId == cellId {
 			logger.Debug("task-already-running-on-cell")
 			return nil
@@ -167,7 +167,7 @@ func (db *SQLDB) StartTask(ctx context.Context, logger lager.Logger, taskGuid, c
 		return nil
 	})
 
-	return &beforeTask, afterTask, started, err
+	return beforeTask, afterTask, started, err
 }
 
 func (db *SQLDB) CancelTask(ctx context.Context, logger lager.Logger, taskGuid string) (*models.Task, *models.Task, string, error) {
@@ -175,7 +175,7 @@ func (db *SQLDB) CancelTask(ctx context.Context, logger lager.Logger, taskGuid s
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	var beforeTask models.Task
+	var beforeTask *models.Task
 	var afterTask *models.Task
 	var cellID string
 
@@ -187,7 +187,7 @@ func (db *SQLDB) CancelTask(ctx context.Context, logger lager.Logger, taskGuid s
 			return err
 		}
 
-		beforeTask = *afterTask
+		beforeTask = afterTask
 		cellID = afterTask.CellId
 
 		if err = afterTask.ValidateTransitionTo(models.Task_Completed); err != nil {
@@ -204,7 +204,7 @@ func (db *SQLDB) CancelTask(ctx context.Context, logger lager.Logger, taskGuid s
 		return nil
 	})
 
-	return &beforeTask, afterTask, cellID, err
+	return beforeTask, afterTask, cellID, err
 }
 
 func (db *SQLDB) CompleteTask(ctx context.Context, logger lager.Logger, taskGuid, cellID string, failed bool, failureReason, taskResult string) (*models.Task, *models.Task, error) {
@@ -212,7 +212,7 @@ func (db *SQLDB) CompleteTask(ctx context.Context, logger lager.Logger, taskGuid
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	var beforeTask models.Task
+	var beforeTask *models.Task
 	var afterTask *models.Task
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
@@ -222,7 +222,7 @@ func (db *SQLDB) CompleteTask(ctx context.Context, logger lager.Logger, taskGuid
 			logger.Error("failed-locking-task", err)
 			return err
 		}
-		beforeTask = *afterTask
+		beforeTask = afterTask
 
 		if afterTask.CellId != cellID && afterTask.State == models.Task_Running {
 			logger.Error("failed-task-already-running-on-different-cell", err)
@@ -242,7 +242,7 @@ func (db *SQLDB) CompleteTask(ctx context.Context, logger lager.Logger, taskGuid
 		return nil
 	})
 
-	return &beforeTask, afterTask, err
+	return beforeTask, afterTask, err
 }
 
 func (db *SQLDB) FailTask(ctx context.Context, logger lager.Logger, taskGuid, failureReason string) (*models.Task, *models.Task, error) {
@@ -250,7 +250,7 @@ func (db *SQLDB) FailTask(ctx context.Context, logger lager.Logger, taskGuid, fa
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	var beforeTask models.Task
+	var beforeTask *models.Task
 	var afterTask *models.Task
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
@@ -261,7 +261,7 @@ func (db *SQLDB) FailTask(ctx context.Context, logger lager.Logger, taskGuid, fa
 			return err
 		}
 
-		beforeTask = *afterTask
+		beforeTask = afterTask
 
 		if err = afterTask.ValidateTransitionTo(models.Task_Completed); err != nil {
 			if afterTask.State != models.Task_Pending {
@@ -278,14 +278,14 @@ func (db *SQLDB) FailTask(ctx context.Context, logger lager.Logger, taskGuid, fa
 		return nil
 	})
 
-	return &beforeTask, afterTask, err
+	return beforeTask, afterTask, err
 }
 
 func (db *SQLDB) RejectTask(ctx context.Context, logger lager.Logger, taskGuid, rejectionReason string) (*models.Task, *models.Task, error) {
 	logger = logger.Session("db-reject-task", lager.Data{"task_guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("complete")
-	var beforeTask models.Task
+	var beforeTask *models.Task
 	var afterTask *models.Task
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
@@ -301,7 +301,7 @@ func (db *SQLDB) RejectTask(ctx context.Context, logger lager.Logger, taskGuid, 
 			return models.ErrBadRequest
 		}
 
-		beforeTask = *afterTask
+		beforeTask = afterTask
 
 		now := db.clock.Now().UnixNano()
 
@@ -327,7 +327,7 @@ func (db *SQLDB) RejectTask(ctx context.Context, logger lager.Logger, taskGuid, 
 		return nil
 	})
 
-	return &beforeTask, afterTask, err
+	return beforeTask, afterTask, err
 }
 
 // The stager calls this when it wants to claim a completed task.  This ensures that only one
@@ -337,7 +337,7 @@ func (db *SQLDB) ResolvingTask(ctx context.Context, logger lager.Logger, taskGui
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	var beforeTask models.Task
+	var beforeTask *models.Task
 	var afterTask *models.Task
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
@@ -348,7 +348,7 @@ func (db *SQLDB) ResolvingTask(ctx context.Context, logger lager.Logger, taskGui
 			return err
 		}
 
-		beforeTask = *afterTask
+		beforeTask = afterTask
 
 		if err = afterTask.ValidateTransitionTo(models.Task_Resolving); err != nil {
 			logger.Error("invalid-state-transition", err)
@@ -374,7 +374,7 @@ func (db *SQLDB) ResolvingTask(ctx context.Context, logger lager.Logger, taskGui
 		return nil
 	})
 
-	return &beforeTask, afterTask, err
+	return beforeTask, afterTask, err
 }
 
 func (db *SQLDB) DeleteTask(ctx context.Context, logger lager.Logger, taskGuid string) (*models.Task, error) {

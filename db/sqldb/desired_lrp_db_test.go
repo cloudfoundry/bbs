@@ -340,10 +340,10 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("returns the desired lrp scheduling info", func() {
-			schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.ProcessGuid)
+			schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.DesiredLrpKey.ProcessGuid)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(*schedInfo).To(BeEquivalentTo(expectedDesiredLRPSchedulingInfo))
+			Expect(schedInfo).To(BeEquivalentTo(&expectedDesiredLRPSchedulingInfo))
 		})
 
 		Context("when the desired lrp does not exist", func() {
@@ -366,7 +366,7 @@ var _ = Describe("DesiredLRPDB", func() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
 
-				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPSchedulingInfo.ProcessGuid)
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPSchedulingInfo.DesiredLrpKey.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -374,7 +374,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns an invalid record error", func() {
-				schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.ProcessGuid)
+				schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.DesiredLrpKey.ProcessGuid)
 				Expect(err).To(HaveOccurred())
 				Expect(schedInfo).To(BeNil())
 			})
@@ -463,7 +463,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			routes := models.Routes{
 				"blah": (*json.RawMessage)(&routeContent),
 			}
-			update = &models.DesiredLRPUpdate{Routes: &routes}
+			update = &models.DesiredLRPUpdate{Routes: routes.ToProtoRoutes()}
 			update.SetInstances(123)
 			update.SetAnnotation("annotated")
 			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
@@ -474,7 +474,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 			expectedDesiredLRP.Instances = 123
 			expectedDesiredLRP.Annotation = "annotated"
-			expectedDesiredLRP.Routes = &routes
+			expectedDesiredLRP.Routes = routes.ToProtoRoutes()
 			expectedDesiredLRP.ModificationTag.Increment()
 
 			Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
@@ -544,7 +544,7 @@ var _ = Describe("DesiredLRPDB", func() {
 					"blah": (*json.RawMessage)(&routeContent),
 				}
 				update = &models.DesiredLRPUpdate{
-					Routes: &routes,
+					Routes: routes.ToProtoRoutes(),
 				}
 				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 				Expect(err).To(HaveOccurred())

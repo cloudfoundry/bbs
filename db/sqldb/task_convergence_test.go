@@ -404,8 +404,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				afterResolvingKickedTask, err := sqlDB.TaskByGuid(ctx, logger, "resolving-kickable-task")
 				Expect(err).NotTo(HaveOccurred())
 
-				afterResolvingExpiredTask := &models.Task{}
-				*afterResolvingExpiredTask = *resolvingExpiredTask
+				afterResolvingExpiredTask := resolvingExpiredTask
 				afterResolvingExpiredTask.State = models.Task_Completed
 
 				event1 := models.NewTaskChangedEvent(resolvingKickableTask, afterResolvingKickedTask)

@@ -86,10 +86,10 @@ var _ = Describe("TaskDB", func() {
 				Expect(rejectionCount).To(BeEquivalentTo(0))
 				Expect(rejectionReason).To(Equal(""))
 
-				var actualTaskDef models.TaskDefinition
-				err = serializer.Unmarshal(logger, taskDefData, &actualTaskDef)
+				var actualTaskDef *models.TaskDefinition
+				err = serializer.Unmarshal(logger, taskDefData, actualTaskDef)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualTaskDef).To(Equal(*taskDef))
+				Expect(actualTaskDef).To(Equal(taskDef))
 
 				Expect(desiredTask.Domain).To(Equal(taskDomain))
 				Expect(desiredTask.TaskGuid).To(Equal(taskGuid))

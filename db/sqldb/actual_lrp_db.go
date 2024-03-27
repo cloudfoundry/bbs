@@ -42,7 +42,7 @@ func (db *SQLDB) ChangeActualLRPPresence(ctx context.Context, logger lager.Logge
 	defer logger.Info("finished")
 
 	var beforeLRP *models.ActualLRP
-	var afterLRP models.ActualLRP
+	var afterLRP *models.ActualLRP
 	err = db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
 		beforeLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, from, tx)
@@ -51,7 +51,7 @@ func (db *SQLDB) ChangeActualLRPPresence(ctx context.Context, logger lager.Logge
 			return err
 		}
 
-		afterLRP = *beforeLRP
+		afterLRP = beforeLRP
 		afterLRP.Presence = to
 		wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
 		_, err = db.update(ctx, logger, tx, actualLRPsTable, helpers.SQLAttributes{
@@ -63,7 +63,7 @@ func (db *SQLDB) ChangeActualLRPPresence(ctx context.Context, logger lager.Logge
 		return err
 	})
 
-	return beforeLRP, &afterLRP, err
+	return beforeLRP, afterLRP, err
 }
 
 func (db *SQLDB) ActualLRPs(ctx context.Context, logger lager.Logger, filter models.ActualLRPFilter) ([]*models.ActualLRP, error) {
