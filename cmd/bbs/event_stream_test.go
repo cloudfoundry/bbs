@@ -75,7 +75,7 @@ var _ = Describe("Events API", func() {
 					ProcessGuid: "some-guid",
 					Domain:      "some-domain",
 					RootFs:      "some:rootfs",
-					Routes:      routes,
+					Routes:      routes.ToProtoRoutes(),
 					Action: models.WrapAction(&models.RunAction{
 						User:      "me",
 						Dir:       "/tmp",
@@ -107,7 +107,7 @@ var _ = Describe("Events API", func() {
 				newRoutes := &models.Routes{
 					"cf-router": &routeMessage,
 				}
-				err = client.UpdateDesiredLRP(logger, "some-trace-id", desiredLRP.ProcessGuid, &models.DesiredLRPUpdate{Routes: newRoutes})
+				err = client.UpdateDesiredLRP(logger, "some-trace-id", desiredLRP.ProcessGuid, &models.DesiredLRPUpdate{Routes: newRoutes.ToProtoRoutes()})
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(eventChannel).Should(Receive(&event))
@@ -138,7 +138,7 @@ var _ = Describe("Events API", func() {
 				key = models.NewActualLRPKey(processGuid, 0, domain)
 				instanceKey = models.NewActualLRPInstanceKey("instance-guid", "cell-id")
 				newInstanceKey = models.NewActualLRPInstanceKey("other-instance-guid", "other-cell-id")
-				netInfo = models.NewActualLRPNetInfo("1.1.1.1", "3.3.3.3", models.ActualLRPNetInfo_PreferredAddressUnknown)
+				netInfo = models.NewActualLRPNetInfo("1.1.1.1", "3.3.3.3", models.ActualLRPNetInfo_UNKNOWN)
 
 				desiredLRP = &models.DesiredLRP{
 					ProcessGuid: processGuid,
@@ -219,7 +219,7 @@ var _ = Describe("Events API", func() {
 
 					actualLRPCreatedEvent = event.(*models.ActualLRPCreatedEvent)
 					response := actualLRPCreatedEvent.ActualLrpGroup.GetEvacuating()
-					Expect(*response).To(Equal(evacuatingLRP))
+					Expect(response).To(Equal(&evacuatingLRP))
 
 					// discard instance -> UNCLAIMED
 					Eventually(func() models.Event {
@@ -258,7 +258,7 @@ var _ = Describe("Events API", func() {
 
 					actualLRPCreatedEvent = event.(*models.ActualLRPCreatedEvent)
 					response = actualLRPCreatedEvent.ActualLrpGroup.GetEvacuating()
-					Expect(*response).To(Equal(evacuatingLRP))
+					Expect(response).To(Equal(&evacuatingLRP))
 
 					// discard instance -> UNCLAIMED
 					Eventually(func() models.Event {
@@ -281,7 +281,7 @@ var _ = Describe("Events API", func() {
 
 					actualLRPRemovedEvent := event.(*models.ActualLRPRemovedEvent)
 					response = actualLRPRemovedEvent.ActualLrpGroup.GetInstance()
-					Expect(*response).To(Equal(actualLRP))
+					Expect(response).To(Equal(&actualLRP))
 
 					By("removing the evacuating ActualLRP")
 					err = client.RemoveEvacuatingActualLRP(logger, "some-trace-id", &key, &newInstanceKey)
@@ -294,7 +294,7 @@ var _ = Describe("Events API", func() {
 
 					actualLRPRemovedEvent = event.(*models.ActualLRPRemovedEvent)
 					response = actualLRPRemovedEvent.ActualLrpGroup.GetEvacuating()
-					Expect(*response).To(Equal(evacuatingLRP))
+					Expect(response).To(Equal(&evacuatingLRP))
 				})
 			})
 
@@ -346,7 +346,7 @@ var _ = Describe("Events API", func() {
 								After:  actualLRPGroup,
 							})))
 
-							Expect(actualLRPGroup.GetInstance().GetCellId()).To(Equal(cellID))
+							Expect(actualLRPGroup.GetInstance().ActualLrpInstanceKey.GetCellId()).To(Equal(cellID))
 						}
 						claimLRP()
 
@@ -373,7 +373,7 @@ var _ = Describe("Events API", func() {
 						actualLRPRemovedEvent := event.(*models.ActualLRPRemovedEvent)
 						response := actualLRPRemovedEvent.ActualLrpGroup.GetInstance()
 						Expect(response).To(Equal(actualLRPGroup.GetInstance()))
-						Expect(actualLRPGroup.GetInstance().GetCellId()).To(Equal(cellID))
+						Expect(actualLRPGroup.GetInstance().ActualLrpInstanceKey.GetCellId()).To(Equal(cellID))
 					})
 
 					It("does not receive events from the other cells", func() {

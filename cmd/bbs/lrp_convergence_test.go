@@ -35,12 +35,13 @@ var _ = Describe("Convergence API", func() {
 			bbsRunner = testrunner.New(bbsBinPath, bbsConfig)
 			bbsProcess = ginkgomon.Invoke(bbsRunner)
 
+			cellCapacity := models.NewCellCapacity(128, 1024, 6)
 			cellPresence := models.NewCellPresence(
 				"some-cell",
 				"cell.example.com",
 				"http://cell.example.com",
 				"the-zone",
-				models.NewCellCapacity(128, 1024, 6),
+				&cellCapacity,
 				[]string{},
 				[]string{},
 				[]string{},
@@ -60,7 +61,7 @@ var _ = Describe("Convergence API", func() {
 			)
 
 			BeforeEach(func() {
-				netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
+				netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(8080, 80))
 
 				lrpKey = &models.ActualLRPKey{
 					ProcessGuid: processGuid,
@@ -81,7 +82,7 @@ var _ = Describe("Convergence API", func() {
 					group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 					Expect(err).NotTo(HaveOccurred())
 					return group.Instance.Presence
-				}).Should(Equal(models.ActualLRP_Suspect))
+				}).Should(Equal(models.ActualLRP_SUSPECT))
 			})
 
 			Context("and the LRP is marked Suspect", func() {
@@ -117,17 +118,18 @@ var _ = Describe("Convergence API", func() {
 						group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 						Expect(err).NotTo(HaveOccurred())
 						return group.Instance.Presence
-					}).Should(Equal(models.ActualLRP_Suspect))
+					}).Should(Equal(models.ActualLRP_SUSPECT))
 				})
 
 				Context("when the cell is back", func() {
 					BeforeEach(func() {
+						cellCapacity := models.NewCellCapacity(128, 1024, 6)
 						cellPresence := models.NewCellPresence(
 							"missing-cell",
 							"cell.example.com",
 							"http://cell.example.com",
 							"the-zone",
-							models.NewCellCapacity(128, 1024, 6),
+							&cellCapacity,
 							[]string{},
 							[]string{},
 							[]string{},
@@ -141,7 +143,7 @@ var _ = Describe("Convergence API", func() {
 						// 	group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, processGuid, 0)
 						// 	Expect(err).NotTo(HaveOccurred())
 						// 	return group.Instance.Presence
-						// }).Should(Equal(models.ActualLRP_Ordinary))
+						// }).Should(Equal(models.ActualLRP_ORDINARY))
 						Expect(1).To(Equal(1))
 					})
 				})
@@ -160,7 +162,7 @@ var _ = Describe("Convergence API", func() {
 							return false
 						}).Should(BeTrue())
 
-						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
+						netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(8080, 80))
 						_, _, err := db.StartActualLRP(ctx, logger,
 							&models.ActualLRPKey{
 								ProcessGuid: processGuid,
@@ -186,9 +188,9 @@ var _ = Describe("Convergence API", func() {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							lrp = group.Instance
-							return lrp.InstanceGuid
+							return lrp.ActualLrpInstanceKey.InstanceGuid
 						}).Should(Equal("ig-2"))
-						Expect(lrp.Presence).To(Equal(models.ActualLRP_Ordinary))
+						Expect(lrp.Presence).To(Equal(models.ActualLRP_ORDINARY))
 					})
 
 					It("emits a LRPRemoved event", func() {
@@ -197,8 +199,8 @@ var _ = Describe("Convergence API", func() {
 						Eventually(eventCh).Should(Receive(&removedEvent))
 
 						Expect(removedEvent.ActualLrpGroup.Evacuating).To(BeNil())
-						Expect(removedEvent.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
-						Expect(removedEvent.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+						Expect(removedEvent.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
+						Expect(removedEvent.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 					})
 				})
 
@@ -232,7 +234,7 @@ var _ = Describe("Convergence API", func() {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							return group.Instance.Presence
-						}).Should(Equal(models.ActualLRP_Suspect))
+						}).Should(Equal(models.ActualLRP_SUSPECT))
 					})
 
 					It("unclaims the replacement", func() {
@@ -241,7 +243,7 @@ var _ = Describe("Convergence API", func() {
 							lrps, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: processGuid, Index: &index})
 							Expect(err).NotTo(HaveOccurred())
 							for _, lrp := range lrps {
-								if lrp.Presence == models.ActualLRP_Ordinary {
+								if lrp.Presence == models.ActualLRP_ORDINARY {
 									return lrp.State
 								}
 							}
@@ -271,7 +273,7 @@ var _ = Describe("Convergence API", func() {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							return group.Instance.Presence
-						}).Should(Equal(models.ActualLRP_Suspect))
+						}).Should(Equal(models.ActualLRP_SUSPECT))
 					})
 				})
 
@@ -333,7 +335,7 @@ var _ = Describe("Convergence API", func() {
 
 					Context("when the replacement LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
-							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
@@ -348,7 +350,7 @@ var _ = Describe("Convergence API", func() {
 						It("replaces the Running LRP instance with the ordinary one", func() {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
-							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_ORDINARY))
 						})
 
 						It("emits a LRPCreated event", func() {
@@ -357,8 +359,8 @@ var _ = Describe("Convergence API", func() {
 							var e *models.ActualLRPCreatedEvent
 
 							Eventually(eventCh, 2*time.Second).Should(Receive(&e))
-							Expect(e.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-2"))
-							Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+							Expect(e.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-2"))
+							Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_ORDINARY))
 						})
 
 						It("emits a LRPRemoved event", func() {
@@ -367,12 +369,12 @@ var _ = Describe("Convergence API", func() {
 							var e *models.ActualLRPRemovedEvent
 
 							Eventually(eventCh, 2*time.Second).Should(Receive(&e))
-							Expect(e.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
-							Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+							Expect(e.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
+							Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 						})
 
 						It("returns ErrActualLRPCannotBeStarted when the Suspect LRP is started", func() {
-							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
@@ -387,7 +389,7 @@ var _ = Describe("Convergence API", func() {
 
 					Context("when the suspect LRP is started by calling StartActualLRP", func() {
 						BeforeEach(func() {
-							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
+							netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(8080, 80))
 							err := client.StartActualLRP(logger, "some-trace-id", &models.ActualLRPKey{
 								ProcessGuid: "some-process-guid",
 								Index:       0,
@@ -402,7 +404,7 @@ var _ = Describe("Convergence API", func() {
 						It("does not change the ActualLRPGroups returned from the API", func() {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
-							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+							Expect(group.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 						})
 
 						It("does not emit any events", func() {
@@ -437,14 +439,14 @@ var _ = Describe("Convergence API", func() {
 								var e *models.ActualLRPRemovedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&e))
-								Expect(e.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
-								Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+								Expect(e.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
+								Expect(e.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 							})
 
 							It("removes the Suspect instance from the database", func() {
 								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
-								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_ORDINARY))
 							})
 						})
 
@@ -462,7 +464,7 @@ var _ = Describe("Convergence API", func() {
 								Expect(err).NotTo(HaveOccurred())
 								foundUnclaimed := false
 								for _, lrp := range lrps {
-									if lrp.Presence == models.ActualLRP_Ordinary {
+									if lrp.Presence == models.ActualLRP_ORDINARY {
 										Expect(lrp.State).To(Equal(models.ActualLRPStateUnclaimed))
 										foundUnclaimed = true
 									}
@@ -473,7 +475,7 @@ var _ = Describe("Convergence API", func() {
 
 						Context("when the suspect LRP is evacuated", func() {
 							BeforeEach(func() {
-								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(8080, 80))
+								netInfo := models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_UNKNOWN, models.NewPortMapping(8080, 80))
 								_, err := client.EvacuateRunningActualLRP(logger, "some-trace-id", lrpKey, suspectLRPInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 								Expect(err).NotTo(HaveOccurred())
 							})
@@ -481,14 +483,14 @@ var _ = Describe("Convergence API", func() {
 							It("creates an evacuating LRP", func() {
 								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
-								Expect(group.Evacuating.Presence).To(Equal(models.ActualLRP_Evacuating))
-								Expect(group.Evacuating.ActualLRPInstanceKey).To(Equal(*suspectLRPInstanceKey))
+								Expect(group.Evacuating.Presence).To(Equal(models.ActualLRP_EVACUATING))
+								Expect(group.Evacuating.ActualLrpInstanceKey).To(Equal(suspectLRPInstanceKey))
 							})
 
 							It("removes the suspect LRP", func() {
 								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
-								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
+								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_SUSPECT))
 							})
 
 							It("emits two LRPCreated events and a LRPRemoved event", func() {
@@ -497,20 +499,20 @@ var _ = Describe("Convergence API", func() {
 								var ce *models.ActualLRPCreatedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&ce))
-								Expect(ce.ActualLrpGroup.Evacuating.InstanceGuid).To(Equal("ig-1"))
-								Expect(ce.ActualLrpGroup.Evacuating.Presence).To(Equal(models.ActualLRP_Evacuating))
+								Expect(ce.ActualLrpGroup.Evacuating.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
+								Expect(ce.ActualLrpGroup.Evacuating.Presence).To(Equal(models.ActualLRP_EVACUATING))
 
 								var ce2 *models.ActualLRPCreatedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&ce2))
-								Expect(ce2.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-2"))
-								Expect(ce2.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Ordinary))
+								Expect(ce2.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-2"))
+								Expect(ce2.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_ORDINARY))
 
 								var re *models.ActualLRPRemovedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
-								Expect(re.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
-								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+								Expect(re.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 							})
 						})
 
@@ -528,7 +530,7 @@ var _ = Describe("Convergence API", func() {
 								Expect(err).NotTo(HaveOccurred())
 								foundUnclaimed := false
 								for _, lrp := range lrps {
-									if lrp.Presence == models.ActualLRP_Ordinary {
+									if lrp.Presence == models.ActualLRP_ORDINARY {
 										Expect(lrp.State).To(Equal(models.ActualLRPStateUnclaimed))
 										foundUnclaimed = true
 									}
@@ -542,7 +544,7 @@ var _ = Describe("Convergence API", func() {
 								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 
-								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+								Expect(group.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 								Consistently(eventCh).ShouldNot(Receive(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{})))
 							})
 						})
@@ -556,7 +558,7 @@ var _ = Describe("Convergence API", func() {
 							It("removes the suspect LRP", func() {
 								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
-								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
+								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_SUSPECT))
 							})
 
 							It("emits a LRPRemoved event", func() {
@@ -565,8 +567,8 @@ var _ = Describe("Convergence API", func() {
 								var re *models.ActualLRPRemovedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
-								Expect(re.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
-								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+								Expect(re.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 							})
 						})
 
@@ -579,7 +581,7 @@ var _ = Describe("Convergence API", func() {
 							It("removes the suspect LRP", func() {
 								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
-								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_Suspect))
+								Expect(group.Instance.Presence).NotTo(Equal(models.ActualLRP_SUSPECT))
 							})
 
 							It("emits a LRPRemoved event", func() {
@@ -588,8 +590,8 @@ var _ = Describe("Convergence API", func() {
 								var re *models.ActualLRPRemovedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
-								Expect(re.ActualLrpGroup.Instance.InstanceGuid).To(Equal("ig-1"))
-								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_Suspect))
+								Expect(re.ActualLrpGroup.Instance.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrpGroup.Instance.Presence).To(Equal(models.ActualLRP_SUSPECT))
 							})
 						})
 					})
