@@ -66,7 +66,7 @@ func (e *AddPresenceToActualLrp) alterTable(tx *sql.Tx, logger lager.Logger) err
 	}
 
 	alterTablesSQL := []string{}
-	alterTablesSQL = append(alterTablesSQL, fmt.Sprintf("UPDATE actual_lrps SET presence = %d WHERE evacuating = true;", models.ActualLRP_Evacuating))
+	alterTablesSQL = append(alterTablesSQL, fmt.Sprintf("UPDATE actual_lrps SET presence = %d WHERE evacuating = true;", models.ActualLRP_EVACUATING))
 
 	if e.dbFlavor == "mysql" {
 		alterTablesSQL = append(alterTablesSQL,

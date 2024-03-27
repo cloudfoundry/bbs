@@ -140,7 +140,7 @@ func (db *SQLDB) selectLRPInstanceCounts(ctx context.Context, logger lager.Logge
 			GROUP BY desired_lrps.process_guid
 			HAVING COUNT(actual_lrps.instance_index) <> desired_lrps.instances
 		`,
-		strings.Join(columns, ", "), models.ActualLRP_Ordinary,
+		strings.Join(columns, ", "), models.ActualLRP_ORDINARY,
 	)
 
 	return q.QueryContext(ctx, query)
@@ -153,7 +153,7 @@ func (db *SQLDB) selectOrphanedActualLRPs(ctx context.Context, logger lager.Logg
       JOIN domains ON actual_lrps.domain = domains.domain
       LEFT JOIN desired_lrps ON actual_lrps.process_guid = desired_lrps.process_guid
       WHERE actual_lrps.presence = %d AND desired_lrps.process_guid IS NULL
-		`, models.ActualLRP_Ordinary)
+		`, models.ActualLRP_ORDINARY)
 
 	return q.QueryContext(ctx, query)
 }
@@ -165,7 +165,7 @@ func (db *SQLDB) selectOrphanedSuspectActualLRPs(ctx context.Context, logger lag
       JOIN domains ON actual_lrps.domain = domains.domain
       LEFT JOIN desired_lrps ON actual_lrps.process_guid = desired_lrps.process_guid
       WHERE actual_lrps.presence = %d AND desired_lrps.process_guid IS NULL
-		`, models.ActualLRP_Suspect)
+		`, models.ActualLRP_SUSPECT)
 
 	return q.QueryContext(ctx, query)
 }
@@ -175,7 +175,7 @@ func (db *SQLDB) selectSuspectRunningActualLRPs(ctx context.Context, logger lage
 			FROM actual_lrps
 			WHERE actual_lrps.presence = ? AND actual_lrps.state = ?`)
 
-	return q.QueryContext(ctx, query, models.ActualLRP_Suspect, models.ActualLRPStateRunning)
+	return q.QueryContext(ctx, query, models.ActualLRP_SUSPECT, models.ActualLRPStateRunning)
 }
 
 func (db *SQLDB) selectSuspectClaimedActualLRPs(ctx context.Context, logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
@@ -183,7 +183,7 @@ func (db *SQLDB) selectSuspectClaimedActualLRPs(ctx context.Context, logger lage
 			FROM actual_lrps
 			WHERE actual_lrps.presence = ? AND actual_lrps.state = ?`)
 
-	return q.QueryContext(ctx, query, models.ActualLRP_Suspect, models.ActualLRPStateClaimed)
+	return q.QueryContext(ctx, query, models.ActualLRP_SUSPECT, models.ActualLRPStateClaimed)
 }
 
 func (db *SQLDB) selectExtraSuspectActualLRPs(ctx context.Context, logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
@@ -192,11 +192,11 @@ func (db *SQLDB) selectExtraSuspectActualLRPs(ctx context.Context, logger lager.
       WHERE actual_lrps.presence IN (?, ?) AND actual_lrps.state = ?
 			GROUP BY process_guid, instance_index, domain
 			HAVING count(*) >= 2`)
-	return q.QueryContext(ctx, query, models.ActualLRP_Ordinary, models.ActualLRP_Suspect, models.ActualLRPStateRunning)
+	return q.QueryContext(ctx, query, models.ActualLRP_ORDINARY, models.ActualLRP_SUSPECT, models.ActualLRPStateRunning)
 }
 
 func (db *SQLDB) selectSuspectLRPsWithExistingCells(ctx context.Context, logger lager.Logger, q helpers.Queryable, cellSet models.CellSet) (*sql.Rows, error) {
-	wheres := []string{fmt.Sprintf("actual_lrps.presence = %d", models.ActualLRP_Suspect)}
+	wheres := []string{fmt.Sprintf("actual_lrps.presence = %d", models.ActualLRP_SUSPECT)}
 	bindings := make([]interface{}, 0, len(cellSet))
 
 	if len(cellSet) > 0 {
@@ -260,7 +260,7 @@ func (db *SQLDB) selectCrashedLRPs(ctx context.Context, logger lager.Logger, q h
 		),
 	)
 
-	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateCrashed, models.ActualLRP_Ordinary)
+	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateCrashed, models.ActualLRP_ORDINARY)
 }
 
 func (db *SQLDB) selectStaleUnclaimedLRPs(ctx context.Context, logger lager.Logger, q helpers.Queryable, now time.Time) (*sql.Rows, error) {
@@ -277,7 +277,7 @@ func (db *SQLDB) selectStaleUnclaimedLRPs(ctx context.Context, logger lager.Logg
 		db.helper.Rebind(query),
 		models.ActualLRPStateUnclaimed,
 		now.Add(-models.StaleUnclaimedActualLRPDuration).UnixNano(),
-		models.ActualLRP_Ordinary,
+		models.ActualLRP_ORDINARY,
 	)
 }
 
@@ -294,7 +294,7 @@ func (db *SQLDB) selectLRPsWithRoutes(ctx context.Context, logger lager.Logger, 
 		),
 	)
 
-	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_Ordinary)
+	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_ORDINARY)
 }
 
 func (db *SQLDB) selectLRPsWithMetricTags(ctx context.Context, logger lager.Logger, q helpers.Queryable) (*sql.Rows, error) {
@@ -310,7 +310,7 @@ func (db *SQLDB) selectLRPsWithMetricTags(ctx context.Context, logger lager.Logg
 		),
 	)
 
-	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_Ordinary)
+	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_ORDINARY)
 }
 
 func (db *SQLDB) CountDesiredInstances(ctx context.Context, logger lager.Logger) int {
@@ -358,7 +358,7 @@ func (db *SQLDB) CountActualLRPsByState(ctx context.Context, logger lager.Logger
 		panic("database flavor not implemented: " + db.flavor)
 	}
 
-	row := db.db.QueryRowContext(ctx, query, models.ActualLRPStateClaimed, models.ActualLRPStateUnclaimed, models.ActualLRPStateRunning, models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, models.ActualLRP_Ordinary)
+	row := db.db.QueryRowContext(ctx, query, models.ActualLRPStateClaimed, models.ActualLRPStateUnclaimed, models.ActualLRPStateRunning, models.ActualLRPStateCrashed, models.ActualLRPStateCrashed, models.ActualLRP_ORDINARY)
 	err := row.Scan(&claimedCount, &unclaimedCount, &runningCount, &crashedCount, &crashingDesiredCount)
 	if err != nil {
 		logger.Error("failed-counting-actual-lrps", err)

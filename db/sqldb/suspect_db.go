@@ -22,7 +22,7 @@ func (db *SQLDB) RemoveSuspectActualLRP(ctx context.Context, logger lager.Logger
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		lrp, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Suspect, tx)
+		lrp, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_SUSPECT, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("suspect-lrp-does-not-exist")
 			return nil
@@ -35,7 +35,7 @@ func (db *SQLDB) RemoveSuspectActualLRP(ctx context.Context, logger lager.Logger
 
 		_, err = db.delete(ctx, logger, tx, "actual_lrps",
 			"process_guid = ? AND instance_index = ? AND presence = ?",
-			processGuid, index, models.ActualLRP_Suspect,
+			processGuid, index, models.ActualLRP_SUSPECT,
 		)
 
 		if err != nil {
@@ -56,18 +56,18 @@ func (db *SQLDB) PromoteSuspectActualLRP(ctx context.Context, logger lager.Logge
 
 	var (
 		beforeLRP   *models.ActualLRP
-		afterLRP    models.ActualLRP
+		afterLRP    *models.ActualLRP
 		ordinaryLRP *models.ActualLRP
 	)
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
-		beforeLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Suspect, tx)
+		beforeLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_SUSPECT, tx)
 		if err != nil {
 			logger.Error("failed-fetching-suspect-actual-lrp", err)
 			return err
 		}
 
-		ordinaryLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Ordinary, tx)
+		ordinaryLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_ORDINARY, tx)
 		if err != nil && err != models.ErrResourceNotFound {
 			logger.Error("failed-fetching-ordinary-actual-lrp", err)
 			return err
@@ -75,7 +75,7 @@ func (db *SQLDB) PromoteSuspectActualLRP(ctx context.Context, logger lager.Logge
 		if err != models.ErrResourceNotFound {
 			_, err = db.delete(ctx, logger, tx, actualLRPsTable,
 				"process_guid = ? AND instance_index = ? AND presence = ?",
-				processGuid, index, models.ActualLRP_Ordinary,
+				processGuid, index, models.ActualLRP_ORDINARY,
 			)
 			if err != nil {
 				logger.Error("failed-removing-ordinaryactual-lrp", err)
@@ -83,8 +83,8 @@ func (db *SQLDB) PromoteSuspectActualLRP(ctx context.Context, logger lager.Logge
 			}
 		}
 
-		afterLRP = *beforeLRP
-		afterLRP.Presence = models.ActualLRP_Ordinary
+		afterLRP = beforeLRP
+		afterLRP.Presence = models.ActualLRP_ORDINARY
 		wheres := "process_guid = ? AND instance_index = ? AND presence = ?"
 		_, err = db.update(ctx, logger, tx, actualLRPsTable, helpers.SQLAttributes{
 			"presence": afterLRP.Presence,
@@ -96,5 +96,5 @@ func (db *SQLDB) PromoteSuspectActualLRP(ctx context.Context, logger lager.Logge
 		return nil
 	})
 
-	return beforeLRP, &afterLRP, ordinaryLRP, err
+	return beforeLRP, afterLRP, ordinaryLRP, err
 }

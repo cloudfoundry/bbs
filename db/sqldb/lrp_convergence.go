@@ -106,13 +106,13 @@ func (c *convergence) staleUnclaimedActualLRPs(ctx context.Context, logger lager
 		if err != nil {
 			continue
 		}
-		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(index), schedulingInfo.Domain)
+		key := models.NewActualLRPKey(schedulingInfo.DesiredLrpKey.ProcessGuid, int32(index), schedulingInfo.DesiredLrpKey.Domain)
 		c.unstartedLRPKeys = append(c.unstartedLRPKeys, &models.ActualLRPKeyWithSchedulingInfo{
 			Key:            &key,
 			SchedulingInfo: schedulingInfo,
 		})
 		logger.Info("creating-start-request",
-			lager.Data{"reason": "stale-unclaimed-lrp", "process_guid": schedulingInfo.ProcessGuid, "index": index})
+			lager.Data{"reason": "stale-unclaimed-lrp", "process_guid": schedulingInfo.DesiredLrpKey.ProcessGuid, "index": index})
 	}
 
 	if rows.Err() != nil {
@@ -142,16 +142,17 @@ func (c *convergence) crashedActualLRPs(ctx context.Context, logger lager.Logger
 			continue
 		}
 
-		actual.ActualLRPKey = models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(index), schedulingInfo.Domain)
+		newActualLRPKey := models.NewActualLRPKey(schedulingInfo.DesiredLrpKey.ProcessGuid, int32(index), schedulingInfo.DesiredLrpKey.Domain)
+		actual.ActualLrpKey = &newActualLRPKey
 		actual.State = models.ActualLRPStateCrashed
 
 		if actual.ShouldRestartCrash(now, restartCalculator) {
 			c.unstartedLRPKeys = append(c.unstartedLRPKeys, &models.ActualLRPKeyWithSchedulingInfo{
-				Key:            &actual.ActualLRPKey,
+				Key:            actual.ActualLrpKey,
 				SchedulingInfo: schedulingInfo,
 			})
 			logger.Info("creating-start-request",
-				lager.Data{"reason": "crashed-instance", "process_guid": actual.ProcessGuid, "index": index})
+				lager.Data{"reason": "crashed-instance", "process_guid": actual.ActualLrpKey.ProcessGuid, "index": index})
 		}
 	}
 
@@ -283,8 +284,8 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 			continue
 		}
 		desiredMetricTags, err := models.ConvertMetricTags(runInfo.MetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
-			models.MetricTagDynamicValueIndex:        actualLRPKey.Index,
-			models.MetricTagDynamicValueInstanceGuid: actualLRPInstanceKey.InstanceGuid,
+			models.MetricTagValue_INDEX:         actualLRPKey.Index,
+			models.MetricTagValue_INSTANCE_GUID: actualLRPInstanceKey.InstanceGuid,
 		})
 		if err != nil {
 			logger.Error("converting-metric-tags-failed", err)
@@ -450,14 +451,14 @@ func (c *convergence) lrpInstanceCounts(ctx context.Context, logger lager.Logger
 			index := int32(i)
 			c.missingLRPKeys = append(c.missingLRPKeys, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
-					ProcessGuid: schedulingInfo.ProcessGuid,
-					Domain:      schedulingInfo.Domain,
+					ProcessGuid: schedulingInfo.DesiredLrpKey.ProcessGuid,
+					Domain:      schedulingInfo.DesiredLrpKey.Domain,
 					Index:       index,
 				},
 				SchedulingInfo: schedulingInfo,
 			})
 			logger.Info("creating-start-request",
-				lager.Data{"reason": "missing-instance", "process_guid": schedulingInfo.ProcessGuid, "index": index})
+				lager.Data{"reason": "missing-instance", "process_guid": schedulingInfo.DesiredLrpKey.ProcessGuid, "index": index})
 		}
 
 		for index := range existingIndices {
@@ -466,11 +467,11 @@ func (c *convergence) lrpInstanceCounts(ctx context.Context, logger lager.Logger
 			}
 
 			// only take destructive actions for fresh domains
-			if _, ok := domainSet[schedulingInfo.Domain]; ok {
+			if _, ok := domainSet[schedulingInfo.DesiredLrpKey.Domain]; ok {
 				c.keysToRetire = append(c.keysToRetire, &models.ActualLRPKey{
-					ProcessGuid: schedulingInfo.ProcessGuid,
+					ProcessGuid: schedulingInfo.DesiredLrpKey.ProcessGuid,
 					Index:       int32(index),
-					Domain:      schedulingInfo.Domain,
+					Domain:      schedulingInfo.DesiredLrpKey.Domain,
 				})
 			}
 		}
@@ -518,11 +519,11 @@ func (c *convergence) actualLRPsWithMissingCells(ctx context.Context, logger lag
 		var cellID string
 		var presence models.ActualLRP_Presence
 		schedulingInfo, err := c.fetchDesiredLRPSchedulingInfoAndMore(logger, rows, &index, &cellID, &presence)
-		if err == nil && presence == models.ActualLRP_Ordinary {
+		if err == nil && presence == models.ActualLRP_ORDINARY {
 			ordinaryKeysWithMissingCells = append(ordinaryKeysWithMissingCells, &models.ActualLRPKeyWithSchedulingInfo{
 				Key: &models.ActualLRPKey{
-					ProcessGuid: schedulingInfo.ProcessGuid,
-					Domain:      schedulingInfo.Domain,
+					ProcessGuid: schedulingInfo.DesiredLrpKey.ProcessGuid,
+					Domain:      schedulingInfo.DesiredLrpKey.Domain,
 					Index:       index,
 				},
 				SchedulingInfo: schedulingInfo,
@@ -579,7 +580,7 @@ func (db *SQLDB) pruneEvacuatingActualLRPs(ctx context.Context, logger lager.Log
 	logger = logger.Session("prune-evacuating-actual-lrps")
 
 	wheres := []string{"presence = ?"}
-	bindings := []interface{}{models.ActualLRP_Evacuating}
+	bindings := []interface{}{models.ActualLRP_EVACUATING}
 
 	if len(cellSet) > 0 {
 		wheres = append(wheres, fmt.Sprintf("actual_lrps.cell_id NOT IN (%s)", helpers.QuestionMarks(len(cellSet))))

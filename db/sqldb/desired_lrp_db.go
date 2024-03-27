@@ -17,7 +17,7 @@ func (db *SQLDB) DesireLRP(ctx context.Context, logger lager.Logger, desiredLRP 
 	defer logger.Info("complete")
 
 	return db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
-		routesData, err := db.encodeRouteData(logger, desiredLRP.Routes)
+		routesData, err := db.encodeRouteData(logger, desiredLRP.Routes.ToRoutes())
 		if err != nil {
 			logger.Error("failed-encoding-route-data", err)
 			return err
@@ -304,7 +304,7 @@ func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, proc
 		}
 
 		if update.Routes != nil {
-			encodedData, err := db.encodeRouteData(logger, update.Routes)
+			encodedData, err := db.encodeRouteData(logger, update.Routes.ToRoutes())
 			if err != nil {
 				return err
 			}
@@ -375,15 +375,15 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	schedulingInfo := &models.DesiredLRPSchedulingInfo{}
 	var routeData, volumePlacementData, placementTagData []byte
 	values := []interface{}{
-		&schedulingInfo.ProcessGuid,
-		&schedulingInfo.Domain,
-		&schedulingInfo.LogGuid,
+		&schedulingInfo.DesiredLrpKey.ProcessGuid,
+		&schedulingInfo.DesiredLrpKey.Domain,
+		&schedulingInfo.DesiredLrpKey.LogGuid,
 		&schedulingInfo.Annotation,
 		&schedulingInfo.Instances,
-		&schedulingInfo.MemoryMb,
-		&schedulingInfo.DiskMb,
-		&schedulingInfo.MaxPids,
-		&schedulingInfo.RootFs,
+		&schedulingInfo.DesiredLrpResource.MemoryMb,
+		&schedulingInfo.DesiredLrpResource.DiskMb,
+		&schedulingInfo.DesiredLrpResource.MaxPids,
+		&schedulingInfo.DesiredLrpResource.RootFs,
 		&routeData,
 		&volumePlacementData,
 		&schedulingInfo.ModificationTag.Epoch,
@@ -413,7 +413,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 		logger.Error("failed-parsing-routes", err)
 		return nil, err
 	}
-	schedulingInfo.Routes = routes
+	schedulingInfo.Routes = routes.ToProtoRoutes()
 
 	var volumePlacement models.VolumePlacement
 	err = db.deserializeModel(logger, volumePlacementData, &volumePlacement)
@@ -469,7 +469,7 @@ func (db *SQLDB) fetchDesiredLRPRoutingInfo(logger lager.Logger, scanner helpers
 		logger.Error("failed-parsing-routes", err)
 		return nil, err
 	}
-	routingInfo.Routes = &routes
+	routingInfo.Routes = routes.ToProtoRoutes()
 
 	var runInfo models.DesiredLRPRunInfo
 	err = db.deserializeModel(logger, runInfoData, &runInfo)
@@ -540,11 +540,11 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	var runInfo models.DesiredLRPRunInfo
 	err = db.deserializeModel(logger, runInfoData, &runInfo)
 	if err != nil {
-		return nil, schedulingInfo.ProcessGuid, models.ErrDeserialize
+		return nil, schedulingInfo.DesiredLrpKey.ProcessGuid, models.ErrDeserialize
 	}
 	// dedup the ports
 	runInfo.Ports = dedupSlice(runInfo.Ports)
-	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo)
+	desiredLRP := models.NewDesiredLRP(schedulingInfo, &runInfo)
 	return &desiredLRP, "", nil
 }
 

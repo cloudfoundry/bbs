@@ -31,7 +31,7 @@ func (db *SQLDB) EvacuateActualLRP(
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Evacuating, tx)
+		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_EVACUATING, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("creating-evacuating-lrp")
 			actualLRP, err = db.createEvacuatingActualLRP(ctx, logger, lrpKey, instanceKey, netInfo, internalRoutes, metricTags, routable, availabilityZone, tx)
@@ -43,23 +43,23 @@ func (db *SQLDB) EvacuateActualLRP(
 			return err
 		}
 
-		if actualLRP.ActualLRPKey.Equal(lrpKey) &&
-			actualLRP.ActualLRPInstanceKey.Equal(instanceKey) &&
-			reflect.DeepEqual(actualLRP.ActualLRPNetInfo, *netInfo) {
+		if actualLRP.ActualLrpKey.Equal(lrpKey) &&
+			actualLRP.ActualLrpInstanceKey.Equal(instanceKey) &&
+			reflect.DeepEqual(actualLRP.ActualLrpNetInfo, netInfo) {
 			logger.Debug("evacuating-lrp-already-exists")
 			return models.ErrResourceExists
 		}
 
 		now := db.clock.Now().UnixNano()
 		actualLRP.ModificationTag.Increment()
-		actualLRP.ActualLRPKey = *lrpKey
-		actualLRP.ActualLRPInstanceKey = *instanceKey
+		actualLRP.ActualLrpKey = lrpKey
+		actualLRP.ActualLrpInstanceKey = instanceKey
 		actualLRP.Since = now
-		actualLRP.ActualLRPNetInfo = *netInfo
+		actualLRP.ActualLrpNetInfo = netInfo
 		actualLRP.ActualLrpInternalRoutes = internalRoutes
 		actualLRP.MetricTags = metricTags
 		actualLRP.AvailabilityZone = availabilityZone
-		actualLRP.Presence = models.ActualLRP_Evacuating
+		actualLRP.Presence = models.ActualLRP_EVACUATING
 
 		netInfoData, err := db.serializeModel(logger, netInfo)
 		if err != nil {
@@ -81,9 +81,9 @@ func (db *SQLDB) EvacuateActualLRP(
 
 		_, err = db.update(ctx, logger, tx, "actual_lrps",
 			helpers.SQLAttributes{
-				"domain":                 actualLRP.Domain,
-				"instance_guid":          actualLRP.InstanceGuid,
-				"cell_id":                actualLRP.CellId,
+				"domain":                 actualLRP.ActualLrpKey.Domain,
+				"instance_guid":          actualLRP.ActualLrpInstanceKey.InstanceGuid,
+				"cell_id":                actualLRP.ActualLrpInstanceKey.CellId,
 				"net_info":               netInfoData,
 				"internal_routes":        internalRoutesData,
 				"metric_tags":            metricTagsData,
@@ -92,7 +92,7 @@ func (db *SQLDB) EvacuateActualLRP(
 				"modification_tag_index": actualLRP.ModificationTag.Index,
 			},
 			"process_guid = ? AND instance_index = ? AND presence = ?",
-			actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Evacuating,
+			actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index, models.ActualLRP_EVACUATING,
 		)
 		if err != nil {
 			logger.Error("failed-update-evacuating-lrp", err)
@@ -114,7 +114,7 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(ctx context.Context, logger lager.Log
 		processGuid := lrpKey.ProcessGuid
 		index := lrpKey.Index
 
-		lrp, err := db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_Evacuating, tx)
+		lrp, err := db.fetchActualLRPForUpdate(ctx, logger, processGuid, index, models.ActualLRP_EVACUATING, tx)
 		if err == models.ErrResourceNotFound {
 			logger.Debug("evacuating-lrp-does-not-exist")
 			return nil
@@ -125,14 +125,14 @@ func (db *SQLDB) RemoveEvacuatingActualLRP(ctx context.Context, logger lager.Log
 			return err
 		}
 
-		if !lrp.ActualLRPInstanceKey.Equal(instanceKey) {
-			logger.Debug("actual-lrp-instance-key-mismatch", lager.Data{"instance_key_param": instanceKey, "instance_key_from_db": lrp.ActualLRPInstanceKey})
+		if !lrp.ActualLrpInstanceKey.Equal(instanceKey) {
+			logger.Debug("actual-lrp-instance-key-mismatch", lager.Data{"instance_key_param": instanceKey, "instance_key_from_db": lrp.ActualLrpInstanceKey})
 			return models.ErrActualLRPCannotBeRemoved
 		}
 
 		_, err = db.delete(ctx, logger, tx, "actual_lrps",
 			"process_guid = ? AND instance_index = ? AND presence = ?",
-			processGuid, index, models.ActualLRP_Evacuating,
+			processGuid, index, models.ActualLRP_EVACUATING,
 		)
 		if err != nil {
 			logger.Error("failed-delete", err)
@@ -179,27 +179,28 @@ func (db *SQLDB) createEvacuatingActualLRP(
 		return nil, models.ErrGUIDGeneration
 	}
 
+	modificationTag := models.ModificationTag{Epoch: guid, Index: 0}
 	actualLRP := &models.ActualLRP{
-		ActualLRPKey:            *lrpKey,
-		ActualLRPInstanceKey:    *instanceKey,
-		ActualLRPNetInfo:        *netInfo,
+		ActualLrpKey:            lrpKey,
+		ActualLrpInstanceKey:    instanceKey,
+		ActualLrpNetInfo:        netInfo,
 		ActualLrpInternalRoutes: internalRoutes,
 		MetricTags:              metricTags,
 		AvailabilityZone:        availabilityZone,
 		State:                   models.ActualLRPStateRunning,
 		Since:                   now.UnixNano(),
-		ModificationTag:         models.ModificationTag{Epoch: guid, Index: 0},
-		Presence:                models.ActualLRP_Evacuating,
+		ModificationTag:         &modificationTag,
+		Presence:                models.ActualLRP_EVACUATING,
 	}
 	actualLRP.SetRoutable(routable)
 
 	sqlAttributes := helpers.SQLAttributes{
-		"process_guid":           actualLRP.ProcessGuid,
-		"instance_index":         actualLRP.Index,
-		"presence":               models.ActualLRP_Evacuating,
-		"domain":                 actualLRP.Domain,
-		"instance_guid":          actualLRP.InstanceGuid,
-		"cell_id":                actualLRP.CellId,
+		"process_guid":           actualLRP.ActualLrpKey.ProcessGuid,
+		"instance_index":         actualLRP.ActualLrpKey.Index,
+		"presence":               models.ActualLRP_EVACUATING,
+		"domain":                 actualLRP.ActualLrpKey.Domain,
+		"instance_guid":          actualLRP.ActualLrpInstanceKey.InstanceGuid,
+		"cell_id":                actualLRP.ActualLrpInstanceKey.CellId,
 		"state":                  actualLRP.State,
 		"net_info":               netInfoData,
 		"internal_routes":        internalRoutesData,
@@ -214,7 +215,7 @@ func (db *SQLDB) createEvacuatingActualLRP(
 	_, err = db.upsert(ctx, logger, tx, "actual_lrps",
 		sqlAttributes,
 		"process_guid = ? AND instance_index = ? AND presence = ?",
-		actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Evacuating,
+		actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index, models.ActualLRP_EVACUATING,
 	)
 	if err != nil {
 		logger.Error("failed-inserting-evacuating-lrp", err)
