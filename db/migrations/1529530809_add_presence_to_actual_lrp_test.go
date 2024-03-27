@@ -63,7 +63,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 			query := helpers.RebindForFlavor("SELECT presence FROM actual_lrps LIMIT 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&presence)).To(Succeed())
-			Expect(presence).To(Equal(fmt.Sprintf("%d", models.ActualLRP_Ordinary)))
+			Expect(presence).To(Equal(fmt.Sprintf("%d", models.ActualLRP_ORDINARY)))
 		})
 
 		It("adds presence as a primary key so that duplicate entries with different presence do not violate the unique constraint", func() {
@@ -89,7 +89,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 					VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 					flavor,
 				),
-				"guid", 10, "cfapps", "RUNNING", "", "epoch", 0, models.ActualLRP_Evacuating,
+				"guid", 10, "cfapps", "RUNNING", "", "epoch", 0, models.ActualLRP_EVACUATING,
 			)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -133,7 +133,7 @@ var _ = Describe("AddPresenceToActualLrp", func() {
 				query := helpers.RebindForFlavor("SELECT presence FROM actual_lrps WHERE evacuating = true LIMIT 1", flavor)
 				row := rawSQLDB.QueryRow(query)
 				Expect(row.Scan(&presence)).To(Succeed())
-				Expect(presence).To(Equal(fmt.Sprintf("%d", models.ActualLRP_Evacuating)))
+				Expect(presence).To(Equal(fmt.Sprintf("%d", models.ActualLRP_EVACUATING)))
 			})
 
 			It("is idempotent even with preexisting data", func() {
