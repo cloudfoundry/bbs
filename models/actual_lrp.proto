@@ -66,8 +66,6 @@ message ActualLRP {
   Presence presence = 10 [json_name = "presence"];
   repeated ActualLRPInternalRoute actual_lrp_internal_routes = 11;
   map<string, string> metric_tags = 12;
-  oneof optional_routable {
-    bool routable = 13 [json_name = "routable"];
-  }
+  optional bool routable = 13 [json_name = "routable"];
   string availability_zone = 14 [json_name = "availability_zone"];
 }
