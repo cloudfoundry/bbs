@@ -53,11 +53,11 @@ func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddres
 }
 
 func EmptyActualLRPNetInfo() ActualLRPNetInfo {
-	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_PreferredAddressUnknown)
+	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_UNKNOWN)
 }
 
 func (info ActualLRPNetInfo) Empty() bool {
-	return info.Address == "" && len(info.Ports) == 0 && info.PreferredAddress == ActualLRPNetInfo_PreferredAddressUnknown
+	return info.Address == "" && len(info.Ports) == 0 && info.PreferredAddress == ActualLRPNetInfo_UNKNOWN
 }
 
 func (*ActualLRPNetInfo) Version() format.Version {
@@ -321,7 +321,7 @@ func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
 	}
 
 	switch actual.Presence {
-	case ActualLRP_Evacuating:
+	case ActualLRP_EVACUATING:
 		return &ActualLRPGroup{Evacuating: actual}
 	default:
 		return &ActualLRPGroup{Instance: actual}
@@ -348,7 +348,7 @@ func (actual ActualLRP) Validate() error {
 		if !actual.ActualLRPNetInfo.Empty() {
 			validationError = validationError.Append(errors.New("net info cannot be set when state is unclaimed"))
 		}
-		if actual.Presence != ActualLRP_Ordinary {
+		if actual.Presence != ActualLRP_ORDINARY {
 			validationError = validationError.Append(errors.New("presence cannot be set when state is unclaimed"))
 		}
 
@@ -456,14 +456,14 @@ func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
 		return true
 	}
 
-	if lrp1.Presence == ActualLRP_Ordinary {
+	if lrp1.Presence == ActualLRP_ORDINARY {
 		switch lrp1.State {
 		case ActualLRPStateRunning:
 			return true
 		case ActualLRPStateClaimed:
 			return lrp2.State != ActualLRPStateRunning && lrp2.State != ActualLRPStateClaimed
 		}
-	} else if lrp1.Presence == ActualLRP_Suspect {
+	} else if lrp1.Presence == ActualLRP_SUSPECT {
 		switch lrp1.State {
 		case ActualLRPStateRunning:
 			return lrp2.State != ActualLRPStateRunning
@@ -493,7 +493,7 @@ func ResolveActualLRPGroups(lrps []*ActualLRP) []*ActualLRPGroup {
 			mapOfGroups[actualLRP.ActualLRPKey] = &ActualLRPGroup{}
 			result = append(result, mapOfGroups[actualLRP.ActualLRPKey])
 		}
-		if actualLRP.Presence == ActualLRP_Evacuating {
+		if actualLRP.Presence == ActualLRP_EVACUATING {
 			mapOfGroups[actualLRP.ActualLRPKey].Evacuating = actualLRP
 		} else if hasHigherPriority(actualLRP, mapOfGroups[actualLRP.ActualLRPKey].Instance) {
 			mapOfGroups[actualLRP.ActualLRPKey].Instance = actualLRP
