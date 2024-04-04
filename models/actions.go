@@ -106,7 +106,7 @@ func (a *DownloadAction) ActionType() string {
 	return ActionTypeDownload
 }
 
-func (a DownloadAction) Validate() error {
+func (a *DownloadAction) Validate() error {
 	var validationError ValidationError
 
 	if a.GetFrom() == "" {
@@ -155,7 +155,7 @@ func (a *UploadAction) ActionType() string {
 	return ActionTypeUpload
 }
 
-func (a UploadAction) Validate() error {
+func (a *UploadAction) Validate() error {
 	var validationError ValidationError
 
 	if a.GetTo() == "" {
@@ -181,7 +181,7 @@ func (a *RunAction) ActionType() string {
 	return ActionTypeRun
 }
 
-func (a RunAction) Validate() error {
+func (a *RunAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Path == "" {
@@ -203,7 +203,7 @@ func (a *TimeoutAction) ActionType() string {
 	return ActionTypeTimeout
 }
 
-func (a TimeoutAction) Validate() error {
+func (a *TimeoutAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Action == nil {
@@ -230,7 +230,7 @@ func (a *TryAction) ActionType() string {
 	return ActionTypeTry
 }
 
-func (a TryAction) Validate() error {
+func (a *TryAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Action == nil {
@@ -257,7 +257,7 @@ func (a *ParallelAction) ActionType() string {
 	return ActionTypeParallel
 }
 
-func (a ParallelAction) Validate() error {
+func (a *ParallelAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Actions == nil || len(a.Actions) == 0 {
@@ -287,7 +287,7 @@ func (a *CodependentAction) ActionType() string {
 	return ActionTypeCodependent
 }
 
-func (a CodependentAction) Validate() error {
+func (a *CodependentAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Actions == nil || len(a.Actions) == 0 {
@@ -325,7 +325,7 @@ func (a *SerialAction) ActionType() string {
 	return ActionTypeSerial
 }
 
-func (a SerialAction) Validate() error {
+func (a *SerialAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Actions == nil || len(a.Actions) == 0 {
@@ -355,7 +355,7 @@ func (a *EmitProgressAction) ActionType() string {
 	return ActionTypeEmitProgress
 }
 
-func (a EmitProgressAction) Validate() error {
+func (a *EmitProgressAction) Validate() error {
 	var validationError ValidationError
 
 	if a.Action == nil {
@@ -547,7 +547,7 @@ func (l *ResourceLimits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (l ResourceLimits) MarshalJSON() ([]byte, error) {
+func (l *ResourceLimits) MarshalJSON() ([]byte, error) {
 	var limit internalResourceLimits
 	if l.NofileExists() {
 		n := l.GetNofile()
