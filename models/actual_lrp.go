@@ -56,7 +56,7 @@ func EmptyActualLRPNetInfo() ActualLRPNetInfo {
 	return NewActualLRPNetInfo("", "", ActualLRPNetInfo_UNKNOWN)
 }
 
-func (info ActualLRPNetInfo) Empty() bool {
+func (info *ActualLRPNetInfo) Empty() bool {
 	return info.Address == "" && len(info.Ports) == 0 && info.PreferredAddress == ActualLRPNetInfo_UNKNOWN
 }
 
@@ -97,7 +97,7 @@ func NewPortMappingWithTLSProxy(hostPort, containerPort, tlsHost, tlsContainer u
 	}
 }
 
-func (key ActualLRPInstanceKey) Empty() bool {
+func (key *ActualLRPInstanceKey) Empty() bool {
 	return key.InstanceGuid == "" && key.CellId == ""
 }
 func (a *ActualLRP) Copy() *ActualLRP {
@@ -107,7 +107,7 @@ func (a *ActualLRP) Copy() *ActualLRP {
 
 const StaleUnclaimedActualLRPDuration = 30 * time.Second
 
-func (actual ActualLRP) ShouldStartUnclaimed(now time.Time) bool {
+func (actual *ActualLRP) ShouldStartUnclaimed(now time.Time) bool {
 	if actual.State != ActualLRPStateUnclaimed {
 		return false
 	}
@@ -119,7 +119,7 @@ func (actual ActualLRP) ShouldStartUnclaimed(now time.Time) bool {
 	return false
 }
 
-func (actual ActualLRP) CellIsMissing(cellSet CellSet) bool {
+func (actual *ActualLRP) CellIsMissing(cellSet CellSet) bool {
 	if actual.State == ActualLRPStateUnclaimed ||
 		actual.State == ActualLRPStateCrashed {
 		return false
@@ -128,7 +128,7 @@ func (actual ActualLRP) CellIsMissing(cellSet CellSet) bool {
 	return !cellSet.HasCellID(actual.CellId)
 }
 
-func (actual ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
+func (actual *ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
 	if actual.State != ActualLRPStateCrashed {
 		return false
 	}
@@ -136,7 +136,7 @@ func (actual ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
 	return calc.ShouldRestart(0, 0, actual.CrashCount)
 }
 
-func (actual ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator) bool {
+func (actual *ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculator) bool {
 	if actual.State != ActualLRPStateCrashed {
 		return false
 	}
@@ -155,7 +155,7 @@ func (actual *ActualLRP) RoutableExists() bool {
 	return ok
 }
 
-func (before ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
+func (before *ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
 	if !before.ActualLRPKey.Equal(lrpKey) {
 		return false
 	}
@@ -217,7 +217,7 @@ func NewEvacuatingActualLRPGroup(actualLRP *ActualLRP) *ActualLRPGroup {
 }
 
 // Deprecated: use the ActualLRPInstances API instead
-func (group ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
+func (group *ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
 	switch {
 	case group.Instance == nil && group.Evacuating == nil:
 		return nil, false, ErrActualLRPGroupInvalid
@@ -328,7 +328,7 @@ func (actual *ActualLRP) ToActualLRPGroup() *ActualLRPGroup {
 	}
 }
 
-func (actual ActualLRP) Validate() error {
+func (actual *ActualLRP) Validate() error {
 	var validationError ValidationError
 
 	err := actual.ActualLRPKey.Validate()
