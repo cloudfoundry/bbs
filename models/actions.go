@@ -448,7 +448,7 @@ func (action *Action) SetDeprecatedTimeoutNs() *Action {
 		return action
 
 	case *TimeoutAction:
-		timeoutAction := *actionModel
+		timeoutAction := *action.GetTimeoutAction()
 		timeoutAction.DeprecatedTimeoutNs = timeoutAction.TimeoutMs * int64(time.Millisecond)
 		return WrapAction(&timeoutAction)
 
@@ -463,7 +463,7 @@ func (action *Action) SetDeprecatedTimeoutNs() *Action {
 		for _, subaction := range actionModel.Actions {
 			newActions = append(newActions, subaction.SetDeprecatedTimeoutNs())
 		}
-		parallelAction := *actionModel
+		parallelAction := *action.GetParallelAction()
 		parallelAction.Actions = newActions
 		return WrapAction(&parallelAction)
 
@@ -472,7 +472,7 @@ func (action *Action) SetDeprecatedTimeoutNs() *Action {
 		for _, subaction := range actionModel.Actions {
 			newActions = append(newActions, subaction.SetDeprecatedTimeoutNs())
 		}
-		serialAction := *actionModel
+		serialAction := *action.GetSerialAction()
 		serialAction.Actions = newActions
 		return WrapAction(&serialAction)
 
@@ -481,7 +481,7 @@ func (action *Action) SetDeprecatedTimeoutNs() *Action {
 		for _, subaction := range actionModel.Actions {
 			newActions = append(newActions, subaction.SetDeprecatedTimeoutNs())
 		}
-		codependentAction := *actionModel
+		codependentAction := *action.GetCodependentAction()
 		codependentAction.Actions = newActions
 		return WrapAction(&codependentAction)
 	}
