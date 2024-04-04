@@ -561,30 +561,21 @@ func (l ResourceLimits) MarshalJSON() ([]byte, error) {
 }
 
 func (l *ResourceLimits) SetNofile(nofile uint64) {
-	l.OptionalNofile = &ResourceLimits_Nofile{
-		Nofile: nofile,
-	}
+	l.Nofile = &nofile
 }
 
 func (m *ResourceLimits) GetNofilePtr() *uint64 {
-	if x, ok := m.GetOptionalNofile().(*ResourceLimits_Nofile); ok {
-		return &x.Nofile
-	}
-	return nil
+	return m.Nofile
 }
 
 func (l *ResourceLimits) NofileExists() bool {
-	_, ok := l.GetOptionalNofile().(*ResourceLimits_Nofile)
-	return ok
+	return l.Nofile != nil
 }
 
 func (l *ResourceLimits) SetNproc(nproc uint64) {
-	l.OptionalNproc = &ResourceLimits_Nproc{
-		Nproc: nproc,
-	}
+	l.Nproc = &nproc
 }
 
 func (l *ResourceLimits) NprocExists() bool {
-	_, ok := l.GetOptionalNproc().(*ResourceLimits_Nproc)
-	return ok
+	return l.Nproc != nil
 }
