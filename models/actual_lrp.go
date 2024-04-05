@@ -41,15 +41,15 @@ type ActualLRPFilter struct {
 }
 
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
-	return ActualLRPKey{processGuid, index, domain}
+	return ActualLRPKey{ProcessGuid: processGuid, Index: index, Domain: domain}
 }
 
 func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstanceKey {
-	return ActualLRPInstanceKey{instanceGuid, cellId}
+	return ActualLRPInstanceKey{InstanceGuid: instanceGuid, CellId: cellId}
 }
 
 func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddress ActualLRPNetInfo_PreferredAddress, ports ...*PortMapping) ActualLRPNetInfo {
-	return ActualLRPNetInfo{address, ports, instanceAddress, preferredAddress}
+	return ActualLRPNetInfo{Address: address, Ports: ports, InstanceAddress: instanceAddress, PreferredAddress: preferredAddress}
 }
 
 func EmptyActualLRPNetInfo() ActualLRPNetInfo {
