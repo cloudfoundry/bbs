@@ -480,7 +480,7 @@ func hasHigherPriority(lrp1, lrp2 *ActualLRP) bool {
 // Ordinary instance is returned in the Instance field of the ActualLRPGroup.
 // Deprecated: use the ActualLRPInstances API instead
 func ResolveActualLRPGroups(lrps []*ActualLRP) []*ActualLRPGroup {
-	mapOfGroups := map[ActualLRPKey]*ActualLRPGroup{}
+	mapOfGroups := map[*ActualLRPKey]*ActualLRPGroup{}
 	result := []*ActualLRPGroup{}
 	for _, actualLRP := range lrps {
 		// Every actual LRP has potentially 2 rows in the database: one for the instance
