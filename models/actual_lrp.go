@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -125,7 +126,7 @@ func (actual *ActualLRP) CellIsMissing(cellSet CellSet) bool {
 		return false
 	}
 
-	return !cellSet.HasCellID(actual.CellId)
+	return !cellSet.HasCellID(actual.ActualLrpInstanceKey.CellId)
 }
 
 func (actual *ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
@@ -145,18 +146,15 @@ func (actual *ActualLRP) ShouldRestartCrash(now time.Time, calc RestartCalculato
 }
 
 func (actual *ActualLRP) SetRoutable(routable bool) {
-	actual.OptionalRoutable = &ActualLRP_Routable{
-		Routable: routable,
-	}
+	actual.Routable = &routable
 }
 
 func (actual *ActualLRP) RoutableExists() bool {
-	_, ok := actual.GetOptionalRoutable().(*ActualLRP_Routable)
-	return ok
+	return actual != nil && actual.Routable != nil
 }
 
 func (before *ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *ActualLRPInstanceKey, newState string) bool {
-	if !before.ActualLrpKey.Equal(lrpKey) {
+	if !proto.Equal(before.ActualLrpKey, lrpKey) {
 		return false
 	}
 
@@ -168,18 +166,18 @@ func (before *ActualLRP) AllowsTransitionTo(lrpKey *ActualLRPKey, instanceKey *A
 			newState == ActualLRPStateRunning
 	case ActualLRPStateClaimed:
 		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
-			newState == ActualLRPStateClaimed && before.ActualLrpInstanceKey.Equal(instanceKey) ||
+			newState == ActualLRPStateClaimed && proto.Equal(before.ActualLrpInstanceKey, instanceKey) ||
 			newState == ActualLRPStateRunning ||
-			newState == ActualLRPStateCrashed && before.ActualLrpInstanceKey.Equal(instanceKey)
+			newState == ActualLRPStateCrashed && proto.Equal(before.ActualLrpInstanceKey, instanceKey)
 	case ActualLRPStateRunning:
 		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
-			newState == ActualLRPStateClaimed && before.ActualLrpInstanceKey.Equal(instanceKey) ||
-			newState == ActualLRPStateRunning && before.ActualLrpInstanceKey.Equal(instanceKey) ||
-			newState == ActualLRPStateCrashed && before.ActualLrpInstanceKey.Equal(instanceKey)
+			newState == ActualLRPStateClaimed && proto.Equal(before.ActualLrpInstanceKey, instanceKey) ||
+			newState == ActualLRPStateRunning && proto.Equal(before.ActualLrpInstanceKey, instanceKey) ||
+			newState == ActualLRPStateCrashed && proto.Equal(before.ActualLrpInstanceKey, instanceKey)
 	case ActualLRPStateCrashed:
 		valid = newState == ActualLRPStateUnclaimed && instanceKey.Empty() ||
-			newState == ActualLRPStateClaimed && before.ActualLrpInstanceKey.Equal(instanceKey) ||
-			newState == ActualLRPStateRunning && before.ActualLrpInstanceKey.Equal(instanceKey)
+			newState == ActualLRPStateClaimed && proto.Equal(before.ActualLrpInstanceKey, instanceKey) ||
+			newState == ActualLRPStateRunning && proto.Equal(before.ActualLrpInstanceKey, instanceKey)
 	}
 
 	return valid
