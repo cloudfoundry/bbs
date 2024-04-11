@@ -1,4 +1,10 @@
-## BBS Migrations
+---
+title: Development Worklow (Migrations)
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+## Development Worklow (Migrations)
 
 ### Schema versions
 

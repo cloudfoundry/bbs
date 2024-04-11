@@ -1,4 +1,10 @@
-# BBS Conventions for Revising API Endpoints
+---
+title: Development Worklow (Conventions for Revising API Endpoints)
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# Development Worklow (Conventions for Revising API Endpoints)
 
 The goal of this doc is to socialize conventions regarding the update of API endpoints in the BBS.
 Specifically, we want to establish conventions for adding revision numbers to endpoint routes and handler names.
@@ -48,5 +54,4 @@ based on when each was introduced:
 |                                  | `/v1/desired_lrps/list.r3` (new) |                            |                            |
 
 # See Also
-- To find more documentation about specific endpoints, look in the [table of contents](README.md) for links to API references.
 - To find information about endpoints that are deprecated (that is, still supported but planned to be removed in the next major release), look at [this document in diego-release](https://github.com/cloudfoundry/diego-release/blob/develop/docs/deprecations.md#bbs-1).

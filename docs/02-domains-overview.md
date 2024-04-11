@@ -1,3 +1,9 @@
+---
+title: Overview of Domains
+expires_at: never
+tags: [diego-release, bbs]
+---
+
 # Overview of Domains
 
 The consumer of Diego may organize LRPs into groupings called 'domains'.  These
@@ -41,16 +47,14 @@ eventual consistency operations.
 > convergence cycle are gated on freshness.  Diego will continue to start/stop
 > instances when explicitly instructed to.
 
-## <a name="api"></a>API
-
-### Upserting a domain
+### <a name="upserting-a-domain"></a>Upserting a domain
 
 To mark a domain as fresh for N seconds (ttl):
 
 POST an
-[UpsertDomainRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#UpsertDomainRequest)
+[UpsertDomainRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#UpsertDomainRequest)
 to `/v1/domains/upsert`, and receive an
-[UpsertDomainResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#UpsertDomainResponse).
+[UpsertDomainResponse]().
 
 
 You must repeat the POST before the `ttl` expires.  To make the domain never
@@ -85,7 +89,7 @@ err := client.UpsertDomain(logger, "my-domain", 60*time.Second)
 To fetch all fresh domains:
 
 POST an empty body to `/v1/domains/list`, and receive a
-[DomainsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#DomainsResponse).
+[DomainsResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#DomainsResponse).
 
 
 ### Golang Client API
@@ -111,4 +115,3 @@ None.
 client := bbs.NewClient(url)
 domains, err := client.Domains(logger)
 ```
-[back](README.md)

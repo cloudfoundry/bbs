@@ -1,11 +1,17 @@
-# Cells API Reference
+---
+title: Cells External API
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# Cells External API
 
 This reference does not cover the protobuf payload supplied to each endpoint.
 Instead, it illustrates calls to the API via the Golang `bbs.Client` interface.
 Each method on that `Client` interface takes a `lager.Logger` as the first argument to log errors generated within the client.
 This first `Logger` argument will not be duplicated on the descriptions of the method arguments.
 
-For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://godoc.org/code.cloudfoundry.org/bbs/models).
+For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://pkg.go.dev/code.cloudfoundry.org/bbs/models).
 
 
 # Cells APIs
@@ -15,12 +21,12 @@ For detailed information on the types referred to below, see the [godoc document
 ### BBS API Endpoint
 
 POST an empty request to `/v1/cells/list.r1` and receive a
-[CellsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#CellsResponse).
+[CellsResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#CellsResponse).
 
 #### Deprecated Endpoints
 
 * Make a GET request to `/v1/cells/list.r1` and receive a
-[CellsResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#CellsResponse).
+[CellsResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#CellsResponse).
 
 ### Golang Client API
 
@@ -34,7 +40,7 @@ None.
 
 #### Output
 
-* `[]*models.CellPresence`: Slice of [`models.CellPresence`](https://godoc.org/code.cloudfoundry.org/bbs/models#CellPresence) pointers.
+* `[]*models.CellPresence`: Slice of [`models.CellPresence`](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#CellPresence) pointers.
 * `error`:  Non-nil if an error occurred.
 
 
@@ -44,4 +50,3 @@ None.
 client := bbs.NewClient(url)
 cells, err := client.Cells(logger)
 ```
-[back](README.md)

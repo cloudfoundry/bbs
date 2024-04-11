@@ -1,10 +1,16 @@
-# Internal Tasks API Reference
+---
+title: Tasks Internal API
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# Tasks Internal API
 
 Instead, it illustrates calls to the API via the Golang `bbs.Client` interface.
 Each method on that `Client` interface takes a `lager.Logger` as the first argument to log errors generated within the client.
 This first `Logger` argument will not be duplicated on the descriptions of the method arguments.
 
-For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://godoc.org/code.cloudfoundry.org/bbs/models).
+For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://pkg.go.dev/code.cloudfoundry.org/bbs/models).
 
 # Internal Tasks APIs
 
@@ -12,9 +18,9 @@ For detailed information on the types referred to below, see the [godoc document
 
 ### BBS API Endpoint
 
-POST a [StartTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#StartTaskRequest)
+POST a [StartTaskRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#StartTaskRequest)
 to `/v1/tasks/start`
-and receive a [StartTaskResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#StartTaskResponse).
+and receive a [StartTaskResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#StartTaskResponse).
 
 ### Golang Client API
 
@@ -49,13 +55,13 @@ if shouldStart {
 
 ## FailTask
 
-**Deprecated** in favor of [CompleteTask](api-tasks-internal.md#completetask) and [CancelTask](api-tasks.md#canceltask).
+**Deprecated** in favor of [CompleteTask](09-f-api-internal-tasks.md#completetask) and [CancelTask](09-a-api-external-tasks.md#canceltask).
 
 ### BBS API Endpoint
 
-POST a [FailTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#FailTaskRequest)
+POST a [FailTaskRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#FailTaskRequest)
 to `/v1/tasks/fail`
-and receive a [TaskLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
+and receive a [TaskLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
 
 ### Golang Client API
 
@@ -86,9 +92,9 @@ if err != nil {
 
 ### BBS API Endpoint
 
-POST a [RejectTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RejectTaskRequest)
+POST a [RejectTaskRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#RejectTaskRequest)
 to `/v1/tasks/reject`
-and receive a [TaskLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
+and receive a [TaskLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
 
 ### Golang Client API
 
@@ -118,9 +124,9 @@ if err != nil {
 ## CompleteTask
 
 ### BBS API Endpoint
-POST a [CompleteTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#CompleteTaskRequest)
+POST a [CompleteTaskRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#CompleteTaskRequest)
 to `/v1/tasks/fail`
-and receive a [TaskLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
+and receive a [TaskLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskLifecycleResponse).
 
 ### Golang Client API
 
@@ -149,5 +155,3 @@ if err != nil {
     log.Printf("could not complete task: " + err.Error())
 }
 ```
-
-[back](README.md)

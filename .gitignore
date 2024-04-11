@@ -1,3 +1,4 @@
 *.coverprofile
 *.test
 cmd/bbs/bbs
+.lycheecache

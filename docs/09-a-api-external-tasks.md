@@ -1,8 +1,14 @@
-# Tasks API Reference
+---
+title: Tasks External API
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# Tasks External API
 
 This reference does not cover the protobuf payload supplied to each endpoint.
 
-For detailed information on the structs and types listed see [models documentation](https://godoc.org/code.cloudfoundry.org/bbs/models)
+For detailed information on the structs and types listed see [models documentation](https://pkg.go.dev/code.cloudfoundry.org/bbs/models)
 
 # Tasks APIs
 
@@ -10,10 +16,10 @@ For detailed information on the structs and types listed see [models documentati
 
 ### BBS API Endpoint
 
-Post a [DesireTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesireTaskRequest) containing a V3 [TaskDefinition](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskDefinition) to "/v1/tasks/desire.r2"
+Post a [DesireTaskRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#DesireTaskRequest) containing a V3 [TaskDefinition](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskDefinition) to "/v1/tasks/desire.r2"
 
 DEPRECATED:
-* Post a [DesireTaskRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#DesireTaskRequest) containing a V0 [TaskDefinition](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskDefinition) to "/v1/tasks/desire"
+* Post a [DesireTaskRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#DesireTaskRequest) containing a V0 [TaskDefinition](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskDefinition) to "/v1/tasks/desire"
 
 ### Golang Client API
 ```go
@@ -28,14 +34,14 @@ func (c *client) DesireTask(logger lager.Logger, taskGuid, domain string, taskDe
 * `domain string`
   * The Domain
 * `taskDef *models.TaskDefinition`
-  * See the [Defining Tasks page](defining-tasks.md) for how to create a Task
+  * See the [Defining Tasks page](03-b-tasks-define.md) for how to create a Task
 
 #### Output
 * `error`
   * Non-nil if error occurred
 
 #### Example
-See the [Defining Tasks page](defining-tasks.md) for how to create a Task
+See the [Defining Tasks page](03-b-tasks-define.md) for how to create a Task
 
 ## Tasks
 Lists all Tasks
@@ -58,7 +64,7 @@ func (c *client) Tasks(logger lager.Logger) ([]*models.Task, error)
 
 #### Output
 * `[]*models.Task`
-  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
+  * [See Task Documentation](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 
@@ -94,7 +100,7 @@ func (c *client) TasksByDomain(logger lager.Logger, domain string) ([]*models.Ta
 
 #### Output
 * `[]*models.Task`
-  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
+  * [See Task Documentation](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 
@@ -130,7 +136,7 @@ func (c *client) TasksByCellID(logger lager.Logger, cellId string) ([]*models.Ta
 
 #### Output
 * `[]*models.Task`
-  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
+  * [See Task Documentation](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 
@@ -150,7 +156,7 @@ Returns the Task with the given guid
 
 ### BBS API Endpoint
 
-Post a [TaskByGuidRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskByGuidRequest) to "/v1/tasks/get_by_task_guid.r3"
+Post a [TaskByGuidRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskByGuidRequest) to "/v1/tasks/get_by_task_guid.r3"
 
 DEPRECATED:
 
@@ -171,7 +177,7 @@ func (c *client) TaskByGuid(logger lager.Logger, taskGuid string) (*models.Task,
 
 #### Output
 * `*models.Task`
-  * [See Task Documentation](https://godoc.org/code.cloudfoundry.org/bbs/models#Task)
+  * [See Task Documentation](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#Task)
 * `error`
   * Non-nil if error occurred
 
@@ -273,4 +279,3 @@ if err != nil {
     log.Printf("failed to delete task: " + err.Error())
 }
 ```
-[back](README.md)

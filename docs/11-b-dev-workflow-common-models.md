@@ -1,3 +1,11 @@
+---
+title: Development Workflow (Common Models)
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# Development Workflow (Common Models)
+
 ##### `EnvironmentVariables` [optional]
 
 Clients may define environment variables at the container level, which all processes running in the container will receive. For example:
@@ -15,7 +23,7 @@ EnvironmentVariables: []*models.EnvironmentVariable{
 }
 ```
 
-For more details on the environment variables provided to processes in the container, see the section on the [Container Runtime Environment](environment.md)
+For more details on the environment variables provided to processes in the container, see the section on the [Container Runtime Environment](07-environment-overview.md)
 
 ##### `CachedDependencies` [optional]
 
@@ -58,7 +66,7 @@ ImageLayers: []*models.ImageLayer{
 
 Image layers of type `LayerTypeShared` could be converted to `CachedDependency` for diego cells that do not support ImageLayers or api clients that are using old api endpoints.
 
-`LayerTypeExclusive` layers are converted to DownloadActions and are ran before LRP `Setup` action or the task's`Action`. For more information see the [Actions Documentation](actions.md).
+`LayerTypeExclusive` layers are converted to DownloadActions and are ran before LRP `Setup` action or the task's`Action`. For more information see the [Actions Documentation](06-actions-overview.md).
 
 ##### `VolumeMounts` [optional]
 
@@ -67,7 +75,7 @@ Volume Mounts are used to specify persistent storage to be attached to a contain
 You can define the specific storage subsystem driver, volumeId, path in the container, bind mount mode as well as
 some driver specific configuration information.
 
-See the model documentation for VolumeMount [here](https://godoc.org/code.cloudfoundry.org/bbs/models#VolumeMount)
+See the model documentation for VolumeMount [here](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#VolumeMount)
 
 ```go
 VolumeMounts: []*models.VolumeMount{
@@ -211,5 +219,3 @@ icmp := &SecurityGroupRule{
     },
 }
 ```
-
-[back](README.md)

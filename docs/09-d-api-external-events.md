@@ -1,4 +1,10 @@
-# Events
+---
+title: Events External API
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# Events External API
 
 The BBS emits events when a DesiredLRP, ActualLRP or Task is created,
 updated, or deleted. The following sections provide details on how to subscribe
@@ -36,11 +42,15 @@ Events relevant to the cell are defined as:
 3. `ActualLRPChangedEvent` that used to/started running on that cell
 4. `ActualLRPCrashedEvent` that used to run on that cell
 
-**Note** Passing an empty string `cellID` argument to `SubscribeToEventsByCellID` is equivalent to calling `SubscribeToEvents`
+> \[!NOTE\]
+>
+> Passing an empty string `cellID` argument to `SubscribeToEventsByCellID` is equivalent to calling `SubscribeToEvents`
 
-**Note** `SubscribeToEventsByCellID` and `SubscribeToEvents` do not have events related to Tasks.
+> \[!NOTE\]
+>
+> `SubscribeToEventsByCellID` and `SubscribeToEvents` do not have events related to Tasks.
 
-## Subscribing to LRP Instance Events
+## <a name="subscribing-to-lrp-instance-events"></a>Subscribing to LRP Instance Events
 
 You can use the `SubscribeToInstanceEvents(logger lager.Logger) (events.EventSource,
 error)` client method to subscribe to lrp instance events. For example:
@@ -70,9 +80,13 @@ Events relevant to the cell are defined as:
 3. `ActualLRPInstanceChangedEvent` that used to/started running on that cell
 4. `ActualLRPCrashedEvent` that used to run on that cell
 
-**Note** Passing an empty string `cellID` argument to `SubscribeToInstanceEventsByCellID` is equivalent to calling `SubscribeToInstanceEvents`
+> \[!NOTE\]
+>
+> Passing an empty string `cellID` argument to `SubscribeToInstanceEventsByCellID` is equivalent to calling `SubscribeToInstanceEvents`
 
-**Note** `SubscribeToInstanceEventsByCellID` and `SubscribeToInstanceEvents` do not have events related to Tasks.
+> \[!NOTE\]
+>
+> `SubscribeToInstanceEventsByCellID` and `SubscribeToInstanceEvents` do not have events related to Tasks.
 
 ## Subscribing to Task Events
 
@@ -90,7 +104,7 @@ if err != nil {
 ## Using the event source
 
 Once an `EventSource` is created, you can then loop through the events by calling
-[Next](https://godoc.org/code.cloudfoundry.org/bbs/events#EventSource) in a
+[Next](https://pkg.go.dev/code.cloudfoundry.org/bbs/events#EventSource) in a
 loop, for example:
 
 ``` go
@@ -134,86 +148,86 @@ The following types of events are emitted:
 
 ## DesiredLRP events
 
-### `DesiredLRPCreatedEvent`
+### DesiredLRPCreatedEvent
 
 When a new DesiredLRP is created, a
-[DesiredLRPCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPCreatedEvent)
+[DesiredLRPCreatedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#DesiredLRPCreatedEvent)
 is emitted. The value of the `DesiredLrp` field contains information about the
 DesiredLRP that was just created.
 
-### `DesiredLRPChangedEvent`
+### DesiredLRPChangedEvent
 
 When a DesiredLRP changes, a
-[DesiredLRPChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPChangedEvent)
+[DesiredLRPChangedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#DesiredLRPChangedEvent)
 is emitted. The value of the `Before` and `After` fields have information about the
 DesiredLRP before and after the change.
 
-### `DesiredLRPRemovedEvent`
+### DesiredLRPRemovedEvent
 
 When a DesiredLRP is deleted, a
-[DesiredLRPRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#DesiredLRPRemovedEvent)
+[DesiredLRPRemovedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#DesiredLRPRemovedEvent)
 is emitted. The field value of `DesiredLrp` will have information about the
 DesiredLRP that was just removed.
 
 ## ActualLRP events
 
-### `ActualLRPCreatedEvent`
+### ActualLRPCreatedEvent
 
 **Deprecated** in favor of [ActualLRPInstanceCreatedEvent](#ActualLRPInstanceCreatedEvent)
 
 When a new ActualLRP is created, a
-[ActualLRPCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPCreatedEvent)
+[ActualLRPCreatedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPCreatedEvent)
 is emitted. The value of the `ActualLrpGroup` field contains more information
 about the ActualLRP.
 
 
-### `ActualLRPChangedEvent`
+### ActualLRPChangedEvent
 
 **Deprecated** in favor of [ActualLRPInstanceChangedEvent](#ActualLRPInstanceChangedEvent)
 
 When a ActualLRP changes, a
-[ActualLRPChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPChangedEvent)
+[ActualLRPChangedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPChangedEvent)
 is emitted. The value of the `Before` and `After` fields contains information about the
 ActualLRP state before and after the change.
 
-### `ActualLRPRemovedEvent`
+### ActualLRPRemovedEvent
 
 **Deprecated** in favor of [ActualLRPInstanceRemovedEvent](#ActualLRPInstanceRemovedEvent)
 
 When a ActualLRP is removed, a
-[ActualLRPRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPRemovedEvent)
+[ActualLRPRemovedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPRemovedEvent)
 is emitted. The value of the `ActualLrpGroup` field contains information about the
 ActualLRP that was just removed.
 
 
 ## ActualLRP instance events
 
-### `ActualLRPInstanceCreatedEvent`
+### <a name="ActualLRPInstanceCreatedEvent"></a>ActualLRPInstanceCreatedEvent
 
 When a new ActualLRP instance is created, a
-[ActualLRPInstanceCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceCreatedEvent)
+[ActualLRPInstanceCreatedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceCreatedEvent)
 is emitted. The value of the `ActualLrp` field contains more information
 about the ActualLRP.
 
 
-### `ActualLRPInstanceChangedEvent`
+### <a name=ActualLRPInstanceChangedEvent"></a>ActualLRPInstanceChangedEvent
 
 When a ActualLRP changes, a
-[ActualLRPInstanceChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceChangedEvent)
+[ActualLRPInstanceChangedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceChangedEvent)
 is emitted. The value of the `Before` and `After` fields contains information about the
 ActualLRP state before and after the change.
 
-### `ActualLRPInstanceRemovedEvent`
+### <a name=ActualLRPInstanceRemovedEvent"></a>ActualLRPInstanceRemovedEvent
 
 When a ActualLRP is removed, a
-[ActualLRPInstanceRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceRemovedEvent)
+[ActualLRPInstanceRemovedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceRemovedEvent)
 is emitted. The value of the `ActualLrp` field contains information about the
 ActualLRP that was just removed.
 
-### `ActualLRPCrashedEvent`
+### ActualLRPCrashedEvent
 
 When a ActualLRP crashes a
-[ActualLRPCrashedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPCrashedEvent)
+[ActualLRPCrashedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPCrashedEvent)
 is emitted. The event will have the following field values:
 
 1. `ActualLRPKey`: The LRP key of the ActualLRP.
@@ -224,25 +238,23 @@ is emitted. The event will have the following field values:
 
 ## Task events
 
-### `TaskCreatedEvent`
+### TaskCreatedEvent
 
 When a new Task is created, a
-[TaskCreatedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskCreatedEvent)
+[TaskCreatedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskCreatedEvent)
 is emitted. The value of the `Task` field contains information about the
 Task that was just created.
 
-### `TaskChangedEvent`
+### TaskChangedEvent
 
 When a Task changes, a
-[TaskChangedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskChangedEvent)
+[TaskChangedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskChangedEvent)
 is emitted. The value of the `Before` and `After` fields have information about the
 Task before and after the change.
 
-### `TaskRemovedEvent`
+### TaskRemovedEvent
 
 When a Task is deleted, a
-[TaskRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskRemovedEvent)
+[TaskRemovedEvent](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskRemovedEvent)
 is emitted. The field value of `Task` will have information about the
 Task that was just removed.
-
-[back](README.md)

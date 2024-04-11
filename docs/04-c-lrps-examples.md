@@ -1,3 +1,9 @@
+---
+title: LRP Examples
+expires_at: never
+tags: [diego-release, bbs]
+---
+
 # LRP Examples
 
 ## Desiring an LRP
@@ -154,5 +160,3 @@ if err != nil {
     log.Printf("failed to remove desired lrp: " + err.Error())
 }
 ```
-
-[back](README.md)

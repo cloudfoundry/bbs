@@ -1,3 +1,9 @@
+---
+title: Task Examples
+expires_at: never
+tags: [diego-release, bbs]
+---
+
 # Task Examples
 
 ## Desiring a Task
@@ -78,5 +84,3 @@ if err != nil {
   log.Printf("failed to cancel task: " + err.Error())
 }
 ```
-
-[back](README.md)

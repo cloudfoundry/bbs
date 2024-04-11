@@ -1,3 +1,11 @@
+---
+title: Schema Description
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# Schema Description
+
 | table          | column                 | data type               | Encrypted | description                                                                                                                                               |
 |----------------|------------------------|-------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | actual_lrps    | process_guid           | character varying(255)  | No        | DesiredLRP unique identifier (foreign key)                                                                                                                |

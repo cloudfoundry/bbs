@@ -1,3 +1,9 @@
+---
+title: Overview of Tasks
+expires_at: never
+tags: [diego-release, bbs]
+---
+
 # Overview of Tasks
 
 Diego can run one-off work in the form of Tasks. When a Task is submitted, Diego allocates resources for the Task on a Cell, runs the Task on that Cell, and then reports the result of the Task. Tasks are guaranteed to run at most once.
@@ -5,10 +11,10 @@ Diego can run one-off work in the form of Tasks. When a Task is submitted, Diego
 
 ## The Task API
 
-We recommend interacting with Diego's Task functionality through the ExternalTaskClient interface. The calls exposed to external clients are specifically documented [here](https://godoc.org/github.com/cloudfoundry/bbs#ExternalTaskClient).
+We recommend interacting with Diego's Task functionality through the ExternalTaskClient interface. The calls exposed to external clients are specifically documented [here](https://pkg.go.dev/github.com/cloudfoundry/bbs#ExternalTaskClient).
 
 
-## The Task Lifecycle
+## <a name="the_task_lifecycle"></a>The Task Lifecycle
 
 Tasks in Diego undergo a lifecycle encoded in the Task state:
 
@@ -26,7 +32,7 @@ Diego will automatically delete completed Tasks that remain unresolved after 2 m
 
 ## Defining Tasks
 
-When submitting a task, a valid `guid`, `domain`, and `TaskDefinition` should be provided to [a Client's DesireTask method](https://github.com/cloudfoundry/bbs/blob/master/client.go#L87). See [Defining Tasks](defining-tasks.md) for more detail on the `TaskDefinition` fields.
+When submitting a task, a valid `guid`, `domain`, and `TaskDefinition` should be provided to [a Client's DesireTask method](https://github.com/cloudfoundry/bbs/blob/master/client.go#L87). See [Defining Tasks](#03-b-tasks-define.md) for more detail on the `TaskDefinition` fields.
 
 
 ## Retreiving Tasks
@@ -96,6 +102,3 @@ If `ResultFile` was specified and the Task has completed succesfully, `Result` w
 #### `Annotation`
 
 This is the arbitrary string that was specified in the TaskDefinition.
-
-
-[back](README.md)

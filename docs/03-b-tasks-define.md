@@ -1,6 +1,12 @@
-## Defining Tasks
+---
+title: Defining Tasks
+expires_at: never
+tags: [diego-release, bbs]
+---
 
-This document explains the fields available when defining a new Task. For a higher-level overview of the Diego Task API, see the [Tasks Overview](tasks.md).
+## Defining Task
+
+This document explains the fields available when defining a new Task. For a higher-level overview of the Diego Task API, see the [Tasks Overview](03-a-tasks-overview.md).
 
 ```go
 client := bbs.NewClient(url)
@@ -149,15 +155,15 @@ Setting `ImagePassword` requires the `ImageUsername` to also be set.
 
 ##### `EnvironmentVariables` [optional]
 
-See description of [Environment Variables](common-models.md#environmentvariables-optional)
+See description of [Environment Variables](11-b-dev-workflow-common-models.md#environmentvariables-optional)
 
 ##### `CachedDependencies` [optional]
 
-See description of [Cached Dependencies](common-models.md#cacheddependencies-optional)
+See description of [Cached Dependencies](11-b-dev-workflow-common-models.md#cacheddependencies-optional)
 
 ##### `ImageLayers` [optional]
 
-See description of [Image Layers](common-models.md#imagelayers-optional)
+See description of [Image Layers](11-b-dev-workflow-common-models.md#imagelayers-optional)
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -165,7 +171,7 @@ An absolute path inside the container's filesystem where trusted system certific
 
 ##### `VolumeMounts` [optional]
 
-See description of [Volume Mounts](common-models.md#volumemounts-optional)
+See description of [Volume Mounts](11-b-dev-workflow-common-models.md#volumemounts-optional)
 
 ##### `PlacementTags` [optional]
 
@@ -219,7 +225,7 @@ A memory limit in mebibytes applied to the container.  If the total memory consu
 
 ##### `Action` [required]
 
-Encodes the action to execute when running the Task.  For more details, see the section on [Actions](actions.md).
+Encodes the action to execute when running the Task.  For more details, see the section on [Actions](06-actions-overview.md).
 
 
 #### Task Completion and Output
@@ -228,7 +234,7 @@ When the `Action` on a Task finishes, the Task is marked as `COMPLETED`.
 
 ##### `ResultFile` [optional]
 
-If specified on a TaskDefinition, Diego retrieves the contents of this file from the container when the Task completes successfully. The retrieved contents are made available in the `Result` field of the [Task](https://godoc.org/code.cloudfoundry.org/bbs/models#Task) returned in a  [TaskResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskResponse).
+If specified on a TaskDefinition, Diego retrieves the contents of this file from the container when the Task completes successfully. The retrieved contents are made available in the `Result` field of the [Task](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#Task) returned in a  [TaskResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskResponse).
 
 - Diego only returns the first 10 kilobytes of the `ResultFile`.  If you need to communicate back larger datasets, consider using an `UploadAction` to upload the result file to another service.
 
@@ -237,7 +243,7 @@ If specified on a TaskDefinition, Diego retrieves the contents of this file from
 
 Diego clients have several ways to learn that a Task has `COMPLETED`: they can poll the Task, subscribe to the Task event stream, or register a callback.
 
-If a `CompletionCallbackUrl` is provided, Diego will send a `POST` request to the provided URL when the Task completes.  The body of the `POST` will include the [TaskResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskResponse).
+If a `CompletionCallbackUrl` is provided, Diego will send a `POST` request to the provided URL when the Task completes.  The body of the `POST` will include the [TaskResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#TaskResponse).
 
 - Almost any response from the callback will resolve the Task, thereby removing it from the BBS.
 - If the callback responds with status code '503 Service Unavailable' or '504 Gateway Timeout', however, Diego will immediately retry the callback up to 3 times.
@@ -252,7 +258,7 @@ By default network access for any container is limited but some tasks may need s
 
 ##### `EgressRules` [optional]
 
-See description of [EgressRules](common-models.md#egressrules-optional)
+See description of [EgressRules](11-b-dev-workflow-common-models.md#egressrules-optional)
 
 ---
 
@@ -274,13 +280,8 @@ The `LogSource` field sets the default `SourceType` on the log messages. Individ
 
 The `MetricsGuid` field sets the `ApplicationId` on container metris coming from the Task.
 
-
 #### Storing Arbitrary Metadata
 
 ##### `Annotation` [optional]
 
 Diego allows arbitrary annotations to be attached to a Task.  The annotation may not exceed 10 kilobytes in size.
-
-
-
-[back](README.md)

@@ -1,13 +1,19 @@
-# Long Running Processes Internal API Reference
+---
+title: LRPs (Long Running Processes) Internal API
+expires_at: never
+tags: [diego-release, bbs]
+---
+
+# LRPs (Long Running Processes) Internal API
 
 This reference does not cover the protobuf payload supplied to each endpoint.
 Instead, it illustrates calls to the API via the Golang `bbs.InternalClient` interface.
 Each method on that `InternalClient` interface takes a `lager.Logger` as the first argument to log errors generated within the client.
 This first `Logger` argument will not be duplicated on the descriptions of the method arguments.
 
-For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://godoc.org/code.cloudfoundry.org/bbs/models).
+For detailed information on the types referred to below, see the [godoc documentation for the BBS models](https://pkg.go.dev/code.cloudfoundry.org/bbs/models).
 
-# ActualLRP APIs
+# <a name="actuallrps-apis"></a>ActualLRP APIs
 
 ## ClaimActualLRP
 
@@ -15,9 +21,9 @@ The cell calls `ClaimActualLRP` to report to the BBS that it has claimed an Actu
 
 ### BBS API Endpoint
 
-POST an [ClaimActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#ClaimActualLRPRequest)
+POST an [ClaimActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ClaimActualLRPRequest)
 to `/v1/actual_lrps/claim`
-and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+and receive an [ActualLRPLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
@@ -57,15 +63,15 @@ The cell calls `StartActualLRP` to report to the BBS that it has started an Actu
 
 ### BBS API Endpoint
 
-POST an [StartActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#StartActualLRPRequest)
+POST an [StartActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#StartActualLRPRequest)
 to `/v1/actual_lrps/start.r1`
-and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+and receive an [ActualLRPLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Deprecated Endpoints
 
-POST an [StartActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#StartActualLRPRequest)
+POST an [StartActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#StartActualLRPRequest)
 to `/v1/actual_lrps/start`
-and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+and receive an [ActualLRPLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
@@ -75,12 +81,12 @@ StartActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *model
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the ActualLRP to start.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the ActualLRP to start.
   * `InstanceGuid string`: The GUID of the instance to start.
   * `CellID string`: ID of the Cell starting the ActualLRP.
-* `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
-* `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
+* `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
+* `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
 * `metricTags map[string]string`: containing updated metric tags for the ActualLRP.
 
 #### Output
@@ -122,9 +128,9 @@ The cell calls `CrashActualLRP` to report to the BBS that an ActualLRP instance 
 
 ### BBS API Endpoint
 
-POST an [CrashActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#CrashActualLRPRequest)
+POST an [CrashActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#CrashActualLRPRequest)
 to `/v1/actual_lrps/crash`
-and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+and receive an [ActualLRPLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
@@ -134,8 +140,8 @@ CrashActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *model
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the ActualLRP to crash.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the ActualLRP to crash.
   * `InstanceGuid string`: The GUID of the instance to crash.
   * `CellID string`: ID of the Cell crashing the ActualLRP.
 * `errorMessage string`: The error message describing the reason for the crash.
@@ -171,9 +177,9 @@ The auctioneer calls `FailActualLRP` to report to the BBS that it has failed to 
 
 ### BBS API Endpoint
 
-POST an [FailActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#FailActualLRPRequest)
+POST an [FailActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#FailActualLRPRequest)
 to `/v1/actual_lrps/fail`
-and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+and receive an [ActualLRPLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
@@ -183,7 +189,7 @@ FailActualLRP(logger lager.Logger, key *models.ActualLRPKey, errorMessage string
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
 * `errorMessage string`: The error message describing the reason for the placement failure.
 
 #### Output
@@ -212,9 +218,9 @@ The cell calls `RemoveActualLRP` to remove from the BBS an ActualLRP instance it
 
 ### BBS API Endpoint
 
-POST an [RemoveActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RemoveActualLRPRequest)
+POST an [RemoveActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#RemoveActualLRPRequest)
 to `/v1/actual_lrps/remove`
-and receive an [ActualLRPLifecycleResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
+and receive an [ActualLRPLifecycleResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPLifecycleResponse).
 
 ### Golang Client API
 
@@ -224,8 +230,8 @@ RemoveActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanceKey *mode
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index (the domain is ignored).
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the ActualLRP to remove. If present, must match the key in the BBS record. If nil, the ActualLRP is removed without requiring a match.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index (the domain is ignored).
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the ActualLRP to remove. If present, must match the key in the BBS record. If nil, the ActualLRP is removed without requiring a match.
 
 #### Output
 
@@ -251,9 +257,9 @@ The cell calls `EvacuateClaimedActualLRP` to evacuate an ActualLRP it has claime
 
 ### BBS API Endpoint
 
-POST an [EvacuateClaimedActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuateClaimedActualLRPRequest)
+POST an [EvacuateClaimedActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuateClaimedActualLRPRequest)
 to `/v1/actual_lrps/evacuate_claimed`
-and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuationResponse).
+and receive an [EvacuationResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuationResponse).
 
 ### Golang Client API
 
@@ -263,8 +269,8 @@ EvacuateClaimedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instance
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the claimed ActualLRP to evacuate.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the claimed ActualLRP to evacuate.
 
 #### Output
 
@@ -295,9 +301,9 @@ The cell calls `EvacuateCrashedActualLRP` to report that an ActualLRP has crashe
 
 ### BBS API Endpoint
 
-POST an [EvacuateCrashedActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuateCrashedActualLRPRequest)
+POST an [EvacuateCrashedActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuateCrashedActualLRPRequest)
 to `/v1/actual_lrps/evacuate_crashed`
-and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuationResponse).
+and receive an [EvacuationResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuationResponse).
 
 ### Golang Client API
 
@@ -307,8 +313,8 @@ EvacuateCrashedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instance
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the crashed ActualLRP to evacuate.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the crashed ActualLRP to evacuate.
 * `errorMessage string`: The error message describing the reason for the crash.
 
 #### Output
@@ -341,9 +347,9 @@ The cell calls `EvacuateStoppedActualLRP` to report that an ActualLRP has stoppe
 
 ### BBS API Endpoint
 
-POST an [EvacuateStoppedActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuateStoppedActualLRPRequest)
+POST an [EvacuateStoppedActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuateStoppedActualLRPRequest)
 to `/v1/actual_lrps/evacuate_stopped`
-and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuationResponse).
+and receive an [EvacuationResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuationResponse).
 
 ### Golang Client API
 
@@ -353,8 +359,8 @@ EvacuateStoppedActualLRP(logger lager.Logger, key *models.ActualLRPKey, instance
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the stopped ActualLRP to evacuate.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the stopped ActualLRP to evacuate.
 
 #### Output
 
@@ -386,15 +392,15 @@ The cell calls `EvacuateRunningActualLRP` to evacuate an ActualLRP it has starte
 
 ### BBS API Endpoint
 
-POST an [EvacuateRunningActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuateRunningActualLRPRequest)
+POST an [EvacuateRunningActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuateRunningActualLRPRequest)
 to `/v1/actual_lrps/evacuate_running.r1`
-and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuationResponse).
+and receive an [EvacuationResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuationResponse).
 
 #### Deprecated Endpoints
 
-POST an [EvacuateRunningActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuateRunningActualLRPRequest)
+POST an [EvacuateRunningActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuateRunningActualLRPRequest)
 to `/v1/actual_lrps/evacuate_running`
-and receive an [EvacuationResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#EvacuationResponse).
+and receive an [EvacuationResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#EvacuationResponse).
 
 ### Golang Client API
 
@@ -404,10 +410,10 @@ EvacuateRunningActualLRP(logger lager.Logger, key *models.ActualLRPKey, instance
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the running ActualLRP to evacuate.
-* `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
-* `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the running ActualLRP to evacuate.
+* `netInfo *models.ActualLRPNetInfo`: [ActualLRPNetInfo](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPNetInfo) containing updated networking information for the ActualLRP.
+* `internalRoutes []*models.ActualLRPInternalRoute`: [ActualLRPInternalRoute](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInternalRoute) containing updated internal routes for the ActualLRP.
 * `metricTags map[string]string`: containing updated metric tags for the ActualLRP.
 
 #### Output
@@ -449,7 +455,7 @@ The cell calls `EvacuateRunningActualLRP` to remove an evacuating ActualLRP for 
 
 ### BBS API Endpoint
 
-POST an [RemoveEvacuatingActualLRPRequest](https://godoc.org/code.cloudfoundry.org/bbs/models#RemoveEvacuatingActualLRPRequest) to `/v1/actual_lrps/remove_evacuating`, and receive an [RemoveEvacuatingActualLRPResponse](https://godoc.org/code.cloudfoundry.org/bbs/models#RemoveEvacuatingActualLRPResponse).
+POST an [RemoveEvacuatingActualLRPRequest](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#RemoveEvacuatingActualLRPRequest) to `/v1/actual_lrps/remove_evacuating`, and receive an [RemoveEvacuatingActualLRPResponse](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#RemoveEvacuatingActualLRPResponse).
 
 ### Golang Client API
 
@@ -459,8 +465,8 @@ RemoveEvacuatingActualLRP(logger lager.Logger, key *models.ActualLRPKey, instanc
 
 #### Inputs
 
-* `key *models.ActualLRPKey`: [ActualLRPKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
-* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the evacuating ActualLRP to remove.
+* `key *models.ActualLRPKey`: [ActualLRPKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPKey) for the instance. Includes the LRP process guid, index, and LRP domain.
+* `instanceKey *models.ActualLRPInstanceKey`: [ActualLRPInstanceKey](https://pkg.go.dev/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey) for the evacuating ActualLRP to remove.
 
 #### Output
 
@@ -484,4 +490,3 @@ if err != nil {
     log.Printf("failed to remove evacuating actual lrp: " + err.Error())
 }
 ```
-[back](README.md)

@@ -1,6 +1,12 @@
+---
+title: Defining LRPs
+expires_at: never
+tags: [diego-release, bbs]
+---
+
 ### Defining LRPs
 
-This document explains the fields available when defining a new LRP. For a higher-level overview of the Diego LRP API, see the [LRPs Overview](lrps.md).
+This document explains the fields available when defining a new LRP. For a higher-level overview of the Diego LRP API, see the [LRPs Overview](04-a-lrps-overview.md).
 
 ```go
 client := bbs.NewClient(url)
@@ -135,7 +141,7 @@ refer to it by its `ProcessGuid`.
 - If you attempt to create a DesiredLRP with a `ProcessGuid` that matches that
   of an existing DesiredLRP, Diego will attempt to update the existing
   DesiredLRP.  This is subject to the rules described in [updating
-  DesiredLRPs](lrps.md#updating-desiredlrps) below.
+  DesiredLRPs](04-a-lrps-overview.md#updating-desiredlrps) below.
 
 
 ##### `Domain` [required]
@@ -170,9 +176,10 @@ Preloaded root filesystems look like:
 ```
 
 Diego's [BOSH release](https://github.com/cloudfoundry/diego-release) ships with the
-`cflinuxfs3` filesystem root filesystem built to work with the Cloud Foundry buildpacks, which can be specified via
+`cflinuxfs4` filesystem root filesystem built to work with the Cloud Foundry buildpacks, which can be specified via
+
 ```
-"rootfs": "preloaded:cflinuxfs3"
+"rootfs": "preloaded:cflinuxfs4"
 ```
 
 It is possible to provide a custom root filesystem by specifying a Docker image for `RootFs`:
@@ -205,15 +212,15 @@ Setting `ImagePassword` requires the `ImageUsername` to also be set.
 
 ##### `EnvironmentVariables` [optional]
 
-See description of [Environment Variables](common-models.md#environmentvariables-optional)
+See description of [Environment Variables](11-b-dev-workflow-common-models.md#environmentvariables-optional)
 
 ##### `CachedDependencies` [optional]
 
-See description of [Cached Dependencies](common-models.md#cacheddependencies-optional)
+See description of [Cached Dependencies](11-b-dev-workflow-common-models.md#cacheddependencies-optional)
 
 ##### `ImageLayers` [optional]
 
-See description of [Image Layers](common-models.md#imagelayers-optional)
+See description of [Image Layers](11-b-dev-workflow-common-models.md#imagelayers-optional)
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -221,7 +228,7 @@ An absolute path inside the container's filesystem where trusted system certific
 
 ##### `VolumeMounts` [optional]
 
-See description of [Volume Mounts](common-models.md#volumemounts-optional)
+See description of [Volume Mounts](11-b-dev-workflow-common-models.md#volumemounts-optional)
 
 ##### `PlacementTags` [optional]
 
@@ -289,7 +296,7 @@ Diego is responsible for performing any container setup necessary to successfull
 
 After creating a container, Diego will first run the action specified in the `Setup` field.
 This field is optional and is typically used to download files and run (short-lived) processes that configure the container.
-For more details on the available actions see [actions](actions.md).
+For more details on the available actions see [actions](06-actions-overview.md).
 
 - If the `Setup` action fails the `ActualLRP` is considered to have crashed and will be restarted
 
@@ -297,7 +304,7 @@ For more details on the available actions see [actions](actions.md).
 
 After completing any `Setup` action, Diego will launch the `Action` action.
 This `Action` is intended to launch any long-running processes.
-For more details on the available actions see [actions](actions.md).
+For more details on the available actions see [actions](06-actions-overview.md).
 
 ##### `CheckDefinition` [optional]
 
@@ -354,7 +361,7 @@ A TCP health check.
 
 If provided, Diego will monitor the long running processes encoded in `Action` by periodically invoking the `Monitor` action.
 If the `Monitor` action returns succesfully (exit status code 0), the container is deemed "healthy", otherwise the container is deemed "unhealthy".
-Monitoring is quite flexible in Diego and is outlined in more detail [here](lrps.md#monitoring-health).
+Monitoring is quite flexible in Diego and is outlined in more detail [here](04-a-lrps-overview.md#monitoring-health).
 
 ##### `StartTimeoutMs` [required]
 
@@ -393,7 +400,7 @@ The total length of the routing information must not exceed 131072 bytes (128kb)
 
 ##### `EgressRules` [optional]
 
-See description of [EgressRules](common-models.md#egressrules-optional)
+See description of [EgressRules](11-b-dev-workflow-common-models.md#egressrules-optional)
 
 #### Logging
 
@@ -432,5 +439,3 @@ clients.
 
 Diego allows arbitrary annotations to be attached to a DesiredLRP.
 The annotation must not exceed 10 kilobytes in size.
-
-[back](README.md)
