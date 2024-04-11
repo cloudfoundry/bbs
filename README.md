@@ -1,84 +1,59 @@
-# BBS Server [![GoDoc](https://godoc.org/github.com/cloudfoundry/bbs?status.svg)](https://godoc.org/github.com/cloudfoundry/bbs)
+# BBS
 
+Bulletin Board System (BBS) is the API to access the database for Diego.
+It communicates via protocol-buffer-encoded RPC-style calls over HTTP.
 
-**Note**: This repository should be imported as `code.cloudfoundry.org/bbs`.
+> \[!NOTE\]
+>
+> This repository should be imported as `code.cloudfoundry.org/bbs`.
 
-API to access the database for Diego.
+# Docs
 
-A general overview of the BBS is documented [here](doc).
+-   [Where does BBS fits in Cloud
+    Foundry](./docs/01-where-does-bbs-fit.md)
+-   [Overview of Domains](./docs/02-domains-overview.md)
+-   [Overview of Tasks](./docs/03-a-tasks-overview.md)
+-   [Defining Tasks](./docs/03-b-tasks-define.md)
+-   [Task Examples](./docs/03-c-tasks-examples.md)
+-   [Overview of LRPs (Long Running
+    Processes)](./docs/04-a-lrps-overview.md)
+-   [Defining LRPs](./docs/04-b-lrps-define.md)
+-   [LRP Examples](./docs/04-c-lrps-examples.md)
+-   [Overview of Cells](./docs/05-cells-overview.md)
+-   [Available Actions for BBS](./docs/06-actions-overview.md)
+-   [Container Runtime Environment
+    Variables](./docs/07-environment-overview.md)
+-   [Tasks External API](./docs/09-a-api-external-tasks.md)
+-   [LRPs (Long Running Processes) External
+    API](./docs/09-b-api-external-lrps.md)
+-   [Cells External API](./docs/09-c-api-external-cells.md)
+-   [Events External API](./docs/09-d-api-external-events.md)
+-   [Tasks Internal API](./docs/09-f-api-internal-tasks.md)
+-   [LRPs (Long Running Processes) Internal
+    API](./docs/09-g-api-internal-lrps.md)
+-   [Schema Description](./docs/10-schema-overview.md)
+-   [Development Worklow
+    (Migrations)](./docs/11-a-dev-workflow-migrations.md)
+-   [Development Workflow (Common
+    Models)](./docs/11-b-dev-workflow-common-models.md)
+-   [Development Worklow (Code Generation with
+    Protobuf)](./docs/11-c-dev-workflow-protobuf.md)
+-   [Development Worklow (Conventions for Revising API
+    Endpoints)](./docs/11-d-dev-workdflow-revisioning.md)
 
-## Reporting issues and requesting features
+# Contributing
 
-Please report all issues and feature requests in [cloudfoundry/diego-release](https://github.com/cloudfoundry/diego-release/issues).
+See the [Contributing.md](./.github/CONTRIBUTING.md) for more
+information on how to contribute.
 
-## API
+# Working Group Charter
 
-To interact with the BBS from outside of Diego, use the methods provided on the
-[`Client` interface](https://godoc.org/github.com/cloudfoundry/bbs#Client).
+This repository is maintained by [App Runtime
+Platform](https://github.com/cloudfoundry/community/blob/main/toc/working-groups/app-runtime-platform.md)
+under `Diego` area.
 
-Components within Diego may use the full [`InternalClient`
-interface](https://godoc.org/github.com/cloudfoundry/bbs#InternalClient) to modify internal state.
-
-## Code Generation
-
-The protobuf models in this repository require version 3.5 or later of the `protoc` compiler.
-
-### OSX
-
-On Mac OS X with [Homebrew](http://brew.sh/), run the following to install it:
-
-```
-brew install protobuf
-```
-
-### Linux
-
-1. Download a zip archive of the latest protobuf release from [here](https://github.com/google/protobuf/releases).
-1. Unzip the archive in `/usr/local` (including /bin and /include folders).
-1. `chmod a+x /usr/local/bin/protoc` to make sure you can use the binary.
-
-> If you already have an older version of protobuf installed, you must
-> uninstall it first by running `brew uninstall protobuf`
-
-Install the `gogoproto` compiler by running:
-
-```
-go install github.com/gogo/protobuf/protoc-gen-gogoslick
-```
-
-Run `go generate ./...` from the root directory of this repository to generate code from the `.proto` files as well as to generate fake implementations of certain interfaces for use in test code.
-
-### Generating ruby models for BBS models
-
-The following documentation assume the following versions:
-
-1. [protoc](https://github.com/google/protobuf/releases) `> v3.5.0`
-2. [ruby protobuf gem](https://github.com/ruby-protobuf/protobuf) `> 3.6.12`
-
-Run the following commands from the `models` directory to generate `.pb.rb`
-files for the BBS models:
-
-1. `sed -i'' -e 's/package models/package diego.bbs.models/' ./*.proto`
-1. `protoc -I../../vendor --proto_path=. --ruby_out=/path/to/ruby/files *.proto`
-
-**Note** Replace `/path/to/ruby/files` with the desired destination of the
-`.pb.rb` files. That directory must exist before running this command.
-
-**Note** The above steps assume that
-`github.com/gogo/protobuf/gogoproto/gogo.proto` is on the `GOPATH`.
-
-## SQL
-
-See the instructions in [Running the SQL Unit Tests](https://github.com/cloudfoundry/diego-release/blob/develop/CONTRIBUTING.md#running-the-sql-unit-tests)
-for testing against a SQL backend
-
-See [Migrations](https://github.com/cloudfoundry/bbs/blob/master/doc/bbs-migration.md) for information about writing database migrations.
-
-## Run Tests
-
-1. First setup your [GOPATH and install the necessary dependencies](https://github.com/cloudfoundry/diego-release/blob/develop/CONTRIBUTING.md#initial-setup) for running tests.
-1. Setup a MySQL server or a postgres server. [Please follow these instructions.](https://github.com/cloudfoundry/diego-release/blob/develop/CONTRIBUTING.md#running-the-sql-unit-tests)
-1. Run the tests from the root directory of the bbs repo:
-```
-SQL_FLAVOR=mysql ginkgo -r -p -race
-```
+> \[!IMPORTANT\]
+>
+> Content in this file is managed by the [CI task
+> `sync-readme`](https://github.com/cloudfoundry/wg-app-platform-runtime-ci/blob/main/shared/tasks/sync-readme/metadata.yml)
+> and is generated by CI following a convention.
