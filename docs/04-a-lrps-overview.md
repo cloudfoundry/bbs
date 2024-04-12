@@ -48,7 +48,7 @@ State | Meaning
 See [Defining LRPs](04-b-lrps-define.md) for more details on the fields that should be provided
 when submitting a DesiredLRP to a Client's `DesireLRP` method.
 
-## <a name=updating-desiredlrps"></a>Updating DesiredLRPs
+## <a name="updating-desiredlrps"></a>Updating DesiredLRPs
 
 Only a subset of the DesiredLRP's fields may be updated dynamically.  In particular, changes that require the process to be restarted are not allowed - instead, you should submit a new DesiredLRP and orchestrate the upgrade path from one LRP to the next.  This provides the consumer of Diego the flexibility to pick the most appropriate upgrade strategy (blue-green, etc...)
 
