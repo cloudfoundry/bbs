@@ -10,7 +10,7 @@ func (request *ActualLRPsRequest) SetIndex(index int32) {
 	request.OptionalIndex = &ActualLRPsRequest_Index{Index: index}
 }
 
-func (request ActualLRPsRequest) IndexExists() bool {
+func (request *ActualLRPsRequest) IndexExists() bool {
 	_, ok := request.GetOptionalIndex().(*ActualLRPsRequest_Index)
 	return ok
 }
@@ -38,7 +38,7 @@ func (request *ActualLRPsRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
+func (request *ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	internalRequest := internalActualLRPsRequest{
 		Domain:      request.Domain,
 		CellId:      request.CellId,
