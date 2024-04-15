@@ -77,11 +77,11 @@ func NewCellPresence(
 	var providers []*Provider
 	var pProviders []string
 	pProviders = append(pProviders, preloadedRootFSes...)
-	providers = append(providers, &Provider{PreloadedRootFSScheme, pProviders})
-	providers = append(providers, &Provider{PreloadedOCIRootFSScheme, pProviders})
+	providers = append(providers, &Provider{Name: PreloadedRootFSScheme, Properties: pProviders})
+	providers = append(providers, &Provider{Name: PreloadedOCIRootFSScheme, Properties: pProviders})
 
 	for _, prov := range rootFSProviders {
-		providers = append(providers, &Provider{prov, []string{}})
+		providers = append(providers, &Provider{Name: prov, Properties: []string{}})
 	}
 
 	return CellPresence{
@@ -89,7 +89,7 @@ func NewCellPresence(
 		RepAddress:            repAddress,
 		RepUrl:                repUrl,
 		Zone:                  zone,
-		Capacity:              &capacity,
+		Capacity:              capacity,
 		RootfsProviders:       providers,
 		PlacementTags:         placementTags,
 		OptionalPlacementTags: optionalPlacementTags,
