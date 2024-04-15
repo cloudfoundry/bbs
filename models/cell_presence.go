@@ -47,7 +47,7 @@ func NewCellCapacity(memoryMB, diskMB, containers int32) CellCapacity {
 	}
 }
 
-func (cap CellCapacity) Validate() error {
+func (cap *CellCapacity) Validate() error {
 	var validationError ValidationError
 
 	if cap.MemoryMb <= 0 {
@@ -71,7 +71,7 @@ func (cap CellCapacity) Validate() error {
 
 func NewCellPresence(
 	cellID, repAddress, repUrl, zone string,
-	capacity CellCapacity,
+	capacity *CellCapacity,
 	rootFSProviders, preloadedRootFSes, placementTags, optionalPlacementTags []string,
 ) CellPresence {
 	var providers []*Provider
@@ -96,7 +96,7 @@ func NewCellPresence(
 	}
 }
 
-func (c CellPresence) Validate() error {
+func (c *CellPresence) Validate() error {
 	var validationError ValidationError
 
 	if c.CellId == "" {
