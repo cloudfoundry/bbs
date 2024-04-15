@@ -4,7 +4,7 @@ type PortChecker interface {
 	GetPort() uint32
 }
 
-func (check CheckDefinition) Validate() error {
+func (check *CheckDefinition) Validate() error {
 	var validationError ValidationError
 
 	checks := check.GetChecks()
@@ -29,7 +29,7 @@ func (check CheckDefinition) Validate() error {
 
 }
 
-func (check Check) GetPortChecker() PortChecker {
+func (check *Check) GetPortChecker() PortChecker {
 	httpCheck := check.GetHttpCheck()
 	tcpCheck := check.GetTcpCheck()
 	if httpCheck != nil && tcpCheck != nil {
@@ -42,7 +42,7 @@ func (check Check) GetPortChecker() PortChecker {
 	}
 }
 
-func (check Check) Validate() error {
+func (check *Check) Validate() error {
 	var validationError ValidationError
 	c := check.GetPortChecker()
 
