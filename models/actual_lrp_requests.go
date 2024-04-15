@@ -7,12 +7,11 @@ func (request *ActualLRPsRequest) Validate() error {
 }
 
 func (request *ActualLRPsRequest) SetIndex(index int32) {
-	request.OptionalIndex = &ActualLRPsRequest_Index{Index: index}
+	request.Index = &index
 }
 
 func (request *ActualLRPsRequest) IndexExists() bool {
-	_, ok := request.GetOptionalIndex().(*ActualLRPsRequest_Index)
-	return ok
+	return request != nil && request.Index != nil
 }
 
 type internalActualLRPsRequest struct {
@@ -158,14 +157,11 @@ func (request *StartActualLRPRequest) Validate() error {
 }
 
 func (request *StartActualLRPRequest) SetRoutable(routable bool) {
-	request.OptionalRoutable = &StartActualLRPRequest_Routable{
-		Routable: routable,
-	}
+	request.Routable = &routable
 }
 
 func (request *StartActualLRPRequest) RoutableExists() bool {
-	_, ok := request.GetOptionalRoutable().(*StartActualLRPRequest_Routable)
-	return ok
+	return request != nil && request.Routable != nil
 }
 
 func (request *CrashActualLRPRequest) Validate() error {
