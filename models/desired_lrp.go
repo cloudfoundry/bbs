@@ -32,7 +32,7 @@ func PreloadedRootFS(stack string) string {
 	}).String()
 }
 
-func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo) DesiredLRP {
+func NewDesiredLRP(schedInfo *DesiredLRPSchedulingInfo, runInfo *DesiredLRPRunInfo) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
@@ -83,7 +83,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 	}
 }
 
-func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
+func (desiredLRP *DesiredLRP) AddRunInfo(runInfo *DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
@@ -523,12 +523,12 @@ func (key *DesiredLRPKey) Validate() error {
 }
 
 func NewDesiredLRPSchedulingInfo(
-	key DesiredLRPKey,
+	key *DesiredLRPKey,
 	annotation string,
 	instances int32,
-	resource DesiredLRPResource,
+	resource *DesiredLRPResource,
 	routes Routes,
-	modTag ModificationTag,
+	modTag *ModificationTag,
 	volumePlacement *VolumePlacement,
 	placementTags []string,
 ) DesiredLRPSchedulingInfo {
@@ -545,7 +545,7 @@ func NewDesiredLRPSchedulingInfo(
 }
 
 func NewDesiredLRPRoutingInfo(
-	key DesiredLRPKey,
+	key *DesiredLRPKey,
 	instances int32,
 	routes *Routes,
 	modTag *ModificationTag,
@@ -628,7 +628,7 @@ func (resource *DesiredLRPResource) Validate() error {
 }
 
 func NewDesiredLRPRunInfo(
-	key DesiredLRPKey,
+	key *DesiredLRPKey,
 	createdAt time.Time,
 	envVars []EnvironmentVariable,
 	cacheDeps []*CachedDependency,
