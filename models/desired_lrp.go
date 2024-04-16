@@ -306,7 +306,7 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 	return &newDesired
 }
 
-func (desired DesiredLRP) Validate() error {
+func (desired *DesiredLRP) Validate() error {
 	var validationError ValidationError
 
 	if desired.GetDomain() == "" {
@@ -404,7 +404,7 @@ func (desired *DesiredLRPUpdate) SetInstances(instances int32) {
 	}
 }
 
-func (desired DesiredLRPUpdate) InstancesExists() bool {
+func (desired *DesiredLRPUpdate) InstancesExists() bool {
 	_, ok := desired.GetOptionalInstances().(*DesiredLRPUpdate_Instances)
 	return ok
 }
@@ -415,12 +415,12 @@ func (desired *DesiredLRPUpdate) SetAnnotation(annotation string) {
 	}
 }
 
-func (desired DesiredLRPUpdate) AnnotationExists() bool {
+func (desired *DesiredLRPUpdate) AnnotationExists() bool {
 	_, ok := desired.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation)
 	return ok
 }
 
-func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup string) bool {
+func (desired *DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup string) bool {
 	if desired.Routes == nil {
 		return false
 	}
@@ -442,7 +442,7 @@ func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup
 	return true
 }
 
-func (desired DesiredLRPUpdate) IsMetricTagsUpdated(existingTags map[string]*MetricTagValue) bool {
+func (desired *DesiredLRPUpdate) IsMetricTagsUpdated(existingTags map[string]*MetricTagValue) bool {
 	if desired.MetricTags == nil {
 		return false
 	}
@@ -486,7 +486,7 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (desired DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
+func (desired *DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
 	var update internalDesiredLRPUpdate
 	if desired.InstancesExists() {
 		i := desired.GetInstances()
@@ -509,7 +509,7 @@ func NewDesiredLRPKey(processGuid, domain, logGuid string) DesiredLRPKey {
 	}
 }
 
-func (key DesiredLRPKey) Validate() error {
+func (key *DesiredLRPKey) Validate() error {
 	var validationError ValidationError
 	if key.GetDomain() == "" {
 		validationError = validationError.Append(ErrInvalidField{"domain"})
@@ -579,7 +579,7 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 	return format.V0
 }
 
-func (s DesiredLRPSchedulingInfo) Validate() error {
+func (s *DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
 	validationError = validationError.Check(s.DesiredLRPKey, s.DesiredLRPResource, s.Routes)
@@ -604,7 +604,7 @@ func NewDesiredLRPResource(memoryMb, diskMb, maxPids int32, rootFs string) Desir
 	}
 }
 
-func (resource DesiredLRPResource) Validate() error {
+func (resource *DesiredLRPResource) Validate() error {
 	var validationError ValidationError
 
 	rootFSURL, err := url.Parse(resource.GetRootFs())
@@ -684,7 +684,7 @@ func NewDesiredLRPRunInfo(
 	}
 }
 
-func (runInfo DesiredLRPRunInfo) Validate() error {
+func (runInfo *DesiredLRPRunInfo) Validate() error {
 	var validationError ValidationError
 
 	validationError = validationError.Check(runInfo.DesiredLRPKey)
@@ -780,6 +780,6 @@ func (*CertificateProperties) Version() format.Version {
 	return format.V0
 }
 
-func (CertificateProperties) Validate() error {
+func (*CertificateProperties) Validate() error {
 	return nil
 }
