@@ -44,13 +44,13 @@ func NewDesiredLRP(schedInfo *DesiredLRPSchedulingInfo, runInfo *DesiredLRPRunIn
 	}
 
 	return DesiredLRP{
-		ProcessGuid:                   schedInfo.ProcessGuid,
-		Domain:                        schedInfo.Domain,
-		LogGuid:                       schedInfo.LogGuid,
-		MemoryMb:                      schedInfo.MemoryMb,
-		DiskMb:                        schedInfo.DiskMb,
-		MaxPids:                       schedInfo.MaxPids,
-		RootFs:                        schedInfo.RootFs,
+		ProcessGuid:                   schedInfo.DesiredLrpKey.ProcessGuid,
+		Domain:                        schedInfo.DesiredLrpKey.Domain,
+		LogGuid:                       schedInfo.DesiredLrpKey.LogGuid,
+		MemoryMb:                      schedInfo.DesiredLrpResource.MemoryMb,
+		DiskMb:                        schedInfo.DesiredLrpResource.DiskMb,
+		MaxPids:                       schedInfo.DesiredLrpResource.MaxPids,
+		RootFs:                        schedInfo.DesiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
 		Routes:                        &schedInfo.Routes,
@@ -399,25 +399,19 @@ func (desired *DesiredLRPUpdate) Validate() error {
 }
 
 func (desired *DesiredLRPUpdate) SetInstances(instances int32) {
-	desired.OptionalInstances = &DesiredLRPUpdate_Instances{
-		Instances: instances,
-	}
+	desired.Instances = &instances
 }
 
 func (desired *DesiredLRPUpdate) InstancesExists() bool {
-	_, ok := desired.GetOptionalInstances().(*DesiredLRPUpdate_Instances)
-	return ok
+	return desired != nil && desired.Instances != nil
 }
 
 func (desired *DesiredLRPUpdate) SetAnnotation(annotation string) {
-	desired.OptionalAnnotation = &DesiredLRPUpdate_Annotation{
-		Annotation: annotation,
-	}
+	desired.Annotation = &annotation
 }
 
 func (desired *DesiredLRPUpdate) AnnotationExists() bool {
-	_, ok := desired.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation)
-	return ok
+	return desired != nil && desired.Annotation != nil
 }
 
 func (desired *DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup string) bool {
@@ -533,10 +527,10 @@ func NewDesiredLRPSchedulingInfo(
 	placementTags []string,
 ) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
-		DesiredLRPKey:      key,
+		DesiredLrpKey:      key,
 		Annotation:         annotation,
 		Instances:          instances,
-		DesiredLRPResource: resource,
+		DesiredLrpResource: resource,
 		Routes:             routes,
 		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
@@ -655,7 +649,7 @@ func NewDesiredLRPRunInfo(
 	logRateLimit *LogRateLimit,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
-		DesiredLRPKey:                 key,
+		DesiredLrpKey:                 key,
 		CreatedAt:                     createdAt.UnixNano(),
 		EnvironmentVariables:          envVars,
 		CachedDependencies:            cacheDeps,
