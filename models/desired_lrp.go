@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
+	"google.golang.org/protobuf/proto"
 )
 
 const PreloadedRootFSScheme = "preloaded"
@@ -35,12 +36,12 @@ func PreloadedRootFS(stack string) string {
 func NewDesiredLRP(schedInfo *DesiredLRPSchedulingInfo, runInfo *DesiredLRPRunInfo) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+		environmentVariables[i] = runInfo.EnvironmentVariables[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
+		egressRules[i] = runInfo.EgressRules[i]
 	}
 
 	return DesiredLRP{
@@ -53,8 +54,8 @@ func NewDesiredLRP(schedInfo *DesiredLRPSchedulingInfo, runInfo *DesiredLRPRunIn
 		RootFs:                        schedInfo.DesiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
-		Routes:                        &schedInfo.Routes,
-		ModificationTag:               &schedInfo.ModificationTag,
+		Routes:                        schedInfo.Routes,
+		ModificationTag:               schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
 		Setup:                         runInfo.Setup,
@@ -86,12 +87,12 @@ func NewDesiredLRP(schedInfo *DesiredLRPSchedulingInfo, runInfo *DesiredLRPRunIn
 func (desiredLRP *DesiredLRP) AddRunInfo(runInfo *DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+		environmentVariables[i] = runInfo.EnvironmentVariables[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
+		egressRules[i] = runInfo.EgressRules[i]
 	}
 
 	desiredLRP.EnvironmentVariables = environmentVariables
@@ -217,9 +218,9 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 	if d.Routes != nil {
 		routes = *d.Routes
 	}
-	var modificationTag ModificationTag
+	var modificationTag *ModificationTag
 	if d.ModificationTag != nil {
-		modificationTag = *d.ModificationTag
+		modificationTag = d.ModificationTag
 	}
 
 	var volumePlacement VolumePlacement
@@ -228,11 +229,14 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 		volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
 	}
 
+	key := d.DesiredLRPKey()
+	resource := d.DesiredLRPResource()
+
 	return NewDesiredLRPSchedulingInfo(
-		d.DesiredLRPKey(),
+		&key,
 		d.Annotation,
 		d.Instances,
-		d.DesiredLRPResource(),
+		&resource,
 		routes,
 		modificationTag,
 		&volumePlacement,
@@ -246,33 +250,37 @@ func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
 		routes = *d.Routes
 	}
 
-	var modificationTag ModificationTag
+	var modificationTag *ModificationTag
 	if d.ModificationTag != nil {
-		modificationTag = *d.ModificationTag
+		modificationTag = d.ModificationTag
 	}
 
+	key := d.DesiredLRPKey()
+
 	return NewDesiredLRPRoutingInfo(
-		d.DesiredLRPKey(),
+		&key,
 		d.Instances,
 		&routes,
-		&modificationTag,
+		modificationTag,
 		d.MetricTags,
 	)
 }
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
-	environmentVariables := make([]EnvironmentVariable, len(d.EnvironmentVariables))
+	environmentVariables := make([]*EnvironmentVariable, len(d.EnvironmentVariables))
 	for i := range d.EnvironmentVariables {
-		environmentVariables[i] = *d.EnvironmentVariables[i]
+		environmentVariables[i] = d.EnvironmentVariables[i]
 	}
 
-	egressRules := make([]SecurityGroupRule, len(d.EgressRules))
+	egressRules := make([]*SecurityGroupRule, len(d.EgressRules))
 	for i := range d.EgressRules {
-		egressRules[i] = *d.EgressRules[i]
+		egressRules[i] = d.EgressRules[i]
 	}
+
+	key := d.DesiredLRPKey()
 
 	return NewDesiredLRPRunInfo(
-		d.DesiredLRPKey(),
+		&key,
 		createdAt,
 		environmentVariables,
 		d.CachedDependencies,
@@ -302,8 +310,8 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 }
 
 func (d *DesiredLRP) Copy() *DesiredLRP {
-	newDesired := *d
-	return &newDesired
+	newDesired := proto.Clone(d).(*DesiredLRP)
+	return newDesired
 }
 
 func (desired *DesiredLRP) Validate() error {
@@ -359,7 +367,8 @@ func (desired *DesiredLRP) Validate() error {
 		}
 	}
 
-	runInfoErrors := desired.DesiredLRPRunInfo(time.Now()).Validate()
+	runInfo := desired.DesiredLRPRunInfo(time.Now())
+	runInfoErrors := runInfo.Validate()
 	if runInfoErrors != nil {
 		validationError = validationError.Append(runInfoErrors)
 	}
@@ -624,7 +633,7 @@ func (resource *DesiredLRPResource) Validate() error {
 func NewDesiredLRPRunInfo(
 	key *DesiredLRPKey,
 	createdAt time.Time,
-	envVars []EnvironmentVariable,
+	envVars []*EnvironmentVariable,
 	cacheDeps []*CachedDependency,
 	setup,
 	action,
@@ -633,7 +642,7 @@ func NewDesiredLRPRunInfo(
 	privileged bool,
 	cpuWeight uint32,
 	ports []uint32,
-	egressRules []SecurityGroupRule,
+	egressRules []*SecurityGroupRule,
 	logSource,
 	metricsGuid string,
 	legacyDownloadUser string,
