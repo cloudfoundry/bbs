@@ -458,13 +458,18 @@ func (db *SQLDB) fetchTasks(ctx context.Context, logger lager.Logger, rows *sql.
 		var guid string
 
 		task, guid, err = db.fetchTaskInternal(logger, rows)
-		if err == models.ErrDeserialize {
-			invalidGuids = append(invalidGuids, guid)
+		if err != nil {
+			if err == models.ErrDeserialize {
+				invalidGuids = append(invalidGuids, guid)
+			}
+
 			if abortOnError {
 				break
 			}
+
 			continue
 		}
+
 		tasks = append(tasks, task)
 		validGuids = append(validGuids, task.TaskGuid)
 	}
