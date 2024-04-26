@@ -4,22 +4,22 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 
-message PortRange {
+message ProtoPortRange {
   uint32 start = 1 [json_name =  "start"];
   uint32 end = 2 [json_name =  "end"];
 }
 
-message ICMPInfo {
+message ProtoICMPInfo {
   int32 type = 1 [json_name =  "type"];
   int32 code = 2 [json_name =  "code"];
 }
 
-message SecurityGroupRule {
+message ProtoSecurityGroupRule {
   string protocol = 1;
   repeated string destinations = 2;
   repeated uint32 ports = 3 [packed = false];
-  PortRange port_range = 4;
-  ICMPInfo icmp_info = 5;
+  ProtoPortRange port_range = 4;
+  ProtoICMPInfo icmp_info = 5;
   bool log = 6 [json_name = "log"];
   repeated string annotations = 7;
 }

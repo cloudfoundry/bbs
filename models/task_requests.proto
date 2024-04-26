@@ -6,42 +6,42 @@ option go_package="code.cloudfoundry.org/bbs/models";
 import "task.proto";
 import "error.proto";
 
-message TaskLifecycleResponse {
-  Error error = 1;
+message ProtoTaskLifecycleResponse {
+  ProtoError error = 1;
 }
 
-message DesireTaskRequest {
-  TaskDefinition task_definition = 1 [json_name = "task_definition"];
+message ProtoDesireTaskRequest {
+  ProtoTaskDefinition task_definition = 1 [json_name = "task_definition"];
   string task_guid = 2 [json_name =  "task_guid"];
   string domain = 3 [json_name =  "domain"];
 }
 
-message StartTaskRequest {
+message ProtoStartTaskRequest {
   string task_guid = 1 [json_name =  "task_guid"];
   string cell_id = 2 [json_name =  "cell_id"];
 }
 
-message StartTaskResponse {
-  Error error = 1;
+message ProtoStartTaskResponse {
+  ProtoError error = 1;
   bool should_start = 2 [json_name =  "should_start"];
 }
 
-message FailTaskRequest {
+message ProtoFailTaskRequest {
   option deprecated = true;
   string task_guid = 1 [json_name =  "task_guid"];
   string failure_reason = 2 [json_name =  "failure_reason"];
 }
 
-message RejectTaskRequest {
+message ProtoRejectTaskRequest {
   string task_guid = 1 [json_name =  "task_guid"];
   string rejection_reason = 2 [json_name =  "rejection_reason"];
 }
 
-message TaskGuidRequest {
+message ProtoTaskGuidRequest {
   string task_guid = 1 [json_name =  "task_guid"];
 }
 
-message CompleteTaskRequest {
+message ProtoCompleteTaskRequest {
   string task_guid = 1 [json_name =  "task_guid"];
   string cell_id = 2 [json_name =  "cell_id"];
   bool failed = 3 [json_name =  "failed"];
@@ -49,7 +49,7 @@ message CompleteTaskRequest {
   string result = 5 [json_name =  "result"];
 }
 
-message TaskCallbackResponse {
+message ProtoTaskCallbackResponse {
   string task_guid = 1 [json_name =  "task_guid"];
   bool failed = 2 [json_name =  "failed"];
   string failure_reason = 3 [json_name =  "failure_reason"];
@@ -58,21 +58,21 @@ message TaskCallbackResponse {
   int64 created_at = 6 [json_name =  "created_at"];
 }
 
-message TasksRequest{
+message ProtoTasksRequest{
   string domain = 1 [json_name =  "domain"];
   string cell_id = 2 [json_name =  "cell_id"];
 }
 
-message TasksResponse{
-  Error error = 1;
-  repeated Task tasks = 2;
+message ProtoTasksResponse{
+  ProtoError error = 1;
+  repeated ProtoTask tasks = 2;
 }
 
-message TaskByGuidRequest{
+message ProtoTaskByGuidRequest{
   string task_guid = 1 [json_name =  "task_guid"];
 }
 
-message TaskResponse{
-  Error error = 1;
-  Task task = 2;
+message ProtoTaskResponse{
+  ProtoError error = 1;
+  ProtoTask task = 2;
 }

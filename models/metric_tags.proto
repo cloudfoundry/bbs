@@ -4,7 +4,7 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 
-message MetricTagValue {
+message ProtoMetricTagValue {
   enum DynamicValue {
     DynamicValueInvalid = 0;
     INDEX               = 1;
