@@ -5,7 +5,7 @@ option go_package="code.cloudfoundry.org/bbs/models";
 
 import "environment_variables.proto";
 
-message Action {
+message ProtoAction {
   // Note: we only expect one of the following set of fields to be
   // set. Previously we used `option (gogoproto.onlyone) = true' but since this
   // is now deprecated and oneof introduces a lot of structural changes, we
@@ -15,19 +15,19 @@ message Action {
   // disadvantages of using multiple optionals without onlyone:
   //   - writing our own GetAction/SetAction methods
   // action oneof {
-    DownloadAction download_action = 1 [json_name="download"];
-    UploadAction upload_action = 2 [json_name = "upload"];
-    RunAction run_action = 3 [json_name = "run"];
-    TimeoutAction timeout_action = 4 [json_name = "timeout"];
-    EmitProgressAction emit_progress_action = 5 [json_name = "emit_progress"];
-    TryAction try_action = 6 [json_name = "try"];
-    ParallelAction parallel_action = 7 [json_name = "parallel"];
-    SerialAction serial_action = 8 [json_name = "serial"];
-    CodependentAction codependent_action = 9 [json_name = "codependent"];
+    ProtoDownloadAction download_action = 1 [json_name="download"];
+    ProtoUploadAction upload_action = 2 [json_name = "upload"];
+    ProtoRunAction run_action = 3 [json_name = "run"];
+    ProtoTimeoutAction timeout_action = 4 [json_name = "timeout"];
+    ProtoEmitProgressAction emit_progress_action = 5 [json_name = "emit_progress"];
+    ProtoTryAction try_action = 6 [json_name = "try"];
+    ProtoParallelAction parallel_action = 7 [json_name = "parallel"];
+    ProtoSerialAction serial_action = 8 [json_name = "serial"];
+    ProtoCodependentAction codependent_action = 9 [json_name = "codependent"];
   // }
 }
 
-message DownloadAction {
+message ProtoDownloadAction {
   string artifact = 1;
   string from = 2 [json_name = "from"];
   string to = 3 [json_name = "to"];
@@ -38,7 +38,7 @@ message DownloadAction {
   string checksum_value = 8;
 }
 
-message UploadAction {
+message ProtoUploadAction {
   string artifact = 1;
   string from = 2 [json_name = "from"];
   string to = 3 [json_name = "to"];
@@ -46,53 +46,53 @@ message UploadAction {
   string user = 5 [json_name = "user"];
 }
 
-message RunAction {
+message ProtoRunAction {
   string path = 1 [json_name = "path"];
   repeated string args = 2;
   string dir = 3;
-  repeated EnvironmentVariable env = 4;
-  ResourceLimits resource_limits = 5;
+  repeated ProtoEnvironmentVariable env = 4;
+  ProtoResourceLimits resource_limits = 5;
   string user = 6 [json_name = "user"];
   string log_source = 7;
   bool suppress_log_output = 8 [json_name = "suppress_log_output"];
 }
 
-message TimeoutAction {
-  Action action = 1;
+message ProtoTimeoutAction {
+  ProtoAction action = 1;
   int64 deprecated_timeout_ns = 2 [json_name = "timeout", deprecated=true];
   string log_source = 3;
   int64 timeout_ms = 4 [json_name = "timeout_ms"];
 }
 
-message EmitProgressAction {
-  Action action = 1;
+message ProtoEmitProgressAction {
+  ProtoAction action = 1;
   string start_message = 2 [json_name = "start_message"];
   string success_message = 3 [json_name = "success_message"];
   string failure_message_prefix = 4 [json_name = "failure_message_prefix"];
   string log_source = 5;
 }
 
-message TryAction {
-  Action action = 1;
+message ProtoTryAction {
+  ProtoAction action = 1;
   string log_source = 2;
 }
 
-message ParallelAction {
-  repeated Action actions = 1;
+message ProtoParallelAction {
+  repeated ProtoAction actions = 1;
   string log_source = 2;
 }
 
-message SerialAction {
-  repeated Action actions = 1;
+message ProtoSerialAction {
+  repeated ProtoAction actions = 1;
   string log_source = 2;
 }
 
-message CodependentAction {
-  repeated Action actions = 1;
+message ProtoCodependentAction {
+  repeated ProtoAction actions = 1;
   string log_source = 2;
 }
 
-message ResourceLimits {
+message ProtoResourceLimits {
   optional uint64 nofile = 1;
   optional uint64 nproc = 2 [deprecated=true];
 }

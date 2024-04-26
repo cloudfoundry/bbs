@@ -6,82 +6,82 @@ option go_package="code.cloudfoundry.org/bbs/models";
 import "actual_lrp.proto";
 import "error.proto";
 
-message ActualLRPLifecycleResponse {
-  Error error = 1;
+message ProtoActualLRPLifecycleResponse {
+  ProtoError error = 1;
 }
 
-message ActualLRPGroupsResponse {
+message ProtoActualLRPGroupsResponse {
   option deprecated = true;
-  Error error = 1;
-  repeated ActualLRPGroup actual_lrp_groups = 2;
+  ProtoError error = 1;
+  repeated ProtoActualLRPGroup actual_lrp_groups = 2;
 }
 
-message ActualLRPGroupResponse {
+message ProtoActualLRPGroupResponse {
   option deprecated = true;
-  Error error = 1;
-  ActualLRPGroup actual_lrp_group = 2;
+  ProtoError error = 1;
+  ProtoActualLRPGroup actual_lrp_group = 2;
 }
 
-message ActualLRPGroupsRequest {
+message ProtoActualLRPGroupsRequest {
   option deprecated = true;
   string domain = 1 [json_name = "domain"];
   string cell_id = 2 [json_name = "cell_id"];
 }
 
-message ActualLRPGroupsByProcessGuidRequest {
+message ProtoActualLRPGroupsByProcessGuidRequest {
   option deprecated = true;
   string process_guid = 1 [json_name = "process_guid"];
 }
 
-message ActualLRPGroupByProcessGuidAndIndexRequest {
+message ProtoActualLRPGroupByProcessGuidAndIndexRequest {
   option deprecated = true;
   string process_guid = 1 [json_name = "process_guid"];
   int32 index = 2 [json_name = "index"];
 }
 
-message ClaimActualLRPRequest {
+message ProtoClaimActualLRPRequest {
   string process_guid = 1 [json_name = "process_guid"];
   int32 index = 2 [json_name = "index"];
-  ActualLRPInstanceKey actual_lrp_instance_key = 3;
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 3;
 }
 
-message StartActualLRPRequest {
-  ActualLRPKey actual_lrp_key = 1;
-  ActualLRPInstanceKey actual_lrp_instance_key = 2;
-  ActualLRPNetInfo actual_lrp_net_info = 3;
-  repeated ActualLRPInternalRoute actual_lrp_internal_routes = 4;
+message ProtoStartActualLRPRequest {
+  ProtoActualLRPKey actual_lrp_key = 1;
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3;
+  repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 4;
   map<string, string> metric_tags = 5;
   optional bool Routable = 6;
   string availability_zone = 7 [json_name= "availability_zone"];
 }
 
-message CrashActualLRPRequest {
-  ActualLRPKey actual_lrp_key = 1;
-  ActualLRPInstanceKey actual_lrp_instance_key = 2;
+message ProtoCrashActualLRPRequest {
+  ProtoActualLRPKey actual_lrp_key = 1;
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
   string error_message = 3 [json_name = "error_message"];
 }
 
-message FailActualLRPRequest {
-  ActualLRPKey actual_lrp_key = 1;
+message ProtoFailActualLRPRequest {
+  ProtoActualLRPKey actual_lrp_key = 1;
   string error_message = 2 [json_name = "error_message"];
 }
 
-message RetireActualLRPRequest {
-  ActualLRPKey actual_lrp_key = 1;
+message ProtoRetireActualLRPRequest {
+  ProtoActualLRPKey actual_lrp_key = 1;
 }
 
-message RemoveActualLRPRequest {
+message ProtoRemoveActualLRPRequest {
   string process_guid = 1 [json_name = "process_guid"];
   int32 index = 2 [json_name = "index"];
-  ActualLRPInstanceKey actual_lrp_instance_key = 3;
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 3;
 }
 
-message ActualLRPsResponse {
-  Error error = 1;
-  repeated ActualLRP actual_lrps = 2;
+message ProtoActualLRPsResponse {
+  ProtoError error = 1;
+  repeated ProtoActualLRP actual_lrps = 2;
 }
 
-message ActualLRPsRequest {
+message ProtoActualLRPsRequest {
   string domain = 1 [json_name = "domain"];
   string cell_id = 2 [json_name = "cell_id"];
   string process_guid = 3 [json_name = "process_guid"];

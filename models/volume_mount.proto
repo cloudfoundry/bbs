@@ -3,12 +3,12 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
-message SharedDevice {
+message ProtoSharedDevice {
   string volume_id = 1 [json_name = "volume_id"];
   string mount_config = 2 [json_name = "mount_config"];
 }
 
-message VolumeMount {
+message ProtoVolumeMount {
   reserved 2, 4, 5;
 
   string driver = 1 [json_name = "driver"];
@@ -16,10 +16,10 @@ message VolumeMount {
   string mode = 6 [json_name = "mode"];
 
   // oneof device {
-    SharedDevice shared = 7 [json_name = "shared"];
+    ProtoSharedDevice shared = 7 [json_name = "shared"];
   // }
 }
 
-message VolumePlacement {
+message ProtoVolumePlacement {
   repeated string driver_names = 1 [json_name = "driver_names"];
 }

@@ -4,7 +4,7 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 
-message ImageLayer {
+message ProtoImageLayer {
   enum DigestAlgorithm {
     DigestAlgorithmInvalid = 0; // not camel cased since it isn't supposed to be used by API users
     SHA256                 = 1;

@@ -6,48 +6,48 @@ option go_package="code.cloudfoundry.org/bbs/models";
 import "desired_lrp.proto";
 import "error.proto";
 
-message DesiredLRPLifecycleResponse {
-  Error error = 1;
+message ProtoDesiredLRPLifecycleResponse {
+  ProtoError error = 1;
 }
 
-message DesiredLRPsResponse {
-  Error error = 1;
-  repeated DesiredLRP desired_lrps = 2;
+message ProtoDesiredLRPsResponse {
+  ProtoError error = 1;
+  repeated ProtoDesiredLRP desired_lrps = 2;
 }
 
-message DesiredLRPsRequest {
+message ProtoDesiredLRPsRequest {
   string domain = 1 [json_name = "domain"];
   repeated string process_guids = 2;
 }
 
-message DesiredLRPResponse {
-  Error error = 1;
-  DesiredLRP desired_lrp = 2;
+message ProtoDesiredLRPResponse {
+  ProtoError error = 1;
+  ProtoDesiredLRP desired_lrp = 2;
 }
 
-message DesiredLRPSchedulingInfosResponse {
-  Error error = 1;
-  repeated DesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2;
+message ProtoDesiredLRPSchedulingInfosResponse {
+  ProtoError error = 1;
+  repeated ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2;
 }
 
-message DesiredLRPSchedulingInfoByProcessGuidResponse {
-  Error error = 1;
-  DesiredLRPSchedulingInfo desired_lrp_scheduling_info = 2;
+message ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
+  ProtoError error = 1;
+  ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_info = 2;
 }
 
-message DesiredLRPByProcessGuidRequest {
+message ProtoDesiredLRPByProcessGuidRequest {
   string process_guid = 1 [json_name = "process_guid"];
 }
 
-message DesireLRPRequest {
-  DesiredLRP desired_lrp = 1;
+message ProtoDesireLRPRequest {
+  ProtoDesiredLRP desired_lrp = 1;
 }
 
-message UpdateDesiredLRPRequest {
+message ProtoUpdateDesiredLRPRequest {
   string process_guid = 1 [json_name = "process_guid"];
-  DesiredLRPUpdate update = 2;
+  ProtoDesiredLRPUpdate update = 2;
 }
 
-message RemoveDesiredLRPRequest {
+message ProtoRemoveDesiredLRPRequest {
   string process_guid = 1 [json_name = "process_guid"];
 }

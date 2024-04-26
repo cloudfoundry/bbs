@@ -4,7 +4,7 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 
-message EnvironmentVariable {
+message ProtoEnvironmentVariable {
   string name = 1 [json_name = "name"];
   string value = 2 [json_name = "value"];
 }

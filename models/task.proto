@@ -14,10 +14,10 @@ import "image_layer.proto";
 import "log_rate_limit.proto";
 import "metric_tags.proto";
 
-message TaskDefinition {
+message ProtoTaskDefinition {
   string root_fs = 1 [json_name = "rootfs"];
-  repeated EnvironmentVariable environment_variables = 2 [json_name = "env"];
-  Action action = 3;
+  repeated ProtoEnvironmentVariable environment_variables = 2 [json_name = "env"];
+  ProtoAction action = 3;
   int32 disk_mb = 4 [json_name =  "disk_mb"];
   int32 memory_mb = 5 [json_name =  "memory_mb"];
   uint32 cpu_weight = 6 [json_name =  "cpu_weight"];
@@ -28,23 +28,23 @@ message TaskDefinition {
   string result_file = 11 [json_name =  "result_file"];
   string completion_callback_url = 12;
   string annotation = 13;
-  repeated SecurityGroupRule egress_rules = 14;
-  repeated CachedDependency cached_dependencies = 15;
+  repeated ProtoSecurityGroupRule egress_rules = 14;
+  repeated ProtoCachedDependency cached_dependencies = 15;
   string legacy_download_user = 16 [deprecated=true];
   string trusted_system_certificates_path = 17;
-  repeated VolumeMount volume_mounts = 18;
-  Network network = 19;
+  repeated ProtoVolumeMount volume_mounts = 18;
+  ProtoNetwork network = 19;
   repeated string placement_tags = 20;
   int32 max_pids = 21 [json_name =  "max_pids"];
-  CertificateProperties certificate_properties = 22;
+  ProtoCertificateProperties certificate_properties = 22;
   string image_username = 23 [json_name =  "image_username"];
   string image_password = 24 [json_name =  "image_password"];
-  repeated ImageLayer image_layers = 25;
-  LogRateLimit log_rate_limit = 26;
-  map<string, MetricTagValue> metric_tags = 27;
+  repeated ProtoImageLayer image_layers = 25;
+  ProtoLogRateLimit log_rate_limit = 26;
+  map<string, ProtoMetricTagValue> metric_tags = 27;
 }
 
-message Task {
+message ProtoTask {
   enum State {
     Invalid = 0;
     Pending = 1;
@@ -53,7 +53,7 @@ message Task {
     Resolving = 4;
   }
 
-  TaskDefinition task_definition = 1 [json_name = ""];
+  ProtoTaskDefinition task_definition = 1 [json_name = ""];
 
   string task_guid = 2 [json_name =  "task_guid"];
   string domain = 3 [json_name =  "domain"];

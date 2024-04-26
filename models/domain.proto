@@ -5,16 +5,16 @@ option go_package="code.cloudfoundry.org/bbs/models";
 
 import "error.proto";
 
-message DomainsResponse {
-  Error error = 1;
+message ProtoDomainsResponse {
+  ProtoError error = 1;
   repeated string domains = 2;
 }
 
-message UpsertDomainResponse {
-  Error error = 1;
+message ProtoUpsertDomainResponse {
+  ProtoError error = 1;
 }
 
-message UpsertDomainRequest {
+message ProtoUpsertDomainRequest {
   string domain = 1 [json_name = "domain"];
   uint32 ttl = 2 [json_name = "ttl"];
 }
