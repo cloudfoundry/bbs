@@ -36,12 +36,12 @@ message ProtoActualLRPNetInfo {
   string instance_address = 3;
 
   enum PreferredAddress {
-    UNKNOWN   = 0;
-    INSTANCE  = 1;
-    HOST      = 2;
+    UNKNOWN   = 0 [(bbs.bbs_enumvalue_customname) = "PreferredAddressUnknown"];
+    INSTANCE  = 1 [(bbs.bbs_enumvalue_customname) = "PreferredAddressInstance"];
+    HOST      = 2 [(bbs.bbs_enumvalue_customname) = "PreferredAddressHost"];
   }
 
-  PreferredAddress preferred_address = 4 [json_name = "preferred_address", (bbs.bbs_json_name) = "PreferredAddressTesting"];
+  PreferredAddress preferred_address = 4 [json_name = "preferred_address"];
 }
 
 message ProtoActualLRPInternalRoute {
@@ -50,9 +50,9 @@ message ProtoActualLRPInternalRoute {
 
 message ProtoActualLRP {
   enum Presence {
-    ORDINARY   = 0;
-    EVACUATING = 1;
-    SUSPECT    = 2;
+    ORDINARY   = 0 [(bbs.bbs_enumvalue_customname) = "Ordinary"];
+    EVACUATING = 1 [(bbs.bbs_enumvalue_customname) = "Evacuating"];
+    SUSPECT    = 2 [(bbs.bbs_enumvalue_customname) = "Suspect"];
   }
 
   ProtoActualLRPKey actual_lrp_key = 1;

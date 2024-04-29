@@ -7,26 +7,26 @@ option go_package="code.cloudfoundry.org/bbs/models";
 message ProtoImageLayer {
   enum DigestAlgorithm {
     DigestAlgorithmInvalid = 0; // not camel cased since it isn't supposed to be used by API users
-    SHA256                 = 1;
-    SHA512                 = 2 [deprecated=true];
+    SHA256                 = 1 [(bbs.bbs_enumvalue_customname) = "DigestAlgorithmSha256"];
+    SHA512                 = 2 [(bbs.bbs_enumvalue_customname) = "DigestAlgorithmSha512", deprecated=true];
   }
 
   enum MediaType {
     MediaTypeInvalid = 0; // not camel cased since it isn't supposed to be used by API users
-    TGZ              = 1;
-    TAR              = 2;
-    ZIP              = 3;
+    TGZ              = 1 [(bbs.bbs_enumvalue_customname) = "MediaTypeTgz"];
+    TAR              = 2 [(bbs.bbs_enumvalue_customname) = "MediaTypeTar"];
+    ZIP              = 3 [(bbs.bbs_enumvalue_customname) = "MediaTypeZip"];
   }
 
   enum Type {
     LayerTypeInvalid = 0; // not camel cased since it isn't supposed to be used by API users
-    SHARED           = 1;
-    EXCLUSIVE        = 2;
+    SHARED           = 1 [(bbs.bbs_enumvalue_customname) = "LayerTypeShared"];
+    EXCLUSIVE        = 2 [(bbs.bbs_enumvalue_customname) = "LayerTypeExclusive"];
   }
 
   string name                      = 1;
-  string url                       = 2 [json_name =  "url"];
-  string destination_path          = 3 [json_name =  "destination_path"];
+  string url                       = 2 [json_name = "url"];
+  string destination_path          = 3 [json_name = "destination_path"];
   Type layer_type                  = 4 [json_name = "layer_type"];
   MediaType media_type             = 5 [json_name = "media_type"];
   DigestAlgorithm digest_algorithm = 6;
