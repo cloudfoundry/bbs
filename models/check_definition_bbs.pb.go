@@ -13,6 +13,49 @@ type CheckDefinition struct {
 	ReadinessChecks []*Check
 }
 
+func (this *CheckDefinition) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CheckDefinition)
+	if !ok {
+		that2, ok := that.(CheckDefinition)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if len(this.Checks) != len(that1.Checks) {
+		return false
+	}
+	for i := range this.Checks {
+		if !this.Checks[i].Equal(that1.Checks[i]) {
+			return false
+		}
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if len(this.ReadinessChecks) != len(that1.ReadinessChecks) {
+		return false
+	}
+	for i := range this.ReadinessChecks {
+		if !this.ReadinessChecks[i].Equal(that1.ReadinessChecks[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (m *CheckDefinition) GetChecks() []*Check {
 	if m != nil {
 		return m.Checks
@@ -69,6 +112,36 @@ type Check struct {
 	HttpCheck *HTTPCheck
 }
 
+func (this *Check) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Check)
+	if !ok {
+		that2, ok := that.(Check)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.TcpCheck.Equal(that1.TcpCheck) {
+		return false
+	}
+	if !this.HttpCheck.Equal(that1.HttpCheck) {
+		return false
+	}
+	return true
+}
 func (m *Check) GetTcpCheck() *TCPCheck {
 	if m != nil {
 		return m.TcpCheck
@@ -114,6 +187,39 @@ type TCPCheck struct {
 	IntervalMs       uint64
 }
 
+func (this *TCPCheck) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TCPCheck)
+	if !ok {
+		that2, ok := that.(TCPCheck)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Port != that1.Port {
+		return false
+	}
+	if this.ConnectTimeoutMs != that1.ConnectTimeoutMs {
+		return false
+	}
+	if this.IntervalMs != that1.IntervalMs {
+		return false
+	}
+	return true
+}
 func (m *TCPCheck) GetPort() uint32 {
 	if m != nil {
 		return m.Port
@@ -172,6 +278,42 @@ type HTTPCheck struct {
 	IntervalMs       uint64
 }
 
+func (this *HTTPCheck) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*HTTPCheck)
+	if !ok {
+		that2, ok := that.(HTTPCheck)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Port != that1.Port {
+		return false
+	}
+	if this.RequestTimeoutMs != that1.RequestTimeoutMs {
+		return false
+	}
+	if this.Path != that1.Path {
+		return false
+	}
+	if this.IntervalMs != that1.IntervalMs {
+		return false
+	}
+	return true
+}
 func (m *HTTPCheck) GetPort() uint32 {
 	if m != nil {
 		return m.Port

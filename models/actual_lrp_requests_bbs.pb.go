@@ -11,6 +11,33 @@ type ActualLRPLifecycleResponse struct {
 	Error *Error
 }
 
+func (this *ActualLRPLifecycleResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPLifecycleResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPLifecycleResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPLifecycleResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -43,6 +70,41 @@ type ActualLRPGroupsResponse struct {
 	ActualLrpGroups []*ActualLRPGroup
 }
 
+func (this *ActualLRPGroupsResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupsResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.ActualLrpGroups) != len(that1.ActualLrpGroups) {
+		return false
+	}
+	for i := range this.ActualLrpGroups {
+		if !this.ActualLrpGroups[i].Equal(that1.ActualLrpGroups[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (m *ActualLRPGroupsResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -87,6 +149,36 @@ type ActualLRPGroupResponse struct {
 	ActualLrpGroup *ActualLRPGroup
 }
 
+func (this *ActualLRPGroupResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPGroupResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -131,6 +223,36 @@ type ActualLRPGroupsRequest struct {
 	CellId string
 }
 
+func (this *ActualLRPGroupsRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupsRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupsRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPGroupsRequest) GetDomain() string {
 	if m != nil {
 		return m.Domain
@@ -174,6 +296,33 @@ type ActualLRPGroupsByProcessGuidRequest struct {
 	ProcessGuid string
 }
 
+func (this *ActualLRPGroupsByProcessGuidRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupsByProcessGuidRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupsByProcessGuidRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPGroupsByProcessGuidRequest) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -206,6 +355,36 @@ type ActualLRPGroupByProcessGuidAndIndexRequest struct {
 	Index       int32
 }
 
+func (this *ActualLRPGroupByProcessGuidAndIndexRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupByProcessGuidAndIndexRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupByProcessGuidAndIndexRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPGroupByProcessGuidAndIndexRequest) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -251,6 +430,39 @@ type ClaimActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (this *ClaimActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ClaimActualLRPRequest)
+	if !ok {
+		that2, ok := that.(ClaimActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	return true
+}
 func (m *ClaimActualLRPRequest) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -312,6 +524,61 @@ type StartActualLRPRequest struct {
 	AvailabilityZone        string
 }
 
+func (this *StartActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*StartActualLRPRequest)
+	if !ok {
+		that2, ok := that.(StartActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+		return false
+	}
+	if len(this.ActualLrpInternalRoutes) != len(that1.ActualLrpInternalRoutes) {
+		return false
+	}
+	for i := range this.ActualLrpInternalRoutes {
+		if !this.ActualLrpInternalRoutes[i].Equal(that1.ActualLrpInternalRoutes[i]) {
+			return false
+		}
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	if this.Routable != that1.Routable {
+		return false
+	}
+	if this.AvailabilityZone != that1.AvailabilityZone {
+		return false
+	}
+	return true
+}
 func (m *StartActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -417,6 +684,39 @@ type CrashActualLRPRequest struct {
 	ErrorMessage         string
 }
 
+func (this *CrashActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CrashActualLRPRequest)
+	if !ok {
+		that2, ok := that.(CrashActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if this.ErrorMessage != that1.ErrorMessage {
+		return false
+	}
+	return true
+}
 func (m *CrashActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -473,6 +773,36 @@ type FailActualLRPRequest struct {
 	ErrorMessage string
 }
 
+func (this *FailActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*FailActualLRPRequest)
+	if !ok {
+		that2, ok := that.(FailActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if this.ErrorMessage != that1.ErrorMessage {
+		return false
+	}
+	return true
+}
 func (m *FailActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -516,6 +846,33 @@ type RetireActualLRPRequest struct {
 	ActualLrpKey *ActualLRPKey
 }
 
+func (this *RetireActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RetireActualLRPRequest)
+	if !ok {
+		that2, ok := that.(RetireActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	return true
+}
 func (m *RetireActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -549,6 +906,39 @@ type RemoveActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (this *RemoveActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RemoveActualLRPRequest)
+	if !ok {
+		that2, ok := that.(RemoveActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	return true
+}
 func (m *RemoveActualLRPRequest) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -605,6 +995,41 @@ type ActualLRPsResponse struct {
 	ActualLrps []*ActualLRP
 }
 
+func (this *ActualLRPsResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPsResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.ActualLrps) != len(that1.ActualLrps) {
+		return false
+	}
+	for i := range this.ActualLrps {
+		if !this.ActualLrps[i].Equal(that1.ActualLrps[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (m *ActualLRPsResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -651,6 +1076,42 @@ type ActualLRPsRequest struct {
 	Index       int32
 }
 
+func (this *ActualLRPsRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPsRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPsRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPsRequest) GetDomain() string {
 	if m != nil {
 		return m.Domain

@@ -11,6 +11,38 @@ type CertificateProperties struct {
 	OrganizationalUnit []string
 }
 
+func (this *CertificateProperties) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CertificateProperties)
+	if !ok {
+		that2, ok := that.(CertificateProperties)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if len(this.OrganizationalUnit) != len(that1.OrganizationalUnit) {
+		return false
+	}
+	for i := range this.OrganizationalUnit {
+		if this.OrganizationalUnit[i] != that1.OrganizationalUnit[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *CertificateProperties) GetOrganizationalUnit() []string {
 	if m != nil {
 		return m.OrganizationalUnit

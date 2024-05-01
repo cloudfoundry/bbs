@@ -12,6 +12,36 @@ type ModificationTag struct {
 	Index uint32
 }
 
+func (this *ModificationTag) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ModificationTag)
+	if !ok {
+		that2, ok := that.(ModificationTag)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Epoch != that1.Epoch {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	return true
+}
 func (m *ModificationTag) GetEpoch() string {
 	if m != nil {
 		return m.Epoch

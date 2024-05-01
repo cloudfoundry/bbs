@@ -12,6 +12,36 @@ type EvacuationResponse struct {
 	KeepContainer bool
 }
 
+func (this *EvacuationResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EvacuationResponse)
+	if !ok {
+		that2, ok := that.(EvacuationResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if this.KeepContainer != that1.KeepContainer {
+		return false
+	}
+	return true
+}
 func (m *EvacuationResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -56,6 +86,36 @@ type EvacuateClaimedActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (this *EvacuateClaimedActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EvacuateClaimedActualLRPRequest)
+	if !ok {
+		that2, ok := that.(EvacuateClaimedActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	return true
+}
 func (m *EvacuateClaimedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -105,6 +165,61 @@ type EvacuateRunningActualLRPRequest struct {
 	AvailabilityZone        string
 }
 
+func (this *EvacuateRunningActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EvacuateRunningActualLRPRequest)
+	if !ok {
+		that2, ok := that.(EvacuateRunningActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+		return false
+	}
+	if len(this.ActualLrpInternalRoutes) != len(that1.ActualLrpInternalRoutes) {
+		return false
+	}
+	for i := range this.ActualLrpInternalRoutes {
+		if !this.ActualLrpInternalRoutes[i].Equal(that1.ActualLrpInternalRoutes[i]) {
+			return false
+		}
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	if this.ProtoRoutable != that1.ProtoRoutable {
+		return false
+	}
+	if this.AvailabilityZone != that1.AvailabilityZone {
+		return false
+	}
+	return true
+}
 func (m *EvacuateRunningActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -209,6 +324,36 @@ type EvacuateStoppedActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (this *EvacuateStoppedActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EvacuateStoppedActualLRPRequest)
+	if !ok {
+		that2, ok := that.(EvacuateStoppedActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	return true
+}
 func (m *EvacuateStoppedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -254,6 +399,39 @@ type EvacuateCrashedActualLRPRequest struct {
 	ErrorMessage         string
 }
 
+func (this *EvacuateCrashedActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EvacuateCrashedActualLRPRequest)
+	if !ok {
+		that2, ok := that.(EvacuateCrashedActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if this.ErrorMessage != that1.ErrorMessage {
+		return false
+	}
+	return true
+}
 func (m *EvacuateCrashedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -310,6 +488,36 @@ type RemoveEvacuatingActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (this *RemoveEvacuatingActualLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RemoveEvacuatingActualLRPRequest)
+	if !ok {
+		that2, ok := that.(RemoveEvacuatingActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	return true
+}
 func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -353,6 +561,33 @@ type RemoveEvacuatingActualLRPResponse struct {
 	Error *Error
 }
 
+func (this *RemoveEvacuatingActualLRPResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RemoveEvacuatingActualLRPResponse)
+	if !ok {
+		that2, ok := that.(RemoveEvacuatingActualLRPResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	return true
+}
 func (m *RemoveEvacuatingActualLRPResponse) GetError() *Error {
 	if m != nil {
 		return m.Error

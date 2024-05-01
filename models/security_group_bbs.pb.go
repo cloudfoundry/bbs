@@ -12,6 +12,36 @@ type PortRange struct {
 	End   uint32
 }
 
+func (this *PortRange) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*PortRange)
+	if !ok {
+		that2, ok := that.(PortRange)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Start != that1.Start {
+		return false
+	}
+	if this.End != that1.End {
+		return false
+	}
+	return true
+}
 func (m *PortRange) GetStart() uint32 {
 	if m != nil {
 		return m.Start
@@ -56,6 +86,36 @@ type ICMPInfo struct {
 	Code int32
 }
 
+func (this *ICMPInfo) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ICMPInfo)
+	if !ok {
+		that2, ok := that.(ICMPInfo)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Type != that1.Type {
+		return false
+	}
+	if this.Code != that1.Code {
+		return false
+	}
+	return true
+}
 func (m *ICMPInfo) GetType() int32 {
 	if m != nil {
 		return m.Type
@@ -105,6 +165,66 @@ type SecurityGroupRule struct {
 	Annotations  []string
 }
 
+func (this *SecurityGroupRule) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*SecurityGroupRule)
+	if !ok {
+		that2, ok := that.(SecurityGroupRule)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Protocol != that1.Protocol {
+		return false
+	}
+	if len(this.Destinations) != len(that1.Destinations) {
+		return false
+	}
+	for i := range this.Destinations {
+		if this.Destinations[i] != that1.Destinations[i] {
+			return false
+		}
+	}
+	if len(this.Ports) != len(that1.Ports) {
+		return false
+	}
+	for i := range this.Ports {
+		if this.Ports[i] != that1.Ports[i] {
+			return false
+		}
+	}
+	if !this.PortRange.Equal(that1.PortRange) {
+		return false
+	}
+	if !this.IcmpInfo.Equal(that1.IcmpInfo) {
+		return false
+	}
+	if this.Log != that1.Log {
+		return false
+	}
+	if len(this.Annotations) != len(that1.Annotations) {
+		return false
+	}
+	for i := range this.Annotations {
+		if this.Annotations[i] != that1.Annotations[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *SecurityGroupRule) GetProtocol() string {
 	if m != nil {
 		return m.Protocol

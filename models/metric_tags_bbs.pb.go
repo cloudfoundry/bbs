@@ -46,6 +46,36 @@ type MetricTagValue struct {
 	Dynamic MetricTagValue_DynamicValue
 }
 
+func (this *MetricTagValue) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MetricTagValue)
+	if !ok {
+		that2, ok := that.(MetricTagValue)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Static != that1.Static {
+		return false
+	}
+	if this.Dynamic != that1.Dynamic {
+		return false
+	}
+	return true
+}
 func (m *MetricTagValue) GetStatic() string {
 	if m != nil {
 		return m.Static

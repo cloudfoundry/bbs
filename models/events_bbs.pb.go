@@ -11,6 +11,33 @@ type ActualLRPCreatedEvent struct {
 	ActualLrpGroup *ActualLRPGroup
 }
 
+func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPCreatedEvent)
+	if !ok {
+		that2, ok := that.(ActualLRPCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPCreatedEvent) GetActualLrpGroup() *ActualLRPGroup {
 	if m != nil {
 		return m.ActualLrpGroup
@@ -43,6 +70,36 @@ type ActualLRPChangedEvent struct {
 	After  *ActualLRPGroup
 }
 
+func (this *ActualLRPChangedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPChangedEvent)
+	if !ok {
+		that2, ok := that.(ActualLRPChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPChangedEvent) GetBefore() *ActualLRPGroup {
 	if m != nil {
 		return m.Before
@@ -86,6 +143,33 @@ type ActualLRPRemovedEvent struct {
 	ActualLrpGroup *ActualLRPGroup
 }
 
+func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPRemovedEvent)
+	if !ok {
+		that2, ok := that.(ActualLRPRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPRemovedEvent) GetActualLrpGroup() *ActualLRPGroup {
 	if m != nil {
 		return m.ActualLrpGroup
@@ -118,6 +202,36 @@ type ActualLRPInstanceCreatedEvent struct {
 	TraceId   string
 }
 
+func (this *ActualLRPInstanceCreatedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPInstanceCreatedEvent)
+	if !ok {
+		that2, ok := that.(ActualLRPInstanceCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrp.Equal(that1.ActualLrp) {
+		return false
+	}
+	if this.TraceId != that1.TraceId {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPInstanceCreatedEvent) GetActualLrp() *ActualLRP {
 	if m != nil {
 		return m.ActualLrp
@@ -170,6 +284,60 @@ type ActualLRPInfo struct {
 	AvailabilityZone string
 }
 
+func (this *ActualLRPInfo) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPInfo)
+	if !ok {
+		that2, ok := that.(ActualLRPInfo)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+		return false
+	}
+	if this.CrashCount != that1.CrashCount {
+		return false
+	}
+	if this.CrashReason != that1.CrashReason {
+		return false
+	}
+	if this.State != that1.State {
+		return false
+	}
+	if this.PlacementError != that1.PlacementError {
+		return false
+	}
+	if this.Since != that1.Since {
+		return false
+	}
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
+		return false
+	}
+	if this.Presence != that1.Presence {
+		return false
+	}
+	if this.ProtoRoutable != that1.ProtoRoutable {
+		return false
+	}
+	if this.AvailabilityZone != that1.AvailabilityZone {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPInfo) GetActualLrpNetInfo() *ActualLRPNetInfo {
 	if m != nil {
 		return m.ActualLrpNetInfo
@@ -313,6 +481,45 @@ type ActualLRPInstanceChangedEvent struct {
 	TraceId              string
 }
 
+func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPInstanceChangedEvent)
+	if !ok {
+		that2, ok := that.(ActualLRPInstanceChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	if this.TraceId != that1.TraceId {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPInstanceChangedEvent) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -393,6 +600,36 @@ type ActualLRPInstanceRemovedEvent struct {
 	TraceId   string
 }
 
+func (this *ActualLRPInstanceRemovedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPInstanceRemovedEvent)
+	if !ok {
+		that2, ok := that.(ActualLRPInstanceRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrp.Equal(that1.ActualLrp) {
+		return false
+	}
+	if this.TraceId != that1.TraceId {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPInstanceRemovedEvent) GetActualLrp() *ActualLRP {
 	if m != nil {
 		return m.ActualLrp
@@ -437,6 +674,36 @@ type DesiredLRPCreatedEvent struct {
 	TraceId    string
 }
 
+func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPCreatedEvent)
+	if !ok {
+		that2, ok := that.(DesiredLRPCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+		return false
+	}
+	if this.TraceId != that1.TraceId {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPCreatedEvent) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
 		return m.DesiredLrp
@@ -482,6 +749,39 @@ type DesiredLRPChangedEvent struct {
 	TraceId string
 }
 
+func (this *DesiredLRPChangedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPChangedEvent)
+	if !ok {
+		that2, ok := that.(DesiredLRPChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	if this.TraceId != that1.TraceId {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPChangedEvent) GetBefore() *DesiredLRP {
 	if m != nil {
 		return m.Before
@@ -538,6 +838,36 @@ type DesiredLRPRemovedEvent struct {
 	TraceId    string
 }
 
+func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPRemovedEvent)
+	if !ok {
+		that2, ok := that.(DesiredLRPRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+		return false
+	}
+	if this.TraceId != that1.TraceId {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
 		return m.DesiredLrp
@@ -585,6 +915,45 @@ type ActualLRPCrashedEvent struct {
 	Since                int64
 }
 
+func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPCrashedEvent)
+	if !ok {
+		that2, ok := that.(ActualLRPCrashedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if this.CrashCount != that1.CrashCount {
+		return false
+	}
+	if this.CrashReason != that1.CrashReason {
+		return false
+	}
+	if this.Since != that1.Since {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPCrashedEvent) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey
@@ -664,6 +1033,33 @@ type EventsByCellId struct {
 	CellId string
 }
 
+func (this *EventsByCellId) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventsByCellId)
+	if !ok {
+		that2, ok := that.(EventsByCellId)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.CellId != that1.CellId {
+		return false
+	}
+	return true
+}
 func (m *EventsByCellId) GetCellId() string {
 	if m != nil {
 		return m.CellId
@@ -695,6 +1091,33 @@ type TaskCreatedEvent struct {
 	Task *Task
 }
 
+func (this *TaskCreatedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskCreatedEvent)
+	if !ok {
+		that2, ok := that.(TaskCreatedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Task.Equal(that1.Task) {
+		return false
+	}
+	return true
+}
 func (m *TaskCreatedEvent) GetTask() *Task {
 	if m != nil {
 		return m.Task
@@ -727,6 +1150,36 @@ type TaskChangedEvent struct {
 	After  *Task
 }
 
+func (this *TaskChangedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskChangedEvent)
+	if !ok {
+		that2, ok := that.(TaskChangedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Before.Equal(that1.Before) {
+		return false
+	}
+	if !this.After.Equal(that1.After) {
+		return false
+	}
+	return true
+}
 func (m *TaskChangedEvent) GetBefore() *Task {
 	if m != nil {
 		return m.Before
@@ -770,6 +1223,33 @@ type TaskRemovedEvent struct {
 	Task *Task
 }
 
+func (this *TaskRemovedEvent) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskRemovedEvent)
+	if !ok {
+		that2, ok := that.(TaskRemovedEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Task.Equal(that1.Task) {
+		return false
+	}
+	return true
+}
 func (m *TaskRemovedEvent) GetTask() *Task {
 	if m != nil {
 		return m.Task

@@ -112,6 +112,36 @@ type Error struct {
 	Message string
 }
 
+func (this *Error) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Error)
+	if !ok {
+		that2, ok := that.(Error)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Type != that1.Type {
+		return false
+	}
+	if this.Message != that1.Message {
+		return false
+	}
+	return true
+}
 func (m *Error) GetType() Error_Type {
 	if m != nil {
 		return m.Type

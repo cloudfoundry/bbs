@@ -41,6 +41,146 @@ type TaskDefinition struct {
 	MetricTags                    map[string]*ProtoMetricTagValue
 }
 
+func (this *TaskDefinition) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskDefinition)
+	if !ok {
+		that2, ok := that.(TaskDefinition)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.RootFs != that1.RootFs {
+		return false
+	}
+	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
+		return false
+	}
+	for i := range this.EnvironmentVariables {
+		if !this.EnvironmentVariables[i].Equal(that1.EnvironmentVariables[i]) {
+			return false
+		}
+	}
+	if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	if this.DiskMb != that1.DiskMb {
+		return false
+	}
+	if this.MemoryMb != that1.MemoryMb {
+		return false
+	}
+	if this.CpuWeight != that1.CpuWeight {
+		return false
+	}
+	if this.Privileged != that1.Privileged {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.LogGuid != that1.LogGuid {
+		return false
+	}
+	if this.MetricsGuid != that1.MetricsGuid {
+		return false
+	}
+	if this.ResultFile != that1.ResultFile {
+		return false
+	}
+	if this.CompletionCallbackUrl != that1.CompletionCallbackUrl {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
+		return false
+	}
+	if len(this.EgressRules) != len(that1.EgressRules) {
+		return false
+	}
+	for i := range this.EgressRules {
+		if !this.EgressRules[i].Equal(that1.EgressRules[i]) {
+			return false
+		}
+	}
+	if len(this.CachedDependencies) != len(that1.CachedDependencies) {
+		return false
+	}
+	for i := range this.CachedDependencies {
+		if !this.CachedDependencies[i].Equal(that1.CachedDependencies[i]) {
+			return false
+		}
+	}
+	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
+		return false
+	}
+	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
+		return false
+	}
+	if len(this.VolumeMounts) != len(that1.VolumeMounts) {
+		return false
+	}
+	for i := range this.VolumeMounts {
+		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
+			return false
+		}
+	}
+	if !this.Network.Equal(that1.Network) {
+		return false
+	}
+	if len(this.PlacementTags) != len(that1.PlacementTags) {
+		return false
+	}
+	for i := range this.PlacementTags {
+		if this.PlacementTags[i] != that1.PlacementTags[i] {
+			return false
+		}
+	}
+	if this.MaxPids != that1.MaxPids {
+		return false
+	}
+	if !this.CertificateProperties.Equal(that1.CertificateProperties) {
+		return false
+	}
+	if this.ImageUsername != that1.ImageUsername {
+		return false
+	}
+	if this.ImagePassword != that1.ImagePassword {
+		return false
+	}
+	if len(this.ImageLayers) != len(that1.ImageLayers) {
+		return false
+	}
+	for i := range this.ImageLayers {
+		if !this.ImageLayers[i].Equal(that1.ImageLayers[i]) {
+			return false
+		}
+	}
+	if !this.LogRateLimit.Equal(that1.LogRateLimit) {
+		return false
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *TaskDefinition) GetRootFs() string {
 	if m != nil {
 		return m.RootFs
@@ -434,6 +574,69 @@ type Task struct {
 	RejectionReason  string
 }
 
+func (this *Task) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Task)
+	if !ok {
+		that2, ok := that.(Task)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.TaskDefinition.Equal(that1.TaskDefinition) {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.CreatedAt != that1.CreatedAt {
+		return false
+	}
+	if this.UpdatedAt != that1.UpdatedAt {
+		return false
+	}
+	if this.FirstCompletedAt != that1.FirstCompletedAt {
+		return false
+	}
+	if this.State != that1.State {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	if this.Result != that1.Result {
+		return false
+	}
+	if this.Failed != that1.Failed {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	if this.RejectionCount != that1.RejectionCount {
+		return false
+	}
+	if this.RejectionReason != that1.RejectionReason {
+		return false
+	}
+	return true
+}
 func (m *Task) GetTaskDefinition() *TaskDefinition {
 	if m != nil {
 		return m.TaskDefinition

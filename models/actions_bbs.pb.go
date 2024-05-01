@@ -19,6 +19,57 @@ type Action struct {
 	CodependentAction  *CodependentAction
 }
 
+func (this *Action) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Action)
+	if !ok {
+		that2, ok := that.(Action)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.DownloadAction.Equal(that1.DownloadAction) {
+		return false
+	}
+	if !this.UploadAction.Equal(that1.UploadAction) {
+		return false
+	}
+	if !this.RunAction.Equal(that1.RunAction) {
+		return false
+	}
+	if !this.TimeoutAction.Equal(that1.TimeoutAction) {
+		return false
+	}
+	if !this.EmitProgressAction.Equal(that1.EmitProgressAction) {
+		return false
+	}
+	if !this.TryAction.Equal(that1.TryAction) {
+		return false
+	}
+	if !this.ParallelAction.Equal(that1.ParallelAction) {
+		return false
+	}
+	if !this.SerialAction.Equal(that1.SerialAction) {
+		return false
+	}
+	if !this.CodependentAction.Equal(that1.CodependentAction) {
+		return false
+	}
+	return true
+}
 func (m *Action) GetDownloadAction() *DownloadAction {
 	if m != nil {
 		return m.DownloadAction
@@ -153,6 +204,54 @@ type DownloadAction struct {
 	ChecksumValue     string
 }
 
+func (this *DownloadAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DownloadAction)
+	if !ok {
+		that2, ok := that.(DownloadAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Artifact != that1.Artifact {
+		return false
+	}
+	if this.From != that1.From {
+		return false
+	}
+	if this.To != that1.To {
+		return false
+	}
+	if this.CacheKey != that1.CacheKey {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.User != that1.User {
+		return false
+	}
+	if this.ChecksumAlgorithm != that1.ChecksumAlgorithm {
+		return false
+	}
+	if this.ChecksumValue != that1.ChecksumValue {
+		return false
+	}
+	return true
+}
 func (m *DownloadAction) GetArtifact() string {
 	if m != nil {
 		return m.Artifact
@@ -272,6 +371,45 @@ type UploadAction struct {
 	User      string
 }
 
+func (this *UploadAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*UploadAction)
+	if !ok {
+		that2, ok := that.(UploadAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Artifact != that1.Artifact {
+		return false
+	}
+	if this.From != that1.From {
+		return false
+	}
+	if this.To != that1.To {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.User != that1.User {
+		return false
+	}
+	return true
+}
 func (m *UploadAction) GetArtifact() string {
 	if m != nil {
 		return m.Artifact
@@ -358,6 +496,64 @@ type RunAction struct {
 	SuppressLogOutput bool
 }
 
+func (this *RunAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RunAction)
+	if !ok {
+		that2, ok := that.(RunAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Path != that1.Path {
+		return false
+	}
+	if len(this.Args) != len(that1.Args) {
+		return false
+	}
+	for i := range this.Args {
+		if this.Args[i] != that1.Args[i] {
+			return false
+		}
+	}
+	if this.Dir != that1.Dir {
+		return false
+	}
+	if len(this.Env) != len(that1.Env) {
+		return false
+	}
+	for i := range this.Env {
+		if !this.Env[i].Equal(that1.Env[i]) {
+			return false
+		}
+	}
+	if !this.ResourceLimits.Equal(that1.ResourceLimits) {
+		return false
+	}
+	if this.User != that1.User {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.SuppressLogOutput != that1.SuppressLogOutput {
+		return false
+	}
+	return true
+}
 func (m *RunAction) GetPath() string {
 	if m != nil {
 		return m.Path
@@ -476,6 +672,42 @@ type TimeoutAction struct {
 	TimeoutMs           int64
 }
 
+func (this *TimeoutAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TimeoutAction)
+	if !ok {
+		that2, ok := that.(TimeoutAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	if this.DeprecatedTimeoutNs != that1.DeprecatedTimeoutNs {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.TimeoutMs != that1.TimeoutMs {
+		return false
+	}
+	return true
+}
 func (m *TimeoutAction) GetAction() *Action {
 	if m != nil {
 		return m.Action
@@ -549,6 +781,45 @@ type EmitProgressAction struct {
 	LogSource            string
 }
 
+func (this *EmitProgressAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EmitProgressAction)
+	if !ok {
+		that2, ok := that.(EmitProgressAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	if this.StartMessage != that1.StartMessage {
+		return false
+	}
+	if this.SuccessMessage != that1.SuccessMessage {
+		return false
+	}
+	if this.FailureMessagePrefix != that1.FailureMessagePrefix {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	return true
+}
 func (m *EmitProgressAction) GetAction() *Action {
 	if m != nil {
 		return m.Action
@@ -629,6 +900,36 @@ type TryAction struct {
 	LogSource string
 }
 
+func (this *TryAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TryAction)
+	if !ok {
+		that2, ok := that.(TryAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	return true
+}
 func (m *TryAction) GetAction() *Action {
 	if m != nil {
 		return m.Action
@@ -673,6 +974,41 @@ type ParallelAction struct {
 	LogSource string
 }
 
+func (this *ParallelAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ParallelAction)
+	if !ok {
+		that2, ok := that.(ParallelAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if len(this.Actions) != len(that1.Actions) {
+		return false
+	}
+	for i := range this.Actions {
+		if !this.Actions[i].Equal(that1.Actions[i]) {
+			return false
+		}
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	return true
+}
 func (m *ParallelAction) GetActions() []*Action {
 	if m != nil {
 		return m.Actions
@@ -717,6 +1053,41 @@ type SerialAction struct {
 	LogSource string
 }
 
+func (this *SerialAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*SerialAction)
+	if !ok {
+		that2, ok := that.(SerialAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if len(this.Actions) != len(that1.Actions) {
+		return false
+	}
+	for i := range this.Actions {
+		if !this.Actions[i].Equal(that1.Actions[i]) {
+			return false
+		}
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	return true
+}
 func (m *SerialAction) GetActions() []*Action {
 	if m != nil {
 		return m.Actions
@@ -761,6 +1132,41 @@ type CodependentAction struct {
 	LogSource string
 }
 
+func (this *CodependentAction) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CodependentAction)
+	if !ok {
+		that2, ok := that.(CodependentAction)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if len(this.Actions) != len(that1.Actions) {
+		return false
+	}
+	for i := range this.Actions {
+		if !this.Actions[i].Equal(that1.Actions[i]) {
+			return false
+		}
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	return true
+}
 func (m *CodependentAction) GetActions() []*Action {
 	if m != nil {
 		return m.Actions
@@ -805,6 +1211,36 @@ type ResourceLimits struct {
 	Nproc  uint64
 }
 
+func (this *ResourceLimits) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ResourceLimits)
+	if !ok {
+		that2, ok := that.(ResourceLimits)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Nofile != that1.Nofile {
+		return false
+	}
+	if this.Nproc != that1.Nproc {
+		return false
+	}
+	return true
+}
 func (m *ResourceLimits) GetNofile() uint64 {
 	if m != nil {
 		return m.Nofile
