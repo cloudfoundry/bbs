@@ -6,6 +6,10 @@
 
 package models
 
+import (
+	strconv "strconv"
+)
+
 type ImageLayer_DigestAlgorithm int32
 
 const (
@@ -27,6 +31,14 @@ var (
 		"SHA512":                 2,
 	}
 )
+
+func (m ImageLayer_DigestAlgorithm) String() string {
+	s, ok := ImageLayer_DigestAlgorithm_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
 
 type ImageLayer_MediaType int32
 
@@ -53,6 +65,14 @@ var (
 	}
 )
 
+func (m ImageLayer_MediaType) String() string {
+	s, ok := ImageLayer_MediaType_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
+
 type ImageLayer_Type int32
 
 const (
@@ -74,6 +94,14 @@ var (
 		"EXCLUSIVE":        2,
 	}
 )
+
+func (m ImageLayer_Type) String() string {
+	s, ok := ImageLayer_Type_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
 
 // Prevent copylock errors when using ProtoImageLayer directly
 type ImageLayer struct {

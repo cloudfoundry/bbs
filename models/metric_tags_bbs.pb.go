@@ -6,6 +6,10 @@
 
 package models
 
+import (
+	strconv "strconv"
+)
+
 type MetricTagValue_DynamicValue int32
 
 const (
@@ -27,6 +31,14 @@ var (
 		"INSTANCE_GUID":       2,
 	}
 )
+
+func (m MetricTagValue_DynamicValue) String() string {
+	s, ok := MetricTagValue_DynamicValue_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
 
 // Prevent copylock errors when using ProtoMetricTagValue directly
 type MetricTagValue struct {

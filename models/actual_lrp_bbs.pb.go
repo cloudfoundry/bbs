@@ -6,6 +6,10 @@
 
 package models
 
+import (
+	strconv "strconv"
+)
+
 // Prevent copylock errors when using ProtoActualLRPGroup directly
 type ActualLRPGroup struct {
 	Instance   *ActualLRP
@@ -243,6 +247,14 @@ var (
 	}
 )
 
+func (m ActualLRPNetInfo_PreferredAddress) String() string {
+	s, ok := ActualLRPNetInfo_PreferredAddress_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
+
 // Prevent copylock errors when using ProtoActualLRPNetInfo directly
 type ActualLRPNetInfo struct {
 	Address          string
@@ -365,6 +377,14 @@ var (
 		"SUSPECT":    2,
 	}
 )
+
+func (m ActualLRP_Presence) String() string {
+	s, ok := ActualLRP_Presence_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
 
 // Prevent copylock errors when using ProtoActualLRP directly
 type ActualLRP struct {

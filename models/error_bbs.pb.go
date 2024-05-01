@@ -6,6 +6,10 @@
 
 package models
 
+import (
+	strconv "strconv"
+)
+
 type Error_Type int32
 
 const (
@@ -93,6 +97,14 @@ var (
 		"Timeout":                    31,
 	}
 )
+
+func (m Error_Type) String() string {
+	s, ok := Error_Type_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
 
 // Prevent copylock errors when using ProtoError directly
 type Error struct {
