@@ -17,8 +17,11 @@ type bbsGenerateHelperInterface interface {
 	genToProtoMethod(g *protogen.GeneratedFile, msg *protogen.Message)
 	genProtoMapMethod(g *protogen.GeneratedFile, msg *protogen.Message)
 	genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message)
+	genAccessors(g *protogen.GeneratedFile, msg *protogen.Message)
 }
 type bbsGenerateHelper struct{}
+
+var helper bbsGenerateHelperInterface = bbsGenerateHelper{}
 
 func getUnsafeName(g *protogen.GeneratedFile, ident protogen.GoIdent) string {
 	return g.QualifiedGoIdent(ident)
@@ -34,9 +37,9 @@ func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *proto
 		g.P("// Prevent copylock errors when using ", msg.GoIdent.GoName, " directly")
 		g.P("type ", copysafeName, " struct {")
 		for _, field := range msg.Fields {
+			options := field.Desc.Options().(*descriptorpb.FieldOptions)
 			if *debug {
 				log.Printf("New Field Detected: %+v\n\n", field)
-				options := field.Desc.Options().(*descriptorpb.FieldOptions)
 				log.Printf("Field Options: %+v\n\n", options)
 
 			}
@@ -44,6 +47,72 @@ func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *proto
 			g.P(field.GoName, " ", fieldType)
 		}
 		g.P("}")
+
+		helper.genAccessors(g, msg)
+	}
+}
+
+func (bbsGenerateHelper) genAccessors(g *protogen.GeneratedFile, msg *protogen.Message) {
+	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
+		for _, field := range msg.Fields {
+			fieldName := field.GoName
+			fieldType := getActualType(g, field)
+			options := field.Desc.Options().(*descriptorpb.FieldOptions)
+
+			if *debug {
+				log.Printf("Generating accessors for %s...\n", fieldName)
+			}
+
+			if options.GetDeprecated() {
+				g.P("// DEPRECATED: DO NOT USE")
+			}
+			defaultValue := getDefaultValueString(field)
+			genGetter(g, copysafeName, fieldName, fieldType, defaultValue)
+			genSetter(g, copysafeName, fieldName, fieldType)
+		}
+	}
+}
+
+func genGetter(g *protogen.GeneratedFile, copysafeName string, fieldName string, fieldType string, defaultValue string) {
+	if *debug {
+		log.Print("Getter...")
+	}
+	g.P("func (m *", copysafeName, ") Get", fieldName, "() ", fieldType, " {")
+	g.P("if m != nil {")
+	g.P("return m.", fieldName)
+	g.P("}")
+	g.P("return ", defaultValue)
+	g.P("}")
+}
+
+func genSetter(g *protogen.GeneratedFile, copysafeName string, fieldName string, fieldType string) {
+	if *debug {
+		log.Print("Setter...")
+	}
+	g.P("func (m *", copysafeName, ") Set", fieldName, "(value ", fieldType, ") {")
+	g.P("if m != nil {")
+	g.P("m.", fieldName, " = value")
+	g.P("}")
+	g.P("}")
+}
+
+func getDefaultValueString(field *protogen.Field) string {
+	switch kind := field.Desc.Kind(); kind {
+	case protoreflect.BytesKind, protoreflect.GroupKind, protoreflect.MessageKind:
+		return "nil"
+	case protoreflect.BoolKind:
+		return "false"
+	case protoreflect.EnumKind:
+		return "0"
+	case protoreflect.DoubleKind, protoreflect.Fixed32Kind, protoreflect.Fixed64Kind, protoreflect.FloatKind, protoreflect.Int32Kind, protoreflect.Sfixed32Kind, protoreflect.Sfixed64Kind, protoreflect.Sint32Kind, protoreflect.Sint64Kind, protoreflect.Uint32Kind, protoreflect.Uint64Kind, protoreflect.Int64Kind:
+		return "0"
+	case protoreflect.StringKind:
+		if field.Desc.Cardinality() == protoreflect.Repeated {
+			return "nil"
+		}
+		return `""`
+	default:
+		panic(fmt.Sprintf("Unrecognized type: %s", kind))
 	}
 }
 
@@ -173,8 +242,6 @@ func (bbsGenerateHelper) genProtoMapMethod(g *protogen.GeneratedFile, msg *proto
 		g.P()
 	}
 }
-
-var helper bbsGenerateHelperInterface = bbsGenerateHelper{}
 
 func generateFile(plugin *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	filename := file.GeneratedFilenamePrefix + "_bbs.pb.go"
