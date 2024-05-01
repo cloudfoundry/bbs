@@ -14,6 +14,20 @@ const (
 	ImageLayer_DigestAlgorithmSha512  ImageLayer_DigestAlgorithm = 2
 )
 
+// Enum value maps for ImageLayer_DigestAlgorithm
+var (
+	ImageLayer_DigestAlgorithm_name = map[int32]string{
+		0: "DigestAlgorithmInvalid",
+		1: "SHA256",
+		2: "SHA512",
+	}
+	ImageLayer_DigestAlgorithm_value = map[string]int32{
+		"DigestAlgorithmInvalid": 0,
+		"SHA256":                 1,
+		"SHA512":                 2,
+	}
+)
+
 type ImageLayer_MediaType int32
 
 const (
@@ -23,12 +37,42 @@ const (
 	ImageLayer_MediaTypeZip     ImageLayer_MediaType = 3
 )
 
+// Enum value maps for ImageLayer_MediaType
+var (
+	ImageLayer_MediaType_name = map[int32]string{
+		0: "MediaTypeInvalid",
+		1: "TGZ",
+		2: "TAR",
+		3: "ZIP",
+	}
+	ImageLayer_MediaType_value = map[string]int32{
+		"MediaTypeInvalid": 0,
+		"TGZ":              1,
+		"TAR":              2,
+		"ZIP":              3,
+	}
+)
+
 type ImageLayer_Type int32
 
 const (
 	ImageLayer_LayerTypeInvalid   ImageLayer_Type = 0
 	ImageLayer_LayerTypeShared    ImageLayer_Type = 1
 	ImageLayer_LayerTypeExclusive ImageLayer_Type = 2
+)
+
+// Enum value maps for ImageLayer_Type
+var (
+	ImageLayer_Type_name = map[int32]string{
+		0: "LayerTypeInvalid",
+		1: "SHARED",
+		2: "EXCLUSIVE",
+	}
+	ImageLayer_Type_value = map[string]int32{
+		"LayerTypeInvalid": 0,
+		"SHARED":           1,
+		"EXCLUSIVE":        2,
+	}
 )
 
 // Prevent copylock errors when using ProtoImageLayer directly

@@ -36,6 +36,64 @@ const (
 	Error_Timeout                    Error_Type = 31
 )
 
+// Enum value maps for Error_Type
+var (
+	Error_Type_name = map[int32]string{
+		0:  "UnknownError",
+		3:  "InvalidRecord",
+		4:  "InvalidRequest",
+		5:  "InvalidResponse",
+		6:  "InvalidProtobufMessage",
+		7:  "InvalidJSON",
+		8:  "FailedToOpenEnvelope",
+		9:  "InvalidStateTransition",
+		11: "ResourceConflict",
+		12: "ResourceExists",
+		13: "ResourceNotFound",
+		14: "RouterError",
+		15: "ActualLRPCannotBeClaimed",
+		16: "ActualLRPCannotBeStarted",
+		17: "ActualLRPCannotBeCrashed",
+		18: "ActualLRPCannotBeFailed",
+		19: "ActualLRPCannotBeRemoved",
+		21: "ActualLRPCannotBeUnclaimed",
+		24: "RunningOnDifferentCell",
+		26: "GUIDGeneration",
+		27: "Deserialize",
+		28: "Deadlock",
+		29: "Unrecoverable",
+		30: "LockCollision",
+		31: "Timeout",
+	}
+	Error_Type_value = map[string]int32{
+		"UnknownError":               0,
+		"InvalidRecord":              3,
+		"InvalidRequest":             4,
+		"InvalidResponse":            5,
+		"InvalidProtobufMessage":     6,
+		"InvalidJSON":                7,
+		"FailedToOpenEnvelope":       8,
+		"InvalidStateTransition":     9,
+		"ResourceConflict":           11,
+		"ResourceExists":             12,
+		"ResourceNotFound":           13,
+		"RouterError":                14,
+		"ActualLRPCannotBeClaimed":   15,
+		"ActualLRPCannotBeStarted":   16,
+		"ActualLRPCannotBeCrashed":   17,
+		"ActualLRPCannotBeFailed":    18,
+		"ActualLRPCannotBeRemoved":   19,
+		"ActualLRPCannotBeUnclaimed": 21,
+		"RunningOnDifferentCell":     24,
+		"GUIDGeneration":             26,
+		"Deserialize":                27,
+		"Deadlock":                   28,
+		"Unrecoverable":              29,
+		"LockCollision":              30,
+		"Timeout":                    31,
+	}
+)
+
 // Prevent copylock errors when using ProtoError directly
 type Error struct {
 	Type    Error_Type

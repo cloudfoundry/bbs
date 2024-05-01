@@ -14,6 +14,20 @@ const (
 	MetricTagValue_MetricTagynamicValueInstanceGuid MetricTagValue_DynamicValue = 2
 )
 
+// Enum value maps for MetricTagValue_DynamicValue
+var (
+	MetricTagValue_DynamicValue_name = map[int32]string{
+		0: "DynamicValueInvalid",
+		1: "INDEX",
+		2: "INSTANCE_GUID",
+	}
+	MetricTagValue_DynamicValue_value = map[string]int32{
+		"DynamicValueInvalid": 0,
+		"INDEX":               1,
+		"INSTANCE_GUID":       2,
+	}
+)
+
 // Prevent copylock errors when using ProtoMetricTagValue directly
 type MetricTagValue struct {
 	Static  string
