@@ -6,6 +6,10 @@
 
 package models
 
+import (
+	strconv "strconv"
+)
+
 // Prevent copylock errors when using ProtoTaskDefinition directly
 type TaskDefinition struct {
 	RootFs                        string
@@ -404,6 +408,14 @@ var (
 		"Resolving": 4,
 	}
 )
+
+func (m Task_State) String() string {
+	s, ok := Task_State_name[int32(m)]
+	if ok {
+		return s
+	}
+	return strconv.Itoa(int(m))
+}
 
 // Prevent copylock errors when using ProtoTask directly
 type Task struct {
