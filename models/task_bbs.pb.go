@@ -387,6 +387,24 @@ const (
 	Task_Resolving Task_State = 4
 )
 
+// Enum value maps for Task_State
+var (
+	Task_State_name = map[int32]string{
+		0: "Invalid",
+		1: "Pending",
+		2: "Running",
+		3: "Completed",
+		4: "Resolving",
+	}
+	Task_State_value = map[string]int32{
+		"Invalid":   0,
+		"Pending":   1,
+		"Running":   2,
+		"Completed": 3,
+		"Resolving": 4,
+	}
+)
+
 // Prevent copylock errors when using ProtoTask directly
 type Task struct {
 	TaskDefinition   *TaskDefinition

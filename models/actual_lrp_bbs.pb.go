@@ -229,6 +229,20 @@ const (
 	ActualLRPNetInfo_PreferredAddressHost     ActualLRPNetInfo_PreferredAddress = 2
 )
 
+// Enum value maps for ActualLRPNetInfo_PreferredAddress
+var (
+	ActualLRPNetInfo_PreferredAddress_name = map[int32]string{
+		0: "UNKNOWN",
+		1: "INSTANCE",
+		2: "HOST",
+	}
+	ActualLRPNetInfo_PreferredAddress_value = map[string]int32{
+		"UNKNOWN":  0,
+		"INSTANCE": 1,
+		"HOST":     2,
+	}
+)
+
 // Prevent copylock errors when using ProtoActualLRPNetInfo directly
 type ActualLRPNetInfo struct {
 	Address          string
@@ -336,6 +350,20 @@ const (
 	ActualLRP_Ordinary   ActualLRP_Presence = 0
 	ActualLRP_Evacuating ActualLRP_Presence = 1
 	ActualLRP_Suspect    ActualLRP_Presence = 2
+)
+
+// Enum value maps for ActualLRP_Presence
+var (
+	ActualLRP_Presence_name = map[int32]string{
+		0: "ORDINARY",
+		1: "EVACUATING",
+		2: "SUSPECT",
+	}
+	ActualLRP_Presence_value = map[string]int32{
+		"ORDINARY":   0,
+		"EVACUATING": 1,
+		"SUSPECT":    2,
+	}
 )
 
 // Prevent copylock errors when using ProtoActualLRP directly
