@@ -392,7 +392,7 @@ func protocVersion(plugin *protogen.Plugin) string {
 	return fmt.Sprintf("v%d.%d.%d%s", v.GetMajor(), v.GetMinor(), v.GetPatch(), suffix)
 }
 
-var ignoredMessages []string = []string{"ProtoRoutes"}
+var ignoredMessages []string = []string{}
 
 func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 	for _, msg := range file.Messages {
@@ -402,6 +402,7 @@ func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 
 		if slices.Contains(ignoredMessages, getUnsafeName(g, msg.GoIdent)) {
 			log.Printf("Ignoring message %s", msg.GoIdent)
+			continue
 		}
 		helper.genFriendlyEnums(g, msg)
 		helper.genCopysafeStruct(g, msg)
