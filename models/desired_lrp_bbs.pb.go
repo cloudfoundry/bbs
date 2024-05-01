@@ -6,6 +6,10 @@
 
 package models
 
+import (
+	bytes "bytes"
+)
+
 // Prevent copylock errors when using ProtoDesiredLRPSchedulingInfo directly
 type DesiredLRPSchedulingInfo struct {
 	DesiredLrpKey      *DesiredLRPKey
@@ -18,6 +22,59 @@ type DesiredLRPSchedulingInfo struct {
 	ProtoPlacementTags []string
 }
 
+func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPSchedulingInfo)
+	if !ok {
+		that2, ok := that.(DesiredLRPSchedulingInfo)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.DesiredLrpKey.Equal(that1.DesiredLrpKey) {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
+		return false
+	}
+	if this.Instances != that1.Instances {
+		return false
+	}
+	if !this.DesiredLrpResource.Equal(that1.DesiredLrpResource) {
+		return false
+	}
+	if !this.Routes.Equal(that1.Routes) {
+		return false
+	}
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
+		return false
+	}
+	if !this.VolumePlacement.Equal(that1.VolumePlacement) {
+		return false
+	}
+	if len(this.ProtoPlacementTags) != len(that1.ProtoPlacementTags) {
+		return false
+	}
+	for i := range this.ProtoPlacementTags {
+		if this.ProtoPlacementTags[i] != that1.ProtoPlacementTags[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *DesiredLRPSchedulingInfo) GetDesiredLrpKey() *DesiredLRPKey {
 	if m != nil {
 		return m.DesiredLrpKey
@@ -159,6 +216,151 @@ type DesiredLRPRunInfo struct {
 	LogRateLimit                  *LogRateLimit
 }
 
+func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPRunInfo)
+	if !ok {
+		that2, ok := that.(DesiredLRPRunInfo)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.DesiredLrpKey.Equal(that1.DesiredLrpKey) {
+		return false
+	}
+	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
+		return false
+	}
+	for i := range this.EnvironmentVariables {
+		if !this.EnvironmentVariables[i].Equal(that1.EnvironmentVariables[i]) {
+			return false
+		}
+	}
+	if !this.Setup.Equal(that1.Setup) {
+		return false
+	}
+	if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	if !this.Monitor.Equal(that1.Monitor) {
+		return false
+	}
+	if this.DeprecatedStartTimeoutS != that1.DeprecatedStartTimeoutS {
+		return false
+	}
+	if this.Privileged != that1.Privileged {
+		return false
+	}
+	if this.CpuWeight != that1.CpuWeight {
+		return false
+	}
+	if len(this.Ports) != len(that1.Ports) {
+		return false
+	}
+	for i := range this.Ports {
+		if this.Ports[i] != that1.Ports[i] {
+			return false
+		}
+	}
+	if len(this.EgressRules) != len(that1.EgressRules) {
+		return false
+	}
+	for i := range this.EgressRules {
+		if !this.EgressRules[i].Equal(that1.EgressRules[i]) {
+			return false
+		}
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.MetricsGuid != that1.MetricsGuid {
+		return false
+	}
+	if this.CreatedAt != that1.CreatedAt {
+		return false
+	}
+	if len(this.CachedDependencies) != len(that1.CachedDependencies) {
+		return false
+	}
+	for i := range this.CachedDependencies {
+		if !this.CachedDependencies[i].Equal(that1.CachedDependencies[i]) {
+			return false
+		}
+	}
+	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
+		return false
+	}
+	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
+		return false
+	}
+	if len(this.VolumeMounts) != len(that1.VolumeMounts) {
+		return false
+	}
+	for i := range this.VolumeMounts {
+		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
+			return false
+		}
+	}
+	if !this.Network.Equal(that1.Network) {
+		return false
+	}
+	if this.StartTimeoutMs != that1.StartTimeoutMs {
+		return false
+	}
+	if !this.CertificateProperties.Equal(that1.CertificateProperties) {
+		return false
+	}
+	if this.ImageUsername != that1.ImageUsername {
+		return false
+	}
+	if this.ImagePassword != that1.ImagePassword {
+		return false
+	}
+	if !this.CheckDefinition.Equal(that1.CheckDefinition) {
+		return false
+	}
+	if len(this.ImageLayers) != len(that1.ImageLayers) {
+		return false
+	}
+	for i := range this.ImageLayers {
+		if !this.ImageLayers[i].Equal(that1.ImageLayers[i]) {
+			return false
+		}
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	if len(this.Sidecars) != len(that1.Sidecars) {
+		return false
+	}
+	for i := range this.Sidecars {
+		if !this.Sidecars[i].Equal(that1.Sidecars[i]) {
+			return false
+		}
+	}
+	if !this.LogRateLimit.Equal(that1.LogRateLimit) {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPRunInfo) GetDesiredLrpKey() *DesiredLRPKey {
 	if m != nil {
 		return m.DesiredLrpKey
@@ -503,6 +705,69 @@ func DesiredLRPRunInfoProtoMap(values []*DesiredLRPRunInfo) []*ProtoDesiredLRPRu
 	return result
 }
 
+// Prevent copylock errors when using ProtoRoutes directly
+type Routes struct {
+	Routes map[string][]byte
+}
+
+func (this *Routes) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Routes)
+	if !ok {
+		that2, ok := that.(Routes)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if len(this.Routes) != len(that1.Routes) {
+		return false
+	}
+	for i := range this.Routes {
+		if !bytes.Equal(this.Routes[i], that1.Routes[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (m *Routes) GetRoutes() map[string][]byte {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
+func (m *Routes) SetRoutes(value map[string][]byte) {
+	if m != nil {
+		m.Routes = value
+	}
+}
+func (x *Routes) ToProto() *ProtoRoutes {
+	proto := &ProtoRoutes{
+		Routes: x.Routes,
+	}
+	return proto
+}
+
+func RoutesProtoMap(values []*Routes) []*ProtoRoutes {
+	result := make([]*ProtoRoutes, len(values))
+	for i, val := range values {
+		result[i] = val.ToProto()
+	}
+	return result
+}
+
 // Prevent copylock errors when using ProtoDesiredLRPUpdate directly
 type DesiredLRPUpdate struct {
 	Instances  int32
@@ -511,6 +776,47 @@ type DesiredLRPUpdate struct {
 	MetricTags map[string]*ProtoMetricTagValue
 }
 
+func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPUpdate)
+	if !ok {
+		that2, ok := that.(DesiredLRPUpdate)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Instances != that1.Instances {
+		return false
+	}
+	if !this.Routes.Equal(that1.Routes) {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
+		return false
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *DesiredLRPUpdate) GetInstances() int32 {
 	if m != nil {
 		return m.Instances
@@ -580,6 +886,39 @@ type DesiredLRPKey struct {
 	LogGuid     string
 }
 
+func (this *DesiredLRPKey) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPKey)
+	if !ok {
+		that2, ok := that.(DesiredLRPKey)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.LogGuid != that1.LogGuid {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPKey) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -638,6 +977,42 @@ type DesiredLRPResource struct {
 	MaxPids  int32
 }
 
+func (this *DesiredLRPResource) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPResource)
+	if !ok {
+		that2, ok := that.(DesiredLRPResource)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.MemoryMb != that1.MemoryMb {
+		return false
+	}
+	if this.DiskMb != that1.DiskMb {
+		return false
+	}
+	if this.RootFs != that1.RootFs {
+		return false
+	}
+	if this.MaxPids != that1.MaxPids {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPResource) GetMemoryMb() int32 {
 	if m != nil {
 		return m.MemoryMb
@@ -741,6 +1116,186 @@ type DesiredLRP struct {
 	LogRateLimit                  *LogRateLimit
 }
 
+func (this *DesiredLRP) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRP)
+	if !ok {
+		that2, ok := that.(DesiredLRP)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.RootFs != that1.RootFs {
+		return false
+	}
+	if this.Instances != that1.Instances {
+		return false
+	}
+	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
+		return false
+	}
+	for i := range this.EnvironmentVariables {
+		if !this.EnvironmentVariables[i].Equal(that1.EnvironmentVariables[i]) {
+			return false
+		}
+	}
+	if !this.Setup.Equal(that1.Setup) {
+		return false
+	}
+	if !this.Action.Equal(that1.Action) {
+		return false
+	}
+	if this.StartTimeoutMs != that1.StartTimeoutMs {
+		return false
+	}
+	if this.DeprecatedStartTimeoutS != that1.DeprecatedStartTimeoutS {
+		return false
+	}
+	if !this.Monitor.Equal(that1.Monitor) {
+		return false
+	}
+	if this.DiskMb != that1.DiskMb {
+		return false
+	}
+	if this.MemoryMb != that1.MemoryMb {
+		return false
+	}
+	if this.CpuWeight != that1.CpuWeight {
+		return false
+	}
+	if this.Privileged != that1.Privileged {
+		return false
+	}
+	if len(this.Ports) != len(that1.Ports) {
+		return false
+	}
+	for i := range this.Ports {
+		if this.Ports[i] != that1.Ports[i] {
+			return false
+		}
+	}
+	if !this.Routes.Equal(that1.Routes) {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.LogGuid != that1.LogGuid {
+		return false
+	}
+	if this.MetricsGuid != that1.MetricsGuid {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
+		return false
+	}
+	if len(this.EgressRules) != len(that1.EgressRules) {
+		return false
+	}
+	for i := range this.EgressRules {
+		if !this.EgressRules[i].Equal(that1.EgressRules[i]) {
+			return false
+		}
+	}
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
+		return false
+	}
+	if len(this.CachedDependencies) != len(that1.CachedDependencies) {
+		return false
+	}
+	for i := range this.CachedDependencies {
+		if !this.CachedDependencies[i].Equal(that1.CachedDependencies[i]) {
+			return false
+		}
+	}
+	if this.LegacyDownloadUser != that1.LegacyDownloadUser {
+		return false
+	}
+	if this.TrustedSystemCertificatesPath != that1.TrustedSystemCertificatesPath {
+		return false
+	}
+	if len(this.VolumeMounts) != len(that1.VolumeMounts) {
+		return false
+	}
+	for i := range this.VolumeMounts {
+		if !this.VolumeMounts[i].Equal(that1.VolumeMounts[i]) {
+			return false
+		}
+	}
+	if !this.Network.Equal(that1.Network) {
+		return false
+	}
+	if len(this.ProtoPlacementTags) != len(that1.ProtoPlacementTags) {
+		return false
+	}
+	for i := range this.ProtoPlacementTags {
+		if this.ProtoPlacementTags[i] != that1.ProtoPlacementTags[i] {
+			return false
+		}
+	}
+	if this.MaxPids != that1.MaxPids {
+		return false
+	}
+	if !this.CertificateProperties.Equal(that1.CertificateProperties) {
+		return false
+	}
+	if this.ImageUsername != that1.ImageUsername {
+		return false
+	}
+	if this.ImagePassword != that1.ImagePassword {
+		return false
+	}
+	if !this.CheckDefinition.Equal(that1.CheckDefinition) {
+		return false
+	}
+	if len(this.ImageLayers) != len(that1.ImageLayers) {
+		return false
+	}
+	for i := range this.ImageLayers {
+		if !this.ImageLayers[i].Equal(that1.ImageLayers[i]) {
+			return false
+		}
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	if len(this.Sidecars) != len(that1.Sidecars) {
+		return false
+	}
+	for i := range this.Sidecars {
+		if !this.Sidecars[i].Equal(that1.Sidecars[i]) {
+			return false
+		}
+	}
+	if !this.LogRateLimit.Equal(that1.LogRateLimit) {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRP) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid

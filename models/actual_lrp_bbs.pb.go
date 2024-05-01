@@ -16,6 +16,36 @@ type ActualLRPGroup struct {
 	Evacuating *ActualLRP
 }
 
+func (this *ActualLRPGroup) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroup)
+	if !ok {
+		that2, ok := that.(ActualLRPGroup)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Instance.Equal(that1.Instance) {
+		return false
+	}
+	if !this.Evacuating.Equal(that1.Evacuating) {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPGroup) GetInstance() *ActualLRP {
 	if m != nil {
 		return m.Instance
@@ -62,6 +92,42 @@ type PortMapping struct {
 	HostTlsProxyPort      uint32
 }
 
+func (this *PortMapping) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*PortMapping)
+	if !ok {
+		that2, ok := that.(PortMapping)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ContainerPort != that1.ContainerPort {
+		return false
+	}
+	if this.HostPort != that1.HostPort {
+		return false
+	}
+	if this.ContainerTlsProxyPort != that1.ContainerTlsProxyPort {
+		return false
+	}
+	if this.HostTlsProxyPort != that1.HostTlsProxyPort {
+		return false
+	}
+	return true
+}
 func (m *PortMapping) GetContainerPort() uint32 {
 	if m != nil {
 		return m.ContainerPort
@@ -131,6 +197,39 @@ type ActualLRPKey struct {
 	Domain      string
 }
 
+func (this *ActualLRPKey) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPKey)
+	if !ok {
+		that2, ok := that.(ActualLRPKey)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPKey) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -187,6 +286,36 @@ type ActualLRPInstanceKey struct {
 	CellId       string
 }
 
+func (this *ActualLRPInstanceKey) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPInstanceKey)
+	if !ok {
+		that2, ok := that.(ActualLRPInstanceKey)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.InstanceGuid != that1.InstanceGuid {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPInstanceKey) GetInstanceGuid() string {
 	if m != nil {
 		return m.InstanceGuid
@@ -263,6 +392,47 @@ type ActualLRPNetInfo struct {
 	PreferredAddress ActualLRPNetInfo_PreferredAddress
 }
 
+func (this *ActualLRPNetInfo) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPNetInfo)
+	if !ok {
+		that2, ok := that.(ActualLRPNetInfo)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Address != that1.Address {
+		return false
+	}
+	if len(this.Ports) != len(that1.Ports) {
+		return false
+	}
+	for i := range this.Ports {
+		if !this.Ports[i].Equal(that1.Ports[i]) {
+			return false
+		}
+	}
+	if this.InstanceAddress != that1.InstanceAddress {
+		return false
+	}
+	if this.PreferredAddress != that1.PreferredAddress {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPNetInfo) GetAddress() string {
 	if m != nil {
 		return m.Address
@@ -330,6 +500,33 @@ type ActualLRPInternalRoute struct {
 	Hostname string
 }
 
+func (this *ActualLRPInternalRoute) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPInternalRoute)
+	if !ok {
+		that2, ok := that.(ActualLRPInternalRoute)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Hostname != that1.Hostname {
+		return false
+	}
+	return true
+}
 func (m *ActualLRPInternalRoute) GetHostname() string {
 	if m != nil {
 		return m.Hostname
@@ -404,6 +601,82 @@ type ActualLRP struct {
 	AvailabilityZone        string
 }
 
+func (this *ActualLRP) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRP)
+	if !ok {
+		that2, ok := that.(ActualLRP)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+		return false
+	}
+	if this.CrashCount != that1.CrashCount {
+		return false
+	}
+	if this.CrashReason != that1.CrashReason {
+		return false
+	}
+	if this.State != that1.State {
+		return false
+	}
+	if this.PlacementError != that1.PlacementError {
+		return false
+	}
+	if this.Since != that1.Since {
+		return false
+	}
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
+		return false
+	}
+	if this.Presence != that1.Presence {
+		return false
+	}
+	if len(this.ActualLrpInternalRoutes) != len(that1.ActualLrpInternalRoutes) {
+		return false
+	}
+	for i := range this.ActualLrpInternalRoutes {
+		if !this.ActualLrpInternalRoutes[i].Equal(that1.ActualLrpInternalRoutes[i]) {
+			return false
+		}
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	if this.Routable != that1.Routable {
+		return false
+	}
+	if this.AvailabilityZone != that1.AvailabilityZone {
+		return false
+	}
+	return true
+}
 func (m *ActualLRP) GetActualLrpKey() *ActualLRPKey {
 	if m != nil {
 		return m.ActualLrpKey

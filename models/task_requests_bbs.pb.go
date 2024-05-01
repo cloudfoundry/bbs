@@ -11,6 +11,33 @@ type TaskLifecycleResponse struct {
 	Error *Error
 }
 
+func (this *TaskLifecycleResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskLifecycleResponse)
+	if !ok {
+		that2, ok := that.(TaskLifecycleResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	return true
+}
 func (m *TaskLifecycleResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -44,6 +71,39 @@ type DesireTaskRequest struct {
 	Domain         string
 }
 
+func (this *DesireTaskRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesireTaskRequest)
+	if !ok {
+		that2, ok := that.(DesireTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.TaskDefinition.Equal(that1.TaskDefinition) {
+		return false
+	}
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	return true
+}
 func (m *DesireTaskRequest) GetTaskDefinition() *TaskDefinition {
 	if m != nil {
 		return m.TaskDefinition
@@ -100,6 +160,36 @@ type StartTaskRequest struct {
 	CellId   string
 }
 
+func (this *StartTaskRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*StartTaskRequest)
+	if !ok {
+		that2, ok := that.(StartTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	return true
+}
 func (m *StartTaskRequest) GetTaskGuid() string {
 	if m != nil {
 		return m.TaskGuid
@@ -144,6 +234,36 @@ type StartTaskResponse struct {
 	ShouldStart bool
 }
 
+func (this *StartTaskResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*StartTaskResponse)
+	if !ok {
+		that2, ok := that.(StartTaskResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if this.ShouldStart != that1.ShouldStart {
+		return false
+	}
+	return true
+}
 func (m *StartTaskResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -188,6 +308,36 @@ type FailTaskRequest struct {
 	FailureReason string
 }
 
+func (this *FailTaskRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*FailTaskRequest)
+	if !ok {
+		that2, ok := that.(FailTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	return true
+}
 func (m *FailTaskRequest) GetTaskGuid() string {
 	if m != nil {
 		return m.TaskGuid
@@ -232,6 +382,36 @@ type RejectTaskRequest struct {
 	RejectionReason string
 }
 
+func (this *RejectTaskRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RejectTaskRequest)
+	if !ok {
+		that2, ok := that.(RejectTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.RejectionReason != that1.RejectionReason {
+		return false
+	}
+	return true
+}
 func (m *RejectTaskRequest) GetTaskGuid() string {
 	if m != nil {
 		return m.TaskGuid
@@ -275,6 +455,33 @@ type TaskGuidRequest struct {
 	TaskGuid string
 }
 
+func (this *TaskGuidRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskGuidRequest)
+	if !ok {
+		that2, ok := that.(TaskGuidRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	return true
+}
 func (m *TaskGuidRequest) GetTaskGuid() string {
 	if m != nil {
 		return m.TaskGuid
@@ -310,6 +517,45 @@ type CompleteTaskRequest struct {
 	Result        string
 }
 
+func (this *CompleteTaskRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CompleteTaskRequest)
+	if !ok {
+		that2, ok := that.(CompleteTaskRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	if this.Failed != that1.Failed {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	if this.Result != that1.Result {
+		return false
+	}
+	return true
+}
 func (m *CompleteTaskRequest) GetTaskGuid() string {
 	if m != nil {
 		return m.TaskGuid
@@ -394,6 +640,48 @@ type TaskCallbackResponse struct {
 	CreatedAt     int64
 }
 
+func (this *TaskCallbackResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskCallbackResponse)
+	if !ok {
+		that2, ok := that.(TaskCallbackResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	if this.Failed != that1.Failed {
+		return false
+	}
+	if this.FailureReason != that1.FailureReason {
+		return false
+	}
+	if this.Result != that1.Result {
+		return false
+	}
+	if this.Annotation != that1.Annotation {
+		return false
+	}
+	if this.CreatedAt != that1.CreatedAt {
+		return false
+	}
+	return true
+}
 func (m *TaskCallbackResponse) GetTaskGuid() string {
 	if m != nil {
 		return m.TaskGuid
@@ -486,6 +774,36 @@ type TasksRequest struct {
 	CellId string
 }
 
+func (this *TasksRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TasksRequest)
+	if !ok {
+		that2, ok := that.(TasksRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	return true
+}
 func (m *TasksRequest) GetDomain() string {
 	if m != nil {
 		return m.Domain
@@ -530,6 +848,41 @@ type TasksResponse struct {
 	Tasks []*Task
 }
 
+func (this *TasksResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TasksResponse)
+	if !ok {
+		that2, ok := that.(TasksResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.Tasks) != len(that1.Tasks) {
+		return false
+	}
+	for i := range this.Tasks {
+		if !this.Tasks[i].Equal(that1.Tasks[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (m *TasksResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -573,6 +926,33 @@ type TaskByGuidRequest struct {
 	TaskGuid string
 }
 
+func (this *TaskByGuidRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskByGuidRequest)
+	if !ok {
+		that2, ok := that.(TaskByGuidRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.TaskGuid != that1.TaskGuid {
+		return false
+	}
+	return true
+}
 func (m *TaskByGuidRequest) GetTaskGuid() string {
 	if m != nil {
 		return m.TaskGuid
@@ -605,6 +985,36 @@ type TaskResponse struct {
 	Task  *Task
 }
 
+func (this *TaskResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TaskResponse)
+	if !ok {
+		that2, ok := that.(TaskResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if !this.Task.Equal(that1.Task) {
+		return false
+	}
+	return true
+}
 func (m *TaskResponse) GetError() *Error {
 	if m != nil {
 		return m.Error

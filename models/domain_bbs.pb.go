@@ -12,6 +12,41 @@ type DomainsResponse struct {
 	Domains []string
 }
 
+func (this *DomainsResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DomainsResponse)
+	if !ok {
+		that2, ok := that.(DomainsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.Domains) != len(that1.Domains) {
+		return false
+	}
+	for i := range this.Domains {
+		if this.Domains[i] != that1.Domains[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *DomainsResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -55,6 +90,33 @@ type UpsertDomainResponse struct {
 	Error *Error
 }
 
+func (this *UpsertDomainResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*UpsertDomainResponse)
+	if !ok {
+		that2, ok := that.(UpsertDomainResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	return true
+}
 func (m *UpsertDomainResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -87,6 +149,36 @@ type UpsertDomainRequest struct {
 	Ttl    uint32
 }
 
+func (this *UpsertDomainRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*UpsertDomainRequest)
+	if !ok {
+		that2, ok := that.(UpsertDomainRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.Ttl != that1.Ttl {
+		return false
+	}
+	return true
+}
 func (m *UpsertDomainRequest) GetDomain() string {
 	if m != nil {
 		return m.Domain

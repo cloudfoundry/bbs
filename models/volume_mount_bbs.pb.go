@@ -12,6 +12,36 @@ type SharedDevice struct {
 	MountConfig string
 }
 
+func (this *SharedDevice) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*SharedDevice)
+	if !ok {
+		that2, ok := that.(SharedDevice)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.VolumeId != that1.VolumeId {
+		return false
+	}
+	if this.MountConfig != that1.MountConfig {
+		return false
+	}
+	return true
+}
 func (m *SharedDevice) GetVolumeId() string {
 	if m != nil {
 		return m.VolumeId
@@ -58,6 +88,42 @@ type VolumeMount struct {
 	Shared       *SharedDevice
 }
 
+func (this *VolumeMount) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*VolumeMount)
+	if !ok {
+		that2, ok := that.(VolumeMount)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Driver != that1.Driver {
+		return false
+	}
+	if this.ContainerDir != that1.ContainerDir {
+		return false
+	}
+	if this.Mode != that1.Mode {
+		return false
+	}
+	if !this.Shared.Equal(that1.Shared) {
+		return false
+	}
+	return true
+}
 func (m *VolumeMount) GetDriver() string {
 	if m != nil {
 		return m.Driver
@@ -125,6 +191,38 @@ type VolumePlacement struct {
 	DriverNames []string
 }
 
+func (this *VolumePlacement) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*VolumePlacement)
+	if !ok {
+		that2, ok := that.(VolumePlacement)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if len(this.DriverNames) != len(that1.DriverNames) {
+		return false
+	}
+	for i := range this.DriverNames {
+		if this.DriverNames[i] != that1.DriverNames[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *VolumePlacement) GetDriverNames() []string {
 	if m != nil {
 		return m.DriverNames

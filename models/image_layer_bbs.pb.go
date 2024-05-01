@@ -114,6 +114,51 @@ type ImageLayer struct {
 	DigestValue     string
 }
 
+func (this *ImageLayer) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ImageLayer)
+	if !ok {
+		that2, ok := that.(ImageLayer)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Name != that1.Name {
+		return false
+	}
+	if this.Url != that1.Url {
+		return false
+	}
+	if this.DestinationPath != that1.DestinationPath {
+		return false
+	}
+	if this.LayerType != that1.LayerType {
+		return false
+	}
+	if this.MediaType != that1.MediaType {
+		return false
+	}
+	if this.DigestAlgorithm != that1.DigestAlgorithm {
+		return false
+	}
+	if this.DigestValue != that1.DigestValue {
+		return false
+	}
+	return true
+}
 func (m *ImageLayer) GetName() string {
 	if m != nil {
 		return m.Name

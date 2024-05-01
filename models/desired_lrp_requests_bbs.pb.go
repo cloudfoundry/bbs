@@ -11,6 +11,33 @@ type DesiredLRPLifecycleResponse struct {
 	Error *Error
 }
 
+func (this *DesiredLRPLifecycleResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPLifecycleResponse)
+	if !ok {
+		that2, ok := that.(DesiredLRPLifecycleResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPLifecycleResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -43,6 +70,41 @@ type DesiredLRPsResponse struct {
 	DesiredLrps []*DesiredLRP
 }
 
+func (this *DesiredLRPsResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPsResponse)
+	if !ok {
+		that2, ok := that.(DesiredLRPsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.DesiredLrps) != len(that1.DesiredLrps) {
+		return false
+	}
+	for i := range this.DesiredLrps {
+		if !this.DesiredLrps[i].Equal(that1.DesiredLrps[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (m *DesiredLRPsResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -87,6 +149,41 @@ type DesiredLRPsRequest struct {
 	ProcessGuids []string
 }
 
+func (this *DesiredLRPsRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPsRequest)
+	if !ok {
+		that2, ok := that.(DesiredLRPsRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if len(this.ProcessGuids) != len(that1.ProcessGuids) {
+		return false
+	}
+	for i := range this.ProcessGuids {
+		if this.ProcessGuids[i] != that1.ProcessGuids[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *DesiredLRPsRequest) GetDomain() string {
 	if m != nil {
 		return m.Domain
@@ -131,6 +228,36 @@ type DesiredLRPResponse struct {
 	DesiredLrp *DesiredLRP
 }
 
+func (this *DesiredLRPResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPResponse)
+	if !ok {
+		that2, ok := that.(DesiredLRPResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -175,6 +302,41 @@ type DesiredLRPSchedulingInfosResponse struct {
 	DesiredLrpSchedulingInfos []*DesiredLRPSchedulingInfo
 }
 
+func (this *DesiredLRPSchedulingInfosResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPSchedulingInfosResponse)
+	if !ok {
+		that2, ok := that.(DesiredLRPSchedulingInfosResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.DesiredLrpSchedulingInfos) != len(that1.DesiredLrpSchedulingInfos) {
+		return false
+	}
+	for i := range this.DesiredLrpSchedulingInfos {
+		if !this.DesiredLrpSchedulingInfos[i].Equal(that1.DesiredLrpSchedulingInfos[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (m *DesiredLRPSchedulingInfosResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -219,6 +381,36 @@ type DesiredLRPSchedulingInfoByProcessGuidResponse struct {
 	DesiredLrpSchedulingInfo *DesiredLRPSchedulingInfo
 }
 
+func (this *DesiredLRPSchedulingInfoByProcessGuidResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPSchedulingInfoByProcessGuidResponse)
+	if !ok {
+		that2, ok := that.(DesiredLRPSchedulingInfoByProcessGuidResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if !this.DesiredLrpSchedulingInfo.Equal(that1.DesiredLrpSchedulingInfo) {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
@@ -262,6 +454,33 @@ type DesiredLRPByProcessGuidRequest struct {
 	ProcessGuid string
 }
 
+func (this *DesiredLRPByProcessGuidRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesiredLRPByProcessGuidRequest)
+	if !ok {
+		that2, ok := that.(DesiredLRPByProcessGuidRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	return true
+}
 func (m *DesiredLRPByProcessGuidRequest) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -293,6 +512,33 @@ type DesireLRPRequest struct {
 	DesiredLrp *DesiredLRP
 }
 
+func (this *DesireLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DesireLRPRequest)
+	if !ok {
+		that2, ok := that.(DesireLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+		return false
+	}
+	return true
+}
 func (m *DesireLRPRequest) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
 		return m.DesiredLrp
@@ -325,6 +571,36 @@ type UpdateDesiredLRPRequest struct {
 	Update      *DesiredLRPUpdate
 }
 
+func (this *UpdateDesiredLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*UpdateDesiredLRPRequest)
+	if !ok {
+		that2, ok := that.(UpdateDesiredLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if !this.Update.Equal(that1.Update) {
+		return false
+	}
+	return true
+}
 func (m *UpdateDesiredLRPRequest) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid
@@ -368,6 +644,33 @@ type RemoveDesiredLRPRequest struct {
 	ProcessGuid string
 }
 
+func (this *RemoveDesiredLRPRequest) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RemoveDesiredLRPRequest)
+	if !ok {
+		that2, ok := that.(RemoveDesiredLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	return true
+}
 func (m *RemoveDesiredLRPRequest) GetProcessGuid() string {
 	if m != nil {
 		return m.ProcessGuid

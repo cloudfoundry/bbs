@@ -12,6 +12,36 @@ type EnvironmentVariable struct {
 	Value string
 }
 
+func (this *EnvironmentVariable) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EnvironmentVariable)
+	if !ok {
+		that2, ok := that.(EnvironmentVariable)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Name != that1.Name {
+		return false
+	}
+	if this.Value != that1.Value {
+		return false
+	}
+	return true
+}
 func (m *EnvironmentVariable) GetName() string {
 	if m != nil {
 		return m.Name

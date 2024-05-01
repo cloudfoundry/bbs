@@ -17,6 +17,51 @@ type CachedDependency struct {
 	ChecksumValue     string
 }
 
+func (this *CachedDependency) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CachedDependency)
+	if !ok {
+		that2, ok := that.(CachedDependency)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Name != that1.Name {
+		return false
+	}
+	if this.From != that1.From {
+		return false
+	}
+	if this.To != that1.To {
+		return false
+	}
+	if this.CacheKey != that1.CacheKey {
+		return false
+	}
+	if this.LogSource != that1.LogSource {
+		return false
+	}
+	if this.ChecksumAlgorithm != that1.ChecksumAlgorithm {
+		return false
+	}
+	if this.ChecksumValue != that1.ChecksumValue {
+		return false
+	}
+	return true
+}
 func (m *CachedDependency) GetName() string {
 	if m != nil {
 		return m.Name

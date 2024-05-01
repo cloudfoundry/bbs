@@ -13,6 +13,39 @@ type CellCapacity struct {
 	Containers int32
 }
 
+func (this *CellCapacity) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CellCapacity)
+	if !ok {
+		that2, ok := that.(CellCapacity)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.MemoryMb != that1.MemoryMb {
+		return false
+	}
+	if this.DiskMb != that1.DiskMb {
+		return false
+	}
+	if this.Containers != that1.Containers {
+		return false
+	}
+	return true
+}
 func (m *CellCapacity) GetMemoryMb() int32 {
 	if m != nil {
 		return m.MemoryMb
@@ -75,6 +108,69 @@ type CellPresence struct {
 	RepUrl                string
 }
 
+func (this *CellPresence) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CellPresence)
+	if !ok {
+		that2, ok := that.(CellPresence)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.CellId != that1.CellId {
+		return false
+	}
+	if this.RepAddress != that1.RepAddress {
+		return false
+	}
+	if this.Zone != that1.Zone {
+		return false
+	}
+	if !this.Capacity.Equal(that1.Capacity) {
+		return false
+	}
+	if len(this.RootfsProviders) != len(that1.RootfsProviders) {
+		return false
+	}
+	for i := range this.RootfsProviders {
+		if !this.RootfsProviders[i].Equal(that1.RootfsProviders[i]) {
+			return false
+		}
+	}
+	if len(this.PlacementTags) != len(that1.PlacementTags) {
+		return false
+	}
+	for i := range this.PlacementTags {
+		if this.PlacementTags[i] != that1.PlacementTags[i] {
+			return false
+		}
+	}
+	if len(this.OptionalPlacementTags) != len(that1.OptionalPlacementTags) {
+		return false
+	}
+	for i := range this.OptionalPlacementTags {
+		if this.OptionalPlacementTags[i] != that1.OptionalPlacementTags[i] {
+			return false
+		}
+	}
+	if this.RepUrl != that1.RepUrl {
+		return false
+	}
+	return true
+}
 func (m *CellPresence) GetCellId() string {
 	if m != nil {
 		return m.CellId
@@ -191,6 +287,41 @@ type Provider struct {
 	Properties []string
 }
 
+func (this *Provider) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Provider)
+	if !ok {
+		that2, ok := that.(Provider)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if this.Name != that1.Name {
+		return false
+	}
+	if len(this.Properties) != len(that1.Properties) {
+		return false
+	}
+	for i := range this.Properties {
+		if this.Properties[i] != that1.Properties[i] {
+			return false
+		}
+	}
+	return true
+}
 func (m *Provider) GetName() string {
 	if m != nil {
 		return m.Name
@@ -235,6 +366,41 @@ type CellsResponse struct {
 	Cells []*CellPresence
 }
 
+func (this *CellsResponse) Equal(that interface{}) bool {
+
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CellsResponse)
+	if !ok {
+		that2, ok := that.(CellsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.Cells) != len(that1.Cells) {
+		return false
+	}
+	for i := range this.Cells {
+		if !this.Cells[i].Equal(that1.Cells[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (m *CellsResponse) GetError() *Error {
 	if m != nil {
 		return m.Error
