@@ -175,6 +175,25 @@ func (bbsGenerateHelper) genFriendlyEnums(g *protogen.GeneratedFile, msg *protog
 				g.P(enumValueName, " ", copysafeName, "=", actualValue)
 			}
 			g.P(")")
+			g.P("// Enum value maps for ", copysafeName)
+			g.P("var (")
+			g.P(copysafeName, "_name = map[int32]string{")
+			for _, enumValue := range eNuM.Values {
+				enumValueName := enumValue.Desc.Name()
+				actualValue := enumValue.Desc.Number()
+
+				g.P(actualValue, `: "`, enumValueName, `",`)
+			}
+			g.P("}")
+			g.P(copysafeName, "_value = map[string]int32{")
+			for _, enumValue := range eNuM.Values {
+				enumValueName := enumValue.Desc.Name()
+				actualValue := enumValue.Desc.Number()
+
+				g.P(`"`, enumValueName, `": `, actualValue, `,`)
+			}
+			g.P("}")
+			g.P(")")
 		}
 	}
 }
