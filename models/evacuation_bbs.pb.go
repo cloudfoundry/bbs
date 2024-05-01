@@ -12,6 +12,28 @@ type EvacuationResponse struct {
 	KeepContainer bool
 }
 
+func (m *EvacuationResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *EvacuationResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *EvacuationResponse) GetKeepContainer() bool {
+	if m != nil {
+		return m.KeepContainer
+	}
+	return false
+}
+func (m *EvacuationResponse) SetKeepContainer(value bool) {
+	if m != nil {
+		m.KeepContainer = value
+	}
+}
 func (x *EvacuationResponse) ToProto() *ProtoEvacuationResponse {
 	proto := &ProtoEvacuationResponse{
 		Error:         x.Error.ToProto(),
@@ -34,6 +56,28 @@ type EvacuateClaimedActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (m *EvacuateClaimedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *EvacuateClaimedActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *EvacuateClaimedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *EvacuateClaimedActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
 func (x *EvacuateClaimedActualLRPRequest) ToProto() *ProtoEvacuateClaimedActualLRPRequest {
 	proto := &ProtoEvacuateClaimedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
@@ -61,6 +105,83 @@ type EvacuateRunningActualLRPRequest struct {
 	AvailabilityZone        string
 }
 
+func (m *EvacuateRunningActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *EvacuateRunningActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *EvacuateRunningActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *EvacuateRunningActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
+func (m *EvacuateRunningActualLRPRequest) GetActualLrpNetInfo() *ActualLRPNetInfo {
+	if m != nil {
+		return m.ActualLrpNetInfo
+	}
+	return nil
+}
+func (m *EvacuateRunningActualLRPRequest) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+	if m != nil {
+		m.ActualLrpNetInfo = value
+	}
+}
+func (m *EvacuateRunningActualLRPRequest) GetActualLrpInternalRoutes() []*ActualLRPInternalRoute {
+	if m != nil {
+		return m.ActualLrpInternalRoutes
+	}
+	return nil
+}
+func (m *EvacuateRunningActualLRPRequest) SetActualLrpInternalRoutes(value []*ActualLRPInternalRoute) {
+	if m != nil {
+		m.ActualLrpInternalRoutes = value
+	}
+}
+func (m *EvacuateRunningActualLRPRequest) GetMetricTags() map[string]string {
+	if m != nil {
+		return m.MetricTags
+	}
+	return nil
+}
+func (m *EvacuateRunningActualLRPRequest) SetMetricTags(value map[string]string) {
+	if m != nil {
+		m.MetricTags = value
+	}
+}
+func (m *EvacuateRunningActualLRPRequest) GetProtoRoutable() bool {
+	if m != nil {
+		return m.ProtoRoutable
+	}
+	return false
+}
+func (m *EvacuateRunningActualLRPRequest) SetProtoRoutable(value bool) {
+	if m != nil {
+		m.ProtoRoutable = value
+	}
+}
+func (m *EvacuateRunningActualLRPRequest) GetAvailabilityZone() string {
+	if m != nil {
+		return m.AvailabilityZone
+	}
+	return ""
+}
+func (m *EvacuateRunningActualLRPRequest) SetAvailabilityZone(value string) {
+	if m != nil {
+		m.AvailabilityZone = value
+	}
+}
 func (x *EvacuateRunningActualLRPRequest) ToProto() *ProtoEvacuateRunningActualLRPRequest {
 	proto := &ProtoEvacuateRunningActualLRPRequest{
 		ActualLrpKey:            x.ActualLrpKey.ToProto(),
@@ -88,6 +209,28 @@ type EvacuateStoppedActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (m *EvacuateStoppedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *EvacuateStoppedActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *EvacuateStoppedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *EvacuateStoppedActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
 func (x *EvacuateStoppedActualLRPRequest) ToProto() *ProtoEvacuateStoppedActualLRPRequest {
 	proto := &ProtoEvacuateStoppedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
@@ -111,6 +254,39 @@ type EvacuateCrashedActualLRPRequest struct {
 	ErrorMessage         string
 }
 
+func (m *EvacuateCrashedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *EvacuateCrashedActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *EvacuateCrashedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *EvacuateCrashedActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
+func (m *EvacuateCrashedActualLRPRequest) GetErrorMessage() string {
+	if m != nil {
+		return m.ErrorMessage
+	}
+	return ""
+}
+func (m *EvacuateCrashedActualLRPRequest) SetErrorMessage(value string) {
+	if m != nil {
+		m.ErrorMessage = value
+	}
+}
 func (x *EvacuateCrashedActualLRPRequest) ToProto() *ProtoEvacuateCrashedActualLRPRequest {
 	proto := &ProtoEvacuateCrashedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
@@ -134,6 +310,28 @@ type RemoveEvacuatingActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *RemoveEvacuatingActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *RemoveEvacuatingActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
 func (x *RemoveEvacuatingActualLRPRequest) ToProto() *ProtoRemoveEvacuatingActualLRPRequest {
 	proto := &ProtoRemoveEvacuatingActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
@@ -155,6 +353,17 @@ type RemoveEvacuatingActualLRPResponse struct {
 	Error *Error
 }
 
+func (m *RemoveEvacuatingActualLRPResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *RemoveEvacuatingActualLRPResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
 func (x *RemoveEvacuatingActualLRPResponse) ToProto() *ProtoRemoveEvacuatingActualLRPResponse {
 	proto := &ProtoRemoveEvacuatingActualLRPResponse{
 		Error: x.Error.ToProto(),

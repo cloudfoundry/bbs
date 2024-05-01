@@ -12,6 +12,28 @@ type PortRange struct {
 	End   uint32
 }
 
+func (m *PortRange) GetStart() uint32 {
+	if m != nil {
+		return m.Start
+	}
+	return 0
+}
+func (m *PortRange) SetStart(value uint32) {
+	if m != nil {
+		m.Start = value
+	}
+}
+func (m *PortRange) GetEnd() uint32 {
+	if m != nil {
+		return m.End
+	}
+	return 0
+}
+func (m *PortRange) SetEnd(value uint32) {
+	if m != nil {
+		m.End = value
+	}
+}
 func (x *PortRange) ToProto() *ProtoPortRange {
 	proto := &ProtoPortRange{
 		Start: x.Start,
@@ -34,6 +56,28 @@ type ICMPInfo struct {
 	Code int32
 }
 
+func (m *ICMPInfo) GetType() int32 {
+	if m != nil {
+		return m.Type
+	}
+	return 0
+}
+func (m *ICMPInfo) SetType(value int32) {
+	if m != nil {
+		m.Type = value
+	}
+}
+func (m *ICMPInfo) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+func (m *ICMPInfo) SetCode(value int32) {
+	if m != nil {
+		m.Code = value
+	}
+}
 func (x *ICMPInfo) ToProto() *ProtoICMPInfo {
 	proto := &ProtoICMPInfo{
 		Type: x.Type,
@@ -61,6 +105,83 @@ type SecurityGroupRule struct {
 	Annotations  []string
 }
 
+func (m *SecurityGroupRule) GetProtocol() string {
+	if m != nil {
+		return m.Protocol
+	}
+	return ""
+}
+func (m *SecurityGroupRule) SetProtocol(value string) {
+	if m != nil {
+		m.Protocol = value
+	}
+}
+func (m *SecurityGroupRule) GetDestinations() []string {
+	if m != nil {
+		return m.Destinations
+	}
+	return nil
+}
+func (m *SecurityGroupRule) SetDestinations(value []string) {
+	if m != nil {
+		m.Destinations = value
+	}
+}
+func (m *SecurityGroupRule) GetPorts() []uint32 {
+	if m != nil {
+		return m.Ports
+	}
+	return 0
+}
+func (m *SecurityGroupRule) SetPorts(value []uint32) {
+	if m != nil {
+		m.Ports = value
+	}
+}
+func (m *SecurityGroupRule) GetPortRange() *PortRange {
+	if m != nil {
+		return m.PortRange
+	}
+	return nil
+}
+func (m *SecurityGroupRule) SetPortRange(value *PortRange) {
+	if m != nil {
+		m.PortRange = value
+	}
+}
+func (m *SecurityGroupRule) GetIcmpInfo() *ICMPInfo {
+	if m != nil {
+		return m.IcmpInfo
+	}
+	return nil
+}
+func (m *SecurityGroupRule) SetIcmpInfo(value *ICMPInfo) {
+	if m != nil {
+		m.IcmpInfo = value
+	}
+}
+func (m *SecurityGroupRule) GetLog() bool {
+	if m != nil {
+		return m.Log
+	}
+	return false
+}
+func (m *SecurityGroupRule) SetLog(value bool) {
+	if m != nil {
+		m.Log = value
+	}
+}
+func (m *SecurityGroupRule) GetAnnotations() []string {
+	if m != nil {
+		return m.Annotations
+	}
+	return nil
+}
+func (m *SecurityGroupRule) SetAnnotations(value []string) {
+	if m != nil {
+		m.Annotations = value
+	}
+}
 func (x *SecurityGroupRule) ToProto() *ProtoSecurityGroupRule {
 	proto := &ProtoSecurityGroupRule{
 		Protocol:     x.Protocol,

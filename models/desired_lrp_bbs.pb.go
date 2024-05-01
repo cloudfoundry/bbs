@@ -18,6 +18,94 @@ type DesiredLRPSchedulingInfo struct {
 	ProtoPlacementTags []string
 }
 
+func (m *DesiredLRPSchedulingInfo) GetDesiredLrpKey() *DesiredLRPKey {
+	if m != nil {
+		return m.DesiredLrpKey
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfo) SetDesiredLrpKey(value *DesiredLRPKey) {
+	if m != nil {
+		m.DesiredLrpKey = value
+	}
+}
+func (m *DesiredLRPSchedulingInfo) GetAnnotation() string {
+	if m != nil {
+		return m.Annotation
+	}
+	return ""
+}
+func (m *DesiredLRPSchedulingInfo) SetAnnotation(value string) {
+	if m != nil {
+		m.Annotation = value
+	}
+}
+func (m *DesiredLRPSchedulingInfo) GetInstances() int32 {
+	if m != nil {
+		return m.Instances
+	}
+	return 0
+}
+func (m *DesiredLRPSchedulingInfo) SetInstances(value int32) {
+	if m != nil {
+		m.Instances = value
+	}
+}
+func (m *DesiredLRPSchedulingInfo) GetDesiredLrpResource() *DesiredLRPResource {
+	if m != nil {
+		return m.DesiredLrpResource
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfo) SetDesiredLrpResource(value *DesiredLRPResource) {
+	if m != nil {
+		m.DesiredLrpResource = value
+	}
+}
+func (m *DesiredLRPSchedulingInfo) GetRoutes() *Routes {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfo) SetRoutes(value *Routes) {
+	if m != nil {
+		m.Routes = value
+	}
+}
+func (m *DesiredLRPSchedulingInfo) GetModificationTag() *ModificationTag {
+	if m != nil {
+		return m.ModificationTag
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfo) SetModificationTag(value *ModificationTag) {
+	if m != nil {
+		m.ModificationTag = value
+	}
+}
+func (m *DesiredLRPSchedulingInfo) GetVolumePlacement() *VolumePlacement {
+	if m != nil {
+		return m.VolumePlacement
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfo) SetVolumePlacement(value *VolumePlacement) {
+	if m != nil {
+		m.VolumePlacement = value
+	}
+}
+func (m *DesiredLRPSchedulingInfo) GetProtoPlacementTags() []string {
+	if m != nil {
+		return m.ProtoPlacementTags
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfo) SetProtoPlacementTags(value []string) {
+	if m != nil {
+		m.ProtoPlacementTags = value
+	}
+}
 func (x *DesiredLRPSchedulingInfo) ToProto() *ProtoDesiredLRPSchedulingInfo {
 	proto := &ProtoDesiredLRPSchedulingInfo{
 		DesiredLrpKey:      x.DesiredLrpKey.ToProto(),
@@ -71,6 +159,309 @@ type DesiredLRPRunInfo struct {
 	LogRateLimit                  *LogRateLimit
 }
 
+func (m *DesiredLRPRunInfo) GetDesiredLrpKey() *DesiredLRPKey {
+	if m != nil {
+		return m.DesiredLrpKey
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetDesiredLrpKey(value *DesiredLRPKey) {
+	if m != nil {
+		m.DesiredLrpKey = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetEnvironmentVariables() []*EnvironmentVariable {
+	if m != nil {
+		return m.EnvironmentVariables
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetEnvironmentVariables(value []*EnvironmentVariable) {
+	if m != nil {
+		m.EnvironmentVariables = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetSetup() *Action {
+	if m != nil {
+		return m.Setup
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetSetup(value *Action) {
+	if m != nil {
+		m.Setup = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetAction() *Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetAction(value *Action) {
+	if m != nil {
+		m.Action = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetMonitor() *Action {
+	if m != nil {
+		return m.Monitor
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetMonitor(value *Action) {
+	if m != nil {
+		m.Monitor = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *DesiredLRPRunInfo) GetDeprecatedStartTimeoutS() uint32 {
+	if m != nil {
+		return m.DeprecatedStartTimeoutS
+	}
+	return 0
+}
+func (m *DesiredLRPRunInfo) SetDeprecatedStartTimeoutS(value uint32) {
+	if m != nil {
+		m.DeprecatedStartTimeoutS = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetPrivileged() bool {
+	if m != nil {
+		return m.Privileged
+	}
+	return false
+}
+func (m *DesiredLRPRunInfo) SetPrivileged(value bool) {
+	if m != nil {
+		m.Privileged = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetCpuWeight() uint32 {
+	if m != nil {
+		return m.CpuWeight
+	}
+	return 0
+}
+func (m *DesiredLRPRunInfo) SetCpuWeight(value uint32) {
+	if m != nil {
+		m.CpuWeight = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetPorts() []uint32 {
+	if m != nil {
+		return m.Ports
+	}
+	return 0
+}
+func (m *DesiredLRPRunInfo) SetPorts(value []uint32) {
+	if m != nil {
+		m.Ports = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetEgressRules() []*SecurityGroupRule {
+	if m != nil {
+		return m.EgressRules
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetEgressRules(value []*SecurityGroupRule) {
+	if m != nil {
+		m.EgressRules = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *DesiredLRPRunInfo) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *DesiredLRPRunInfo) GetMetricsGuid() string {
+	if m != nil {
+		return m.MetricsGuid
+	}
+	return ""
+}
+func (m *DesiredLRPRunInfo) SetMetricsGuid(value string) {
+	if m != nil {
+		m.MetricsGuid = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetCreatedAt() int64 {
+	if m != nil {
+		return m.CreatedAt
+	}
+	return 0
+}
+func (m *DesiredLRPRunInfo) SetCreatedAt(value int64) {
+	if m != nil {
+		m.CreatedAt = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetCachedDependencies() []*CachedDependency {
+	if m != nil {
+		return m.CachedDependencies
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetCachedDependencies(value []*CachedDependency) {
+	if m != nil {
+		m.CachedDependencies = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *DesiredLRPRunInfo) GetLegacyDownloadUser() string {
+	if m != nil {
+		return m.LegacyDownloadUser
+	}
+	return ""
+}
+func (m *DesiredLRPRunInfo) SetLegacyDownloadUser(value string) {
+	if m != nil {
+		m.LegacyDownloadUser = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetTrustedSystemCertificatesPath() string {
+	if m != nil {
+		return m.TrustedSystemCertificatesPath
+	}
+	return ""
+}
+func (m *DesiredLRPRunInfo) SetTrustedSystemCertificatesPath(value string) {
+	if m != nil {
+		m.TrustedSystemCertificatesPath = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetVolumeMounts() []*VolumeMount {
+	if m != nil {
+		return m.VolumeMounts
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetVolumeMounts(value []*VolumeMount) {
+	if m != nil {
+		m.VolumeMounts = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetNetwork() *Network {
+	if m != nil {
+		return m.Network
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetNetwork(value *Network) {
+	if m != nil {
+		m.Network = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetStartTimeoutMs() int64 {
+	if m != nil {
+		return m.StartTimeoutMs
+	}
+	return 0
+}
+func (m *DesiredLRPRunInfo) SetStartTimeoutMs(value int64) {
+	if m != nil {
+		m.StartTimeoutMs = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetCertificateProperties() *CertificateProperties {
+	if m != nil {
+		return m.CertificateProperties
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetCertificateProperties(value *CertificateProperties) {
+	if m != nil {
+		m.CertificateProperties = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetImageUsername() string {
+	if m != nil {
+		return m.ImageUsername
+	}
+	return ""
+}
+func (m *DesiredLRPRunInfo) SetImageUsername(value string) {
+	if m != nil {
+		m.ImageUsername = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetImagePassword() string {
+	if m != nil {
+		return m.ImagePassword
+	}
+	return ""
+}
+func (m *DesiredLRPRunInfo) SetImagePassword(value string) {
+	if m != nil {
+		m.ImagePassword = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetCheckDefinition() *CheckDefinition {
+	if m != nil {
+		return m.CheckDefinition
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetCheckDefinition(value *CheckDefinition) {
+	if m != nil {
+		m.CheckDefinition = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetImageLayers() []*ImageLayer {
+	if m != nil {
+		return m.ImageLayers
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetImageLayers(value []*ImageLayer) {
+	if m != nil {
+		m.ImageLayers = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetMetricTags() map[string]*ProtoMetricTagValue {
+	if m != nil {
+		return m.MetricTags
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+	if m != nil {
+		m.MetricTags = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetSidecars() []*Sidecar {
+	if m != nil {
+		return m.Sidecars
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetSidecars(value []*Sidecar) {
+	if m != nil {
+		m.Sidecars = value
+	}
+}
+func (m *DesiredLRPRunInfo) GetLogRateLimit() *LogRateLimit {
+	if m != nil {
+		return m.LogRateLimit
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetLogRateLimit(value *LogRateLimit) {
+	if m != nil {
+		m.LogRateLimit = value
+	}
+}
 func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 	proto := &ProtoDesiredLRPRunInfo{
 		DesiredLrpKey:                 x.DesiredLrpKey.ToProto(),
@@ -120,6 +511,50 @@ type DesiredLRPUpdate struct {
 	MetricTags map[string]*ProtoMetricTagValue
 }
 
+func (m *DesiredLRPUpdate) GetInstances() int32 {
+	if m != nil {
+		return m.Instances
+	}
+	return 0
+}
+func (m *DesiredLRPUpdate) SetInstances(value int32) {
+	if m != nil {
+		m.Instances = value
+	}
+}
+func (m *DesiredLRPUpdate) GetRoutes() *Routes {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
+func (m *DesiredLRPUpdate) SetRoutes(value *Routes) {
+	if m != nil {
+		m.Routes = value
+	}
+}
+func (m *DesiredLRPUpdate) GetAnnotation() string {
+	if m != nil {
+		return m.Annotation
+	}
+	return ""
+}
+func (m *DesiredLRPUpdate) SetAnnotation(value string) {
+	if m != nil {
+		m.Annotation = value
+	}
+}
+func (m *DesiredLRPUpdate) GetMetricTags() map[string]*ProtoMetricTagValue {
+	if m != nil {
+		return m.MetricTags
+	}
+	return nil
+}
+func (m *DesiredLRPUpdate) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+	if m != nil {
+		m.MetricTags = value
+	}
+}
 func (x *DesiredLRPUpdate) ToProto() *ProtoDesiredLRPUpdate {
 	proto := &ProtoDesiredLRPUpdate{
 		Instances:  &x.Instances,
@@ -145,6 +580,39 @@ type DesiredLRPKey struct {
 	LogGuid     string
 }
 
+func (m *DesiredLRPKey) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *DesiredLRPKey) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *DesiredLRPKey) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *DesiredLRPKey) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *DesiredLRPKey) GetLogGuid() string {
+	if m != nil {
+		return m.LogGuid
+	}
+	return ""
+}
+func (m *DesiredLRPKey) SetLogGuid(value string) {
+	if m != nil {
+		m.LogGuid = value
+	}
+}
 func (x *DesiredLRPKey) ToProto() *ProtoDesiredLRPKey {
 	proto := &ProtoDesiredLRPKey{
 		ProcessGuid: x.ProcessGuid,
@@ -170,6 +638,50 @@ type DesiredLRPResource struct {
 	MaxPids  int32
 }
 
+func (m *DesiredLRPResource) GetMemoryMb() int32 {
+	if m != nil {
+		return m.MemoryMb
+	}
+	return 0
+}
+func (m *DesiredLRPResource) SetMemoryMb(value int32) {
+	if m != nil {
+		m.MemoryMb = value
+	}
+}
+func (m *DesiredLRPResource) GetDiskMb() int32 {
+	if m != nil {
+		return m.DiskMb
+	}
+	return 0
+}
+func (m *DesiredLRPResource) SetDiskMb(value int32) {
+	if m != nil {
+		m.DiskMb = value
+	}
+}
+func (m *DesiredLRPResource) GetRootFs() string {
+	if m != nil {
+		return m.RootFs
+	}
+	return ""
+}
+func (m *DesiredLRPResource) SetRootFs(value string) {
+	if m != nil {
+		m.RootFs = value
+	}
+}
+func (m *DesiredLRPResource) GetMaxPids() int32 {
+	if m != nil {
+		return m.MaxPids
+	}
+	return 0
+}
+func (m *DesiredLRPResource) SetMaxPids(value int32) {
+	if m != nil {
+		m.MaxPids = value
+	}
+}
 func (x *DesiredLRPResource) ToProto() *ProtoDesiredLRPResource {
 	proto := &ProtoDesiredLRPResource{
 		MemoryMb: x.MemoryMb,
@@ -229,6 +741,419 @@ type DesiredLRP struct {
 	LogRateLimit                  *LogRateLimit
 }
 
+func (m *DesiredLRP) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *DesiredLRP) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *DesiredLRP) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *DesiredLRP) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *DesiredLRP) GetRootFs() string {
+	if m != nil {
+		return m.RootFs
+	}
+	return ""
+}
+func (m *DesiredLRP) SetRootFs(value string) {
+	if m != nil {
+		m.RootFs = value
+	}
+}
+func (m *DesiredLRP) GetInstances() int32 {
+	if m != nil {
+		return m.Instances
+	}
+	return 0
+}
+func (m *DesiredLRP) SetInstances(value int32) {
+	if m != nil {
+		m.Instances = value
+	}
+}
+func (m *DesiredLRP) GetEnvironmentVariables() []*EnvironmentVariable {
+	if m != nil {
+		return m.EnvironmentVariables
+	}
+	return nil
+}
+func (m *DesiredLRP) SetEnvironmentVariables(value []*EnvironmentVariable) {
+	if m != nil {
+		m.EnvironmentVariables = value
+	}
+}
+func (m *DesiredLRP) GetSetup() *Action {
+	if m != nil {
+		return m.Setup
+	}
+	return nil
+}
+func (m *DesiredLRP) SetSetup(value *Action) {
+	if m != nil {
+		m.Setup = value
+	}
+}
+func (m *DesiredLRP) GetAction() *Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+func (m *DesiredLRP) SetAction(value *Action) {
+	if m != nil {
+		m.Action = value
+	}
+}
+func (m *DesiredLRP) GetStartTimeoutMs() int64 {
+	if m != nil {
+		return m.StartTimeoutMs
+	}
+	return 0
+}
+func (m *DesiredLRP) SetStartTimeoutMs(value int64) {
+	if m != nil {
+		m.StartTimeoutMs = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *DesiredLRP) GetDeprecatedStartTimeoutS() uint32 {
+	if m != nil {
+		return m.DeprecatedStartTimeoutS
+	}
+	return 0
+}
+func (m *DesiredLRP) SetDeprecatedStartTimeoutS(value uint32) {
+	if m != nil {
+		m.DeprecatedStartTimeoutS = value
+	}
+}
+func (m *DesiredLRP) GetMonitor() *Action {
+	if m != nil {
+		return m.Monitor
+	}
+	return nil
+}
+func (m *DesiredLRP) SetMonitor(value *Action) {
+	if m != nil {
+		m.Monitor = value
+	}
+}
+func (m *DesiredLRP) GetDiskMb() int32 {
+	if m != nil {
+		return m.DiskMb
+	}
+	return 0
+}
+func (m *DesiredLRP) SetDiskMb(value int32) {
+	if m != nil {
+		m.DiskMb = value
+	}
+}
+func (m *DesiredLRP) GetMemoryMb() int32 {
+	if m != nil {
+		return m.MemoryMb
+	}
+	return 0
+}
+func (m *DesiredLRP) SetMemoryMb(value int32) {
+	if m != nil {
+		m.MemoryMb = value
+	}
+}
+func (m *DesiredLRP) GetCpuWeight() uint32 {
+	if m != nil {
+		return m.CpuWeight
+	}
+	return 0
+}
+func (m *DesiredLRP) SetCpuWeight(value uint32) {
+	if m != nil {
+		m.CpuWeight = value
+	}
+}
+func (m *DesiredLRP) GetPrivileged() bool {
+	if m != nil {
+		return m.Privileged
+	}
+	return false
+}
+func (m *DesiredLRP) SetPrivileged(value bool) {
+	if m != nil {
+		m.Privileged = value
+	}
+}
+func (m *DesiredLRP) GetPorts() []uint32 {
+	if m != nil {
+		return m.Ports
+	}
+	return 0
+}
+func (m *DesiredLRP) SetPorts(value []uint32) {
+	if m != nil {
+		m.Ports = value
+	}
+}
+func (m *DesiredLRP) GetRoutes() *Routes {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
+func (m *DesiredLRP) SetRoutes(value *Routes) {
+	if m != nil {
+		m.Routes = value
+	}
+}
+func (m *DesiredLRP) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *DesiredLRP) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *DesiredLRP) GetLogGuid() string {
+	if m != nil {
+		return m.LogGuid
+	}
+	return ""
+}
+func (m *DesiredLRP) SetLogGuid(value string) {
+	if m != nil {
+		m.LogGuid = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *DesiredLRP) GetMetricsGuid() string {
+	if m != nil {
+		return m.MetricsGuid
+	}
+	return ""
+}
+func (m *DesiredLRP) SetMetricsGuid(value string) {
+	if m != nil {
+		m.MetricsGuid = value
+	}
+}
+func (m *DesiredLRP) GetAnnotation() string {
+	if m != nil {
+		return m.Annotation
+	}
+	return ""
+}
+func (m *DesiredLRP) SetAnnotation(value string) {
+	if m != nil {
+		m.Annotation = value
+	}
+}
+func (m *DesiredLRP) GetEgressRules() []*SecurityGroupRule {
+	if m != nil {
+		return m.EgressRules
+	}
+	return nil
+}
+func (m *DesiredLRP) SetEgressRules(value []*SecurityGroupRule) {
+	if m != nil {
+		m.EgressRules = value
+	}
+}
+func (m *DesiredLRP) GetModificationTag() *ModificationTag {
+	if m != nil {
+		return m.ModificationTag
+	}
+	return nil
+}
+func (m *DesiredLRP) SetModificationTag(value *ModificationTag) {
+	if m != nil {
+		m.ModificationTag = value
+	}
+}
+func (m *DesiredLRP) GetCachedDependencies() []*CachedDependency {
+	if m != nil {
+		return m.CachedDependencies
+	}
+	return nil
+}
+func (m *DesiredLRP) SetCachedDependencies(value []*CachedDependency) {
+	if m != nil {
+		m.CachedDependencies = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *DesiredLRP) GetLegacyDownloadUser() string {
+	if m != nil {
+		return m.LegacyDownloadUser
+	}
+	return ""
+}
+func (m *DesiredLRP) SetLegacyDownloadUser(value string) {
+	if m != nil {
+		m.LegacyDownloadUser = value
+	}
+}
+func (m *DesiredLRP) GetTrustedSystemCertificatesPath() string {
+	if m != nil {
+		return m.TrustedSystemCertificatesPath
+	}
+	return ""
+}
+func (m *DesiredLRP) SetTrustedSystemCertificatesPath(value string) {
+	if m != nil {
+		m.TrustedSystemCertificatesPath = value
+	}
+}
+func (m *DesiredLRP) GetVolumeMounts() []*VolumeMount {
+	if m != nil {
+		return m.VolumeMounts
+	}
+	return nil
+}
+func (m *DesiredLRP) SetVolumeMounts(value []*VolumeMount) {
+	if m != nil {
+		m.VolumeMounts = value
+	}
+}
+func (m *DesiredLRP) GetNetwork() *Network {
+	if m != nil {
+		return m.Network
+	}
+	return nil
+}
+func (m *DesiredLRP) SetNetwork(value *Network) {
+	if m != nil {
+		m.Network = value
+	}
+}
+func (m *DesiredLRP) GetProtoPlacementTags() []string {
+	if m != nil {
+		return m.ProtoPlacementTags
+	}
+	return nil
+}
+func (m *DesiredLRP) SetProtoPlacementTags(value []string) {
+	if m != nil {
+		m.ProtoPlacementTags = value
+	}
+}
+func (m *DesiredLRP) GetMaxPids() int32 {
+	if m != nil {
+		return m.MaxPids
+	}
+	return 0
+}
+func (m *DesiredLRP) SetMaxPids(value int32) {
+	if m != nil {
+		m.MaxPids = value
+	}
+}
+func (m *DesiredLRP) GetCertificateProperties() *CertificateProperties {
+	if m != nil {
+		return m.CertificateProperties
+	}
+	return nil
+}
+func (m *DesiredLRP) SetCertificateProperties(value *CertificateProperties) {
+	if m != nil {
+		m.CertificateProperties = value
+	}
+}
+func (m *DesiredLRP) GetImageUsername() string {
+	if m != nil {
+		return m.ImageUsername
+	}
+	return ""
+}
+func (m *DesiredLRP) SetImageUsername(value string) {
+	if m != nil {
+		m.ImageUsername = value
+	}
+}
+func (m *DesiredLRP) GetImagePassword() string {
+	if m != nil {
+		return m.ImagePassword
+	}
+	return ""
+}
+func (m *DesiredLRP) SetImagePassword(value string) {
+	if m != nil {
+		m.ImagePassword = value
+	}
+}
+func (m *DesiredLRP) GetCheckDefinition() *CheckDefinition {
+	if m != nil {
+		return m.CheckDefinition
+	}
+	return nil
+}
+func (m *DesiredLRP) SetCheckDefinition(value *CheckDefinition) {
+	if m != nil {
+		m.CheckDefinition = value
+	}
+}
+func (m *DesiredLRP) GetImageLayers() []*ImageLayer {
+	if m != nil {
+		return m.ImageLayers
+	}
+	return nil
+}
+func (m *DesiredLRP) SetImageLayers(value []*ImageLayer) {
+	if m != nil {
+		m.ImageLayers = value
+	}
+}
+func (m *DesiredLRP) GetMetricTags() map[string]*ProtoMetricTagValue {
+	if m != nil {
+		return m.MetricTags
+	}
+	return nil
+}
+func (m *DesiredLRP) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+	if m != nil {
+		m.MetricTags = value
+	}
+}
+func (m *DesiredLRP) GetSidecars() []*Sidecar {
+	if m != nil {
+		return m.Sidecars
+	}
+	return nil
+}
+func (m *DesiredLRP) SetSidecars(value []*Sidecar) {
+	if m != nil {
+		m.Sidecars = value
+	}
+}
+func (m *DesiredLRP) GetLogRateLimit() *LogRateLimit {
+	if m != nil {
+		return m.LogRateLimit
+	}
+	return nil
+}
+func (m *DesiredLRP) SetLogRateLimit(value *LogRateLimit) {
+	if m != nil {
+		m.LogRateLimit = value
+	}
+}
 func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 	proto := &ProtoDesiredLRP{
 		ProcessGuid:                   x.ProcessGuid,

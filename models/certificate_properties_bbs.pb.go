@@ -11,6 +11,17 @@ type CertificateProperties struct {
 	OrganizationalUnit []string
 }
 
+func (m *CertificateProperties) GetOrganizationalUnit() []string {
+	if m != nil {
+		return m.OrganizationalUnit
+	}
+	return nil
+}
+func (m *CertificateProperties) SetOrganizationalUnit(value []string) {
+	if m != nil {
+		m.OrganizationalUnit = value
+	}
+}
 func (x *CertificateProperties) ToProto() *ProtoCertificateProperties {
 	proto := &ProtoCertificateProperties{
 		OrganizationalUnit: x.OrganizationalUnit,

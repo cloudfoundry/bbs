@@ -12,6 +12,28 @@ type ActualLRPGroup struct {
 	Evacuating *ActualLRP
 }
 
+func (m *ActualLRPGroup) GetInstance() *ActualLRP {
+	if m != nil {
+		return m.Instance
+	}
+	return nil
+}
+func (m *ActualLRPGroup) SetInstance(value *ActualLRP) {
+	if m != nil {
+		m.Instance = value
+	}
+}
+func (m *ActualLRPGroup) GetEvacuating() *ActualLRP {
+	if m != nil {
+		return m.Evacuating
+	}
+	return nil
+}
+func (m *ActualLRPGroup) SetEvacuating(value *ActualLRP) {
+	if m != nil {
+		m.Evacuating = value
+	}
+}
 func (x *ActualLRPGroup) ToProto() *ProtoActualLRPGroup {
 	proto := &ProtoActualLRPGroup{
 		Instance:   x.Instance.ToProto(),
@@ -36,6 +58,50 @@ type PortMapping struct {
 	HostTlsProxyPort      uint32
 }
 
+func (m *PortMapping) GetContainerPort() uint32 {
+	if m != nil {
+		return m.ContainerPort
+	}
+	return 0
+}
+func (m *PortMapping) SetContainerPort(value uint32) {
+	if m != nil {
+		m.ContainerPort = value
+	}
+}
+func (m *PortMapping) GetHostPort() uint32 {
+	if m != nil {
+		return m.HostPort
+	}
+	return 0
+}
+func (m *PortMapping) SetHostPort(value uint32) {
+	if m != nil {
+		m.HostPort = value
+	}
+}
+func (m *PortMapping) GetContainerTlsProxyPort() uint32 {
+	if m != nil {
+		return m.ContainerTlsProxyPort
+	}
+	return 0
+}
+func (m *PortMapping) SetContainerTlsProxyPort(value uint32) {
+	if m != nil {
+		m.ContainerTlsProxyPort = value
+	}
+}
+func (m *PortMapping) GetHostTlsProxyPort() uint32 {
+	if m != nil {
+		return m.HostTlsProxyPort
+	}
+	return 0
+}
+func (m *PortMapping) SetHostTlsProxyPort(value uint32) {
+	if m != nil {
+		m.HostTlsProxyPort = value
+	}
+}
 func (x *PortMapping) ToProto() *ProtoPortMapping {
 	proto := &ProtoPortMapping{
 		ContainerPort:         x.ContainerPort,
@@ -61,6 +127,39 @@ type ActualLRPKey struct {
 	Domain      string
 }
 
+func (m *ActualLRPKey) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *ActualLRPKey) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *ActualLRPKey) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+func (m *ActualLRPKey) SetIndex(value int32) {
+	if m != nil {
+		m.Index = value
+	}
+}
+func (m *ActualLRPKey) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *ActualLRPKey) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
 func (x *ActualLRPKey) ToProto() *ProtoActualLRPKey {
 	proto := &ProtoActualLRPKey{
 		ProcessGuid: x.ProcessGuid,
@@ -84,6 +183,28 @@ type ActualLRPInstanceKey struct {
 	CellId       string
 }
 
+func (m *ActualLRPInstanceKey) GetInstanceGuid() string {
+	if m != nil {
+		return m.InstanceGuid
+	}
+	return ""
+}
+func (m *ActualLRPInstanceKey) SetInstanceGuid(value string) {
+	if m != nil {
+		m.InstanceGuid = value
+	}
+}
+func (m *ActualLRPInstanceKey) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *ActualLRPInstanceKey) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
 func (x *ActualLRPInstanceKey) ToProto() *ProtoActualLRPInstanceKey {
 	proto := &ProtoActualLRPInstanceKey{
 		InstanceGuid: x.InstanceGuid,
@@ -116,6 +237,50 @@ type ActualLRPNetInfo struct {
 	PreferredAddress ActualLRPNetInfo_PreferredAddress
 }
 
+func (m *ActualLRPNetInfo) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+func (m *ActualLRPNetInfo) SetAddress(value string) {
+	if m != nil {
+		m.Address = value
+	}
+}
+func (m *ActualLRPNetInfo) GetPorts() []*PortMapping {
+	if m != nil {
+		return m.Ports
+	}
+	return nil
+}
+func (m *ActualLRPNetInfo) SetPorts(value []*PortMapping) {
+	if m != nil {
+		m.Ports = value
+	}
+}
+func (m *ActualLRPNetInfo) GetInstanceAddress() string {
+	if m != nil {
+		return m.InstanceAddress
+	}
+	return ""
+}
+func (m *ActualLRPNetInfo) SetInstanceAddress(value string) {
+	if m != nil {
+		m.InstanceAddress = value
+	}
+}
+func (m *ActualLRPNetInfo) GetPreferredAddress() ActualLRPNetInfo_PreferredAddress {
+	if m != nil {
+		return m.PreferredAddress
+	}
+	return 0
+}
+func (m *ActualLRPNetInfo) SetPreferredAddress(value ActualLRPNetInfo_PreferredAddress) {
+	if m != nil {
+		m.PreferredAddress = value
+	}
+}
 func (x *ActualLRPNetInfo) ToProto() *ProtoActualLRPNetInfo {
 	proto := &ProtoActualLRPNetInfo{
 		Address:          x.Address,
@@ -139,6 +304,17 @@ type ActualLRPInternalRoute struct {
 	Hostname string
 }
 
+func (m *ActualLRPInternalRoute) GetHostname() string {
+	if m != nil {
+		return m.Hostname
+	}
+	return ""
+}
+func (m *ActualLRPInternalRoute) SetHostname(value string) {
+	if m != nil {
+		m.Hostname = value
+	}
+}
 func (x *ActualLRPInternalRoute) ToProto() *ProtoActualLRPInternalRoute {
 	proto := &ProtoActualLRPInternalRoute{
 		Hostname: x.Hostname,
@@ -180,6 +356,160 @@ type ActualLRP struct {
 	AvailabilityZone        string
 }
 
+func (m *ActualLRP) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *ActualLRP) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *ActualLRP) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *ActualLRP) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
+func (m *ActualLRP) GetActualLrpNetInfo() *ActualLRPNetInfo {
+	if m != nil {
+		return m.ActualLrpNetInfo
+	}
+	return nil
+}
+func (m *ActualLRP) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+	if m != nil {
+		m.ActualLrpNetInfo = value
+	}
+}
+func (m *ActualLRP) GetCrashCount() int32 {
+	if m != nil {
+		return m.CrashCount
+	}
+	return 0
+}
+func (m *ActualLRP) SetCrashCount(value int32) {
+	if m != nil {
+		m.CrashCount = value
+	}
+}
+func (m *ActualLRP) GetCrashReason() string {
+	if m != nil {
+		return m.CrashReason
+	}
+	return ""
+}
+func (m *ActualLRP) SetCrashReason(value string) {
+	if m != nil {
+		m.CrashReason = value
+	}
+}
+func (m *ActualLRP) GetState() string {
+	if m != nil {
+		return m.State
+	}
+	return ""
+}
+func (m *ActualLRP) SetState(value string) {
+	if m != nil {
+		m.State = value
+	}
+}
+func (m *ActualLRP) GetPlacementError() string {
+	if m != nil {
+		return m.PlacementError
+	}
+	return ""
+}
+func (m *ActualLRP) SetPlacementError(value string) {
+	if m != nil {
+		m.PlacementError = value
+	}
+}
+func (m *ActualLRP) GetSince() int64 {
+	if m != nil {
+		return m.Since
+	}
+	return 0
+}
+func (m *ActualLRP) SetSince(value int64) {
+	if m != nil {
+		m.Since = value
+	}
+}
+func (m *ActualLRP) GetModificationTag() *ModificationTag {
+	if m != nil {
+		return m.ModificationTag
+	}
+	return nil
+}
+func (m *ActualLRP) SetModificationTag(value *ModificationTag) {
+	if m != nil {
+		m.ModificationTag = value
+	}
+}
+func (m *ActualLRP) GetPresence() ActualLRP_Presence {
+	if m != nil {
+		return m.Presence
+	}
+	return 0
+}
+func (m *ActualLRP) SetPresence(value ActualLRP_Presence) {
+	if m != nil {
+		m.Presence = value
+	}
+}
+func (m *ActualLRP) GetActualLrpInternalRoutes() []*ActualLRPInternalRoute {
+	if m != nil {
+		return m.ActualLrpInternalRoutes
+	}
+	return nil
+}
+func (m *ActualLRP) SetActualLrpInternalRoutes(value []*ActualLRPInternalRoute) {
+	if m != nil {
+		m.ActualLrpInternalRoutes = value
+	}
+}
+func (m *ActualLRP) GetMetricTags() map[string]string {
+	if m != nil {
+		return m.MetricTags
+	}
+	return nil
+}
+func (m *ActualLRP) SetMetricTags(value map[string]string) {
+	if m != nil {
+		m.MetricTags = value
+	}
+}
+func (m *ActualLRP) GetRoutable() bool {
+	if m != nil {
+		return m.Routable
+	}
+	return false
+}
+func (m *ActualLRP) SetRoutable(value bool) {
+	if m != nil {
+		m.Routable = value
+	}
+}
+func (m *ActualLRP) GetAvailabilityZone() string {
+	if m != nil {
+		return m.AvailabilityZone
+	}
+	return ""
+}
+func (m *ActualLRP) SetAvailabilityZone(value string) {
+	if m != nil {
+		m.AvailabilityZone = value
+	}
+}
 func (x *ActualLRP) ToProto() *ProtoActualLRP {
 	proto := &ProtoActualLRP{
 		ActualLrpKey:            x.ActualLrpKey.ToProto(),

@@ -12,6 +12,28 @@ type DomainsResponse struct {
 	Domains []string
 }
 
+func (m *DomainsResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *DomainsResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *DomainsResponse) GetDomains() []string {
+	if m != nil {
+		return m.Domains
+	}
+	return nil
+}
+func (m *DomainsResponse) SetDomains(value []string) {
+	if m != nil {
+		m.Domains = value
+	}
+}
 func (x *DomainsResponse) ToProto() *ProtoDomainsResponse {
 	proto := &ProtoDomainsResponse{
 		Error:   x.Error.ToProto(),
@@ -33,6 +55,17 @@ type UpsertDomainResponse struct {
 	Error *Error
 }
 
+func (m *UpsertDomainResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *UpsertDomainResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
 func (x *UpsertDomainResponse) ToProto() *ProtoUpsertDomainResponse {
 	proto := &ProtoUpsertDomainResponse{
 		Error: x.Error.ToProto(),
@@ -54,6 +87,28 @@ type UpsertDomainRequest struct {
 	Ttl    uint32
 }
 
+func (m *UpsertDomainRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *UpsertDomainRequest) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *UpsertDomainRequest) GetTtl() uint32 {
+	if m != nil {
+		return m.Ttl
+	}
+	return 0
+}
+func (m *UpsertDomainRequest) SetTtl(value uint32) {
+	if m != nil {
+		m.Ttl = value
+	}
+}
 func (x *UpsertDomainRequest) ToProto() *ProtoUpsertDomainRequest {
 	proto := &ProtoUpsertDomainRequest{
 		Domain: x.Domain,

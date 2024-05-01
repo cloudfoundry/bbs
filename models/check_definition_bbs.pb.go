@@ -13,6 +13,39 @@ type CheckDefinition struct {
 	ReadinessChecks []*Check
 }
 
+func (m *CheckDefinition) GetChecks() []*Check {
+	if m != nil {
+		return m.Checks
+	}
+	return nil
+}
+func (m *CheckDefinition) SetChecks(value []*Check) {
+	if m != nil {
+		m.Checks = value
+	}
+}
+func (m *CheckDefinition) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *CheckDefinition) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *CheckDefinition) GetReadinessChecks() []*Check {
+	if m != nil {
+		return m.ReadinessChecks
+	}
+	return nil
+}
+func (m *CheckDefinition) SetReadinessChecks(value []*Check) {
+	if m != nil {
+		m.ReadinessChecks = value
+	}
+}
 func (x *CheckDefinition) ToProto() *ProtoCheckDefinition {
 	proto := &ProtoCheckDefinition{
 		Checks:          CheckProtoMap(x.Checks),
@@ -36,6 +69,28 @@ type Check struct {
 	HttpCheck *HTTPCheck
 }
 
+func (m *Check) GetTcpCheck() *TCPCheck {
+	if m != nil {
+		return m.TcpCheck
+	}
+	return nil
+}
+func (m *Check) SetTcpCheck(value *TCPCheck) {
+	if m != nil {
+		m.TcpCheck = value
+	}
+}
+func (m *Check) GetHttpCheck() *HTTPCheck {
+	if m != nil {
+		return m.HttpCheck
+	}
+	return nil
+}
+func (m *Check) SetHttpCheck(value *HTTPCheck) {
+	if m != nil {
+		m.HttpCheck = value
+	}
+}
 func (x *Check) ToProto() *ProtoCheck {
 	proto := &ProtoCheck{
 		TcpCheck:  x.TcpCheck.ToProto(),
@@ -59,6 +114,39 @@ type TCPCheck struct {
 	IntervalMs       uint64
 }
 
+func (m *TCPCheck) GetPort() uint32 {
+	if m != nil {
+		return m.Port
+	}
+	return 0
+}
+func (m *TCPCheck) SetPort(value uint32) {
+	if m != nil {
+		m.Port = value
+	}
+}
+func (m *TCPCheck) GetConnectTimeoutMs() uint64 {
+	if m != nil {
+		return m.ConnectTimeoutMs
+	}
+	return 0
+}
+func (m *TCPCheck) SetConnectTimeoutMs(value uint64) {
+	if m != nil {
+		m.ConnectTimeoutMs = value
+	}
+}
+func (m *TCPCheck) GetIntervalMs() uint64 {
+	if m != nil {
+		return m.IntervalMs
+	}
+	return 0
+}
+func (m *TCPCheck) SetIntervalMs(value uint64) {
+	if m != nil {
+		m.IntervalMs = value
+	}
+}
 func (x *TCPCheck) ToProto() *ProtoTCPCheck {
 	proto := &ProtoTCPCheck{
 		Port:             x.Port,
@@ -84,6 +172,50 @@ type HTTPCheck struct {
 	IntervalMs       uint64
 }
 
+func (m *HTTPCheck) GetPort() uint32 {
+	if m != nil {
+		return m.Port
+	}
+	return 0
+}
+func (m *HTTPCheck) SetPort(value uint32) {
+	if m != nil {
+		m.Port = value
+	}
+}
+func (m *HTTPCheck) GetRequestTimeoutMs() uint64 {
+	if m != nil {
+		return m.RequestTimeoutMs
+	}
+	return 0
+}
+func (m *HTTPCheck) SetRequestTimeoutMs(value uint64) {
+	if m != nil {
+		m.RequestTimeoutMs = value
+	}
+}
+func (m *HTTPCheck) GetPath() string {
+	if m != nil {
+		return m.Path
+	}
+	return ""
+}
+func (m *HTTPCheck) SetPath(value string) {
+	if m != nil {
+		m.Path = value
+	}
+}
+func (m *HTTPCheck) GetIntervalMs() uint64 {
+	if m != nil {
+		return m.IntervalMs
+	}
+	return 0
+}
+func (m *HTTPCheck) SetIntervalMs(value uint64) {
+	if m != nil {
+		m.IntervalMs = value
+	}
+}
 func (x *HTTPCheck) ToProto() *ProtoHTTPCheck {
 	proto := &ProtoHTTPCheck{
 		Port:             x.Port,

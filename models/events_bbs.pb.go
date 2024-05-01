@@ -11,6 +11,17 @@ type ActualLRPCreatedEvent struct {
 	ActualLrpGroup *ActualLRPGroup
 }
 
+func (m *ActualLRPCreatedEvent) GetActualLrpGroup() *ActualLRPGroup {
+	if m != nil {
+		return m.ActualLrpGroup
+	}
+	return nil
+}
+func (m *ActualLRPCreatedEvent) SetActualLrpGroup(value *ActualLRPGroup) {
+	if m != nil {
+		m.ActualLrpGroup = value
+	}
+}
 func (x *ActualLRPCreatedEvent) ToProto() *ProtoActualLRPCreatedEvent {
 	proto := &ProtoActualLRPCreatedEvent{
 		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
@@ -32,6 +43,28 @@ type ActualLRPChangedEvent struct {
 	After  *ActualLRPGroup
 }
 
+func (m *ActualLRPChangedEvent) GetBefore() *ActualLRPGroup {
+	if m != nil {
+		return m.Before
+	}
+	return nil
+}
+func (m *ActualLRPChangedEvent) SetBefore(value *ActualLRPGroup) {
+	if m != nil {
+		m.Before = value
+	}
+}
+func (m *ActualLRPChangedEvent) GetAfter() *ActualLRPGroup {
+	if m != nil {
+		return m.After
+	}
+	return nil
+}
+func (m *ActualLRPChangedEvent) SetAfter(value *ActualLRPGroup) {
+	if m != nil {
+		m.After = value
+	}
+}
 func (x *ActualLRPChangedEvent) ToProto() *ProtoActualLRPChangedEvent {
 	proto := &ProtoActualLRPChangedEvent{
 		Before: x.Before.ToProto(),
@@ -53,6 +86,17 @@ type ActualLRPRemovedEvent struct {
 	ActualLrpGroup *ActualLRPGroup
 }
 
+func (m *ActualLRPRemovedEvent) GetActualLrpGroup() *ActualLRPGroup {
+	if m != nil {
+		return m.ActualLrpGroup
+	}
+	return nil
+}
+func (m *ActualLRPRemovedEvent) SetActualLrpGroup(value *ActualLRPGroup) {
+	if m != nil {
+		m.ActualLrpGroup = value
+	}
+}
 func (x *ActualLRPRemovedEvent) ToProto() *ProtoActualLRPRemovedEvent {
 	proto := &ProtoActualLRPRemovedEvent{
 		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
@@ -74,6 +118,28 @@ type ActualLRPInstanceCreatedEvent struct {
 	TraceId   string
 }
 
+func (m *ActualLRPInstanceCreatedEvent) GetActualLrp() *ActualLRP {
+	if m != nil {
+		return m.ActualLrp
+	}
+	return nil
+}
+func (m *ActualLRPInstanceCreatedEvent) SetActualLrp(value *ActualLRP) {
+	if m != nil {
+		m.ActualLrp = value
+	}
+}
+func (m *ActualLRPInstanceCreatedEvent) GetTraceId() string {
+	if m != nil {
+		return m.TraceId
+	}
+	return ""
+}
+func (m *ActualLRPInstanceCreatedEvent) SetTraceId(value string) {
+	if m != nil {
+		m.TraceId = value
+	}
+}
 func (x *ActualLRPInstanceCreatedEvent) ToProto() *ProtoActualLRPInstanceCreatedEvent {
 	proto := &ProtoActualLRPInstanceCreatedEvent{
 		ActualLrp: x.ActualLrp.ToProto(),
@@ -104,6 +170,116 @@ type ActualLRPInfo struct {
 	AvailabilityZone string
 }
 
+func (m *ActualLRPInfo) GetActualLrpNetInfo() *ActualLRPNetInfo {
+	if m != nil {
+		return m.ActualLrpNetInfo
+	}
+	return nil
+}
+func (m *ActualLRPInfo) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+	if m != nil {
+		m.ActualLrpNetInfo = value
+	}
+}
+func (m *ActualLRPInfo) GetCrashCount() int32 {
+	if m != nil {
+		return m.CrashCount
+	}
+	return 0
+}
+func (m *ActualLRPInfo) SetCrashCount(value int32) {
+	if m != nil {
+		m.CrashCount = value
+	}
+}
+func (m *ActualLRPInfo) GetCrashReason() string {
+	if m != nil {
+		return m.CrashReason
+	}
+	return ""
+}
+func (m *ActualLRPInfo) SetCrashReason(value string) {
+	if m != nil {
+		m.CrashReason = value
+	}
+}
+func (m *ActualLRPInfo) GetState() string {
+	if m != nil {
+		return m.State
+	}
+	return ""
+}
+func (m *ActualLRPInfo) SetState(value string) {
+	if m != nil {
+		m.State = value
+	}
+}
+func (m *ActualLRPInfo) GetPlacementError() string {
+	if m != nil {
+		return m.PlacementError
+	}
+	return ""
+}
+func (m *ActualLRPInfo) SetPlacementError(value string) {
+	if m != nil {
+		m.PlacementError = value
+	}
+}
+func (m *ActualLRPInfo) GetSince() int64 {
+	if m != nil {
+		return m.Since
+	}
+	return 0
+}
+func (m *ActualLRPInfo) SetSince(value int64) {
+	if m != nil {
+		m.Since = value
+	}
+}
+func (m *ActualLRPInfo) GetModificationTag() *ModificationTag {
+	if m != nil {
+		return m.ModificationTag
+	}
+	return nil
+}
+func (m *ActualLRPInfo) SetModificationTag(value *ModificationTag) {
+	if m != nil {
+		m.ModificationTag = value
+	}
+}
+func (m *ActualLRPInfo) GetPresence() ActualLRP_Presence {
+	if m != nil {
+		return m.Presence
+	}
+	return 0
+}
+func (m *ActualLRPInfo) SetPresence(value ActualLRP_Presence) {
+	if m != nil {
+		m.Presence = value
+	}
+}
+func (m *ActualLRPInfo) GetProtoRoutable() bool {
+	if m != nil {
+		return m.ProtoRoutable
+	}
+	return false
+}
+func (m *ActualLRPInfo) SetProtoRoutable(value bool) {
+	if m != nil {
+		m.ProtoRoutable = value
+	}
+}
+func (m *ActualLRPInfo) GetAvailabilityZone() string {
+	if m != nil {
+		return m.AvailabilityZone
+	}
+	return ""
+}
+func (m *ActualLRPInfo) SetAvailabilityZone(value string) {
+	if m != nil {
+		m.AvailabilityZone = value
+	}
+}
 func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
 	proto := &ProtoActualLRPInfo{
 		ActualLrpNetInfo: x.ActualLrpNetInfo.ToProto(),
@@ -137,6 +313,61 @@ type ActualLRPInstanceChangedEvent struct {
 	TraceId              string
 }
 
+func (m *ActualLRPInstanceChangedEvent) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *ActualLRPInstanceChangedEvent) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *ActualLRPInstanceChangedEvent) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *ActualLRPInstanceChangedEvent) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
+func (m *ActualLRPInstanceChangedEvent) GetBefore() *ActualLRPInfo {
+	if m != nil {
+		return m.Before
+	}
+	return nil
+}
+func (m *ActualLRPInstanceChangedEvent) SetBefore(value *ActualLRPInfo) {
+	if m != nil {
+		m.Before = value
+	}
+}
+func (m *ActualLRPInstanceChangedEvent) GetAfter() *ActualLRPInfo {
+	if m != nil {
+		return m.After
+	}
+	return nil
+}
+func (m *ActualLRPInstanceChangedEvent) SetAfter(value *ActualLRPInfo) {
+	if m != nil {
+		m.After = value
+	}
+}
+func (m *ActualLRPInstanceChangedEvent) GetTraceId() string {
+	if m != nil {
+		return m.TraceId
+	}
+	return ""
+}
+func (m *ActualLRPInstanceChangedEvent) SetTraceId(value string) {
+	if m != nil {
+		m.TraceId = value
+	}
+}
 func (x *ActualLRPInstanceChangedEvent) ToProto() *ProtoActualLRPInstanceChangedEvent {
 	proto := &ProtoActualLRPInstanceChangedEvent{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
@@ -162,6 +393,28 @@ type ActualLRPInstanceRemovedEvent struct {
 	TraceId   string
 }
 
+func (m *ActualLRPInstanceRemovedEvent) GetActualLrp() *ActualLRP {
+	if m != nil {
+		return m.ActualLrp
+	}
+	return nil
+}
+func (m *ActualLRPInstanceRemovedEvent) SetActualLrp(value *ActualLRP) {
+	if m != nil {
+		m.ActualLrp = value
+	}
+}
+func (m *ActualLRPInstanceRemovedEvent) GetTraceId() string {
+	if m != nil {
+		return m.TraceId
+	}
+	return ""
+}
+func (m *ActualLRPInstanceRemovedEvent) SetTraceId(value string) {
+	if m != nil {
+		m.TraceId = value
+	}
+}
 func (x *ActualLRPInstanceRemovedEvent) ToProto() *ProtoActualLRPInstanceRemovedEvent {
 	proto := &ProtoActualLRPInstanceRemovedEvent{
 		ActualLrp: x.ActualLrp.ToProto(),
@@ -184,6 +437,28 @@ type DesiredLRPCreatedEvent struct {
 	TraceId    string
 }
 
+func (m *DesiredLRPCreatedEvent) GetDesiredLrp() *DesiredLRP {
+	if m != nil {
+		return m.DesiredLrp
+	}
+	return nil
+}
+func (m *DesiredLRPCreatedEvent) SetDesiredLrp(value *DesiredLRP) {
+	if m != nil {
+		m.DesiredLrp = value
+	}
+}
+func (m *DesiredLRPCreatedEvent) GetTraceId() string {
+	if m != nil {
+		return m.TraceId
+	}
+	return ""
+}
+func (m *DesiredLRPCreatedEvent) SetTraceId(value string) {
+	if m != nil {
+		m.TraceId = value
+	}
+}
 func (x *DesiredLRPCreatedEvent) ToProto() *ProtoDesiredLRPCreatedEvent {
 	proto := &ProtoDesiredLRPCreatedEvent{
 		DesiredLrp: x.DesiredLrp.ToProto(),
@@ -207,6 +482,39 @@ type DesiredLRPChangedEvent struct {
 	TraceId string
 }
 
+func (m *DesiredLRPChangedEvent) GetBefore() *DesiredLRP {
+	if m != nil {
+		return m.Before
+	}
+	return nil
+}
+func (m *DesiredLRPChangedEvent) SetBefore(value *DesiredLRP) {
+	if m != nil {
+		m.Before = value
+	}
+}
+func (m *DesiredLRPChangedEvent) GetAfter() *DesiredLRP {
+	if m != nil {
+		return m.After
+	}
+	return nil
+}
+func (m *DesiredLRPChangedEvent) SetAfter(value *DesiredLRP) {
+	if m != nil {
+		m.After = value
+	}
+}
+func (m *DesiredLRPChangedEvent) GetTraceId() string {
+	if m != nil {
+		return m.TraceId
+	}
+	return ""
+}
+func (m *DesiredLRPChangedEvent) SetTraceId(value string) {
+	if m != nil {
+		m.TraceId = value
+	}
+}
 func (x *DesiredLRPChangedEvent) ToProto() *ProtoDesiredLRPChangedEvent {
 	proto := &ProtoDesiredLRPChangedEvent{
 		Before:  x.Before.ToProto(),
@@ -230,6 +538,28 @@ type DesiredLRPRemovedEvent struct {
 	TraceId    string
 }
 
+func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
+	if m != nil {
+		return m.DesiredLrp
+	}
+	return nil
+}
+func (m *DesiredLRPRemovedEvent) SetDesiredLrp(value *DesiredLRP) {
+	if m != nil {
+		m.DesiredLrp = value
+	}
+}
+func (m *DesiredLRPRemovedEvent) GetTraceId() string {
+	if m != nil {
+		return m.TraceId
+	}
+	return ""
+}
+func (m *DesiredLRPRemovedEvent) SetTraceId(value string) {
+	if m != nil {
+		m.TraceId = value
+	}
+}
 func (x *DesiredLRPRemovedEvent) ToProto() *ProtoDesiredLRPRemovedEvent {
 	proto := &ProtoDesiredLRPRemovedEvent{
 		DesiredLrp: x.DesiredLrp.ToProto(),
@@ -255,6 +585,61 @@ type ActualLRPCrashedEvent struct {
 	Since                int64
 }
 
+func (m *ActualLRPCrashedEvent) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *ActualLRPCrashedEvent) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *ActualLRPCrashedEvent) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *ActualLRPCrashedEvent) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
+func (m *ActualLRPCrashedEvent) GetCrashCount() int32 {
+	if m != nil {
+		return m.CrashCount
+	}
+	return 0
+}
+func (m *ActualLRPCrashedEvent) SetCrashCount(value int32) {
+	if m != nil {
+		m.CrashCount = value
+	}
+}
+func (m *ActualLRPCrashedEvent) GetCrashReason() string {
+	if m != nil {
+		return m.CrashReason
+	}
+	return ""
+}
+func (m *ActualLRPCrashedEvent) SetCrashReason(value string) {
+	if m != nil {
+		m.CrashReason = value
+	}
+}
+func (m *ActualLRPCrashedEvent) GetSince() int64 {
+	if m != nil {
+		return m.Since
+	}
+	return 0
+}
+func (m *ActualLRPCrashedEvent) SetSince(value int64) {
+	if m != nil {
+		m.Since = value
+	}
+}
 func (x *ActualLRPCrashedEvent) ToProto() *ProtoActualLRPCrashedEvent {
 	proto := &ProtoActualLRPCrashedEvent{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
@@ -279,6 +664,17 @@ type EventsByCellId struct {
 	CellId string
 }
 
+func (m *EventsByCellId) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *EventsByCellId) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
 func (x *EventsByCellId) ToProto() *ProtoEventsByCellId {
 	proto := &ProtoEventsByCellId{
 		CellId: x.CellId,
@@ -299,6 +695,17 @@ type TaskCreatedEvent struct {
 	Task *Task
 }
 
+func (m *TaskCreatedEvent) GetTask() *Task {
+	if m != nil {
+		return m.Task
+	}
+	return nil
+}
+func (m *TaskCreatedEvent) SetTask(value *Task) {
+	if m != nil {
+		m.Task = value
+	}
+}
 func (x *TaskCreatedEvent) ToProto() *ProtoTaskCreatedEvent {
 	proto := &ProtoTaskCreatedEvent{
 		Task: x.Task.ToProto(),
@@ -320,6 +727,28 @@ type TaskChangedEvent struct {
 	After  *Task
 }
 
+func (m *TaskChangedEvent) GetBefore() *Task {
+	if m != nil {
+		return m.Before
+	}
+	return nil
+}
+func (m *TaskChangedEvent) SetBefore(value *Task) {
+	if m != nil {
+		m.Before = value
+	}
+}
+func (m *TaskChangedEvent) GetAfter() *Task {
+	if m != nil {
+		return m.After
+	}
+	return nil
+}
+func (m *TaskChangedEvent) SetAfter(value *Task) {
+	if m != nil {
+		m.After = value
+	}
+}
 func (x *TaskChangedEvent) ToProto() *ProtoTaskChangedEvent {
 	proto := &ProtoTaskChangedEvent{
 		Before: x.Before.ToProto(),
@@ -341,6 +770,17 @@ type TaskRemovedEvent struct {
 	Task *Task
 }
 
+func (m *TaskRemovedEvent) GetTask() *Task {
+	if m != nil {
+		return m.Task
+	}
+	return nil
+}
+func (m *TaskRemovedEvent) SetTask(value *Task) {
+	if m != nil {
+		m.Task = value
+	}
+}
 func (x *TaskRemovedEvent) ToProto() *ProtoTaskRemovedEvent {
 	proto := &ProtoTaskRemovedEvent{
 		Task: x.Task.ToProto(),

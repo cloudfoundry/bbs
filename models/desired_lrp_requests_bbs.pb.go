@@ -11,6 +11,17 @@ type DesiredLRPLifecycleResponse struct {
 	Error *Error
 }
 
+func (m *DesiredLRPLifecycleResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *DesiredLRPLifecycleResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
 func (x *DesiredLRPLifecycleResponse) ToProto() *ProtoDesiredLRPLifecycleResponse {
 	proto := &ProtoDesiredLRPLifecycleResponse{
 		Error: x.Error.ToProto(),
@@ -32,6 +43,28 @@ type DesiredLRPsResponse struct {
 	DesiredLrps []*DesiredLRP
 }
 
+func (m *DesiredLRPsResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *DesiredLRPsResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *DesiredLRPsResponse) GetDesiredLrps() []*DesiredLRP {
+	if m != nil {
+		return m.DesiredLrps
+	}
+	return nil
+}
+func (m *DesiredLRPsResponse) SetDesiredLrps(value []*DesiredLRP) {
+	if m != nil {
+		m.DesiredLrps = value
+	}
+}
 func (x *DesiredLRPsResponse) ToProto() *ProtoDesiredLRPsResponse {
 	proto := &ProtoDesiredLRPsResponse{
 		Error:       x.Error.ToProto(),
@@ -54,6 +87,28 @@ type DesiredLRPsRequest struct {
 	ProcessGuids []string
 }
 
+func (m *DesiredLRPsRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *DesiredLRPsRequest) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *DesiredLRPsRequest) GetProcessGuids() []string {
+	if m != nil {
+		return m.ProcessGuids
+	}
+	return nil
+}
+func (m *DesiredLRPsRequest) SetProcessGuids(value []string) {
+	if m != nil {
+		m.ProcessGuids = value
+	}
+}
 func (x *DesiredLRPsRequest) ToProto() *ProtoDesiredLRPsRequest {
 	proto := &ProtoDesiredLRPsRequest{
 		Domain:       x.Domain,
@@ -76,6 +131,28 @@ type DesiredLRPResponse struct {
 	DesiredLrp *DesiredLRP
 }
 
+func (m *DesiredLRPResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *DesiredLRPResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *DesiredLRPResponse) GetDesiredLrp() *DesiredLRP {
+	if m != nil {
+		return m.DesiredLrp
+	}
+	return nil
+}
+func (m *DesiredLRPResponse) SetDesiredLrp(value *DesiredLRP) {
+	if m != nil {
+		m.DesiredLrp = value
+	}
+}
 func (x *DesiredLRPResponse) ToProto() *ProtoDesiredLRPResponse {
 	proto := &ProtoDesiredLRPResponse{
 		Error:      x.Error.ToProto(),
@@ -98,6 +175,28 @@ type DesiredLRPSchedulingInfosResponse struct {
 	DesiredLrpSchedulingInfos []*DesiredLRPSchedulingInfo
 }
 
+func (m *DesiredLRPSchedulingInfosResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfosResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *DesiredLRPSchedulingInfosResponse) GetDesiredLrpSchedulingInfos() []*DesiredLRPSchedulingInfo {
+	if m != nil {
+		return m.DesiredLrpSchedulingInfos
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfosResponse) SetDesiredLrpSchedulingInfos(value []*DesiredLRPSchedulingInfo) {
+	if m != nil {
+		m.DesiredLrpSchedulingInfos = value
+	}
+}
 func (x *DesiredLRPSchedulingInfosResponse) ToProto() *ProtoDesiredLRPSchedulingInfosResponse {
 	proto := &ProtoDesiredLRPSchedulingInfosResponse{
 		Error:                     x.Error.ToProto(),
@@ -120,6 +219,28 @@ type DesiredLRPSchedulingInfoByProcessGuidResponse struct {
 	DesiredLrpSchedulingInfo *DesiredLRPSchedulingInfo
 }
 
+func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) GetDesiredLrpSchedulingInfo() *DesiredLRPSchedulingInfo {
+	if m != nil {
+		return m.DesiredLrpSchedulingInfo
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) SetDesiredLrpSchedulingInfo(value *DesiredLRPSchedulingInfo) {
+	if m != nil {
+		m.DesiredLrpSchedulingInfo = value
+	}
+}
 func (x *DesiredLRPSchedulingInfoByProcessGuidResponse) ToProto() *ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
 	proto := &ProtoDesiredLRPSchedulingInfoByProcessGuidResponse{
 		Error:                    x.Error.ToProto(),
@@ -141,6 +262,17 @@ type DesiredLRPByProcessGuidRequest struct {
 	ProcessGuid string
 }
 
+func (m *DesiredLRPByProcessGuidRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *DesiredLRPByProcessGuidRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
 func (x *DesiredLRPByProcessGuidRequest) ToProto() *ProtoDesiredLRPByProcessGuidRequest {
 	proto := &ProtoDesiredLRPByProcessGuidRequest{
 		ProcessGuid: x.ProcessGuid,
@@ -161,6 +293,17 @@ type DesireLRPRequest struct {
 	DesiredLrp *DesiredLRP
 }
 
+func (m *DesireLRPRequest) GetDesiredLrp() *DesiredLRP {
+	if m != nil {
+		return m.DesiredLrp
+	}
+	return nil
+}
+func (m *DesireLRPRequest) SetDesiredLrp(value *DesiredLRP) {
+	if m != nil {
+		m.DesiredLrp = value
+	}
+}
 func (x *DesireLRPRequest) ToProto() *ProtoDesireLRPRequest {
 	proto := &ProtoDesireLRPRequest{
 		DesiredLrp: x.DesiredLrp.ToProto(),
@@ -182,6 +325,28 @@ type UpdateDesiredLRPRequest struct {
 	Update      *DesiredLRPUpdate
 }
 
+func (m *UpdateDesiredLRPRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *UpdateDesiredLRPRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *UpdateDesiredLRPRequest) GetUpdate() *DesiredLRPUpdate {
+	if m != nil {
+		return m.Update
+	}
+	return nil
+}
+func (m *UpdateDesiredLRPRequest) SetUpdate(value *DesiredLRPUpdate) {
+	if m != nil {
+		m.Update = value
+	}
+}
 func (x *UpdateDesiredLRPRequest) ToProto() *ProtoUpdateDesiredLRPRequest {
 	proto := &ProtoUpdateDesiredLRPRequest{
 		ProcessGuid: x.ProcessGuid,
@@ -203,6 +368,17 @@ type RemoveDesiredLRPRequest struct {
 	ProcessGuid string
 }
 
+func (m *RemoveDesiredLRPRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *RemoveDesiredLRPRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
 func (x *RemoveDesiredLRPRequest) ToProto() *ProtoRemoveDesiredLRPRequest {
 	proto := &ProtoRemoveDesiredLRPRequest{
 		ProcessGuid: x.ProcessGuid,

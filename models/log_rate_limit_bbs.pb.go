@@ -11,6 +11,17 @@ type LogRateLimit struct {
 	BytesPerSecond int64
 }
 
+func (m *LogRateLimit) GetBytesPerSecond() int64 {
+	if m != nil {
+		return m.BytesPerSecond
+	}
+	return 0
+}
+func (m *LogRateLimit) SetBytesPerSecond(value int64) {
+	if m != nil {
+		m.BytesPerSecond = value
+	}
+}
 func (x *LogRateLimit) ToProto() *ProtoLogRateLimit {
 	proto := &ProtoLogRateLimit{
 		BytesPerSecond: x.BytesPerSecond,

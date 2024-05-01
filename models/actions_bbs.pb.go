@@ -19,6 +19,105 @@ type Action struct {
 	CodependentAction  *CodependentAction
 }
 
+func (m *Action) GetDownloadAction() *DownloadAction {
+	if m != nil {
+		return m.DownloadAction
+	}
+	return nil
+}
+func (m *Action) SetDownloadAction(value *DownloadAction) {
+	if m != nil {
+		m.DownloadAction = value
+	}
+}
+func (m *Action) GetUploadAction() *UploadAction {
+	if m != nil {
+		return m.UploadAction
+	}
+	return nil
+}
+func (m *Action) SetUploadAction(value *UploadAction) {
+	if m != nil {
+		m.UploadAction = value
+	}
+}
+func (m *Action) GetRunAction() *RunAction {
+	if m != nil {
+		return m.RunAction
+	}
+	return nil
+}
+func (m *Action) SetRunAction(value *RunAction) {
+	if m != nil {
+		m.RunAction = value
+	}
+}
+func (m *Action) GetTimeoutAction() *TimeoutAction {
+	if m != nil {
+		return m.TimeoutAction
+	}
+	return nil
+}
+func (m *Action) SetTimeoutAction(value *TimeoutAction) {
+	if m != nil {
+		m.TimeoutAction = value
+	}
+}
+func (m *Action) GetEmitProgressAction() *EmitProgressAction {
+	if m != nil {
+		return m.EmitProgressAction
+	}
+	return nil
+}
+func (m *Action) SetEmitProgressAction(value *EmitProgressAction) {
+	if m != nil {
+		m.EmitProgressAction = value
+	}
+}
+func (m *Action) GetTryAction() *TryAction {
+	if m != nil {
+		return m.TryAction
+	}
+	return nil
+}
+func (m *Action) SetTryAction(value *TryAction) {
+	if m != nil {
+		m.TryAction = value
+	}
+}
+func (m *Action) GetParallelAction() *ParallelAction {
+	if m != nil {
+		return m.ParallelAction
+	}
+	return nil
+}
+func (m *Action) SetParallelAction(value *ParallelAction) {
+	if m != nil {
+		m.ParallelAction = value
+	}
+}
+func (m *Action) GetSerialAction() *SerialAction {
+	if m != nil {
+		return m.SerialAction
+	}
+	return nil
+}
+func (m *Action) SetSerialAction(value *SerialAction) {
+	if m != nil {
+		m.SerialAction = value
+	}
+}
+func (m *Action) GetCodependentAction() *CodependentAction {
+	if m != nil {
+		return m.CodependentAction
+	}
+	return nil
+}
+func (m *Action) SetCodependentAction(value *CodependentAction) {
+	if m != nil {
+		m.CodependentAction = value
+	}
+}
 func (x *Action) ToProto() *ProtoAction {
 	proto := &ProtoAction{
 		DownloadAction:     x.DownloadAction.ToProto(),
@@ -54,6 +153,94 @@ type DownloadAction struct {
 	ChecksumValue     string
 }
 
+func (m *DownloadAction) GetArtifact() string {
+	if m != nil {
+		return m.Artifact
+	}
+	return ""
+}
+func (m *DownloadAction) SetArtifact(value string) {
+	if m != nil {
+		m.Artifact = value
+	}
+}
+func (m *DownloadAction) GetFrom() string {
+	if m != nil {
+		return m.From
+	}
+	return ""
+}
+func (m *DownloadAction) SetFrom(value string) {
+	if m != nil {
+		m.From = value
+	}
+}
+func (m *DownloadAction) GetTo() string {
+	if m != nil {
+		return m.To
+	}
+	return ""
+}
+func (m *DownloadAction) SetTo(value string) {
+	if m != nil {
+		m.To = value
+	}
+}
+func (m *DownloadAction) GetCacheKey() string {
+	if m != nil {
+		return m.CacheKey
+	}
+	return ""
+}
+func (m *DownloadAction) SetCacheKey(value string) {
+	if m != nil {
+		m.CacheKey = value
+	}
+}
+func (m *DownloadAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *DownloadAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *DownloadAction) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
+}
+func (m *DownloadAction) SetUser(value string) {
+	if m != nil {
+		m.User = value
+	}
+}
+func (m *DownloadAction) GetChecksumAlgorithm() string {
+	if m != nil {
+		return m.ChecksumAlgorithm
+	}
+	return ""
+}
+func (m *DownloadAction) SetChecksumAlgorithm(value string) {
+	if m != nil {
+		m.ChecksumAlgorithm = value
+	}
+}
+func (m *DownloadAction) GetChecksumValue() string {
+	if m != nil {
+		return m.ChecksumValue
+	}
+	return ""
+}
+func (m *DownloadAction) SetChecksumValue(value string) {
+	if m != nil {
+		m.ChecksumValue = value
+	}
+}
 func (x *DownloadAction) ToProto() *ProtoDownloadAction {
 	proto := &ProtoDownloadAction{
 		Artifact:          x.Artifact,
@@ -85,6 +272,61 @@ type UploadAction struct {
 	User      string
 }
 
+func (m *UploadAction) GetArtifact() string {
+	if m != nil {
+		return m.Artifact
+	}
+	return ""
+}
+func (m *UploadAction) SetArtifact(value string) {
+	if m != nil {
+		m.Artifact = value
+	}
+}
+func (m *UploadAction) GetFrom() string {
+	if m != nil {
+		return m.From
+	}
+	return ""
+}
+func (m *UploadAction) SetFrom(value string) {
+	if m != nil {
+		m.From = value
+	}
+}
+func (m *UploadAction) GetTo() string {
+	if m != nil {
+		return m.To
+	}
+	return ""
+}
+func (m *UploadAction) SetTo(value string) {
+	if m != nil {
+		m.To = value
+	}
+}
+func (m *UploadAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *UploadAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *UploadAction) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
+}
+func (m *UploadAction) SetUser(value string) {
+	if m != nil {
+		m.User = value
+	}
+}
 func (x *UploadAction) ToProto() *ProtoUploadAction {
 	proto := &ProtoUploadAction{
 		Artifact:  x.Artifact,
@@ -116,6 +358,94 @@ type RunAction struct {
 	SuppressLogOutput bool
 }
 
+func (m *RunAction) GetPath() string {
+	if m != nil {
+		return m.Path
+	}
+	return ""
+}
+func (m *RunAction) SetPath(value string) {
+	if m != nil {
+		m.Path = value
+	}
+}
+func (m *RunAction) GetArgs() []string {
+	if m != nil {
+		return m.Args
+	}
+	return nil
+}
+func (m *RunAction) SetArgs(value []string) {
+	if m != nil {
+		m.Args = value
+	}
+}
+func (m *RunAction) GetDir() string {
+	if m != nil {
+		return m.Dir
+	}
+	return ""
+}
+func (m *RunAction) SetDir(value string) {
+	if m != nil {
+		m.Dir = value
+	}
+}
+func (m *RunAction) GetEnv() []*EnvironmentVariable {
+	if m != nil {
+		return m.Env
+	}
+	return nil
+}
+func (m *RunAction) SetEnv(value []*EnvironmentVariable) {
+	if m != nil {
+		m.Env = value
+	}
+}
+func (m *RunAction) GetResourceLimits() *ResourceLimits {
+	if m != nil {
+		return m.ResourceLimits
+	}
+	return nil
+}
+func (m *RunAction) SetResourceLimits(value *ResourceLimits) {
+	if m != nil {
+		m.ResourceLimits = value
+	}
+}
+func (m *RunAction) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
+}
+func (m *RunAction) SetUser(value string) {
+	if m != nil {
+		m.User = value
+	}
+}
+func (m *RunAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *RunAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *RunAction) GetSuppressLogOutput() bool {
+	if m != nil {
+		return m.SuppressLogOutput
+	}
+	return false
+}
+func (m *RunAction) SetSuppressLogOutput(value bool) {
+	if m != nil {
+		m.SuppressLogOutput = value
+	}
+}
 func (x *RunAction) ToProto() *ProtoRunAction {
 	proto := &ProtoRunAction{
 		Path:              x.Path,
@@ -146,6 +476,52 @@ type TimeoutAction struct {
 	TimeoutMs           int64
 }
 
+func (m *TimeoutAction) GetAction() *Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+func (m *TimeoutAction) SetAction(value *Action) {
+	if m != nil {
+		m.Action = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *TimeoutAction) GetDeprecatedTimeoutNs() int64 {
+	if m != nil {
+		return m.DeprecatedTimeoutNs
+	}
+	return 0
+}
+func (m *TimeoutAction) SetDeprecatedTimeoutNs(value int64) {
+	if m != nil {
+		m.DeprecatedTimeoutNs = value
+	}
+}
+func (m *TimeoutAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *TimeoutAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *TimeoutAction) GetTimeoutMs() int64 {
+	if m != nil {
+		return m.TimeoutMs
+	}
+	return 0
+}
+func (m *TimeoutAction) SetTimeoutMs(value int64) {
+	if m != nil {
+		m.TimeoutMs = value
+	}
+}
 func (x *TimeoutAction) ToProto() *ProtoTimeoutAction {
 	proto := &ProtoTimeoutAction{
 		Action:              x.Action.ToProto(),
@@ -173,6 +549,61 @@ type EmitProgressAction struct {
 	LogSource            string
 }
 
+func (m *EmitProgressAction) GetAction() *Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+func (m *EmitProgressAction) SetAction(value *Action) {
+	if m != nil {
+		m.Action = value
+	}
+}
+func (m *EmitProgressAction) GetStartMessage() string {
+	if m != nil {
+		return m.StartMessage
+	}
+	return ""
+}
+func (m *EmitProgressAction) SetStartMessage(value string) {
+	if m != nil {
+		m.StartMessage = value
+	}
+}
+func (m *EmitProgressAction) GetSuccessMessage() string {
+	if m != nil {
+		return m.SuccessMessage
+	}
+	return ""
+}
+func (m *EmitProgressAction) SetSuccessMessage(value string) {
+	if m != nil {
+		m.SuccessMessage = value
+	}
+}
+func (m *EmitProgressAction) GetFailureMessagePrefix() string {
+	if m != nil {
+		return m.FailureMessagePrefix
+	}
+	return ""
+}
+func (m *EmitProgressAction) SetFailureMessagePrefix(value string) {
+	if m != nil {
+		m.FailureMessagePrefix = value
+	}
+}
+func (m *EmitProgressAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *EmitProgressAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
 func (x *EmitProgressAction) ToProto() *ProtoEmitProgressAction {
 	proto := &ProtoEmitProgressAction{
 		Action:               x.Action.ToProto(),
@@ -198,6 +629,28 @@ type TryAction struct {
 	LogSource string
 }
 
+func (m *TryAction) GetAction() *Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+func (m *TryAction) SetAction(value *Action) {
+	if m != nil {
+		m.Action = value
+	}
+}
+func (m *TryAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *TryAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
 func (x *TryAction) ToProto() *ProtoTryAction {
 	proto := &ProtoTryAction{
 		Action:    x.Action.ToProto(),
@@ -220,6 +673,28 @@ type ParallelAction struct {
 	LogSource string
 }
 
+func (m *ParallelAction) GetActions() []*Action {
+	if m != nil {
+		return m.Actions
+	}
+	return nil
+}
+func (m *ParallelAction) SetActions(value []*Action) {
+	if m != nil {
+		m.Actions = value
+	}
+}
+func (m *ParallelAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *ParallelAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
 func (x *ParallelAction) ToProto() *ProtoParallelAction {
 	proto := &ProtoParallelAction{
 		Actions:   ActionProtoMap(x.Actions),
@@ -242,6 +717,28 @@ type SerialAction struct {
 	LogSource string
 }
 
+func (m *SerialAction) GetActions() []*Action {
+	if m != nil {
+		return m.Actions
+	}
+	return nil
+}
+func (m *SerialAction) SetActions(value []*Action) {
+	if m != nil {
+		m.Actions = value
+	}
+}
+func (m *SerialAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *SerialAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
 func (x *SerialAction) ToProto() *ProtoSerialAction {
 	proto := &ProtoSerialAction{
 		Actions:   ActionProtoMap(x.Actions),
@@ -264,6 +761,28 @@ type CodependentAction struct {
 	LogSource string
 }
 
+func (m *CodependentAction) GetActions() []*Action {
+	if m != nil {
+		return m.Actions
+	}
+	return nil
+}
+func (m *CodependentAction) SetActions(value []*Action) {
+	if m != nil {
+		m.Actions = value
+	}
+}
+func (m *CodependentAction) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *CodependentAction) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
 func (x *CodependentAction) ToProto() *ProtoCodependentAction {
 	proto := &ProtoCodependentAction{
 		Actions:   ActionProtoMap(x.Actions),
@@ -286,6 +805,30 @@ type ResourceLimits struct {
 	Nproc  uint64
 }
 
+func (m *ResourceLimits) GetNofile() uint64 {
+	if m != nil {
+		return m.Nofile
+	}
+	return 0
+}
+func (m *ResourceLimits) SetNofile(value uint64) {
+	if m != nil {
+		m.Nofile = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *ResourceLimits) GetNproc() uint64 {
+	if m != nil {
+		return m.Nproc
+	}
+	return 0
+}
+func (m *ResourceLimits) SetNproc(value uint64) {
+	if m != nil {
+		m.Nproc = value
+	}
+}
 func (x *ResourceLimits) ToProto() *ProtoResourceLimits {
 	proto := &ProtoResourceLimits{
 		Nofile: &x.Nofile,

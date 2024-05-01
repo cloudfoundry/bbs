@@ -11,6 +11,17 @@ type Network struct {
 	Properties map[string]string
 }
 
+func (m *Network) GetProperties() map[string]string {
+	if m != nil {
+		return m.Properties
+	}
+	return nil
+}
+func (m *Network) SetProperties(value map[string]string) {
+	if m != nil {
+		m.Properties = value
+	}
+}
 func (x *Network) ToProto() *ProtoNetwork {
 	proto := &ProtoNetwork{
 		Properties: x.Properties,

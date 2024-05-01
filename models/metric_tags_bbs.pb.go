@@ -9,9 +9,9 @@ package models
 type MetricTagValue_DynamicValue int32
 
 const (
-	MetricTagValue_DynamicValueInvalid MetricTagValue_DynamicValue = 0
-	MetricTagValue_INDEX               MetricTagValue_DynamicValue = 1
-	MetricTagValue_INSTANCE_GUID       MetricTagValue_DynamicValue = 2
+	MetricTagValue_DynamicValueInvalid              MetricTagValue_DynamicValue = 0
+	MetricTagValue_MetricTagynamicValueIndex        MetricTagValue_DynamicValue = 1
+	MetricTagValue_MetricTagynamicValueInstanceGuid MetricTagValue_DynamicValue = 2
 )
 
 // Prevent copylock errors when using ProtoMetricTagValue directly
@@ -20,6 +20,28 @@ type MetricTagValue struct {
 	Dynamic MetricTagValue_DynamicValue
 }
 
+func (m *MetricTagValue) GetStatic() string {
+	if m != nil {
+		return m.Static
+	}
+	return ""
+}
+func (m *MetricTagValue) SetStatic(value string) {
+	if m != nil {
+		m.Static = value
+	}
+}
+func (m *MetricTagValue) GetDynamic() MetricTagValue_DynamicValue {
+	if m != nil {
+		return m.Dynamic
+	}
+	return 0
+}
+func (m *MetricTagValue) SetDynamic(value MetricTagValue_DynamicValue) {
+	if m != nil {
+		m.Dynamic = value
+	}
+}
 func (x *MetricTagValue) ToProto() *ProtoMetricTagValue {
 	proto := &ProtoMetricTagValue{
 		Static:  x.Static,
