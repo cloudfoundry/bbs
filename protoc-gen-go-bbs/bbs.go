@@ -158,44 +158,64 @@ func getActualType(g *protogen.GeneratedFile, field *protogen.Field) string {
 }
 
 func (bbsGenerateHelper) genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message) {
-	if len(msg.Enums) > 0 {
-		for _, eNuM := range msg.Enums {
-			if *debug {
-				log.Printf("Nested Enum: %+v\n", eNuM)
-			}
-
-			copysafeName, _ := getCopysafeName(g, eNuM.GoIdent)
-			log.Printf("%s\n", copysafeName)
-			g.P("type ", copysafeName, " int32")
-			g.P("const (")
-			for _, enumValue := range eNuM.Values {
-				enumValueName := getEnumValueName(g, msg, enumValue)
-				actualValue := enumValue.Desc.Number()
-
-				g.P(enumValueName, " ", copysafeName, "=", actualValue)
-			}
-			g.P(")")
-			g.P("// Enum value maps for ", copysafeName)
-			g.P("var (")
-			g.P(copysafeName, "_name = map[int32]string{")
-			for _, enumValue := range eNuM.Values {
-				enumValueName := enumValue.Desc.Name()
-				actualValue := enumValue.Desc.Number()
-
-				g.P(actualValue, `: "`, enumValueName, `",`)
-			}
-			g.P("}")
-			g.P(copysafeName, "_value = map[string]int32{")
-			for _, enumValue := range eNuM.Values {
-				enumValueName := enumValue.Desc.Name()
-				actualValue := enumValue.Desc.Number()
-
-				g.P(`"`, enumValueName, `": `, actualValue, `,`)
-			}
-			g.P("}")
-			g.P(")")
+	for _, eNuM := range msg.Enums {
+		if *debug {
+			log.Printf("Nested Enum: %+v\n", eNuM)
 		}
+
+		genEnumTypeWithValues(g, msg, eNuM)
+		genEnumValueMaps(g, eNuM)
+		genEnumStringFunc(g, eNuM)
 	}
+}
+
+func genEnumTypeWithValues(g *protogen.GeneratedFile, msg *protogen.Message, eNuM *protogen.Enum) {
+	copysafeName, _ := getCopysafeName(g, eNuM.GoIdent)
+	log.Printf("%s\n", copysafeName)
+	g.P("type ", copysafeName, " int32")
+	g.P("const (")
+	for _, enumValue := range eNuM.Values {
+		enumValueName := getEnumValueName(g, msg, enumValue)
+		actualValue := enumValue.Desc.Number()
+
+		g.P(enumValueName, " ", copysafeName, "=", actualValue)
+	}
+	g.P(")")
+}
+
+func genEnumValueMaps(g *protogen.GeneratedFile, eNuM *protogen.Enum) {
+	copysafeName, _ := getCopysafeName(g, eNuM.GoIdent)
+	g.P("// Enum value maps for ", copysafeName)
+	g.P("var (")
+	g.P(copysafeName, "_name = map[int32]string{")
+	for _, enumValue := range eNuM.Values {
+		enumValueName := enumValue.Desc.Name()
+		actualValue := enumValue.Desc.Number()
+
+		g.P(actualValue, `: "`, enumValueName, `",`)
+	}
+	g.P("}")
+	g.P(copysafeName, "_value = map[string]int32{")
+	for _, enumValue := range eNuM.Values {
+		enumValueName := enumValue.Desc.Name()
+		actualValue := enumValue.Desc.Number()
+
+		g.P(`"`, enumValueName, `": `, actualValue, `,`)
+	}
+	g.P("}")
+	g.P(")")
+}
+
+func genEnumStringFunc(g *protogen.GeneratedFile, eNuM *protogen.Enum) {
+	copysafeName, _ := getCopysafeName(g, eNuM.GoIdent)
+	strconvItoa := protogen.GoIdent{GoName: "Itoa", GoImportPath: "strconv"}
+	g.P("func (m ", copysafeName, ") String() string {")
+	g.P("s, ok :=", copysafeName, "_name[int32(m)]")
+	g.P("if ok {")
+	g.P("return s")
+	g.P("}")
+	g.P("return ", g.QualifiedGoIdent(strconvItoa), "(int(m))")
+	g.P("}")
 }
 
 func getEnumValueName(g *protogen.GeneratedFile, msg *protogen.Message, enumValue *protogen.EnumValue) string {
