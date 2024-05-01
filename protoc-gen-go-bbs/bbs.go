@@ -5,6 +5,7 @@ import (
 	"log"
 	"slices"
 	"strings"
+	"text/template"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
@@ -18,6 +19,7 @@ type bbsGenerateHelperInterface interface {
 	genProtoMapMethod(g *protogen.GeneratedFile, msg *protogen.Message)
 	genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message)
 	genAccessors(g *protogen.GeneratedFile, msg *protogen.Message)
+	genEqual(g *protogen.GeneratedFile, msg *protogen.Message)
 }
 type bbsGenerateHelper struct{}
 
@@ -48,7 +50,83 @@ func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *proto
 		}
 		g.P("}")
 
+		helper.genEqual(g, msg)
 		helper.genAccessors(g, msg)
+	}
+}
+
+type EqualFunc struct {
+	CopysafeName string
+}
+
+type EqualField struct {
+	FieldName string
+}
+
+func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Message) {
+	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
+		if copysafeName == "Routes" {
+			log.Printf("FOUNDROUTES: %+v\n", msg)
+		}
+
+		equalBuilder := new(strings.Builder)
+		equal, err := template.New("equal").Parse(
+			`
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*{{.CopysafeName}})
+	if !ok {
+		that2, ok := that.({{.CopysafeName}})
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	`)
+		if err != nil {
+			panic(err)
+		}
+		equal.Execute(equalBuilder, EqualFunc{CopysafeName: copysafeName})
+
+		g.P("func (this *", copysafeName, ") Equal(that interface{}) bool {")
+		g.P(equalBuilder.String())
+		g.P()
+		for _, field := range msg.Fields {
+			if field.Desc.Cardinality() == protoreflect.Repeated {
+				g.P("if len(this.", field.GoName, ") != len(that1.", field.GoName, ") {")
+				g.P("return false")
+				g.P("}")
+				g.P("for i := range this.", field.GoName, " {")
+				if field.Message != nil && !field.Desc.IsMap() {
+					g.P("if !this.", field.GoName, "[i].Equal(that1.", field.GoName, "[i]) {")
+				} else if field.Desc.IsMap() && field.Desc.MapValue().Kind() == protoreflect.BytesKind {
+					bytesEqual := protogen.GoIdent{GoName: "Equal", GoImportPath: "bytes"}
+					g.P("if !", g.QualifiedGoIdent(bytesEqual), "(this.", field.GoName, "[i], that1.", field.GoName, "[i]) {")
+				} else {
+					g.P("if this.", field.GoName, "[i] != that1.", field.GoName, "[i] {")
+				}
+				g.P("return false")
+				g.P("}")
+			} else if field.Message != nil {
+				g.P("if !this.", field.GoName, ".Equal(that1.", field.GoName, ") {")
+				g.P("return false")
+			} else {
+				g.P("if this.", field.GoName, " != that1.", field.GoName, " {")
+				g.P("return false")
+			}
+			g.P("}")
+		}
+		g.P("return true")
+		g.P("}")
 	}
 }
 
@@ -324,7 +402,6 @@ func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 
 		if slices.Contains(ignoredMessages, getUnsafeName(g, msg.GoIdent)) {
 			log.Printf("Ignoring message %s", msg.GoIdent)
-			continue
 		}
 		helper.genFriendlyEnums(g, msg)
 		helper.genCopysafeStruct(g, msg)
