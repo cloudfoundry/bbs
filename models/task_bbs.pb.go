@@ -37,6 +37,305 @@ type TaskDefinition struct {
 	MetricTags                    map[string]*ProtoMetricTagValue
 }
 
+func (m *TaskDefinition) GetRootFs() string {
+	if m != nil {
+		return m.RootFs
+	}
+	return ""
+}
+func (m *TaskDefinition) SetRootFs(value string) {
+	if m != nil {
+		m.RootFs = value
+	}
+}
+func (m *TaskDefinition) GetEnvironmentVariables() []*EnvironmentVariable {
+	if m != nil {
+		return m.EnvironmentVariables
+	}
+	return nil
+}
+func (m *TaskDefinition) SetEnvironmentVariables(value []*EnvironmentVariable) {
+	if m != nil {
+		m.EnvironmentVariables = value
+	}
+}
+func (m *TaskDefinition) GetAction() *Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+func (m *TaskDefinition) SetAction(value *Action) {
+	if m != nil {
+		m.Action = value
+	}
+}
+func (m *TaskDefinition) GetDiskMb() int32 {
+	if m != nil {
+		return m.DiskMb
+	}
+	return 0
+}
+func (m *TaskDefinition) SetDiskMb(value int32) {
+	if m != nil {
+		m.DiskMb = value
+	}
+}
+func (m *TaskDefinition) GetMemoryMb() int32 {
+	if m != nil {
+		return m.MemoryMb
+	}
+	return 0
+}
+func (m *TaskDefinition) SetMemoryMb(value int32) {
+	if m != nil {
+		m.MemoryMb = value
+	}
+}
+func (m *TaskDefinition) GetCpuWeight() uint32 {
+	if m != nil {
+		return m.CpuWeight
+	}
+	return 0
+}
+func (m *TaskDefinition) SetCpuWeight(value uint32) {
+	if m != nil {
+		m.CpuWeight = value
+	}
+}
+func (m *TaskDefinition) GetPrivileged() bool {
+	if m != nil {
+		return m.Privileged
+	}
+	return false
+}
+func (m *TaskDefinition) SetPrivileged(value bool) {
+	if m != nil {
+		m.Privileged = value
+	}
+}
+func (m *TaskDefinition) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *TaskDefinition) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *TaskDefinition) GetLogGuid() string {
+	if m != nil {
+		return m.LogGuid
+	}
+	return ""
+}
+func (m *TaskDefinition) SetLogGuid(value string) {
+	if m != nil {
+		m.LogGuid = value
+	}
+}
+func (m *TaskDefinition) GetMetricsGuid() string {
+	if m != nil {
+		return m.MetricsGuid
+	}
+	return ""
+}
+func (m *TaskDefinition) SetMetricsGuid(value string) {
+	if m != nil {
+		m.MetricsGuid = value
+	}
+}
+func (m *TaskDefinition) GetResultFile() string {
+	if m != nil {
+		return m.ResultFile
+	}
+	return ""
+}
+func (m *TaskDefinition) SetResultFile(value string) {
+	if m != nil {
+		m.ResultFile = value
+	}
+}
+func (m *TaskDefinition) GetCompletionCallbackUrl() string {
+	if m != nil {
+		return m.CompletionCallbackUrl
+	}
+	return ""
+}
+func (m *TaskDefinition) SetCompletionCallbackUrl(value string) {
+	if m != nil {
+		m.CompletionCallbackUrl = value
+	}
+}
+func (m *TaskDefinition) GetAnnotation() string {
+	if m != nil {
+		return m.Annotation
+	}
+	return ""
+}
+func (m *TaskDefinition) SetAnnotation(value string) {
+	if m != nil {
+		m.Annotation = value
+	}
+}
+func (m *TaskDefinition) GetEgressRules() []*SecurityGroupRule {
+	if m != nil {
+		return m.EgressRules
+	}
+	return nil
+}
+func (m *TaskDefinition) SetEgressRules(value []*SecurityGroupRule) {
+	if m != nil {
+		m.EgressRules = value
+	}
+}
+func (m *TaskDefinition) GetCachedDependencies() []*CachedDependency {
+	if m != nil {
+		return m.CachedDependencies
+	}
+	return nil
+}
+func (m *TaskDefinition) SetCachedDependencies(value []*CachedDependency) {
+	if m != nil {
+		m.CachedDependencies = value
+	}
+}
+
+// DEPRECATED: DO NOT USE
+func (m *TaskDefinition) GetLegacyDownloadUser() string {
+	if m != nil {
+		return m.LegacyDownloadUser
+	}
+	return ""
+}
+func (m *TaskDefinition) SetLegacyDownloadUser(value string) {
+	if m != nil {
+		m.LegacyDownloadUser = value
+	}
+}
+func (m *TaskDefinition) GetTrustedSystemCertificatesPath() string {
+	if m != nil {
+		return m.TrustedSystemCertificatesPath
+	}
+	return ""
+}
+func (m *TaskDefinition) SetTrustedSystemCertificatesPath(value string) {
+	if m != nil {
+		m.TrustedSystemCertificatesPath = value
+	}
+}
+func (m *TaskDefinition) GetVolumeMounts() []*VolumeMount {
+	if m != nil {
+		return m.VolumeMounts
+	}
+	return nil
+}
+func (m *TaskDefinition) SetVolumeMounts(value []*VolumeMount) {
+	if m != nil {
+		m.VolumeMounts = value
+	}
+}
+func (m *TaskDefinition) GetNetwork() *Network {
+	if m != nil {
+		return m.Network
+	}
+	return nil
+}
+func (m *TaskDefinition) SetNetwork(value *Network) {
+	if m != nil {
+		m.Network = value
+	}
+}
+func (m *TaskDefinition) GetPlacementTags() []string {
+	if m != nil {
+		return m.PlacementTags
+	}
+	return nil
+}
+func (m *TaskDefinition) SetPlacementTags(value []string) {
+	if m != nil {
+		m.PlacementTags = value
+	}
+}
+func (m *TaskDefinition) GetMaxPids() int32 {
+	if m != nil {
+		return m.MaxPids
+	}
+	return 0
+}
+func (m *TaskDefinition) SetMaxPids(value int32) {
+	if m != nil {
+		m.MaxPids = value
+	}
+}
+func (m *TaskDefinition) GetCertificateProperties() *CertificateProperties {
+	if m != nil {
+		return m.CertificateProperties
+	}
+	return nil
+}
+func (m *TaskDefinition) SetCertificateProperties(value *CertificateProperties) {
+	if m != nil {
+		m.CertificateProperties = value
+	}
+}
+func (m *TaskDefinition) GetImageUsername() string {
+	if m != nil {
+		return m.ImageUsername
+	}
+	return ""
+}
+func (m *TaskDefinition) SetImageUsername(value string) {
+	if m != nil {
+		m.ImageUsername = value
+	}
+}
+func (m *TaskDefinition) GetImagePassword() string {
+	if m != nil {
+		return m.ImagePassword
+	}
+	return ""
+}
+func (m *TaskDefinition) SetImagePassword(value string) {
+	if m != nil {
+		m.ImagePassword = value
+	}
+}
+func (m *TaskDefinition) GetImageLayers() []*ImageLayer {
+	if m != nil {
+		return m.ImageLayers
+	}
+	return nil
+}
+func (m *TaskDefinition) SetImageLayers(value []*ImageLayer) {
+	if m != nil {
+		m.ImageLayers = value
+	}
+}
+func (m *TaskDefinition) GetLogRateLimit() *LogRateLimit {
+	if m != nil {
+		return m.LogRateLimit
+	}
+	return nil
+}
+func (m *TaskDefinition) SetLogRateLimit(value *LogRateLimit) {
+	if m != nil {
+		m.LogRateLimit = value
+	}
+}
+func (m *TaskDefinition) GetMetricTags() map[string]*ProtoMetricTagValue {
+	if m != nil {
+		return m.MetricTags
+	}
+	return nil
+}
+func (m *TaskDefinition) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+	if m != nil {
+		m.MetricTags = value
+	}
+}
 func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
 	proto := &ProtoTaskDefinition{
 		RootFs:                        x.RootFs,
@@ -105,6 +404,149 @@ type Task struct {
 	RejectionReason  string
 }
 
+func (m *Task) GetTaskDefinition() *TaskDefinition {
+	if m != nil {
+		return m.TaskDefinition
+	}
+	return nil
+}
+func (m *Task) SetTaskDefinition(value *TaskDefinition) {
+	if m != nil {
+		m.TaskDefinition = value
+	}
+}
+func (m *Task) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *Task) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
+func (m *Task) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *Task) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *Task) GetCreatedAt() int64 {
+	if m != nil {
+		return m.CreatedAt
+	}
+	return 0
+}
+func (m *Task) SetCreatedAt(value int64) {
+	if m != nil {
+		m.CreatedAt = value
+	}
+}
+func (m *Task) GetUpdatedAt() int64 {
+	if m != nil {
+		return m.UpdatedAt
+	}
+	return 0
+}
+func (m *Task) SetUpdatedAt(value int64) {
+	if m != nil {
+		m.UpdatedAt = value
+	}
+}
+func (m *Task) GetFirstCompletedAt() int64 {
+	if m != nil {
+		return m.FirstCompletedAt
+	}
+	return 0
+}
+func (m *Task) SetFirstCompletedAt(value int64) {
+	if m != nil {
+		m.FirstCompletedAt = value
+	}
+}
+func (m *Task) GetState() Task_State {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+func (m *Task) SetState(value Task_State) {
+	if m != nil {
+		m.State = value
+	}
+}
+func (m *Task) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *Task) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
+func (m *Task) GetResult() string {
+	if m != nil {
+		return m.Result
+	}
+	return ""
+}
+func (m *Task) SetResult(value string) {
+	if m != nil {
+		m.Result = value
+	}
+}
+func (m *Task) GetFailed() bool {
+	if m != nil {
+		return m.Failed
+	}
+	return false
+}
+func (m *Task) SetFailed(value bool) {
+	if m != nil {
+		m.Failed = value
+	}
+}
+func (m *Task) GetFailureReason() string {
+	if m != nil {
+		return m.FailureReason
+	}
+	return ""
+}
+func (m *Task) SetFailureReason(value string) {
+	if m != nil {
+		m.FailureReason = value
+	}
+}
+func (m *Task) GetRejectionCount() int32 {
+	if m != nil {
+		return m.RejectionCount
+	}
+	return 0
+}
+func (m *Task) SetRejectionCount(value int32) {
+	if m != nil {
+		m.RejectionCount = value
+	}
+}
+func (m *Task) GetRejectionReason() string {
+	if m != nil {
+		return m.RejectionReason
+	}
+	return ""
+}
+func (m *Task) SetRejectionReason(value string) {
+	if m != nil {
+		m.RejectionReason = value
+	}
+}
 func (x *Task) ToProto() *ProtoTask {
 	proto := &ProtoTask{
 		TaskDefinition:   x.TaskDefinition.ToProto(),

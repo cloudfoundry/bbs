@@ -17,6 +17,83 @@ type CachedDependency struct {
 	ChecksumValue     string
 }
 
+func (m *CachedDependency) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+func (m *CachedDependency) SetName(value string) {
+	if m != nil {
+		m.Name = value
+	}
+}
+func (m *CachedDependency) GetFrom() string {
+	if m != nil {
+		return m.From
+	}
+	return ""
+}
+func (m *CachedDependency) SetFrom(value string) {
+	if m != nil {
+		m.From = value
+	}
+}
+func (m *CachedDependency) GetTo() string {
+	if m != nil {
+		return m.To
+	}
+	return ""
+}
+func (m *CachedDependency) SetTo(value string) {
+	if m != nil {
+		m.To = value
+	}
+}
+func (m *CachedDependency) GetCacheKey() string {
+	if m != nil {
+		return m.CacheKey
+	}
+	return ""
+}
+func (m *CachedDependency) SetCacheKey(value string) {
+	if m != nil {
+		m.CacheKey = value
+	}
+}
+func (m *CachedDependency) GetLogSource() string {
+	if m != nil {
+		return m.LogSource
+	}
+	return ""
+}
+func (m *CachedDependency) SetLogSource(value string) {
+	if m != nil {
+		m.LogSource = value
+	}
+}
+func (m *CachedDependency) GetChecksumAlgorithm() string {
+	if m != nil {
+		return m.ChecksumAlgorithm
+	}
+	return ""
+}
+func (m *CachedDependency) SetChecksumAlgorithm(value string) {
+	if m != nil {
+		m.ChecksumAlgorithm = value
+	}
+}
+func (m *CachedDependency) GetChecksumValue() string {
+	if m != nil {
+		return m.ChecksumValue
+	}
+	return ""
+}
+func (m *CachedDependency) SetChecksumValue(value string) {
+	if m != nil {
+		m.ChecksumValue = value
+	}
+}
 func (x *CachedDependency) ToProto() *ProtoCachedDependency {
 	proto := &ProtoCachedDependency{
 		Name:              x.Name,

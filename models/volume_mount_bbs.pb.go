@@ -12,6 +12,28 @@ type SharedDevice struct {
 	MountConfig string
 }
 
+func (m *SharedDevice) GetVolumeId() string {
+	if m != nil {
+		return m.VolumeId
+	}
+	return ""
+}
+func (m *SharedDevice) SetVolumeId(value string) {
+	if m != nil {
+		m.VolumeId = value
+	}
+}
+func (m *SharedDevice) GetMountConfig() string {
+	if m != nil {
+		return m.MountConfig
+	}
+	return ""
+}
+func (m *SharedDevice) SetMountConfig(value string) {
+	if m != nil {
+		m.MountConfig = value
+	}
+}
 func (x *SharedDevice) ToProto() *ProtoSharedDevice {
 	proto := &ProtoSharedDevice{
 		VolumeId:    x.VolumeId,
@@ -36,6 +58,50 @@ type VolumeMount struct {
 	Shared       *SharedDevice
 }
 
+func (m *VolumeMount) GetDriver() string {
+	if m != nil {
+		return m.Driver
+	}
+	return ""
+}
+func (m *VolumeMount) SetDriver(value string) {
+	if m != nil {
+		m.Driver = value
+	}
+}
+func (m *VolumeMount) GetContainerDir() string {
+	if m != nil {
+		return m.ContainerDir
+	}
+	return ""
+}
+func (m *VolumeMount) SetContainerDir(value string) {
+	if m != nil {
+		m.ContainerDir = value
+	}
+}
+func (m *VolumeMount) GetMode() string {
+	if m != nil {
+		return m.Mode
+	}
+	return ""
+}
+func (m *VolumeMount) SetMode(value string) {
+	if m != nil {
+		m.Mode = value
+	}
+}
+func (m *VolumeMount) GetShared() *SharedDevice {
+	if m != nil {
+		return m.Shared
+	}
+	return nil
+}
+func (m *VolumeMount) SetShared(value *SharedDevice) {
+	if m != nil {
+		m.Shared = value
+	}
+}
 func (x *VolumeMount) ToProto() *ProtoVolumeMount {
 	proto := &ProtoVolumeMount{
 		Driver:       x.Driver,
@@ -59,6 +125,17 @@ type VolumePlacement struct {
 	DriverNames []string
 }
 
+func (m *VolumePlacement) GetDriverNames() []string {
+	if m != nil {
+		return m.DriverNames
+	}
+	return nil
+}
+func (m *VolumePlacement) SetDriverNames(value []string) {
+	if m != nil {
+		m.DriverNames = value
+	}
+}
 func (x *VolumePlacement) ToProto() *ProtoVolumePlacement {
 	proto := &ProtoVolumePlacement{
 		DriverNames: x.DriverNames,

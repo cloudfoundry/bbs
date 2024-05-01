@@ -10,25 +10,25 @@ type ImageLayer_DigestAlgorithm int32
 
 const (
 	ImageLayer_DigestAlgorithmInvalid ImageLayer_DigestAlgorithm = 0
-	ImageLayer_SHA256                 ImageLayer_DigestAlgorithm = 1
-	ImageLayer_SHA512                 ImageLayer_DigestAlgorithm = 2
+	ImageLayer_DigestAlgorithmSha256  ImageLayer_DigestAlgorithm = 1
+	ImageLayer_DigestAlgorithmSha512  ImageLayer_DigestAlgorithm = 2
 )
 
 type ImageLayer_MediaType int32
 
 const (
 	ImageLayer_MediaTypeInvalid ImageLayer_MediaType = 0
-	ImageLayer_TGZ              ImageLayer_MediaType = 1
-	ImageLayer_TAR              ImageLayer_MediaType = 2
-	ImageLayer_ZIP              ImageLayer_MediaType = 3
+	ImageLayer_MediaTypeTgz     ImageLayer_MediaType = 1
+	ImageLayer_MediaTypeTar     ImageLayer_MediaType = 2
+	ImageLayer_MediaTypeZip     ImageLayer_MediaType = 3
 )
 
 type ImageLayer_Type int32
 
 const (
-	ImageLayer_LayerTypeInvalid ImageLayer_Type = 0
-	ImageLayer_SHARED           ImageLayer_Type = 1
-	ImageLayer_EXCLUSIVE        ImageLayer_Type = 2
+	ImageLayer_LayerTypeInvalid   ImageLayer_Type = 0
+	ImageLayer_LayerTypeShared    ImageLayer_Type = 1
+	ImageLayer_LayerTypeExclusive ImageLayer_Type = 2
 )
 
 // Prevent copylock errors when using ProtoImageLayer directly
@@ -42,6 +42,83 @@ type ImageLayer struct {
 	DigestValue     string
 }
 
+func (m *ImageLayer) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+func (m *ImageLayer) SetName(value string) {
+	if m != nil {
+		m.Name = value
+	}
+}
+func (m *ImageLayer) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+func (m *ImageLayer) SetUrl(value string) {
+	if m != nil {
+		m.Url = value
+	}
+}
+func (m *ImageLayer) GetDestinationPath() string {
+	if m != nil {
+		return m.DestinationPath
+	}
+	return ""
+}
+func (m *ImageLayer) SetDestinationPath(value string) {
+	if m != nil {
+		m.DestinationPath = value
+	}
+}
+func (m *ImageLayer) GetLayerType() ImageLayer_Type {
+	if m != nil {
+		return m.LayerType
+	}
+	return 0
+}
+func (m *ImageLayer) SetLayerType(value ImageLayer_Type) {
+	if m != nil {
+		m.LayerType = value
+	}
+}
+func (m *ImageLayer) GetMediaType() ImageLayer_MediaType {
+	if m != nil {
+		return m.MediaType
+	}
+	return 0
+}
+func (m *ImageLayer) SetMediaType(value ImageLayer_MediaType) {
+	if m != nil {
+		m.MediaType = value
+	}
+}
+func (m *ImageLayer) GetDigestAlgorithm() ImageLayer_DigestAlgorithm {
+	if m != nil {
+		return m.DigestAlgorithm
+	}
+	return 0
+}
+func (m *ImageLayer) SetDigestAlgorithm(value ImageLayer_DigestAlgorithm) {
+	if m != nil {
+		m.DigestAlgorithm = value
+	}
+}
+func (m *ImageLayer) GetDigestValue() string {
+	if m != nil {
+		return m.DigestValue
+	}
+	return ""
+}
+func (m *ImageLayer) SetDigestValue(value string) {
+	if m != nil {
+		m.DigestValue = value
+	}
+}
 func (x *ImageLayer) ToProto() *ProtoImageLayer {
 	proto := &ProtoImageLayer{
 		Name:            x.Name,

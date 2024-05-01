@@ -13,6 +13,39 @@ type CellCapacity struct {
 	Containers int32
 }
 
+func (m *CellCapacity) GetMemoryMb() int32 {
+	if m != nil {
+		return m.MemoryMb
+	}
+	return 0
+}
+func (m *CellCapacity) SetMemoryMb(value int32) {
+	if m != nil {
+		m.MemoryMb = value
+	}
+}
+func (m *CellCapacity) GetDiskMb() int32 {
+	if m != nil {
+		return m.DiskMb
+	}
+	return 0
+}
+func (m *CellCapacity) SetDiskMb(value int32) {
+	if m != nil {
+		m.DiskMb = value
+	}
+}
+func (m *CellCapacity) GetContainers() int32 {
+	if m != nil {
+		return m.Containers
+	}
+	return 0
+}
+func (m *CellCapacity) SetContainers(value int32) {
+	if m != nil {
+		m.Containers = value
+	}
+}
 func (x *CellCapacity) ToProto() *ProtoCellCapacity {
 	proto := &ProtoCellCapacity{
 		MemoryMb:   x.MemoryMb,
@@ -42,6 +75,94 @@ type CellPresence struct {
 	RepUrl                string
 }
 
+func (m *CellPresence) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *CellPresence) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
+func (m *CellPresence) GetRepAddress() string {
+	if m != nil {
+		return m.RepAddress
+	}
+	return ""
+}
+func (m *CellPresence) SetRepAddress(value string) {
+	if m != nil {
+		m.RepAddress = value
+	}
+}
+func (m *CellPresence) GetZone() string {
+	if m != nil {
+		return m.Zone
+	}
+	return ""
+}
+func (m *CellPresence) SetZone(value string) {
+	if m != nil {
+		m.Zone = value
+	}
+}
+func (m *CellPresence) GetCapacity() *CellCapacity {
+	if m != nil {
+		return m.Capacity
+	}
+	return nil
+}
+func (m *CellPresence) SetCapacity(value *CellCapacity) {
+	if m != nil {
+		m.Capacity = value
+	}
+}
+func (m *CellPresence) GetRootfsProviders() []*Provider {
+	if m != nil {
+		return m.RootfsProviders
+	}
+	return nil
+}
+func (m *CellPresence) SetRootfsProviders(value []*Provider) {
+	if m != nil {
+		m.RootfsProviders = value
+	}
+}
+func (m *CellPresence) GetPlacementTags() []string {
+	if m != nil {
+		return m.PlacementTags
+	}
+	return nil
+}
+func (m *CellPresence) SetPlacementTags(value []string) {
+	if m != nil {
+		m.PlacementTags = value
+	}
+}
+func (m *CellPresence) GetOptionalPlacementTags() []string {
+	if m != nil {
+		return m.OptionalPlacementTags
+	}
+	return nil
+}
+func (m *CellPresence) SetOptionalPlacementTags(value []string) {
+	if m != nil {
+		m.OptionalPlacementTags = value
+	}
+}
+func (m *CellPresence) GetRepUrl() string {
+	if m != nil {
+		return m.RepUrl
+	}
+	return ""
+}
+func (m *CellPresence) SetRepUrl(value string) {
+	if m != nil {
+		m.RepUrl = value
+	}
+}
 func (x *CellPresence) ToProto() *ProtoCellPresence {
 	proto := &ProtoCellPresence{
 		CellId:                x.CellId,
@@ -70,6 +191,28 @@ type Provider struct {
 	Properties []string
 }
 
+func (m *Provider) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+func (m *Provider) SetName(value string) {
+	if m != nil {
+		m.Name = value
+	}
+}
+func (m *Provider) GetProperties() []string {
+	if m != nil {
+		return m.Properties
+	}
+	return nil
+}
+func (m *Provider) SetProperties(value []string) {
+	if m != nil {
+		m.Properties = value
+	}
+}
 func (x *Provider) ToProto() *ProtoProvider {
 	proto := &ProtoProvider{
 		Name:       x.Name,
@@ -92,6 +235,28 @@ type CellsResponse struct {
 	Cells []*CellPresence
 }
 
+func (m *CellsResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *CellsResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *CellsResponse) GetCells() []*CellPresence {
+	if m != nil {
+		return m.Cells
+	}
+	return nil
+}
+func (m *CellsResponse) SetCells(value []*CellPresence) {
+	if m != nil {
+		m.Cells = value
+	}
+}
 func (x *CellsResponse) ToProto() *ProtoCellsResponse {
 	proto := &ProtoCellsResponse{
 		Error: x.Error.ToProto(),

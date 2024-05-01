@@ -11,6 +11,17 @@ type TaskLifecycleResponse struct {
 	Error *Error
 }
 
+func (m *TaskLifecycleResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *TaskLifecycleResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
 func (x *TaskLifecycleResponse) ToProto() *ProtoTaskLifecycleResponse {
 	proto := &ProtoTaskLifecycleResponse{
 		Error: x.Error.ToProto(),
@@ -33,6 +44,39 @@ type DesireTaskRequest struct {
 	Domain         string
 }
 
+func (m *DesireTaskRequest) GetTaskDefinition() *TaskDefinition {
+	if m != nil {
+		return m.TaskDefinition
+	}
+	return nil
+}
+func (m *DesireTaskRequest) SetTaskDefinition(value *TaskDefinition) {
+	if m != nil {
+		m.TaskDefinition = value
+	}
+}
+func (m *DesireTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *DesireTaskRequest) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
+func (m *DesireTaskRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *DesireTaskRequest) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
 func (x *DesireTaskRequest) ToProto() *ProtoDesireTaskRequest {
 	proto := &ProtoDesireTaskRequest{
 		TaskDefinition: x.TaskDefinition.ToProto(),
@@ -56,6 +100,28 @@ type StartTaskRequest struct {
 	CellId   string
 }
 
+func (m *StartTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *StartTaskRequest) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
+func (m *StartTaskRequest) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *StartTaskRequest) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
 func (x *StartTaskRequest) ToProto() *ProtoStartTaskRequest {
 	proto := &ProtoStartTaskRequest{
 		TaskGuid: x.TaskGuid,
@@ -78,6 +144,28 @@ type StartTaskResponse struct {
 	ShouldStart bool
 }
 
+func (m *StartTaskResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *StartTaskResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *StartTaskResponse) GetShouldStart() bool {
+	if m != nil {
+		return m.ShouldStart
+	}
+	return false
+}
+func (m *StartTaskResponse) SetShouldStart(value bool) {
+	if m != nil {
+		m.ShouldStart = value
+	}
+}
 func (x *StartTaskResponse) ToProto() *ProtoStartTaskResponse {
 	proto := &ProtoStartTaskResponse{
 		Error:       x.Error.ToProto(),
@@ -100,6 +188,28 @@ type FailTaskRequest struct {
 	FailureReason string
 }
 
+func (m *FailTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *FailTaskRequest) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
+func (m *FailTaskRequest) GetFailureReason() string {
+	if m != nil {
+		return m.FailureReason
+	}
+	return ""
+}
+func (m *FailTaskRequest) SetFailureReason(value string) {
+	if m != nil {
+		m.FailureReason = value
+	}
+}
 func (x *FailTaskRequest) ToProto() *ProtoFailTaskRequest {
 	proto := &ProtoFailTaskRequest{
 		TaskGuid:      x.TaskGuid,
@@ -122,6 +232,28 @@ type RejectTaskRequest struct {
 	RejectionReason string
 }
 
+func (m *RejectTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *RejectTaskRequest) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
+func (m *RejectTaskRequest) GetRejectionReason() string {
+	if m != nil {
+		return m.RejectionReason
+	}
+	return ""
+}
+func (m *RejectTaskRequest) SetRejectionReason(value string) {
+	if m != nil {
+		m.RejectionReason = value
+	}
+}
 func (x *RejectTaskRequest) ToProto() *ProtoRejectTaskRequest {
 	proto := &ProtoRejectTaskRequest{
 		TaskGuid:        x.TaskGuid,
@@ -143,6 +275,17 @@ type TaskGuidRequest struct {
 	TaskGuid string
 }
 
+func (m *TaskGuidRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *TaskGuidRequest) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
 func (x *TaskGuidRequest) ToProto() *ProtoTaskGuidRequest {
 	proto := &ProtoTaskGuidRequest{
 		TaskGuid: x.TaskGuid,
@@ -167,6 +310,61 @@ type CompleteTaskRequest struct {
 	Result        string
 }
 
+func (m *CompleteTaskRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *CompleteTaskRequest) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
+func (m *CompleteTaskRequest) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *CompleteTaskRequest) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
+func (m *CompleteTaskRequest) GetFailed() bool {
+	if m != nil {
+		return m.Failed
+	}
+	return false
+}
+func (m *CompleteTaskRequest) SetFailed(value bool) {
+	if m != nil {
+		m.Failed = value
+	}
+}
+func (m *CompleteTaskRequest) GetFailureReason() string {
+	if m != nil {
+		return m.FailureReason
+	}
+	return ""
+}
+func (m *CompleteTaskRequest) SetFailureReason(value string) {
+	if m != nil {
+		m.FailureReason = value
+	}
+}
+func (m *CompleteTaskRequest) GetResult() string {
+	if m != nil {
+		return m.Result
+	}
+	return ""
+}
+func (m *CompleteTaskRequest) SetResult(value string) {
+	if m != nil {
+		m.Result = value
+	}
+}
 func (x *CompleteTaskRequest) ToProto() *ProtoCompleteTaskRequest {
 	proto := &ProtoCompleteTaskRequest{
 		TaskGuid:      x.TaskGuid,
@@ -196,6 +394,72 @@ type TaskCallbackResponse struct {
 	CreatedAt     int64
 }
 
+func (m *TaskCallbackResponse) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *TaskCallbackResponse) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
+func (m *TaskCallbackResponse) GetFailed() bool {
+	if m != nil {
+		return m.Failed
+	}
+	return false
+}
+func (m *TaskCallbackResponse) SetFailed(value bool) {
+	if m != nil {
+		m.Failed = value
+	}
+}
+func (m *TaskCallbackResponse) GetFailureReason() string {
+	if m != nil {
+		return m.FailureReason
+	}
+	return ""
+}
+func (m *TaskCallbackResponse) SetFailureReason(value string) {
+	if m != nil {
+		m.FailureReason = value
+	}
+}
+func (m *TaskCallbackResponse) GetResult() string {
+	if m != nil {
+		return m.Result
+	}
+	return ""
+}
+func (m *TaskCallbackResponse) SetResult(value string) {
+	if m != nil {
+		m.Result = value
+	}
+}
+func (m *TaskCallbackResponse) GetAnnotation() string {
+	if m != nil {
+		return m.Annotation
+	}
+	return ""
+}
+func (m *TaskCallbackResponse) SetAnnotation(value string) {
+	if m != nil {
+		m.Annotation = value
+	}
+}
+func (m *TaskCallbackResponse) GetCreatedAt() int64 {
+	if m != nil {
+		return m.CreatedAt
+	}
+	return 0
+}
+func (m *TaskCallbackResponse) SetCreatedAt(value int64) {
+	if m != nil {
+		m.CreatedAt = value
+	}
+}
 func (x *TaskCallbackResponse) ToProto() *ProtoTaskCallbackResponse {
 	proto := &ProtoTaskCallbackResponse{
 		TaskGuid:      x.TaskGuid,
@@ -222,6 +486,28 @@ type TasksRequest struct {
 	CellId string
 }
 
+func (m *TasksRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *TasksRequest) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *TasksRequest) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *TasksRequest) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
 func (x *TasksRequest) ToProto() *ProtoTasksRequest {
 	proto := &ProtoTasksRequest{
 		Domain: x.Domain,
@@ -244,6 +530,28 @@ type TasksResponse struct {
 	Tasks []*Task
 }
 
+func (m *TasksResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *TasksResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *TasksResponse) GetTasks() []*Task {
+	if m != nil {
+		return m.Tasks
+	}
+	return nil
+}
+func (m *TasksResponse) SetTasks(value []*Task) {
+	if m != nil {
+		m.Tasks = value
+	}
+}
 func (x *TasksResponse) ToProto() *ProtoTasksResponse {
 	proto := &ProtoTasksResponse{
 		Error: x.Error.ToProto(),
@@ -265,6 +573,17 @@ type TaskByGuidRequest struct {
 	TaskGuid string
 }
 
+func (m *TaskByGuidRequest) GetTaskGuid() string {
+	if m != nil {
+		return m.TaskGuid
+	}
+	return ""
+}
+func (m *TaskByGuidRequest) SetTaskGuid(value string) {
+	if m != nil {
+		m.TaskGuid = value
+	}
+}
 func (x *TaskByGuidRequest) ToProto() *ProtoTaskByGuidRequest {
 	proto := &ProtoTaskByGuidRequest{
 		TaskGuid: x.TaskGuid,
@@ -286,6 +605,28 @@ type TaskResponse struct {
 	Task  *Task
 }
 
+func (m *TaskResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *TaskResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *TaskResponse) GetTask() *Task {
+	if m != nil {
+		return m.Task
+	}
+	return nil
+}
+func (m *TaskResponse) SetTask(value *Task) {
+	if m != nil {
+		m.Task = value
+	}
+}
 func (x *TaskResponse) ToProto() *ProtoTaskResponse {
 	proto := &ProtoTaskResponse{
 		Error: x.Error.ToProto(),

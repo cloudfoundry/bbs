@@ -12,6 +12,28 @@ type EnvironmentVariable struct {
 	Value string
 }
 
+func (m *EnvironmentVariable) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+func (m *EnvironmentVariable) SetName(value string) {
+	if m != nil {
+		m.Name = value
+	}
+}
+func (m *EnvironmentVariable) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
+func (m *EnvironmentVariable) SetValue(value string) {
+	if m != nil {
+		m.Value = value
+	}
+}
 func (x *EnvironmentVariable) ToProto() *ProtoEnvironmentVariable {
 	proto := &ProtoEnvironmentVariable{
 		Name:  x.Name,

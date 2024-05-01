@@ -11,6 +11,17 @@ type ActualLRPLifecycleResponse struct {
 	Error *Error
 }
 
+func (m *ActualLRPLifecycleResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *ActualLRPLifecycleResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
 func (x *ActualLRPLifecycleResponse) ToProto() *ProtoActualLRPLifecycleResponse {
 	proto := &ProtoActualLRPLifecycleResponse{
 		Error: x.Error.ToProto(),
@@ -32,6 +43,28 @@ type ActualLRPGroupsResponse struct {
 	ActualLrpGroups []*ActualLRPGroup
 }
 
+func (m *ActualLRPGroupsResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *ActualLRPGroupsResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *ActualLRPGroupsResponse) GetActualLrpGroups() []*ActualLRPGroup {
+	if m != nil {
+		return m.ActualLrpGroups
+	}
+	return nil
+}
+func (m *ActualLRPGroupsResponse) SetActualLrpGroups(value []*ActualLRPGroup) {
+	if m != nil {
+		m.ActualLrpGroups = value
+	}
+}
 func (x *ActualLRPGroupsResponse) ToProto() *ProtoActualLRPGroupsResponse {
 	proto := &ProtoActualLRPGroupsResponse{
 		Error:           x.Error.ToProto(),
@@ -54,6 +87,28 @@ type ActualLRPGroupResponse struct {
 	ActualLrpGroup *ActualLRPGroup
 }
 
+func (m *ActualLRPGroupResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *ActualLRPGroupResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *ActualLRPGroupResponse) GetActualLrpGroup() *ActualLRPGroup {
+	if m != nil {
+		return m.ActualLrpGroup
+	}
+	return nil
+}
+func (m *ActualLRPGroupResponse) SetActualLrpGroup(value *ActualLRPGroup) {
+	if m != nil {
+		m.ActualLrpGroup = value
+	}
+}
 func (x *ActualLRPGroupResponse) ToProto() *ProtoActualLRPGroupResponse {
 	proto := &ProtoActualLRPGroupResponse{
 		Error:          x.Error.ToProto(),
@@ -76,6 +131,28 @@ type ActualLRPGroupsRequest struct {
 	CellId string
 }
 
+func (m *ActualLRPGroupsRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *ActualLRPGroupsRequest) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *ActualLRPGroupsRequest) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *ActualLRPGroupsRequest) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
 func (x *ActualLRPGroupsRequest) ToProto() *ProtoActualLRPGroupsRequest {
 	proto := &ProtoActualLRPGroupsRequest{
 		Domain: x.Domain,
@@ -97,6 +174,17 @@ type ActualLRPGroupsByProcessGuidRequest struct {
 	ProcessGuid string
 }
 
+func (m *ActualLRPGroupsByProcessGuidRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *ActualLRPGroupsByProcessGuidRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
 func (x *ActualLRPGroupsByProcessGuidRequest) ToProto() *ProtoActualLRPGroupsByProcessGuidRequest {
 	proto := &ProtoActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: x.ProcessGuid,
@@ -118,6 +206,28 @@ type ActualLRPGroupByProcessGuidAndIndexRequest struct {
 	Index       int32
 }
 
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+func (m *ActualLRPGroupByProcessGuidAndIndexRequest) SetIndex(value int32) {
+	if m != nil {
+		m.Index = value
+	}
+}
 func (x *ActualLRPGroupByProcessGuidAndIndexRequest) ToProto() *ProtoActualLRPGroupByProcessGuidAndIndexRequest {
 	proto := &ProtoActualLRPGroupByProcessGuidAndIndexRequest{
 		ProcessGuid: x.ProcessGuid,
@@ -141,6 +251,39 @@ type ClaimActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (m *ClaimActualLRPRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *ClaimActualLRPRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *ClaimActualLRPRequest) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+func (m *ClaimActualLRPRequest) SetIndex(value int32) {
+	if m != nil {
+		m.Index = value
+	}
+}
+func (m *ClaimActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *ClaimActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
 func (x *ClaimActualLRPRequest) ToProto() *ProtoClaimActualLRPRequest {
 	proto := &ProtoClaimActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
@@ -169,6 +312,83 @@ type StartActualLRPRequest struct {
 	AvailabilityZone        string
 }
 
+func (m *StartActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *StartActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *StartActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *StartActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
+func (m *StartActualLRPRequest) GetActualLrpNetInfo() *ActualLRPNetInfo {
+	if m != nil {
+		return m.ActualLrpNetInfo
+	}
+	return nil
+}
+func (m *StartActualLRPRequest) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+	if m != nil {
+		m.ActualLrpNetInfo = value
+	}
+}
+func (m *StartActualLRPRequest) GetActualLrpInternalRoutes() []*ActualLRPInternalRoute {
+	if m != nil {
+		return m.ActualLrpInternalRoutes
+	}
+	return nil
+}
+func (m *StartActualLRPRequest) SetActualLrpInternalRoutes(value []*ActualLRPInternalRoute) {
+	if m != nil {
+		m.ActualLrpInternalRoutes = value
+	}
+}
+func (m *StartActualLRPRequest) GetMetricTags() map[string]string {
+	if m != nil {
+		return m.MetricTags
+	}
+	return nil
+}
+func (m *StartActualLRPRequest) SetMetricTags(value map[string]string) {
+	if m != nil {
+		m.MetricTags = value
+	}
+}
+func (m *StartActualLRPRequest) GetRoutable() bool {
+	if m != nil {
+		return m.Routable
+	}
+	return false
+}
+func (m *StartActualLRPRequest) SetRoutable(value bool) {
+	if m != nil {
+		m.Routable = value
+	}
+}
+func (m *StartActualLRPRequest) GetAvailabilityZone() string {
+	if m != nil {
+		return m.AvailabilityZone
+	}
+	return ""
+}
+func (m *StartActualLRPRequest) SetAvailabilityZone(value string) {
+	if m != nil {
+		m.AvailabilityZone = value
+	}
+}
 func (x *StartActualLRPRequest) ToProto() *ProtoStartActualLRPRequest {
 	proto := &ProtoStartActualLRPRequest{
 		ActualLrpKey:            x.ActualLrpKey.ToProto(),
@@ -197,6 +417,39 @@ type CrashActualLRPRequest struct {
 	ErrorMessage         string
 }
 
+func (m *CrashActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *CrashActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *CrashActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *CrashActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
+func (m *CrashActualLRPRequest) GetErrorMessage() string {
+	if m != nil {
+		return m.ErrorMessage
+	}
+	return ""
+}
+func (m *CrashActualLRPRequest) SetErrorMessage(value string) {
+	if m != nil {
+		m.ErrorMessage = value
+	}
+}
 func (x *CrashActualLRPRequest) ToProto() *ProtoCrashActualLRPRequest {
 	proto := &ProtoCrashActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
@@ -220,6 +473,28 @@ type FailActualLRPRequest struct {
 	ErrorMessage string
 }
 
+func (m *FailActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *FailActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
+func (m *FailActualLRPRequest) GetErrorMessage() string {
+	if m != nil {
+		return m.ErrorMessage
+	}
+	return ""
+}
+func (m *FailActualLRPRequest) SetErrorMessage(value string) {
+	if m != nil {
+		m.ErrorMessage = value
+	}
+}
 func (x *FailActualLRPRequest) ToProto() *ProtoFailActualLRPRequest {
 	proto := &ProtoFailActualLRPRequest{
 		ActualLrpKey: x.ActualLrpKey.ToProto(),
@@ -241,6 +516,17 @@ type RetireActualLRPRequest struct {
 	ActualLrpKey *ActualLRPKey
 }
 
+func (m *RetireActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+	if m != nil {
+		return m.ActualLrpKey
+	}
+	return nil
+}
+func (m *RetireActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+	if m != nil {
+		m.ActualLrpKey = value
+	}
+}
 func (x *RetireActualLRPRequest) ToProto() *ProtoRetireActualLRPRequest {
 	proto := &ProtoRetireActualLRPRequest{
 		ActualLrpKey: x.ActualLrpKey.ToProto(),
@@ -263,6 +549,39 @@ type RemoveActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey
 }
 
+func (m *RemoveActualLRPRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *RemoveActualLRPRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *RemoveActualLRPRequest) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+func (m *RemoveActualLRPRequest) SetIndex(value int32) {
+	if m != nil {
+		m.Index = value
+	}
+}
+func (m *RemoveActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+	if m != nil {
+		return m.ActualLrpInstanceKey
+	}
+	return nil
+}
+func (m *RemoveActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+	if m != nil {
+		m.ActualLrpInstanceKey = value
+	}
+}
 func (x *RemoveActualLRPRequest) ToProto() *ProtoRemoveActualLRPRequest {
 	proto := &ProtoRemoveActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
@@ -286,6 +605,28 @@ type ActualLRPsResponse struct {
 	ActualLrps []*ActualLRP
 }
 
+func (m *ActualLRPsResponse) GetError() *Error {
+	if m != nil {
+		return m.Error
+	}
+	return nil
+}
+func (m *ActualLRPsResponse) SetError(value *Error) {
+	if m != nil {
+		m.Error = value
+	}
+}
+func (m *ActualLRPsResponse) GetActualLrps() []*ActualLRP {
+	if m != nil {
+		return m.ActualLrps
+	}
+	return nil
+}
+func (m *ActualLRPsResponse) SetActualLrps(value []*ActualLRP) {
+	if m != nil {
+		m.ActualLrps = value
+	}
+}
 func (x *ActualLRPsResponse) ToProto() *ProtoActualLRPsResponse {
 	proto := &ProtoActualLRPsResponse{
 		Error:      x.Error.ToProto(),
@@ -310,6 +651,50 @@ type ActualLRPsRequest struct {
 	Index       int32
 }
 
+func (m *ActualLRPsRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+func (m *ActualLRPsRequest) SetDomain(value string) {
+	if m != nil {
+		m.Domain = value
+	}
+}
+func (m *ActualLRPsRequest) GetCellId() string {
+	if m != nil {
+		return m.CellId
+	}
+	return ""
+}
+func (m *ActualLRPsRequest) SetCellId(value string) {
+	if m != nil {
+		m.CellId = value
+	}
+}
+func (m *ActualLRPsRequest) GetProcessGuid() string {
+	if m != nil {
+		return m.ProcessGuid
+	}
+	return ""
+}
+func (m *ActualLRPsRequest) SetProcessGuid(value string) {
+	if m != nil {
+		m.ProcessGuid = value
+	}
+}
+func (m *ActualLRPsRequest) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+func (m *ActualLRPsRequest) SetIndex(value int32) {
+	if m != nil {
+		m.Index = value
+	}
+}
 func (x *ActualLRPsRequest) ToProto() *ProtoActualLRPsRequest {
 	proto := &ProtoActualLRPsRequest{
 		Domain:      x.Domain,

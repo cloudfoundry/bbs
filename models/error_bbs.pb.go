@@ -42,6 +42,28 @@ type Error struct {
 	Message string
 }
 
+func (m *Error) GetType() Error_Type {
+	if m != nil {
+		return m.Type
+	}
+	return 0
+}
+func (m *Error) SetType(value Error_Type) {
+	if m != nil {
+		m.Type = value
+	}
+}
+func (m *Error) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+func (m *Error) SetMessage(value string) {
+	if m != nil {
+		m.Message = value
+	}
+}
 func (x *Error) ToProto() *ProtoError {
 	proto := &ProtoError{
 		Type:    ProtoError_Type(x.Type),

@@ -12,6 +12,28 @@ type ModificationTag struct {
 	Index uint32
 }
 
+func (m *ModificationTag) GetEpoch() string {
+	if m != nil {
+		return m.Epoch
+	}
+	return ""
+}
+func (m *ModificationTag) SetEpoch(value string) {
+	if m != nil {
+		m.Epoch = value
+	}
+}
+func (m *ModificationTag) GetIndex() uint32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+func (m *ModificationTag) SetIndex(value uint32) {
+	if m != nil {
+		m.Index = value
+	}
+}
 func (x *ModificationTag) ToProto() *ProtoModificationTag {
 	proto := &ProtoModificationTag{
 		Epoch: x.Epoch,

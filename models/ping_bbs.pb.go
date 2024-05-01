@@ -11,6 +11,17 @@ type PingResponse struct {
 	Available bool
 }
 
+func (m *PingResponse) GetAvailable() bool {
+	if m != nil {
+		return m.Available
+	}
+	return false
+}
+func (m *PingResponse) SetAvailable(value bool) {
+	if m != nil {
+		m.Available = value
+	}
+}
 func (x *PingResponse) ToProto() *ProtoPingResponse {
 	proto := &ProtoPingResponse{
 		Available: x.Available,

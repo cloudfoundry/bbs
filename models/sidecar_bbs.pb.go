@@ -13,6 +13,39 @@ type Sidecar struct {
 	MemoryMb int32
 }
 
+func (m *Sidecar) GetAction() *Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+func (m *Sidecar) SetAction(value *Action) {
+	if m != nil {
+		m.Action = value
+	}
+}
+func (m *Sidecar) GetDiskMb() int32 {
+	if m != nil {
+		return m.DiskMb
+	}
+	return 0
+}
+func (m *Sidecar) SetDiskMb(value int32) {
+	if m != nil {
+		m.DiskMb = value
+	}
+}
+func (m *Sidecar) GetMemoryMb() int32 {
+	if m != nil {
+		return m.MemoryMb
+	}
+	return 0
+}
+func (m *Sidecar) SetMemoryMb(value int32) {
+	if m != nil {
+		m.MemoryMb = value
+	}
+}
 func (x *Sidecar) ToProto() *ProtoSidecar {
 	proto := &ProtoSidecar{
 		Action:   x.Action.ToProto(),
