@@ -6,15 +6,6 @@ func (request *ActualLRPsRequest) Validate() error {
 	return nil
 }
 
-func (request *ActualLRPsRequest) SetIndex(index int32) {
-	request.OptionalIndex = &ActualLRPsRequest_Index{Index: index}
-}
-
-func (request ActualLRPsRequest) IndexExists() bool {
-	_, ok := request.GetOptionalIndex().(*ActualLRPsRequest_Index)
-	return ok
-}
-
 type internalActualLRPsRequest struct {
 	Domain      string `json:"domain"`
 	CellId      string `json:"cell_id"`
@@ -45,10 +36,8 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 		ProcessGuid: request.ProcessGuid,
 	}
 
-	if request.IndexExists() {
-		i := request.GetIndex()
-		internalRequest.Index = &i
-	}
+	i := request.GetIndex()
+	internalRequest.Index = &i
 	return json.Marshal(internalRequest)
 }
 
@@ -155,17 +144,6 @@ func (request *StartActualLRPRequest) Validate() error {
 	}
 
 	return nil
-}
-
-func (request *StartActualLRPRequest) SetRoutable(routable bool) {
-	request.OptionalRoutable = &StartActualLRPRequest_Routable{
-		Routable: routable,
-	}
-}
-
-func (request *StartActualLRPRequest) RoutableExists() bool {
-	_, ok := request.GetOptionalRoutable().(*StartActualLRPRequest_Routable)
-	return ok
 }
 
 func (request *CrashActualLRPRequest) Validate() error {
