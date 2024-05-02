@@ -38,7 +38,7 @@ message ProtoActualLRPInfo {
   int64 since = 8 [json_name =  "since"];
   ProtoModificationTag modification_tag = 9 [json_name = "modification_tag"];
   ProtoActualLRP.Presence presence = 10 [json_name = "presence"];
-  optional bool ProtoRoutable = 11;
+  optional bool Routable = 11;
   string availability_zone = 12 [json_name = "availability_zone"];
 }
 
