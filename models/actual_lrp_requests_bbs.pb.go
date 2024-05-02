@@ -520,7 +520,7 @@ type StartActualLRPRequest struct {
 	ActualLRPNetInfo        *ActualLRPNetInfo
 	ActualLRPInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
-	Routable                bool
+	Routable                *bool
 	AvailabilityZone        string
 }
 
@@ -634,13 +634,16 @@ func (m *StartActualLRPRequest) SetMetricTags(value map[string]string) {
 		m.MetricTags = value
 	}
 }
-func (m *StartActualLRPRequest) GetRoutable() bool {
-	if m != nil {
+func (m *StartActualLRPRequest) RoutableExists() bool {
+	return m != nil && m.Routable != nil
+}
+func (m *StartActualLRPRequest) GetRoutable() *bool {
+	if m != nil && m.Routable != nil {
 		return m.Routable
 	}
-	return false
+	return nil
 }
-func (m *StartActualLRPRequest) SetRoutable(value bool) {
+func (m *StartActualLRPRequest) SetRoutable(value *bool) {
 	if m != nil {
 		m.Routable = value
 	}
@@ -1073,7 +1076,7 @@ type ActualLRPsRequest struct {
 	Domain      string
 	CellId      string
 	ProcessGuid string
-	Index       int32
+	Index       *int32
 }
 
 func (this *ActualLRPsRequest) Equal(that interface{}) bool {
@@ -1145,13 +1148,16 @@ func (m *ActualLRPsRequest) SetProcessGuid(value string) {
 		m.ProcessGuid = value
 	}
 }
-func (m *ActualLRPsRequest) GetIndex() int32 {
-	if m != nil {
+func (m *ActualLRPsRequest) IndexExists() bool {
+	return m != nil && m.Index != nil
+}
+func (m *ActualLRPsRequest) GetIndex() *int32 {
+	if m != nil && m.Index != nil {
 		return m.Index
 	}
-	return 0
+	return nil
 }
-func (m *ActualLRPsRequest) SetIndex(value int32) {
+func (m *ActualLRPsRequest) SetIndex(value *int32) {
 	if m != nil {
 		m.Index = value
 	}

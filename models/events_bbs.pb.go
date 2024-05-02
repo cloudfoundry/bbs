@@ -280,7 +280,7 @@ type ActualLRPInfo struct {
 	Since            int64
 	ModificationTag  *ModificationTag
 	Presence         ActualLRP_Presence
-	Routable         bool
+	Routable         *bool
 	AvailabilityZone string
 }
 
@@ -426,13 +426,16 @@ func (m *ActualLRPInfo) SetPresence(value ActualLRP_Presence) {
 		m.Presence = value
 	}
 }
-func (m *ActualLRPInfo) GetRoutable() bool {
-	if m != nil {
+func (m *ActualLRPInfo) RoutableExists() bool {
+	return m != nil && m.Routable != nil
+}
+func (m *ActualLRPInfo) GetRoutable() *bool {
+	if m != nil && m.Routable != nil {
 		return m.Routable
 	}
-	return false
+	return nil
 }
-func (m *ActualLRPInfo) SetRoutable(value bool) {
+func (m *ActualLRPInfo) SetRoutable(value *bool) {
 	if m != nil {
 		m.Routable = value
 	}

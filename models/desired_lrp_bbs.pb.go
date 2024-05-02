@@ -576,8 +576,11 @@ func (m *DesiredLRPRunInfo) SetStartTimeoutMs(value int64) {
 		m.StartTimeoutMs = value
 	}
 }
+func (m *DesiredLRPRunInfo) CertificatePropertiesExists() bool {
+	return m != nil && m.CertificateProperties != nil
+}
 func (m *DesiredLRPRunInfo) GetCertificateProperties() *CertificateProperties {
-	if m != nil {
+	if m != nil && m.CertificateProperties != nil {
 		return m.CertificateProperties
 	}
 	return nil
@@ -770,9 +773,9 @@ func RoutesProtoMap(values []*Routes) []*ProtoRoutes {
 
 // Prevent copylock errors when using ProtoDesiredLRPUpdate directly
 type DesiredLRPUpdate struct {
-	Instances  int32
+	Instances  *int32
 	Routes     *Routes
-	Annotation string
+	Annotation *string
 	MetricTags map[string]*ProtoMetricTagValue
 }
 
@@ -817,19 +820,25 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *DesiredLRPUpdate) GetInstances() int32 {
-	if m != nil {
+func (m *DesiredLRPUpdate) InstancesExists() bool {
+	return m != nil && m.Instances != nil
+}
+func (m *DesiredLRPUpdate) GetInstances() *int32 {
+	if m != nil && m.Instances != nil {
 		return m.Instances
 	}
-	return 0
+	return nil
 }
-func (m *DesiredLRPUpdate) SetInstances(value int32) {
+func (m *DesiredLRPUpdate) SetInstances(value *int32) {
 	if m != nil {
 		m.Instances = value
 	}
 }
+func (m *DesiredLRPUpdate) RoutesExists() bool {
+	return m != nil && m.Routes != nil
+}
 func (m *DesiredLRPUpdate) GetRoutes() *Routes {
-	if m != nil {
+	if m != nil && m.Routes != nil {
 		return m.Routes
 	}
 	return nil
@@ -839,13 +848,16 @@ func (m *DesiredLRPUpdate) SetRoutes(value *Routes) {
 		m.Routes = value
 	}
 }
-func (m *DesiredLRPUpdate) GetAnnotation() string {
-	if m != nil {
+func (m *DesiredLRPUpdate) AnnotationExists() bool {
+	return m != nil && m.Annotation != nil
+}
+func (m *DesiredLRPUpdate) GetAnnotation() *string {
+	if m != nil && m.Annotation != nil {
 		return m.Annotation
 	}
-	return ""
+	return nil
 }
-func (m *DesiredLRPUpdate) SetAnnotation(value string) {
+func (m *DesiredLRPUpdate) SetAnnotation(value *string) {
 	if m != nil {
 		m.Annotation = value
 	}
@@ -1463,8 +1475,11 @@ func (m *DesiredLRP) SetPorts(value []uint32) {
 		m.Ports = value
 	}
 }
+func (m *DesiredLRP) RoutesExists() bool {
+	return m != nil && m.Routes != nil
+}
 func (m *DesiredLRP) GetRoutes() *Routes {
-	if m != nil {
+	if m != nil && m.Routes != nil {
 		return m.Routes
 	}
 	return nil
@@ -1621,8 +1636,11 @@ func (m *DesiredLRP) SetMaxPids(value int32) {
 		m.MaxPids = value
 	}
 }
+func (m *DesiredLRP) CertificatePropertiesExists() bool {
+	return m != nil && m.CertificateProperties != nil
+}
 func (m *DesiredLRP) GetCertificateProperties() *CertificateProperties {
-	if m != nil {
+	if m != nil && m.CertificateProperties != nil {
 		return m.CertificateProperties
 	}
 	return nil

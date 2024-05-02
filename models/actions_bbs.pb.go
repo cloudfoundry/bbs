@@ -1207,8 +1207,8 @@ func CodependentActionProtoMap(values []*CodependentAction) []*ProtoCodependentA
 
 // Prevent copylock errors when using ProtoResourceLimits directly
 type ResourceLimits struct {
-	Nofile uint64
-	Nproc  uint64
+	Nofile *uint64
+	Nproc  *uint64
 }
 
 func (this *ResourceLimits) Equal(that interface{}) bool {
@@ -1241,26 +1241,32 @@ func (this *ResourceLimits) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ResourceLimits) GetNofile() uint64 {
-	if m != nil {
+func (m *ResourceLimits) NofileExists() bool {
+	return m != nil && m.Nofile != nil
+}
+func (m *ResourceLimits) GetNofile() *uint64 {
+	if m != nil && m.Nofile != nil {
 		return m.Nofile
 	}
-	return 0
+	return nil
 }
-func (m *ResourceLimits) SetNofile(value uint64) {
+func (m *ResourceLimits) SetNofile(value *uint64) {
 	if m != nil {
 		m.Nofile = value
 	}
 }
 
 // DEPRECATED: DO NOT USE
-func (m *ResourceLimits) GetNproc() uint64 {
-	if m != nil {
+func (m *ResourceLimits) NprocExists() bool {
+	return m != nil && m.Nproc != nil
+}
+func (m *ResourceLimits) GetNproc() *uint64 {
+	if m != nil && m.Nproc != nil {
 		return m.Nproc
 	}
-	return 0
+	return nil
 }
-func (m *ResourceLimits) SetNproc(value uint64) {
+func (m *ResourceLimits) SetNproc(value *uint64) {
 	if m != nil {
 		m.Nproc = value
 	}
