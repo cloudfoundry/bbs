@@ -34,6 +34,14 @@ func getCopysafeName(g *protogen.GeneratedFile, ident protogen.GoIdent) (string,
 	return strings.CutPrefix(unsafeName, *prefix)
 }
 
+func getFieldName(goName string) string {
+	result := goName
+	if strings.Contains(strings.ToLower(result), "lrp") {
+		result = strings.Replace(goName, "Lrp", "LRP", -1)
+	}
+	return result
+}
+
 func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *protogen.Message) {
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
 		g.P("// Prevent copylock errors when using ", msg.GoIdent.GoName, " directly")
@@ -45,8 +53,9 @@ func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *proto
 				log.Printf("Field Options: %+v\n\n", options)
 
 			}
+			fieldName := getFieldName(field.GoName)
 			fieldType := getActualType(g, field)
-			g.P(field.GoName, " ", fieldType)
+			g.P(fieldName, " ", fieldType)
 		}
 		g.P("}")
 
@@ -101,26 +110,27 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 		g.P(equalBuilder.String())
 		g.P()
 		for _, field := range msg.Fields {
+			fieldName := getFieldName(field.GoName)
 			if field.Desc.Cardinality() == protoreflect.Repeated {
-				g.P("if len(this.", field.GoName, ") != len(that1.", field.GoName, ") {")
+				g.P("if len(this.", fieldName, ") != len(that1.", fieldName, ") {")
 				g.P("return false")
 				g.P("}")
-				g.P("for i := range this.", field.GoName, " {")
+				g.P("for i := range this.", fieldName, " {")
 				if field.Message != nil && !field.Desc.IsMap() {
-					g.P("if !this.", field.GoName, "[i].Equal(that1.", field.GoName, "[i]) {")
+					g.P("if !this.", fieldName, "[i].Equal(that1.", fieldName, "[i]) {")
 				} else if field.Desc.IsMap() && field.Desc.MapValue().Kind() == protoreflect.BytesKind {
 					bytesEqual := protogen.GoIdent{GoName: "Equal", GoImportPath: "bytes"}
-					g.P("if !", g.QualifiedGoIdent(bytesEqual), "(this.", field.GoName, "[i], that1.", field.GoName, "[i]) {")
+					g.P("if !", g.QualifiedGoIdent(bytesEqual), "(this.", fieldName, "[i], that1.", fieldName, "[i]) {")
 				} else {
-					g.P("if this.", field.GoName, "[i] != that1.", field.GoName, "[i] {")
+					g.P("if this.", fieldName, "[i] != that1.", fieldName, "[i] {")
 				}
 				g.P("return false")
 				g.P("}")
 			} else if field.Message != nil {
-				g.P("if !this.", field.GoName, ".Equal(that1.", field.GoName, ") {")
+				g.P("if !this.", fieldName, ".Equal(that1.", fieldName, ") {")
 				g.P("return false")
 			} else {
-				g.P("if this.", field.GoName, " != that1.", field.GoName, " {")
+				g.P("if this.", fieldName, " != that1.", fieldName, " {")
 				g.P("return false")
 			}
 			g.P("}")
@@ -133,7 +143,7 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 func (bbsGenerateHelper) genAccessors(g *protogen.GeneratedFile, msg *protogen.Message) {
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
 		for _, field := range msg.Fields {
-			fieldName := field.GoName
+			fieldName := getFieldName(field.GoName)
 			fieldType := getActualType(g, field)
 			options := field.Desc.Options().(*descriptorpb.FieldOptions)
 
@@ -316,26 +326,28 @@ func (bbsGenerateHelper) genToProtoMethod(g *protogen.GeneratedFile, msg *protog
 		g.P("func(x *", copysafeName, ") ToProto() *", unsafeName, " {")
 		g.P("proto := &", unsafeName, "{")
 		for _, field := range msg.Fields {
+			protoFieldName := field.GoName
 			if field.Message != nil {
+				fieldCopysafeName, _ := getCopysafeName(g, field.Message.GoIdent)
+				fieldCopysafeName = getFieldName(fieldCopysafeName)
 				if field.Desc.Cardinality() == protoreflect.Repeated {
-					fieldCopysafeName, _ := getCopysafeName(g, field.Message.GoIdent)
 					if field.Desc.IsList() {
-						g.P(field.GoName, ": ", fieldCopysafeName, "ProtoMap(x.", field.GoName, "),")
+						g.P(protoFieldName, ": ", fieldCopysafeName, "ProtoMap(x.", getFieldName(protoFieldName), "),")
 					} else if field.Desc.IsMap() {
-						g.P(field.GoName, ": ", "x.", field.GoName, ",")
+						g.P(protoFieldName, ": ", "x.", protoFieldName, ",")
 					} else {
 						panic("Unrecognized Repeated field found")
 					}
 				} else {
-					g.P(field.GoName, ": x.", field.GoName, ".ToProto(),")
+					g.P(protoFieldName, ": x.", fieldCopysafeName, ".ToProto(),")
 				}
 			} else if field.Enum != nil {
-				g.P(field.GoName, ": ", field.GoIdent, "(x.", field.GoName, "),")
+				g.P(protoFieldName, ": ", field.GoIdent, "(x.", protoFieldName, "),")
 			} else {
 				if field.Oneof != nil {
-					g.P(field.GoName, ": &x.", field.GoName, ",")
+					g.P(protoFieldName, ": &x.", protoFieldName, ",")
 				} else {
-					g.P(field.GoName, ": x.", field.GoName, ",")
+					g.P(protoFieldName, ": x.", protoFieldName, ",")
 				}
 			}
 		}
