@@ -308,7 +308,7 @@ func (x *SecurityGroupRule) ToProto() *ProtoSecurityGroupRule {
 		Destinations: x.Destinations,
 		Ports:        x.Ports,
 		PortRange:    x.PortRange.ToProto(),
-		IcmpInfo:     x.ICMPInfo.ToProto(),
+		IcmpInfo:     x.IcmpInfo.ToProto(),
 		Log:          x.Log,
 		Annotations:  x.Annotations,
 	}

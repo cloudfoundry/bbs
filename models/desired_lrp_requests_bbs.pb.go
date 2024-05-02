@@ -626,7 +626,7 @@ func (m *UpdateDesiredLRPRequest) SetUpdate(value *DesiredLRPUpdate) {
 func (x *UpdateDesiredLRPRequest) ToProto() *ProtoUpdateDesiredLRPRequest {
 	proto := &ProtoUpdateDesiredLRPRequest{
 		ProcessGuid: x.ProcessGuid,
-		Update:      x.DesiredLRPUpdate.ToProto(),
+		Update:      x.Update.ToProto(),
 	}
 	return proto
 }

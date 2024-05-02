@@ -124,8 +124,8 @@ func (m *ActualLRPChangedEvent) SetAfter(value *ActualLRPGroup) {
 }
 func (x *ActualLRPChangedEvent) ToProto() *ProtoActualLRPChangedEvent {
 	proto := &ProtoActualLRPChangedEvent{
-		Before: x.ActualLRPGroup.ToProto(),
-		After:  x.ActualLRPGroup.ToProto(),
+		Before: x.Before.ToProto(),
+		After:  x.After.ToProto(),
 	}
 	return proto
 }
@@ -582,8 +582,8 @@ func (x *ActualLRPInstanceChangedEvent) ToProto() *ProtoActualLRPInstanceChanged
 	proto := &ProtoActualLRPInstanceChangedEvent{
 		ActualLrpKey:         x.ActualLRPKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
-		Before:               x.ActualLRPInfo.ToProto(),
-		After:                x.ActualLRPInfo.ToProto(),
+		Before:               x.Before.ToProto(),
+		After:                x.After.ToProto(),
 		TraceId:              x.TraceId,
 	}
 	return proto
@@ -820,8 +820,8 @@ func (m *DesiredLRPChangedEvent) SetTraceId(value string) {
 }
 func (x *DesiredLRPChangedEvent) ToProto() *ProtoDesiredLRPChangedEvent {
 	proto := &ProtoDesiredLRPChangedEvent{
-		Before:  x.DesiredLRP.ToProto(),
-		After:   x.DesiredLRP.ToProto(),
+		Before:  x.Before.ToProto(),
+		After:   x.After.ToProto(),
 		TraceId: x.TraceId,
 	}
 	return proto
@@ -1207,8 +1207,8 @@ func (m *TaskChangedEvent) SetAfter(value *Task) {
 }
 func (x *TaskChangedEvent) ToProto() *ProtoTaskChangedEvent {
 	proto := &ProtoTaskChangedEvent{
-		Before: x.Task.ToProto(),
-		After:  x.Task.ToProto(),
+		Before: x.Before.ToProto(),
+		After:  x.After.ToProto(),
 	}
 	return proto
 }

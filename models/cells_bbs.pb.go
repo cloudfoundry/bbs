@@ -264,7 +264,7 @@ func (x *CellPresence) ToProto() *ProtoCellPresence {
 		CellId:                x.CellId,
 		RepAddress:            x.RepAddress,
 		Zone:                  x.Zone,
-		Capacity:              x.CellCapacity.ToProto(),
+		Capacity:              x.Capacity.ToProto(),
 		RootfsProviders:       ProviderProtoMap(x.RootfsProviders),
 		PlacementTags:         x.PlacementTags,
 		OptionalPlacementTags: x.OptionalPlacementTags,

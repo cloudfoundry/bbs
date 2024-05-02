@@ -70,8 +70,8 @@ func (m *ActualLRPGroup) SetEvacuating(value *ActualLRP) {
 }
 func (x *ActualLRPGroup) ToProto() *ProtoActualLRPGroup {
 	proto := &ProtoActualLRPGroup{
-		Instance:   x.ActualLRP.ToProto(),
-		Evacuating: x.ActualLRP.ToProto(),
+		Instance:   x.Instance.ToProto(),
+		Evacuating: x.Evacuating.ToProto(),
 	}
 	return proto
 }
