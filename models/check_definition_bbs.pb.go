@@ -166,8 +166,8 @@ func (m *Check) SetHttpCheck(value *HTTPCheck) {
 }
 func (x *Check) ToProto() *ProtoCheck {
 	proto := &ProtoCheck{
-		TcpCheck:  x.TcpCheck.ToProto(),
-		HttpCheck: x.HttpCheck.ToProto(),
+		TcpCheck:  x.TCPCheck.ToProto(),
+		HttpCheck: x.HTTPCheck.ToProto(),
 	}
 	return proto
 }

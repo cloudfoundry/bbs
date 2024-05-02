@@ -67,7 +67,7 @@ func ActualLRPLifecycleResponseProtoMap(values []*ActualLRPLifecycleResponse) []
 // Prevent copylock errors when using ProtoActualLRPGroupsResponse directly
 type ActualLRPGroupsResponse struct {
 	Error           *Error
-	ActualLrpGroups []*ActualLRPGroup
+	ActualLRPGroups []*ActualLRPGroup
 }
 
 func (this *ActualLRPGroupsResponse) Equal(that interface{}) bool {
@@ -95,11 +95,11 @@ func (this *ActualLRPGroupsResponse) Equal(that interface{}) bool {
 	if !this.Error.Equal(that1.Error) {
 		return false
 	}
-	if len(this.ActualLrpGroups) != len(that1.ActualLrpGroups) {
+	if len(this.ActualLRPGroups) != len(that1.ActualLRPGroups) {
 		return false
 	}
-	for i := range this.ActualLrpGroups {
-		if !this.ActualLrpGroups[i].Equal(that1.ActualLrpGroups[i]) {
+	for i := range this.ActualLRPGroups {
+		if !this.ActualLRPGroups[i].Equal(that1.ActualLRPGroups[i]) {
 			return false
 		}
 	}
@@ -116,21 +116,21 @@ func (m *ActualLRPGroupsResponse) SetError(value *Error) {
 		m.Error = value
 	}
 }
-func (m *ActualLRPGroupsResponse) GetActualLrpGroups() []*ActualLRPGroup {
+func (m *ActualLRPGroupsResponse) GetActualLRPGroups() []*ActualLRPGroup {
 	if m != nil {
-		return m.ActualLrpGroups
+		return m.ActualLRPGroups
 	}
 	return nil
 }
-func (m *ActualLRPGroupsResponse) SetActualLrpGroups(value []*ActualLRPGroup) {
+func (m *ActualLRPGroupsResponse) SetActualLRPGroups(value []*ActualLRPGroup) {
 	if m != nil {
-		m.ActualLrpGroups = value
+		m.ActualLRPGroups = value
 	}
 }
 func (x *ActualLRPGroupsResponse) ToProto() *ProtoActualLRPGroupsResponse {
 	proto := &ProtoActualLRPGroupsResponse{
 		Error:           x.Error.ToProto(),
-		ActualLrpGroups: ActualLRPGroupProtoMap(x.ActualLrpGroups),
+		ActualLrpGroups: ActualLRPGroupProtoMap(x.ActualLRPGroups),
 	}
 	return proto
 }
@@ -146,7 +146,7 @@ func ActualLRPGroupsResponseProtoMap(values []*ActualLRPGroupsResponse) []*Proto
 // Prevent copylock errors when using ProtoActualLRPGroupResponse directly
 type ActualLRPGroupResponse struct {
 	Error          *Error
-	ActualLrpGroup *ActualLRPGroup
+	ActualLRPGroup *ActualLRPGroup
 }
 
 func (this *ActualLRPGroupResponse) Equal(that interface{}) bool {
@@ -174,7 +174,7 @@ func (this *ActualLRPGroupResponse) Equal(that interface{}) bool {
 	if !this.Error.Equal(that1.Error) {
 		return false
 	}
-	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+	if !this.ActualLRPGroup.Equal(that1.ActualLRPGroup) {
 		return false
 	}
 	return true
@@ -190,21 +190,21 @@ func (m *ActualLRPGroupResponse) SetError(value *Error) {
 		m.Error = value
 	}
 }
-func (m *ActualLRPGroupResponse) GetActualLrpGroup() *ActualLRPGroup {
+func (m *ActualLRPGroupResponse) GetActualLRPGroup() *ActualLRPGroup {
 	if m != nil {
-		return m.ActualLrpGroup
+		return m.ActualLRPGroup
 	}
 	return nil
 }
-func (m *ActualLRPGroupResponse) SetActualLrpGroup(value *ActualLRPGroup) {
+func (m *ActualLRPGroupResponse) SetActualLRPGroup(value *ActualLRPGroup) {
 	if m != nil {
-		m.ActualLrpGroup = value
+		m.ActualLRPGroup = value
 	}
 }
 func (x *ActualLRPGroupResponse) ToProto() *ProtoActualLRPGroupResponse {
 	proto := &ProtoActualLRPGroupResponse{
 		Error:          x.Error.ToProto(),
-		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
+		ActualLrpGroup: x.ActualLRPGroup.ToProto(),
 	}
 	return proto
 }
@@ -427,7 +427,7 @@ func ActualLRPGroupByProcessGuidAndIndexRequestProtoMap(values []*ActualLRPGroup
 type ClaimActualLRPRequest struct {
 	ProcessGuid          string
 	Index                int32
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 }
 
 func (this *ClaimActualLRPRequest) Equal(that interface{}) bool {
@@ -458,7 +458,7 @@ func (this *ClaimActualLRPRequest) Equal(that interface{}) bool {
 	if this.Index != that1.Index {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	return true
@@ -485,22 +485,22 @@ func (m *ClaimActualLRPRequest) SetIndex(value int32) {
 		m.Index = value
 	}
 }
-func (m *ClaimActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *ClaimActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *ClaimActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *ClaimActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (x *ClaimActualLRPRequest) ToProto() *ProtoClaimActualLRPRequest {
 	proto := &ProtoClaimActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
 		Index:                x.Index,
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 	}
 	return proto
 }
@@ -515,10 +515,10 @@ func ClaimActualLRPRequestProtoMap(values []*ClaimActualLRPRequest) []*ProtoClai
 
 // Prevent copylock errors when using ProtoStartActualLRPRequest directly
 type StartActualLRPRequest struct {
-	ActualLrpKey            *ActualLRPKey
-	ActualLrpInstanceKey    *ActualLRPInstanceKey
-	ActualLrpNetInfo        *ActualLRPNetInfo
-	ActualLrpInternalRoutes []*ActualLRPInternalRoute
+	ActualLRPKey            *ActualLRPKey
+	ActualLRPInstanceKey    *ActualLRPInstanceKey
+	ActualLRPNetInfo        *ActualLRPNetInfo
+	ActualLRPInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
 	Routable                bool
 	AvailabilityZone        string
@@ -546,20 +546,20 @@ func (this *StartActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
-	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+	if !this.ActualLRPNetInfo.Equal(that1.ActualLRPNetInfo) {
 		return false
 	}
-	if len(this.ActualLrpInternalRoutes) != len(that1.ActualLrpInternalRoutes) {
+	if len(this.ActualLRPInternalRoutes) != len(that1.ActualLRPInternalRoutes) {
 		return false
 	}
-	for i := range this.ActualLrpInternalRoutes {
-		if !this.ActualLrpInternalRoutes[i].Equal(that1.ActualLrpInternalRoutes[i]) {
+	for i := range this.ActualLRPInternalRoutes {
+		if !this.ActualLRPInternalRoutes[i].Equal(that1.ActualLRPInternalRoutes[i]) {
 			return false
 		}
 	}
@@ -579,48 +579,48 @@ func (this *StartActualLRPRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *StartActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *StartActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *StartActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *StartActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *StartActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *StartActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-func (m *StartActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
-	if m != nil {
-		m.ActualLrpInstanceKey = value
-	}
-}
-func (m *StartActualLRPRequest) GetActualLrpNetInfo() *ActualLRPNetInfo {
-	if m != nil {
-		return m.ActualLrpNetInfo
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *StartActualLRPRequest) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+func (m *StartActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpNetInfo = value
+		m.ActualLRPInstanceKey = value
 	}
 }
-func (m *StartActualLRPRequest) GetActualLrpInternalRoutes() []*ActualLRPInternalRoute {
+func (m *StartActualLRPRequest) GetActualLRPNetInfo() *ActualLRPNetInfo {
 	if m != nil {
-		return m.ActualLrpInternalRoutes
+		return m.ActualLRPNetInfo
 	}
 	return nil
 }
-func (m *StartActualLRPRequest) SetActualLrpInternalRoutes(value []*ActualLRPInternalRoute) {
+func (m *StartActualLRPRequest) SetActualLRPNetInfo(value *ActualLRPNetInfo) {
 	if m != nil {
-		m.ActualLrpInternalRoutes = value
+		m.ActualLRPNetInfo = value
+	}
+}
+func (m *StartActualLRPRequest) GetActualLRPInternalRoutes() []*ActualLRPInternalRoute {
+	if m != nil {
+		return m.ActualLRPInternalRoutes
+	}
+	return nil
+}
+func (m *StartActualLRPRequest) SetActualLRPInternalRoutes(value []*ActualLRPInternalRoute) {
+	if m != nil {
+		m.ActualLRPInternalRoutes = value
 	}
 }
 func (m *StartActualLRPRequest) GetMetricTags() map[string]string {
@@ -658,10 +658,10 @@ func (m *StartActualLRPRequest) SetAvailabilityZone(value string) {
 }
 func (x *StartActualLRPRequest) ToProto() *ProtoStartActualLRPRequest {
 	proto := &ProtoStartActualLRPRequest{
-		ActualLrpKey:            x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.ToProto(),
-		ActualLrpNetInfo:        x.ActualLrpNetInfo.ToProto(),
-		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLrpInternalRoutes),
+		ActualLrpKey:            x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey:    x.ActualLRPInstanceKey.ToProto(),
+		ActualLrpNetInfo:        x.ActualLRPNetInfo.ToProto(),
+		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLRPInternalRoutes),
 		MetricTags:              x.MetricTags,
 		Routable:                &x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,
@@ -679,8 +679,8 @@ func StartActualLRPRequestProtoMap(values []*StartActualLRPRequest) []*ProtoStar
 
 // Prevent copylock errors when using ProtoCrashActualLRPRequest directly
 type CrashActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPKey         *ActualLRPKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 	ErrorMessage         string
 }
 
@@ -706,10 +706,10 @@ func (this *CrashActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	if this.ErrorMessage != that1.ErrorMessage {
@@ -717,26 +717,26 @@ func (this *CrashActualLRPRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *CrashActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *CrashActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *CrashActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *CrashActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *CrashActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *CrashActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *CrashActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *CrashActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (m *CrashActualLRPRequest) GetErrorMessage() string {
@@ -752,8 +752,8 @@ func (m *CrashActualLRPRequest) SetErrorMessage(value string) {
 }
 func (x *CrashActualLRPRequest) ToProto() *ProtoCrashActualLRPRequest {
 	proto := &ProtoCrashActualLRPRequest{
-		ActualLrpKey:         x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpKey:         x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 		ErrorMessage:         x.ErrorMessage,
 	}
 	return proto
@@ -769,7 +769,7 @@ func CrashActualLRPRequestProtoMap(values []*CrashActualLRPRequest) []*ProtoCras
 
 // Prevent copylock errors when using ProtoFailActualLRPRequest directly
 type FailActualLRPRequest struct {
-	ActualLrpKey *ActualLRPKey
+	ActualLRPKey *ActualLRPKey
 	ErrorMessage string
 }
 
@@ -795,7 +795,7 @@ func (this *FailActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
 	if this.ErrorMessage != that1.ErrorMessage {
@@ -803,15 +803,15 @@ func (this *FailActualLRPRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *FailActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *FailActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *FailActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *FailActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
 func (m *FailActualLRPRequest) GetErrorMessage() string {
@@ -827,7 +827,7 @@ func (m *FailActualLRPRequest) SetErrorMessage(value string) {
 }
 func (x *FailActualLRPRequest) ToProto() *ProtoFailActualLRPRequest {
 	proto := &ProtoFailActualLRPRequest{
-		ActualLrpKey: x.ActualLrpKey.ToProto(),
+		ActualLrpKey: x.ActualLRPKey.ToProto(),
 		ErrorMessage: x.ErrorMessage,
 	}
 	return proto
@@ -843,7 +843,7 @@ func FailActualLRPRequestProtoMap(values []*FailActualLRPRequest) []*ProtoFailAc
 
 // Prevent copylock errors when using ProtoRetireActualLRPRequest directly
 type RetireActualLRPRequest struct {
-	ActualLrpKey *ActualLRPKey
+	ActualLRPKey *ActualLRPKey
 }
 
 func (this *RetireActualLRPRequest) Equal(that interface{}) bool {
@@ -868,25 +868,25 @@ func (this *RetireActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
 	return true
 }
-func (m *RetireActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *RetireActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *RetireActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *RetireActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
 func (x *RetireActualLRPRequest) ToProto() *ProtoRetireActualLRPRequest {
 	proto := &ProtoRetireActualLRPRequest{
-		ActualLrpKey: x.ActualLrpKey.ToProto(),
+		ActualLrpKey: x.ActualLRPKey.ToProto(),
 	}
 	return proto
 }
@@ -903,7 +903,7 @@ func RetireActualLRPRequestProtoMap(values []*RetireActualLRPRequest) []*ProtoRe
 type RemoveActualLRPRequest struct {
 	ProcessGuid          string
 	Index                int32
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 }
 
 func (this *RemoveActualLRPRequest) Equal(that interface{}) bool {
@@ -934,7 +934,7 @@ func (this *RemoveActualLRPRequest) Equal(that interface{}) bool {
 	if this.Index != that1.Index {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	return true
@@ -961,22 +961,22 @@ func (m *RemoveActualLRPRequest) SetIndex(value int32) {
 		m.Index = value
 	}
 }
-func (m *RemoveActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *RemoveActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *RemoveActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *RemoveActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (x *RemoveActualLRPRequest) ToProto() *ProtoRemoveActualLRPRequest {
 	proto := &ProtoRemoveActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
 		Index:                x.Index,
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 	}
 	return proto
 }
@@ -992,7 +992,7 @@ func RemoveActualLRPRequestProtoMap(values []*RemoveActualLRPRequest) []*ProtoRe
 // Prevent copylock errors when using ProtoActualLRPsResponse directly
 type ActualLRPsResponse struct {
 	Error      *Error
-	ActualLrps []*ActualLRP
+	ActualLRPs []*ActualLRP
 }
 
 func (this *ActualLRPsResponse) Equal(that interface{}) bool {
@@ -1020,11 +1020,11 @@ func (this *ActualLRPsResponse) Equal(that interface{}) bool {
 	if !this.Error.Equal(that1.Error) {
 		return false
 	}
-	if len(this.ActualLrps) != len(that1.ActualLrps) {
+	if len(this.ActualLRPs) != len(that1.ActualLRPs) {
 		return false
 	}
-	for i := range this.ActualLrps {
-		if !this.ActualLrps[i].Equal(that1.ActualLrps[i]) {
+	for i := range this.ActualLRPs {
+		if !this.ActualLRPs[i].Equal(that1.ActualLRPs[i]) {
 			return false
 		}
 	}
@@ -1041,21 +1041,21 @@ func (m *ActualLRPsResponse) SetError(value *Error) {
 		m.Error = value
 	}
 }
-func (m *ActualLRPsResponse) GetActualLrps() []*ActualLRP {
+func (m *ActualLRPsResponse) GetActualLRPs() []*ActualLRP {
 	if m != nil {
-		return m.ActualLrps
+		return m.ActualLRPs
 	}
 	return nil
 }
-func (m *ActualLRPsResponse) SetActualLrps(value []*ActualLRP) {
+func (m *ActualLRPsResponse) SetActualLRPs(value []*ActualLRP) {
 	if m != nil {
-		m.ActualLrps = value
+		m.ActualLRPs = value
 	}
 }
 func (x *ActualLRPsResponse) ToProto() *ProtoActualLRPsResponse {
 	proto := &ProtoActualLRPsResponse{
 		Error:      x.Error.ToProto(),
-		ActualLrps: ActualLRPProtoMap(x.ActualLrps),
+		ActualLrps: ActualLRPProtoMap(x.ActualLRPs),
 	}
 	return proto
 }

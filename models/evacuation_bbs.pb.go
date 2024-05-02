@@ -82,8 +82,8 @@ func EvacuationResponseProtoMap(values []*EvacuationResponse) []*ProtoEvacuation
 
 // Prevent copylock errors when using ProtoEvacuateClaimedActualLRPRequest directly
 type EvacuateClaimedActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPKey         *ActualLRPKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 }
 
 func (this *EvacuateClaimedActualLRPRequest) Equal(that interface{}) bool {
@@ -108,40 +108,40 @@ func (this *EvacuateClaimedActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	return true
 }
-func (m *EvacuateClaimedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *EvacuateClaimedActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *EvacuateClaimedActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *EvacuateClaimedActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *EvacuateClaimedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *EvacuateClaimedActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *EvacuateClaimedActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *EvacuateClaimedActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (x *EvacuateClaimedActualLRPRequest) ToProto() *ProtoEvacuateClaimedActualLRPRequest {
 	proto := &ProtoEvacuateClaimedActualLRPRequest{
-		ActualLrpKey:         x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpKey:         x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 	}
 	return proto
 }
@@ -156,10 +156,10 @@ func EvacuateClaimedActualLRPRequestProtoMap(values []*EvacuateClaimedActualLRPR
 
 // Prevent copylock errors when using ProtoEvacuateRunningActualLRPRequest directly
 type EvacuateRunningActualLRPRequest struct {
-	ActualLrpKey            *ActualLRPKey
-	ActualLrpInstanceKey    *ActualLRPInstanceKey
-	ActualLrpNetInfo        *ActualLRPNetInfo
-	ActualLrpInternalRoutes []*ActualLRPInternalRoute
+	ActualLRPKey            *ActualLRPKey
+	ActualLRPInstanceKey    *ActualLRPInstanceKey
+	ActualLRPNetInfo        *ActualLRPNetInfo
+	ActualLRPInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
 	ProtoRoutable           bool
 	AvailabilityZone        string
@@ -187,20 +187,20 @@ func (this *EvacuateRunningActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
-	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+	if !this.ActualLRPNetInfo.Equal(that1.ActualLRPNetInfo) {
 		return false
 	}
-	if len(this.ActualLrpInternalRoutes) != len(that1.ActualLrpInternalRoutes) {
+	if len(this.ActualLRPInternalRoutes) != len(that1.ActualLRPInternalRoutes) {
 		return false
 	}
-	for i := range this.ActualLrpInternalRoutes {
-		if !this.ActualLrpInternalRoutes[i].Equal(that1.ActualLrpInternalRoutes[i]) {
+	for i := range this.ActualLRPInternalRoutes {
+		if !this.ActualLRPInternalRoutes[i].Equal(that1.ActualLRPInternalRoutes[i]) {
 			return false
 		}
 	}
@@ -220,48 +220,48 @@ func (this *EvacuateRunningActualLRPRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *EvacuateRunningActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *EvacuateRunningActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *EvacuateRunningActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *EvacuateRunningActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-func (m *EvacuateRunningActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
-	if m != nil {
-		m.ActualLrpInstanceKey = value
-	}
-}
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpNetInfo() *ActualLRPNetInfo {
-	if m != nil {
-		return m.ActualLrpNetInfo
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *EvacuateRunningActualLRPRequest) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+func (m *EvacuateRunningActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpNetInfo = value
+		m.ActualLRPInstanceKey = value
 	}
 }
-func (m *EvacuateRunningActualLRPRequest) GetActualLrpInternalRoutes() []*ActualLRPInternalRoute {
+func (m *EvacuateRunningActualLRPRequest) GetActualLRPNetInfo() *ActualLRPNetInfo {
 	if m != nil {
-		return m.ActualLrpInternalRoutes
+		return m.ActualLRPNetInfo
 	}
 	return nil
 }
-func (m *EvacuateRunningActualLRPRequest) SetActualLrpInternalRoutes(value []*ActualLRPInternalRoute) {
+func (m *EvacuateRunningActualLRPRequest) SetActualLRPNetInfo(value *ActualLRPNetInfo) {
 	if m != nil {
-		m.ActualLrpInternalRoutes = value
+		m.ActualLRPNetInfo = value
+	}
+}
+func (m *EvacuateRunningActualLRPRequest) GetActualLRPInternalRoutes() []*ActualLRPInternalRoute {
+	if m != nil {
+		return m.ActualLRPInternalRoutes
+	}
+	return nil
+}
+func (m *EvacuateRunningActualLRPRequest) SetActualLRPInternalRoutes(value []*ActualLRPInternalRoute) {
+	if m != nil {
+		m.ActualLRPInternalRoutes = value
 	}
 }
 func (m *EvacuateRunningActualLRPRequest) GetMetricTags() map[string]string {
@@ -299,10 +299,10 @@ func (m *EvacuateRunningActualLRPRequest) SetAvailabilityZone(value string) {
 }
 func (x *EvacuateRunningActualLRPRequest) ToProto() *ProtoEvacuateRunningActualLRPRequest {
 	proto := &ProtoEvacuateRunningActualLRPRequest{
-		ActualLrpKey:            x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.ToProto(),
-		ActualLrpNetInfo:        x.ActualLrpNetInfo.ToProto(),
-		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLrpInternalRoutes),
+		ActualLrpKey:            x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey:    x.ActualLRPInstanceKey.ToProto(),
+		ActualLrpNetInfo:        x.ActualLRPNetInfo.ToProto(),
+		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLRPInternalRoutes),
 		MetricTags:              x.MetricTags,
 		ProtoRoutable:           &x.ProtoRoutable,
 		AvailabilityZone:        x.AvailabilityZone,
@@ -320,8 +320,8 @@ func EvacuateRunningActualLRPRequestProtoMap(values []*EvacuateRunningActualLRPR
 
 // Prevent copylock errors when using ProtoEvacuateStoppedActualLRPRequest directly
 type EvacuateStoppedActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPKey         *ActualLRPKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 }
 
 func (this *EvacuateStoppedActualLRPRequest) Equal(that interface{}) bool {
@@ -346,40 +346,40 @@ func (this *EvacuateStoppedActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	return true
 }
-func (m *EvacuateStoppedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *EvacuateStoppedActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *EvacuateStoppedActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *EvacuateStoppedActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *EvacuateStoppedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *EvacuateStoppedActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *EvacuateStoppedActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *EvacuateStoppedActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (x *EvacuateStoppedActualLRPRequest) ToProto() *ProtoEvacuateStoppedActualLRPRequest {
 	proto := &ProtoEvacuateStoppedActualLRPRequest{
-		ActualLrpKey:         x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpKey:         x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 	}
 	return proto
 }
@@ -394,8 +394,8 @@ func EvacuateStoppedActualLRPRequestProtoMap(values []*EvacuateStoppedActualLRPR
 
 // Prevent copylock errors when using ProtoEvacuateCrashedActualLRPRequest directly
 type EvacuateCrashedActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPKey         *ActualLRPKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 	ErrorMessage         string
 }
 
@@ -421,10 +421,10 @@ func (this *EvacuateCrashedActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	if this.ErrorMessage != that1.ErrorMessage {
@@ -432,26 +432,26 @@ func (this *EvacuateCrashedActualLRPRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *EvacuateCrashedActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *EvacuateCrashedActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *EvacuateCrashedActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *EvacuateCrashedActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *EvacuateCrashedActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *EvacuateCrashedActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *EvacuateCrashedActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *EvacuateCrashedActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (m *EvacuateCrashedActualLRPRequest) GetErrorMessage() string {
@@ -467,8 +467,8 @@ func (m *EvacuateCrashedActualLRPRequest) SetErrorMessage(value string) {
 }
 func (x *EvacuateCrashedActualLRPRequest) ToProto() *ProtoEvacuateCrashedActualLRPRequest {
 	proto := &ProtoEvacuateCrashedActualLRPRequest{
-		ActualLrpKey:         x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpKey:         x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 		ErrorMessage:         x.ErrorMessage,
 	}
 	return proto
@@ -484,8 +484,8 @@ func EvacuateCrashedActualLRPRequestProtoMap(values []*EvacuateCrashedActualLRPR
 
 // Prevent copylock errors when using ProtoRemoveEvacuatingActualLRPRequest directly
 type RemoveEvacuatingActualLRPRequest struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPKey         *ActualLRPKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 }
 
 func (this *RemoveEvacuatingActualLRPRequest) Equal(that interface{}) bool {
@@ -510,40 +510,40 @@ func (this *RemoveEvacuatingActualLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	return true
 }
-func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpKey() *ActualLRPKey {
+func (m *RemoveEvacuatingActualLRPRequest) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *RemoveEvacuatingActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
+func (m *RemoveEvacuatingActualLRPRequest) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *RemoveEvacuatingActualLRPRequest) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *RemoveEvacuatingActualLRPRequest) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *RemoveEvacuatingActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *RemoveEvacuatingActualLRPRequest) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (x *RemoveEvacuatingActualLRPRequest) ToProto() *ProtoRemoveEvacuatingActualLRPRequest {
 	proto := &ProtoRemoveEvacuatingActualLRPRequest{
-		ActualLrpKey:         x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpKey:         x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 	}
 	return proto
 }

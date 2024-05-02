@@ -8,7 +8,7 @@ package models
 
 // Prevent copylock errors when using ProtoActualLRPCreatedEvent directly
 type ActualLRPCreatedEvent struct {
-	ActualLrpGroup *ActualLRPGroup
+	ActualLRPGroup *ActualLRPGroup
 }
 
 func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
@@ -33,25 +33,25 @@ func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+	if !this.ActualLRPGroup.Equal(that1.ActualLRPGroup) {
 		return false
 	}
 	return true
 }
-func (m *ActualLRPCreatedEvent) GetActualLrpGroup() *ActualLRPGroup {
+func (m *ActualLRPCreatedEvent) GetActualLRPGroup() *ActualLRPGroup {
 	if m != nil {
-		return m.ActualLrpGroup
+		return m.ActualLRPGroup
 	}
 	return nil
 }
-func (m *ActualLRPCreatedEvent) SetActualLrpGroup(value *ActualLRPGroup) {
+func (m *ActualLRPCreatedEvent) SetActualLRPGroup(value *ActualLRPGroup) {
 	if m != nil {
-		m.ActualLrpGroup = value
+		m.ActualLRPGroup = value
 	}
 }
 func (x *ActualLRPCreatedEvent) ToProto() *ProtoActualLRPCreatedEvent {
 	proto := &ProtoActualLRPCreatedEvent{
-		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
+		ActualLrpGroup: x.ActualLRPGroup.ToProto(),
 	}
 	return proto
 }
@@ -124,8 +124,8 @@ func (m *ActualLRPChangedEvent) SetAfter(value *ActualLRPGroup) {
 }
 func (x *ActualLRPChangedEvent) ToProto() *ProtoActualLRPChangedEvent {
 	proto := &ProtoActualLRPChangedEvent{
-		Before: x.Before.ToProto(),
-		After:  x.After.ToProto(),
+		Before: x.ActualLRPGroup.ToProto(),
+		After:  x.ActualLRPGroup.ToProto(),
 	}
 	return proto
 }
@@ -140,7 +140,7 @@ func ActualLRPChangedEventProtoMap(values []*ActualLRPChangedEvent) []*ProtoActu
 
 // Prevent copylock errors when using ProtoActualLRPRemovedEvent directly
 type ActualLRPRemovedEvent struct {
-	ActualLrpGroup *ActualLRPGroup
+	ActualLRPGroup *ActualLRPGroup
 }
 
 func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
@@ -165,25 +165,25 @@ func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+	if !this.ActualLRPGroup.Equal(that1.ActualLRPGroup) {
 		return false
 	}
 	return true
 }
-func (m *ActualLRPRemovedEvent) GetActualLrpGroup() *ActualLRPGroup {
+func (m *ActualLRPRemovedEvent) GetActualLRPGroup() *ActualLRPGroup {
 	if m != nil {
-		return m.ActualLrpGroup
+		return m.ActualLRPGroup
 	}
 	return nil
 }
-func (m *ActualLRPRemovedEvent) SetActualLrpGroup(value *ActualLRPGroup) {
+func (m *ActualLRPRemovedEvent) SetActualLRPGroup(value *ActualLRPGroup) {
 	if m != nil {
-		m.ActualLrpGroup = value
+		m.ActualLRPGroup = value
 	}
 }
 func (x *ActualLRPRemovedEvent) ToProto() *ProtoActualLRPRemovedEvent {
 	proto := &ProtoActualLRPRemovedEvent{
-		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
+		ActualLrpGroup: x.ActualLRPGroup.ToProto(),
 	}
 	return proto
 }
@@ -198,7 +198,7 @@ func ActualLRPRemovedEventProtoMap(values []*ActualLRPRemovedEvent) []*ProtoActu
 
 // Prevent copylock errors when using ProtoActualLRPInstanceCreatedEvent directly
 type ActualLRPInstanceCreatedEvent struct {
-	ActualLrp *ActualLRP
+	ActualLRP *ActualLRP
 	TraceId   string
 }
 
@@ -224,7 +224,7 @@ func (this *ActualLRPInstanceCreatedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrp.Equal(that1.ActualLrp) {
+	if !this.ActualLRP.Equal(that1.ActualLRP) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -232,15 +232,15 @@ func (this *ActualLRPInstanceCreatedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPInstanceCreatedEvent) GetActualLrp() *ActualLRP {
+func (m *ActualLRPInstanceCreatedEvent) GetActualLRP() *ActualLRP {
 	if m != nil {
-		return m.ActualLrp
+		return m.ActualLRP
 	}
 	return nil
 }
-func (m *ActualLRPInstanceCreatedEvent) SetActualLrp(value *ActualLRP) {
+func (m *ActualLRPInstanceCreatedEvent) SetActualLRP(value *ActualLRP) {
 	if m != nil {
-		m.ActualLrp = value
+		m.ActualLRP = value
 	}
 }
 func (m *ActualLRPInstanceCreatedEvent) GetTraceId() string {
@@ -256,7 +256,7 @@ func (m *ActualLRPInstanceCreatedEvent) SetTraceId(value string) {
 }
 func (x *ActualLRPInstanceCreatedEvent) ToProto() *ProtoActualLRPInstanceCreatedEvent {
 	proto := &ProtoActualLRPInstanceCreatedEvent{
-		ActualLrp: x.ActualLrp.ToProto(),
+		ActualLrp: x.ActualLRP.ToProto(),
 		TraceId:   x.TraceId,
 	}
 	return proto
@@ -272,7 +272,7 @@ func ActualLRPInstanceCreatedEventProtoMap(values []*ActualLRPInstanceCreatedEve
 
 // Prevent copylock errors when using ProtoActualLRPInfo directly
 type ActualLRPInfo struct {
-	ActualLrpNetInfo *ActualLRPNetInfo
+	ActualLRPNetInfo *ActualLRPNetInfo
 	CrashCount       int32
 	CrashReason      string
 	State            string
@@ -306,7 +306,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+	if !this.ActualLRPNetInfo.Equal(that1.ActualLRPNetInfo) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -338,15 +338,15 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPInfo) GetActualLrpNetInfo() *ActualLRPNetInfo {
+func (m *ActualLRPInfo) GetActualLRPNetInfo() *ActualLRPNetInfo {
 	if m != nil {
-		return m.ActualLrpNetInfo
+		return m.ActualLRPNetInfo
 	}
 	return nil
 }
-func (m *ActualLRPInfo) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+func (m *ActualLRPInfo) SetActualLRPNetInfo(value *ActualLRPNetInfo) {
 	if m != nil {
-		m.ActualLrpNetInfo = value
+		m.ActualLRPNetInfo = value
 	}
 }
 func (m *ActualLRPInfo) GetCrashCount() int32 {
@@ -450,7 +450,7 @@ func (m *ActualLRPInfo) SetAvailabilityZone(value string) {
 }
 func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
 	proto := &ProtoActualLRPInfo{
-		ActualLrpNetInfo: x.ActualLrpNetInfo.ToProto(),
+		ActualLrpNetInfo: x.ActualLRPNetInfo.ToProto(),
 		CrashCount:       x.CrashCount,
 		CrashReason:      x.CrashReason,
 		State:            x.State,
@@ -474,8 +474,8 @@ func ActualLRPInfoProtoMap(values []*ActualLRPInfo) []*ProtoActualLRPInfo {
 
 // Prevent copylock errors when using ProtoActualLRPInstanceChangedEvent directly
 type ActualLRPInstanceChangedEvent struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPKey         *ActualLRPKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 	Before               *ActualLRPInfo
 	After                *ActualLRPInfo
 	TraceId              string
@@ -503,10 +503,10 @@ func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	if !this.Before.Equal(that1.Before) {
@@ -520,26 +520,26 @@ func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPInstanceChangedEvent) GetActualLrpKey() *ActualLRPKey {
+func (m *ActualLRPInstanceChangedEvent) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *ActualLRPInstanceChangedEvent) SetActualLrpKey(value *ActualLRPKey) {
+func (m *ActualLRPInstanceChangedEvent) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *ActualLRPInstanceChangedEvent) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *ActualLRPInstanceChangedEvent) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *ActualLRPInstanceChangedEvent) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *ActualLRPInstanceChangedEvent) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (m *ActualLRPInstanceChangedEvent) GetBefore() *ActualLRPInfo {
@@ -577,10 +577,10 @@ func (m *ActualLRPInstanceChangedEvent) SetTraceId(value string) {
 }
 func (x *ActualLRPInstanceChangedEvent) ToProto() *ProtoActualLRPInstanceChangedEvent {
 	proto := &ProtoActualLRPInstanceChangedEvent{
-		ActualLrpKey:         x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
-		Before:               x.Before.ToProto(),
-		After:                x.After.ToProto(),
+		ActualLrpKey:         x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
+		Before:               x.ActualLRPInfo.ToProto(),
+		After:                x.ActualLRPInfo.ToProto(),
 		TraceId:              x.TraceId,
 	}
 	return proto
@@ -596,7 +596,7 @@ func ActualLRPInstanceChangedEventProtoMap(values []*ActualLRPInstanceChangedEve
 
 // Prevent copylock errors when using ProtoActualLRPInstanceRemovedEvent directly
 type ActualLRPInstanceRemovedEvent struct {
-	ActualLrp *ActualLRP
+	ActualLRP *ActualLRP
 	TraceId   string
 }
 
@@ -622,7 +622,7 @@ func (this *ActualLRPInstanceRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrp.Equal(that1.ActualLrp) {
+	if !this.ActualLRP.Equal(that1.ActualLRP) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -630,15 +630,15 @@ func (this *ActualLRPInstanceRemovedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPInstanceRemovedEvent) GetActualLrp() *ActualLRP {
+func (m *ActualLRPInstanceRemovedEvent) GetActualLRP() *ActualLRP {
 	if m != nil {
-		return m.ActualLrp
+		return m.ActualLRP
 	}
 	return nil
 }
-func (m *ActualLRPInstanceRemovedEvent) SetActualLrp(value *ActualLRP) {
+func (m *ActualLRPInstanceRemovedEvent) SetActualLRP(value *ActualLRP) {
 	if m != nil {
-		m.ActualLrp = value
+		m.ActualLRP = value
 	}
 }
 func (m *ActualLRPInstanceRemovedEvent) GetTraceId() string {
@@ -654,7 +654,7 @@ func (m *ActualLRPInstanceRemovedEvent) SetTraceId(value string) {
 }
 func (x *ActualLRPInstanceRemovedEvent) ToProto() *ProtoActualLRPInstanceRemovedEvent {
 	proto := &ProtoActualLRPInstanceRemovedEvent{
-		ActualLrp: x.ActualLrp.ToProto(),
+		ActualLrp: x.ActualLRP.ToProto(),
 		TraceId:   x.TraceId,
 	}
 	return proto
@@ -670,7 +670,7 @@ func ActualLRPInstanceRemovedEventProtoMap(values []*ActualLRPInstanceRemovedEve
 
 // Prevent copylock errors when using ProtoDesiredLRPCreatedEvent directly
 type DesiredLRPCreatedEvent struct {
-	DesiredLrp *DesiredLRP
+	DesiredLRP *DesiredLRP
 	TraceId    string
 }
 
@@ -696,7 +696,7 @@ func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+	if !this.DesiredLRP.Equal(that1.DesiredLRP) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -704,15 +704,15 @@ func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *DesiredLRPCreatedEvent) GetDesiredLrp() *DesiredLRP {
+func (m *DesiredLRPCreatedEvent) GetDesiredLRP() *DesiredLRP {
 	if m != nil {
-		return m.DesiredLrp
+		return m.DesiredLRP
 	}
 	return nil
 }
-func (m *DesiredLRPCreatedEvent) SetDesiredLrp(value *DesiredLRP) {
+func (m *DesiredLRPCreatedEvent) SetDesiredLRP(value *DesiredLRP) {
 	if m != nil {
-		m.DesiredLrp = value
+		m.DesiredLRP = value
 	}
 }
 func (m *DesiredLRPCreatedEvent) GetTraceId() string {
@@ -728,7 +728,7 @@ func (m *DesiredLRPCreatedEvent) SetTraceId(value string) {
 }
 func (x *DesiredLRPCreatedEvent) ToProto() *ProtoDesiredLRPCreatedEvent {
 	proto := &ProtoDesiredLRPCreatedEvent{
-		DesiredLrp: x.DesiredLrp.ToProto(),
+		DesiredLrp: x.DesiredLRP.ToProto(),
 		TraceId:    x.TraceId,
 	}
 	return proto
@@ -817,8 +817,8 @@ func (m *DesiredLRPChangedEvent) SetTraceId(value string) {
 }
 func (x *DesiredLRPChangedEvent) ToProto() *ProtoDesiredLRPChangedEvent {
 	proto := &ProtoDesiredLRPChangedEvent{
-		Before:  x.Before.ToProto(),
-		After:   x.After.ToProto(),
+		Before:  x.DesiredLRP.ToProto(),
+		After:   x.DesiredLRP.ToProto(),
 		TraceId: x.TraceId,
 	}
 	return proto
@@ -834,7 +834,7 @@ func DesiredLRPChangedEventProtoMap(values []*DesiredLRPChangedEvent) []*ProtoDe
 
 // Prevent copylock errors when using ProtoDesiredLRPRemovedEvent directly
 type DesiredLRPRemovedEvent struct {
-	DesiredLrp *DesiredLRP
+	DesiredLRP *DesiredLRP
 	TraceId    string
 }
 
@@ -860,7 +860,7 @@ func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+	if !this.DesiredLRP.Equal(that1.DesiredLRP) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -868,15 +868,15 @@ func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *DesiredLRPRemovedEvent) GetDesiredLrp() *DesiredLRP {
+func (m *DesiredLRPRemovedEvent) GetDesiredLRP() *DesiredLRP {
 	if m != nil {
-		return m.DesiredLrp
+		return m.DesiredLRP
 	}
 	return nil
 }
-func (m *DesiredLRPRemovedEvent) SetDesiredLrp(value *DesiredLRP) {
+func (m *DesiredLRPRemovedEvent) SetDesiredLRP(value *DesiredLRP) {
 	if m != nil {
-		m.DesiredLrp = value
+		m.DesiredLRP = value
 	}
 }
 func (m *DesiredLRPRemovedEvent) GetTraceId() string {
@@ -892,7 +892,7 @@ func (m *DesiredLRPRemovedEvent) SetTraceId(value string) {
 }
 func (x *DesiredLRPRemovedEvent) ToProto() *ProtoDesiredLRPRemovedEvent {
 	proto := &ProtoDesiredLRPRemovedEvent{
-		DesiredLrp: x.DesiredLrp.ToProto(),
+		DesiredLrp: x.DesiredLRP.ToProto(),
 		TraceId:    x.TraceId,
 	}
 	return proto
@@ -908,8 +908,8 @@ func DesiredLRPRemovedEventProtoMap(values []*DesiredLRPRemovedEvent) []*ProtoDe
 
 // Prevent copylock errors when using ProtoActualLRPCrashedEvent directly
 type ActualLRPCrashedEvent struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLRPKey         *ActualLRPKey
+	ActualLRPInstanceKey *ActualLRPInstanceKey
 	CrashCount           int32
 	CrashReason          string
 	Since                int64
@@ -937,10 +937,10 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -954,26 +954,26 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPCrashedEvent) GetActualLrpKey() *ActualLRPKey {
+func (m *ActualLRPCrashedEvent) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *ActualLRPCrashedEvent) SetActualLrpKey(value *ActualLRPKey) {
+func (m *ActualLRPCrashedEvent) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *ActualLRPCrashedEvent) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *ActualLRPCrashedEvent) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *ActualLRPCrashedEvent) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *ActualLRPCrashedEvent) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpInstanceKey = value
+		m.ActualLRPInstanceKey = value
 	}
 }
 func (m *ActualLRPCrashedEvent) GetCrashCount() int32 {
@@ -1011,8 +1011,8 @@ func (m *ActualLRPCrashedEvent) SetSince(value int64) {
 }
 func (x *ActualLRPCrashedEvent) ToProto() *ProtoActualLRPCrashedEvent {
 	proto := &ProtoActualLRPCrashedEvent{
-		ActualLrpKey:         x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
+		ActualLrpKey:         x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey: x.ActualLRPInstanceKey.ToProto(),
 		CrashCount:           x.CrashCount,
 		CrashReason:          x.CrashReason,
 		Since:                x.Since,
@@ -1204,8 +1204,8 @@ func (m *TaskChangedEvent) SetAfter(value *Task) {
 }
 func (x *TaskChangedEvent) ToProto() *ProtoTaskChangedEvent {
 	proto := &ProtoTaskChangedEvent{
-		Before: x.Before.ToProto(),
-		After:  x.After.ToProto(),
+		Before: x.Task.ToProto(),
+		After:  x.Task.ToProto(),
 	}
 	return proto
 }
