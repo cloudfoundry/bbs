@@ -538,10 +538,10 @@ func (l *ResourceLimits) UnmarshalJSON(data []byte) error {
 	}
 
 	if limit.Nofile != nil {
-		l.SetNofile(*limit.Nofile)
+		l.SetNofile(limit.Nofile)
 	}
 	if limit.Nproc != nil {
-		l.SetNproc(*limit.Nproc)
+		l.SetNproc(limit.Nproc)
 	}
 
 	return nil
@@ -549,9 +549,14 @@ func (l *ResourceLimits) UnmarshalJSON(data []byte) error {
 
 func (l ResourceLimits) MarshalJSON() ([]byte, error) {
 	var limit internalResourceLimits
-	n := l.GetNofile()
-	limit.Nofile = &n
-	p := l.GetNproc()
-	limit.Nproc = &p
+	if l.NofileExists() {
+		n := l.GetNofile()
+		limit.Nofile = n
+	}
+	if l.NprocExists() {
+
+		n := l.GetNproc()
+		limit.Nproc = n
+	}
 	return json.Marshal(limit)
 }
