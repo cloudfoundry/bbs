@@ -362,7 +362,7 @@ func (bbsGenerateHelper) genToProtoMethod(g *protogen.GeneratedFile, msg *protog
 						panic("Unrecognized Repeated field found")
 					}
 				} else {
-					g.P(protoFieldName, ": x.", fieldCopysafeName, ".ToProto(),")
+					g.P(protoFieldName, ": x.", getFieldName(protoFieldName), ".ToProto(),")
 				}
 			} else if field.Enum != nil {
 				g.P(protoFieldName, ": ", field.GoIdent, "(x.", protoFieldName, "),")
