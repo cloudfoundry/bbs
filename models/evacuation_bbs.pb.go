@@ -161,7 +161,7 @@ type EvacuateRunningActualLRPRequest struct {
 	ActualLRPNetInfo        *ActualLRPNetInfo
 	ActualLRPInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
-	ProtoRoutable           bool
+	Routable                bool
 	AvailabilityZone        string
 }
 
@@ -212,7 +212,7 @@ func (this *EvacuateRunningActualLRPRequest) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if this.ProtoRoutable != that1.ProtoRoutable {
+	if this.Routable != that1.Routable {
 		return false
 	}
 	if this.AvailabilityZone != that1.AvailabilityZone {
@@ -275,15 +275,15 @@ func (m *EvacuateRunningActualLRPRequest) SetMetricTags(value map[string]string)
 		m.MetricTags = value
 	}
 }
-func (m *EvacuateRunningActualLRPRequest) GetProtoRoutable() bool {
+func (m *EvacuateRunningActualLRPRequest) GetRoutable() bool {
 	if m != nil {
-		return m.ProtoRoutable
+		return m.Routable
 	}
 	return false
 }
-func (m *EvacuateRunningActualLRPRequest) SetProtoRoutable(value bool) {
+func (m *EvacuateRunningActualLRPRequest) SetRoutable(value bool) {
 	if m != nil {
-		m.ProtoRoutable = value
+		m.Routable = value
 	}
 }
 func (m *EvacuateRunningActualLRPRequest) GetAvailabilityZone() string {
@@ -304,7 +304,7 @@ func (x *EvacuateRunningActualLRPRequest) ToProto() *ProtoEvacuateRunningActualL
 		ActualLrpNetInfo:        x.ActualLRPNetInfo.ToProto(),
 		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLRPInternalRoutes),
 		MetricTags:              x.MetricTags,
-		ProtoRoutable:           &x.ProtoRoutable,
+		Routable:                &x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,
 	}
 	return proto

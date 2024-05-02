@@ -280,7 +280,7 @@ type ActualLRPInfo struct {
 	Since            int64
 	ModificationTag  *ModificationTag
 	Presence         ActualLRP_Presence
-	ProtoRoutable    bool
+	Routable         bool
 	AvailabilityZone string
 }
 
@@ -330,7 +330,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	if this.Presence != that1.Presence {
 		return false
 	}
-	if this.ProtoRoutable != that1.ProtoRoutable {
+	if this.Routable != that1.Routable {
 		return false
 	}
 	if this.AvailabilityZone != that1.AvailabilityZone {
@@ -426,15 +426,15 @@ func (m *ActualLRPInfo) SetPresence(value ActualLRP_Presence) {
 		m.Presence = value
 	}
 }
-func (m *ActualLRPInfo) GetProtoRoutable() bool {
+func (m *ActualLRPInfo) GetRoutable() bool {
 	if m != nil {
-		return m.ProtoRoutable
+		return m.Routable
 	}
 	return false
 }
-func (m *ActualLRPInfo) SetProtoRoutable(value bool) {
+func (m *ActualLRPInfo) SetRoutable(value bool) {
 	if m != nil {
-		m.ProtoRoutable = value
+		m.Routable = value
 	}
 }
 func (m *ActualLRPInfo) GetAvailabilityZone() string {
@@ -458,7 +458,7 @@ func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
 		Since:            x.Since,
 		ModificationTag:  x.ModificationTag.ToProto(),
 		Presence:         ProtoActualLRPInfo_Presence(x.Presence),
-		ProtoRoutable:    &x.ProtoRoutable,
+		Routable:         &x.Routable,
 		AvailabilityZone: x.AvailabilityZone,
 	}
 	return proto
