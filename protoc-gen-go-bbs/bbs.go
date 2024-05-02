@@ -154,19 +154,38 @@ func (bbsGenerateHelper) genAccessors(g *protogen.GeneratedFile, msg *protogen.M
 			if options.GetDeprecated() {
 				g.P("// DEPRECATED: DO NOT USE")
 			}
-			defaultValue := getDefaultValueString(field)
-			genGetter(g, copysafeName, fieldName, fieldType, defaultValue)
+			genGetter(g, copysafeName, field) //fieldName, fieldType, defaultValue)
 			genSetter(g, copysafeName, fieldName, fieldType)
 		}
 	}
 }
 
-func genGetter(g *protogen.GeneratedFile, copysafeName string, fieldName string, fieldType string, defaultValue string) {
+func genExists(g *protogen.GeneratedFile, copysafeName string, field *protogen.Field) {
+	if *debug {
+		log.Print("Exists...")
+	}
+	fieldName := getFieldName(field.GoName)
+	g.P("func (m *", copysafeName, ") ", fieldName, "Exists() bool {")
+	g.P("return m != nil && m.", fieldName, " != nil")
+	g.P("}")
+}
+
+func genGetter(g *protogen.GeneratedFile, copysafeName string, field *protogen.Field) { //fieldName string, fieldType string, defaultValue string) {
 	if *debug {
 		log.Print("Getter...")
 	}
+	fieldName := getFieldName(field.GoName)
+	fieldType := getActualType(g, field)
+	defaultValue := getDefaultValueString(field)
+	isOptional := field.Desc.HasOptionalKeyword()
+	optionalCheck := ""
+	if isOptional {
+		defaultValue = "nil"
+		optionalCheck = fmt.Sprintf("&& m.%s != nil ", fieldName) //extra space intentional
+		genExists(g, copysafeName, field)
+	}
 	g.P("func (m *", copysafeName, ") Get", fieldName, "() ", fieldType, " {")
-	g.P("if m != nil {")
+	g.P("if m != nil ", optionalCheck, "{")
 	g.P("return m.", fieldName)
 	g.P("}")
 	g.P("return ", defaultValue)
@@ -239,7 +258,11 @@ func getActualType(g *protogen.GeneratedFile, field *protogen.Field) string {
 		enumType, _ := getCopysafeName(g, field.Enum.GoIdent)
 		fieldType += enumType
 	} else {
-		fieldType += field.Desc.Kind().String()
+		optional := ""
+		if field.Desc.HasOptionalKeyword() {
+			optional = "*"
+		}
+		fieldType += optional + field.Desc.Kind().String()
 	}
 
 	return fieldType
