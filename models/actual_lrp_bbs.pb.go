@@ -70,8 +70,8 @@ func (m *ActualLRPGroup) SetEvacuating(value *ActualLRP) {
 }
 func (x *ActualLRPGroup) ToProto() *ProtoActualLRPGroup {
 	proto := &ProtoActualLRPGroup{
-		Instance:   x.Instance.ToProto(),
-		Evacuating: x.Evacuating.ToProto(),
+		Instance:   x.ActualLRP.ToProto(),
+		Evacuating: x.ActualLRP.ToProto(),
 	}
 	return proto
 }
@@ -585,9 +585,9 @@ func (m ActualLRP_Presence) String() string {
 
 // Prevent copylock errors when using ProtoActualLRP directly
 type ActualLRP struct {
-	ActualLrpKey            *ActualLRPKey
-	ActualLrpInstanceKey    *ActualLRPInstanceKey
-	ActualLrpNetInfo        *ActualLRPNetInfo
+	ActualLRPKey            *ActualLRPKey
+	ActualLRPInstanceKey    *ActualLRPInstanceKey
+	ActualLRPNetInfo        *ActualLRPNetInfo
 	CrashCount              int32
 	CrashReason             string
 	State                   string
@@ -595,7 +595,7 @@ type ActualLRP struct {
 	Since                   int64
 	ModificationTag         *ModificationTag
 	Presence                ActualLRP_Presence
-	ActualLrpInternalRoutes []*ActualLRPInternalRoute
+	ActualLRPInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
 	Routable                bool
 	AvailabilityZone        string
@@ -623,13 +623,13 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLRPKey.Equal(that1.ActualLRPKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLRPInstanceKey.Equal(that1.ActualLRPInstanceKey) {
 		return false
 	}
-	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+	if !this.ActualLRPNetInfo.Equal(that1.ActualLRPNetInfo) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -653,11 +653,11 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	if this.Presence != that1.Presence {
 		return false
 	}
-	if len(this.ActualLrpInternalRoutes) != len(that1.ActualLrpInternalRoutes) {
+	if len(this.ActualLRPInternalRoutes) != len(that1.ActualLRPInternalRoutes) {
 		return false
 	}
-	for i := range this.ActualLrpInternalRoutes {
-		if !this.ActualLrpInternalRoutes[i].Equal(that1.ActualLrpInternalRoutes[i]) {
+	for i := range this.ActualLRPInternalRoutes {
+		if !this.ActualLRPInternalRoutes[i].Equal(that1.ActualLRPInternalRoutes[i]) {
 			return false
 		}
 	}
@@ -677,37 +677,37 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRP) GetActualLrpKey() *ActualLRPKey {
+func (m *ActualLRP) GetActualLRPKey() *ActualLRPKey {
 	if m != nil {
-		return m.ActualLrpKey
+		return m.ActualLRPKey
 	}
 	return nil
 }
-func (m *ActualLRP) SetActualLrpKey(value *ActualLRPKey) {
+func (m *ActualLRP) SetActualLRPKey(value *ActualLRPKey) {
 	if m != nil {
-		m.ActualLrpKey = value
+		m.ActualLRPKey = value
 	}
 }
-func (m *ActualLRP) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
+func (m *ActualLRP) GetActualLRPInstanceKey() *ActualLRPInstanceKey {
 	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-func (m *ActualLRP) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
-	if m != nil {
-		m.ActualLrpInstanceKey = value
-	}
-}
-func (m *ActualLRP) GetActualLrpNetInfo() *ActualLRPNetInfo {
-	if m != nil {
-		return m.ActualLrpNetInfo
+		return m.ActualLRPInstanceKey
 	}
 	return nil
 }
-func (m *ActualLRP) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+func (m *ActualLRP) SetActualLRPInstanceKey(value *ActualLRPInstanceKey) {
 	if m != nil {
-		m.ActualLrpNetInfo = value
+		m.ActualLRPInstanceKey = value
+	}
+}
+func (m *ActualLRP) GetActualLRPNetInfo() *ActualLRPNetInfo {
+	if m != nil {
+		return m.ActualLRPNetInfo
+	}
+	return nil
+}
+func (m *ActualLRP) SetActualLRPNetInfo(value *ActualLRPNetInfo) {
+	if m != nil {
+		m.ActualLRPNetInfo = value
 	}
 }
 func (m *ActualLRP) GetCrashCount() int32 {
@@ -787,15 +787,15 @@ func (m *ActualLRP) SetPresence(value ActualLRP_Presence) {
 		m.Presence = value
 	}
 }
-func (m *ActualLRP) GetActualLrpInternalRoutes() []*ActualLRPInternalRoute {
+func (m *ActualLRP) GetActualLRPInternalRoutes() []*ActualLRPInternalRoute {
 	if m != nil {
-		return m.ActualLrpInternalRoutes
+		return m.ActualLRPInternalRoutes
 	}
 	return nil
 }
-func (m *ActualLRP) SetActualLrpInternalRoutes(value []*ActualLRPInternalRoute) {
+func (m *ActualLRP) SetActualLRPInternalRoutes(value []*ActualLRPInternalRoute) {
 	if m != nil {
-		m.ActualLrpInternalRoutes = value
+		m.ActualLRPInternalRoutes = value
 	}
 }
 func (m *ActualLRP) GetMetricTags() map[string]string {
@@ -833,9 +833,9 @@ func (m *ActualLRP) SetAvailabilityZone(value string) {
 }
 func (x *ActualLRP) ToProto() *ProtoActualLRP {
 	proto := &ProtoActualLRP{
-		ActualLrpKey:            x.ActualLrpKey.ToProto(),
-		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.ToProto(),
-		ActualLrpNetInfo:        x.ActualLrpNetInfo.ToProto(),
+		ActualLrpKey:            x.ActualLRPKey.ToProto(),
+		ActualLrpInstanceKey:    x.ActualLRPInstanceKey.ToProto(),
+		ActualLrpNetInfo:        x.ActualLRPNetInfo.ToProto(),
 		CrashCount:              x.CrashCount,
 		CrashReason:             x.CrashReason,
 		State:                   x.State,
@@ -843,7 +843,7 @@ func (x *ActualLRP) ToProto() *ProtoActualLRP {
 		Since:                   x.Since,
 		ModificationTag:         x.ModificationTag.ToProto(),
 		Presence:                ProtoActualLRP_Presence(x.Presence),
-		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLrpInternalRoutes),
+		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLRPInternalRoutes),
 		MetricTags:              x.MetricTags,
 		Routable:                &x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,

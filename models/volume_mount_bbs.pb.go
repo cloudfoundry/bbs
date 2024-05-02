@@ -173,7 +173,7 @@ func (x *VolumeMount) ToProto() *ProtoVolumeMount {
 		Driver:       x.Driver,
 		ContainerDir: x.ContainerDir,
 		Mode:         x.Mode,
-		Shared:       x.Shared.ToProto(),
+		Shared:       x.SharedDevice.ToProto(),
 	}
 	return proto
 }
