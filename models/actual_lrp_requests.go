@@ -23,7 +23,7 @@ func (request *ActualLRPsRequest) UnmarshalJSON(data []byte) error {
 	request.CellId = internalRequest.CellId
 	request.ProcessGuid = internalRequest.ProcessGuid
 	if internalRequest.Index != nil {
-		request.SetIndex(*internalRequest.Index)
+		request.SetIndex(internalRequest.Index)
 	}
 
 	return nil
@@ -37,7 +37,7 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	}
 
 	i := request.GetIndex()
-	internalRequest.Index = &i
+	internalRequest.Index = i
 	return json.Marshal(internalRequest)
 }
 
