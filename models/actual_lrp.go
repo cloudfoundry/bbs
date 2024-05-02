@@ -125,7 +125,7 @@ func (actual ActualLRP) CellIsMissing(cellSet CellSet) bool {
 		return false
 	}
 
-	return !cellSet.HasCellID(actual.CellId)
+	return !cellSet.HasCellID(actual.GetActualLRPInstanceKey().CellId)
 }
 
 func (actual ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
