@@ -307,7 +307,7 @@ func (x *EvacuateRunningActualLRPRequest) ToProto() *ProtoEvacuateRunningActualL
 		ActualLrpNetInfo:        x.ActualLRPNetInfo.ToProto(),
 		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLRPInternalRoutes),
 		MetricTags:              x.MetricTags,
-		Routable:                &x.Routable,
+		Routable:                x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,
 	}
 	return proto

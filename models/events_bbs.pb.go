@@ -461,7 +461,7 @@ func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
 		Since:            x.Since,
 		ModificationTag:  x.ModificationTag.ToProto(),
 		Presence:         ProtoActualLRPInfo_Presence(x.Presence),
-		Routable:         &x.Routable,
+		Routable:         x.Routable,
 		AvailabilityZone: x.AvailabilityZone,
 	}
 	return proto

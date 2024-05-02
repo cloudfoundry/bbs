@@ -875,9 +875,9 @@ func (m *DesiredLRPUpdate) SetMetricTags(value map[string]*ProtoMetricTagValue) 
 }
 func (x *DesiredLRPUpdate) ToProto() *ProtoDesiredLRPUpdate {
 	proto := &ProtoDesiredLRPUpdate{
-		Instances:  &x.Instances,
+		Instances:  x.Instances,
 		Routes:     x.Routes.ToProto(),
-		Annotation: &x.Annotation,
+		Annotation: x.Annotation,
 		MetricTags: x.MetricTags,
 	}
 	return proto

@@ -666,7 +666,7 @@ func (x *StartActualLRPRequest) ToProto() *ProtoStartActualLRPRequest {
 		ActualLrpNetInfo:        x.ActualLRPNetInfo.ToProto(),
 		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLRPInternalRoutes),
 		MetricTags:              x.MetricTags,
-		Routable:                &x.Routable,
+		Routable:                x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,
 	}
 	return proto
@@ -1167,7 +1167,7 @@ func (x *ActualLRPsRequest) ToProto() *ProtoActualLRPsRequest {
 		Domain:      x.Domain,
 		CellId:      x.CellId,
 		ProcessGuid: x.ProcessGuid,
-		Index:       &x.Index,
+		Index:       x.Index,
 	}
 	return proto
 }
