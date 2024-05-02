@@ -597,7 +597,7 @@ type ActualLRP struct {
 	Presence                ActualLRP_Presence
 	ActualLRPInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
-	Routable                bool
+	Routable                *bool
 	AvailabilityZone        string
 }
 
@@ -809,13 +809,16 @@ func (m *ActualLRP) SetMetricTags(value map[string]string) {
 		m.MetricTags = value
 	}
 }
-func (m *ActualLRP) GetRoutable() bool {
-	if m != nil {
+func (m *ActualLRP) RoutableExists() bool {
+	return m != nil && m.Routable != nil
+}
+func (m *ActualLRP) GetRoutable() *bool {
+	if m != nil && m.Routable != nil {
 		return m.Routable
 	}
-	return false
+	return nil
 }
-func (m *ActualLRP) SetRoutable(value bool) {
+func (m *ActualLRP) SetRoutable(value *bool) {
 	if m != nil {
 		m.Routable = value
 	}

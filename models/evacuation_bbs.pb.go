@@ -161,7 +161,7 @@ type EvacuateRunningActualLRPRequest struct {
 	ActualLRPNetInfo        *ActualLRPNetInfo
 	ActualLRPInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
-	Routable                bool
+	Routable                *bool
 	AvailabilityZone        string
 }
 
@@ -275,13 +275,16 @@ func (m *EvacuateRunningActualLRPRequest) SetMetricTags(value map[string]string)
 		m.MetricTags = value
 	}
 }
-func (m *EvacuateRunningActualLRPRequest) GetRoutable() bool {
-	if m != nil {
+func (m *EvacuateRunningActualLRPRequest) RoutableExists() bool {
+	return m != nil && m.Routable != nil
+}
+func (m *EvacuateRunningActualLRPRequest) GetRoutable() *bool {
+	if m != nil && m.Routable != nil {
 		return m.Routable
 	}
-	return false
+	return nil
 }
-func (m *EvacuateRunningActualLRPRequest) SetRoutable(value bool) {
+func (m *EvacuateRunningActualLRPRequest) SetRoutable(value *bool) {
 	if m != nil {
 		m.Routable = value
 	}
