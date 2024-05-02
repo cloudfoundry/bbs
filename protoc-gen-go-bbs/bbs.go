@@ -367,11 +367,12 @@ func (bbsGenerateHelper) genToProtoMethod(g *protogen.GeneratedFile, msg *protog
 			} else if field.Enum != nil {
 				g.P(protoFieldName, ": ", field.GoIdent, "(x.", protoFieldName, "),")
 			} else {
-				if field.Oneof != nil {
-					g.P(protoFieldName, ": &x.", protoFieldName, ",")
-				} else {
-					g.P(protoFieldName, ": x.", protoFieldName, ",")
-				}
+				// we weren't using oneof correctly, so we're not going to support it
+				// if field.Oneof != nil {
+				// 	g.P(protoFieldName, ": &x.", protoFieldName, ",")
+				// } else {
+				g.P(protoFieldName, ": x.", protoFieldName, ",")
+				// }
 			}
 		}
 		g.P("}")

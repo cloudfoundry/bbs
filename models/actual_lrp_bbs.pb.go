@@ -848,7 +848,7 @@ func (x *ActualLRP) ToProto() *ProtoActualLRP {
 		Presence:                ProtoActualLRP_Presence(x.Presence),
 		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLRPInternalRoutes),
 		MetricTags:              x.MetricTags,
-		Routable:                &x.Routable,
+		Routable:                x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,
 	}
 	return proto

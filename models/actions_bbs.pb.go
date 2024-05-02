@@ -1273,8 +1273,8 @@ func (m *ResourceLimits) SetNproc(value *uint64) {
 }
 func (x *ResourceLimits) ToProto() *ProtoResourceLimits {
 	proto := &ProtoResourceLimits{
-		Nofile: &x.Nofile,
-		Nproc:  &x.Nproc,
+		Nofile: x.Nofile,
+		Nproc:  x.Nproc,
 	}
 	return proto
 }
