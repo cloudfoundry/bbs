@@ -24,7 +24,7 @@ message ProtoEvacuateRunningActualLRPRequest {
   ProtoActualLRPNetInfo actual_lrp_net_info = 3;
   repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 5;
   map<string, string> metric_tags = 6;
-  optional bool ProtoRoutable = 7;
+  optional bool Routable = 7;
   string availability_zone = 8 [json_name = "availability_zone"];
 }
 
