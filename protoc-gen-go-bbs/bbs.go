@@ -36,9 +36,9 @@ func getCopysafeName(g *protogen.GeneratedFile, ident protogen.GoIdent) (string,
 
 func getFieldName(goName string) string {
 	result := goName
-	if strings.Contains(strings.ToLower(result), "lrp") {
-		result = strings.Replace(goName, "Lrp", "LRP", -1)
-	}
+	// if strings.Contains(strings.ToLower(result), "lrp") {
+	// 	result = strings.Replace(goName, "Lrp", "LRP", -1)
+	// }
 	return result
 }
 
