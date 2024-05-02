@@ -67,7 +67,7 @@ func DesiredLRPLifecycleResponseProtoMap(values []*DesiredLRPLifecycleResponse) 
 // Prevent copylock errors when using ProtoDesiredLRPsResponse directly
 type DesiredLRPsResponse struct {
 	Error       *Error
-	DesiredLRPs []*DesiredLRP
+	DesiredLrps []*DesiredLRP
 }
 
 func (this *DesiredLRPsResponse) Equal(that interface{}) bool {
@@ -95,11 +95,11 @@ func (this *DesiredLRPsResponse) Equal(that interface{}) bool {
 	if !this.Error.Equal(that1.Error) {
 		return false
 	}
-	if len(this.DesiredLRPs) != len(that1.DesiredLRPs) {
+	if len(this.DesiredLrps) != len(that1.DesiredLrps) {
 		return false
 	}
-	for i := range this.DesiredLRPs {
-		if !this.DesiredLRPs[i].Equal(that1.DesiredLRPs[i]) {
+	for i := range this.DesiredLrps {
+		if !this.DesiredLrps[i].Equal(that1.DesiredLrps[i]) {
 			return false
 		}
 	}
@@ -116,21 +116,21 @@ func (m *DesiredLRPsResponse) SetError(value *Error) {
 		m.Error = value
 	}
 }
-func (m *DesiredLRPsResponse) GetDesiredLRPs() []*DesiredLRP {
+func (m *DesiredLRPsResponse) GetDesiredLrps() []*DesiredLRP {
 	if m != nil {
-		return m.DesiredLRPs
+		return m.DesiredLrps
 	}
 	return nil
 }
-func (m *DesiredLRPsResponse) SetDesiredLRPs(value []*DesiredLRP) {
+func (m *DesiredLRPsResponse) SetDesiredLrps(value []*DesiredLRP) {
 	if m != nil {
-		m.DesiredLRPs = value
+		m.DesiredLrps = value
 	}
 }
 func (x *DesiredLRPsResponse) ToProto() *ProtoDesiredLRPsResponse {
 	proto := &ProtoDesiredLRPsResponse{
 		Error:       x.Error.ToProto(),
-		DesiredLrps: DesiredLRPProtoMap(x.DesiredLRPs),
+		DesiredLrps: DesiredLRPProtoMap(x.DesiredLrps),
 	}
 	return proto
 }
@@ -225,7 +225,7 @@ func DesiredLRPsRequestProtoMap(values []*DesiredLRPsRequest) []*ProtoDesiredLRP
 // Prevent copylock errors when using ProtoDesiredLRPResponse directly
 type DesiredLRPResponse struct {
 	Error      *Error
-	DesiredLRP *DesiredLRP
+	DesiredLrp *DesiredLRP
 }
 
 func (this *DesiredLRPResponse) Equal(that interface{}) bool {
@@ -253,7 +253,7 @@ func (this *DesiredLRPResponse) Equal(that interface{}) bool {
 	if !this.Error.Equal(that1.Error) {
 		return false
 	}
-	if !this.DesiredLRP.Equal(that1.DesiredLRP) {
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
 		return false
 	}
 	return true
@@ -269,21 +269,21 @@ func (m *DesiredLRPResponse) SetError(value *Error) {
 		m.Error = value
 	}
 }
-func (m *DesiredLRPResponse) GetDesiredLRP() *DesiredLRP {
+func (m *DesiredLRPResponse) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
-		return m.DesiredLRP
+		return m.DesiredLrp
 	}
 	return nil
 }
-func (m *DesiredLRPResponse) SetDesiredLRP(value *DesiredLRP) {
+func (m *DesiredLRPResponse) SetDesiredLrp(value *DesiredLRP) {
 	if m != nil {
-		m.DesiredLRP = value
+		m.DesiredLrp = value
 	}
 }
 func (x *DesiredLRPResponse) ToProto() *ProtoDesiredLRPResponse {
 	proto := &ProtoDesiredLRPResponse{
 		Error:      x.Error.ToProto(),
-		DesiredLrp: x.DesiredLRP.ToProto(),
+		DesiredLrp: x.DesiredLrp.ToProto(),
 	}
 	return proto
 }
@@ -299,7 +299,7 @@ func DesiredLRPResponseProtoMap(values []*DesiredLRPResponse) []*ProtoDesiredLRP
 // Prevent copylock errors when using ProtoDesiredLRPSchedulingInfosResponse directly
 type DesiredLRPSchedulingInfosResponse struct {
 	Error                     *Error
-	DesiredLRPSchedulingInfos []*DesiredLRPSchedulingInfo
+	DesiredLrpSchedulingInfos []*DesiredLRPSchedulingInfo
 }
 
 func (this *DesiredLRPSchedulingInfosResponse) Equal(that interface{}) bool {
@@ -327,11 +327,11 @@ func (this *DesiredLRPSchedulingInfosResponse) Equal(that interface{}) bool {
 	if !this.Error.Equal(that1.Error) {
 		return false
 	}
-	if len(this.DesiredLRPSchedulingInfos) != len(that1.DesiredLRPSchedulingInfos) {
+	if len(this.DesiredLrpSchedulingInfos) != len(that1.DesiredLrpSchedulingInfos) {
 		return false
 	}
-	for i := range this.DesiredLRPSchedulingInfos {
-		if !this.DesiredLRPSchedulingInfos[i].Equal(that1.DesiredLRPSchedulingInfos[i]) {
+	for i := range this.DesiredLrpSchedulingInfos {
+		if !this.DesiredLrpSchedulingInfos[i].Equal(that1.DesiredLrpSchedulingInfos[i]) {
 			return false
 		}
 	}
@@ -348,21 +348,21 @@ func (m *DesiredLRPSchedulingInfosResponse) SetError(value *Error) {
 		m.Error = value
 	}
 }
-func (m *DesiredLRPSchedulingInfosResponse) GetDesiredLRPSchedulingInfos() []*DesiredLRPSchedulingInfo {
+func (m *DesiredLRPSchedulingInfosResponse) GetDesiredLrpSchedulingInfos() []*DesiredLRPSchedulingInfo {
 	if m != nil {
-		return m.DesiredLRPSchedulingInfos
+		return m.DesiredLrpSchedulingInfos
 	}
 	return nil
 }
-func (m *DesiredLRPSchedulingInfosResponse) SetDesiredLRPSchedulingInfos(value []*DesiredLRPSchedulingInfo) {
+func (m *DesiredLRPSchedulingInfosResponse) SetDesiredLrpSchedulingInfos(value []*DesiredLRPSchedulingInfo) {
 	if m != nil {
-		m.DesiredLRPSchedulingInfos = value
+		m.DesiredLrpSchedulingInfos = value
 	}
 }
 func (x *DesiredLRPSchedulingInfosResponse) ToProto() *ProtoDesiredLRPSchedulingInfosResponse {
 	proto := &ProtoDesiredLRPSchedulingInfosResponse{
 		Error:                     x.Error.ToProto(),
-		DesiredLrpSchedulingInfos: DesiredLRPSchedulingInfoProtoMap(x.DesiredLRPSchedulingInfos),
+		DesiredLrpSchedulingInfos: DesiredLRPSchedulingInfoProtoMap(x.DesiredLrpSchedulingInfos),
 	}
 	return proto
 }
@@ -378,7 +378,7 @@ func DesiredLRPSchedulingInfosResponseProtoMap(values []*DesiredLRPSchedulingInf
 // Prevent copylock errors when using ProtoDesiredLRPSchedulingInfoByProcessGuidResponse directly
 type DesiredLRPSchedulingInfoByProcessGuidResponse struct {
 	Error                    *Error
-	DesiredLRPSchedulingInfo *DesiredLRPSchedulingInfo
+	DesiredLrpSchedulingInfo *DesiredLRPSchedulingInfo
 }
 
 func (this *DesiredLRPSchedulingInfoByProcessGuidResponse) Equal(that interface{}) bool {
@@ -406,7 +406,7 @@ func (this *DesiredLRPSchedulingInfoByProcessGuidResponse) Equal(that interface{
 	if !this.Error.Equal(that1.Error) {
 		return false
 	}
-	if !this.DesiredLRPSchedulingInfo.Equal(that1.DesiredLRPSchedulingInfo) {
+	if !this.DesiredLrpSchedulingInfo.Equal(that1.DesiredLrpSchedulingInfo) {
 		return false
 	}
 	return true
@@ -422,21 +422,21 @@ func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) SetError(value *Error) {
 		m.Error = value
 	}
 }
-func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) GetDesiredLRPSchedulingInfo() *DesiredLRPSchedulingInfo {
+func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) GetDesiredLrpSchedulingInfo() *DesiredLRPSchedulingInfo {
 	if m != nil {
-		return m.DesiredLRPSchedulingInfo
+		return m.DesiredLrpSchedulingInfo
 	}
 	return nil
 }
-func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) SetDesiredLRPSchedulingInfo(value *DesiredLRPSchedulingInfo) {
+func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) SetDesiredLrpSchedulingInfo(value *DesiredLRPSchedulingInfo) {
 	if m != nil {
-		m.DesiredLRPSchedulingInfo = value
+		m.DesiredLrpSchedulingInfo = value
 	}
 }
 func (x *DesiredLRPSchedulingInfoByProcessGuidResponse) ToProto() *ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
 	proto := &ProtoDesiredLRPSchedulingInfoByProcessGuidResponse{
 		Error:                    x.Error.ToProto(),
-		DesiredLrpSchedulingInfo: x.DesiredLRPSchedulingInfo.ToProto(),
+		DesiredLrpSchedulingInfo: x.DesiredLrpSchedulingInfo.ToProto(),
 	}
 	return proto
 }
@@ -509,7 +509,7 @@ func DesiredLRPByProcessGuidRequestProtoMap(values []*DesiredLRPByProcessGuidReq
 
 // Prevent copylock errors when using ProtoDesireLRPRequest directly
 type DesireLRPRequest struct {
-	DesiredLRP *DesiredLRP
+	DesiredLrp *DesiredLRP
 }
 
 func (this *DesireLRPRequest) Equal(that interface{}) bool {
@@ -534,25 +534,25 @@ func (this *DesireLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLRP.Equal(that1.DesiredLRP) {
+	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
 		return false
 	}
 	return true
 }
-func (m *DesireLRPRequest) GetDesiredLRP() *DesiredLRP {
+func (m *DesireLRPRequest) GetDesiredLrp() *DesiredLRP {
 	if m != nil {
-		return m.DesiredLRP
+		return m.DesiredLrp
 	}
 	return nil
 }
-func (m *DesireLRPRequest) SetDesiredLRP(value *DesiredLRP) {
+func (m *DesireLRPRequest) SetDesiredLrp(value *DesiredLRP) {
 	if m != nil {
-		m.DesiredLRP = value
+		m.DesiredLrp = value
 	}
 }
 func (x *DesireLRPRequest) ToProto() *ProtoDesireLRPRequest {
 	proto := &ProtoDesireLRPRequest{
-		DesiredLrp: x.DesiredLRP.ToProto(),
+		DesiredLrp: x.DesiredLrp.ToProto(),
 	}
 	return proto
 }
