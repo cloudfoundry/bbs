@@ -1,0 +1,1 @@
+../protoc-gen-go-bbs/bbs.pb.go
