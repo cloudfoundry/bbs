@@ -43,18 +43,21 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		egressRules[i] = runInfo.EgressRules[i]
 	}
 
+	desiredLrpKey := schedInfo.GetDesiredLrpKey()
+	desiredLrpResource := schedInfo.GetDesiredLrpResource()
+
 	return DesiredLRP{
-		ProcessGuid:                   schedInfo.ProcessGuid,
-		Domain:                        schedInfo.Domain,
-		LogGuid:                       schedInfo.LogGuid,
-		MemoryMb:                      schedInfo.MemoryMb,
-		DiskMb:                        schedInfo.DiskMb,
-		MaxPids:                       schedInfo.MaxPids,
-		RootFs:                        schedInfo.RootFs,
+		ProcessGuid:                   desiredLrpKey.ProcessGuid,
+		Domain:                        desiredLrpKey.Domain,
+		LogGuid:                       desiredLrpKey.LogGuid,
+		MemoryMb:                      desiredLrpResource.MemoryMb,
+		DiskMb:                        desiredLrpResource.DiskMb,
+		MaxPids:                       desiredLrpResource.MaxPids,
+		RootFs:                        desiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
-		Routes:                        &schedInfo.Routes,
-		ModificationTag:               &schedInfo.ModificationTag,
+		Routes:                        schedInfo.Routes,
+		ModificationTag:               schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
 		Setup:                         runInfo.Setup,
