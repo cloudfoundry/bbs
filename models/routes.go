@@ -65,13 +65,13 @@ package models
 // 	return true
 // }
 
-// func (r Routes) Validate() error {
-// 	totalRoutesLength := 0
-// 	for _, value := range r {
-// 		totalRoutesLength += len(*value)
-// 		if totalRoutesLength > maximumRouteLength {
-// 			return ErrInvalidField{"routes"}
-// 		}
-// 	}
-// 	return nil
-// }
+func (r Routes) Validate() error {
+	totalRoutesLength := 0
+	for _, value := range r.Routes {
+		totalRoutesLength += len(value)
+		if totalRoutesLength > maximumRouteLength {
+			return ErrInvalidField{"routes"}
+		}
+	}
+	return nil
+}
