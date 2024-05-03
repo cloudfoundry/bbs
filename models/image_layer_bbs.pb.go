@@ -241,7 +241,7 @@ func (x *ImageLayer) ToProto() *ProtoImageLayer {
 		Name:            x.Name,
 		Url:             x.Url,
 		DestinationPath: x.DestinationPath,
-		LayerType:       ProtoImageLayer_LayerType(x.LayerType),
+		LayerType:       ProtoImageLayer_Type(x.LayerType),
 		MediaType:       ProtoImageLayer_MediaType(x.MediaType),
 		DigestAlgorithm: ProtoImageLayer_DigestAlgorithm(x.DigestAlgorithm),
 		DigestValue:     x.DigestValue,

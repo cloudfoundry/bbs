@@ -19,7 +19,7 @@ type DesiredLRPSchedulingInfo struct {
 	Routes             *Routes
 	ModificationTag    *ModificationTag
 	VolumePlacement    *VolumePlacement
-	ProtoPlacementTags []string
+	PlacementTags      []string
 }
 
 func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
@@ -65,11 +65,11 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if !this.VolumePlacement.Equal(that1.VolumePlacement) {
 		return false
 	}
-	if len(this.ProtoPlacementTags) != len(that1.ProtoPlacementTags) {
+	if len(this.PlacementTags) != len(that1.PlacementTags) {
 		return false
 	}
-	for i := range this.ProtoPlacementTags {
-		if this.ProtoPlacementTags[i] != that1.ProtoPlacementTags[i] {
+	for i := range this.PlacementTags {
+		if this.PlacementTags[i] != that1.PlacementTags[i] {
 			return false
 		}
 	}
@@ -152,15 +152,15 @@ func (m *DesiredLRPSchedulingInfo) SetVolumePlacement(value *VolumePlacement) {
 		m.VolumePlacement = value
 	}
 }
-func (m *DesiredLRPSchedulingInfo) GetProtoPlacementTags() []string {
+func (m *DesiredLRPSchedulingInfo) GetPlacementTags() []string {
 	if m != nil {
-		return m.ProtoPlacementTags
+		return m.PlacementTags
 	}
 	return nil
 }
-func (m *DesiredLRPSchedulingInfo) SetProtoPlacementTags(value []string) {
+func (m *DesiredLRPSchedulingInfo) SetPlacementTags(value []string) {
 	if m != nil {
-		m.ProtoPlacementTags = value
+		m.PlacementTags = value
 	}
 }
 func (x *DesiredLRPSchedulingInfo) ToProto() *ProtoDesiredLRPSchedulingInfo {
@@ -172,7 +172,7 @@ func (x *DesiredLRPSchedulingInfo) ToProto() *ProtoDesiredLRPSchedulingInfo {
 		Routes:             x.Routes.ToProto(),
 		ModificationTag:    x.ModificationTag.ToProto(),
 		VolumePlacement:    x.VolumePlacement.ToProto(),
-		ProtoPlacementTags: x.ProtoPlacementTags,
+		PlacementTags:      x.PlacementTags,
 	}
 	return proto
 }
@@ -211,7 +211,7 @@ type DesiredLRPRunInfo struct {
 	ImagePassword                 string
 	CheckDefinition               *CheckDefinition
 	ImageLayers                   []*ImageLayer
-	MetricTags                    map[string]*ProtoMetricTagValue
+	MetricTags                    map[string]*MetricTagValue
 	Sidecars                      []*Sidecar
 	LogRateLimit                  *LogRateLimit
 }
@@ -455,7 +455,7 @@ func (m *DesiredLRPRunInfo) GetPorts() []uint32 {
 	if m != nil {
 		return m.Ports
 	}
-	return 0
+	return nil
 }
 func (m *DesiredLRPRunInfo) SetPorts(value []uint32) {
 	if m != nil {
@@ -634,13 +634,13 @@ func (m *DesiredLRPRunInfo) SetImageLayers(value []*ImageLayer) {
 		m.ImageLayers = value
 	}
 }
-func (m *DesiredLRPRunInfo) GetMetricTags() map[string]*ProtoMetricTagValue {
+func (m *DesiredLRPRunInfo) GetMetricTags() map[string]*MetricTagValue {
 	if m != nil {
 		return m.MetricTags
 	}
 	return nil
 }
-func (m *DesiredLRPRunInfo) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+func (m *DesiredLRPRunInfo) SetMetricTags(value map[string]*MetricTagValue) {
 	if m != nil {
 		m.MetricTags = value
 	}
@@ -693,7 +693,7 @@ func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 		ImagePassword:                 x.ImagePassword,
 		CheckDefinition:               x.CheckDefinition.ToProto(),
 		ImageLayers:                   ImageLayerProtoMap(x.ImageLayers),
-		MetricTags:                    x.MetricTags,
+		MetricTags:                    DesiredLRPRunInfoMetricTagsProtoMap(x.MetricTags),
 		Sidecars:                      SidecarProtoMap(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
 	}
@@ -702,6 +702,14 @@ func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 
 func DesiredLRPRunInfoProtoMap(values []*DesiredLRPRunInfo) []*ProtoDesiredLRPRunInfo {
 	result := make([]*ProtoDesiredLRPRunInfo, len(values))
+	for i, val := range values {
+		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPRunInfoMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
 	}
@@ -776,7 +784,7 @@ type DesiredLRPUpdate struct {
 	Instances  *int32
 	Routes     *Routes
 	Annotation *string
-	MetricTags map[string]*ProtoMetricTagValue
+	MetricTags map[string]*MetricTagValue
 }
 
 func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
@@ -862,13 +870,13 @@ func (m *DesiredLRPUpdate) SetAnnotation(value *string) {
 		m.Annotation = value
 	}
 }
-func (m *DesiredLRPUpdate) GetMetricTags() map[string]*ProtoMetricTagValue {
+func (m *DesiredLRPUpdate) GetMetricTags() map[string]*MetricTagValue {
 	if m != nil {
 		return m.MetricTags
 	}
 	return nil
 }
-func (m *DesiredLRPUpdate) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+func (m *DesiredLRPUpdate) SetMetricTags(value map[string]*MetricTagValue) {
 	if m != nil {
 		m.MetricTags = value
 	}
@@ -878,13 +886,21 @@ func (x *DesiredLRPUpdate) ToProto() *ProtoDesiredLRPUpdate {
 		Instances:  x.Instances,
 		Routes:     x.Routes.ToProto(),
 		Annotation: x.Annotation,
-		MetricTags: x.MetricTags,
+		MetricTags: DesiredLRPUpdateMetricTagsProtoMap(x.MetricTags),
 	}
 	return proto
 }
 
 func DesiredLRPUpdateProtoMap(values []*DesiredLRPUpdate) []*ProtoDesiredLRPUpdate {
 	result := make([]*ProtoDesiredLRPUpdate, len(values))
+	for i, val := range values {
+		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPUpdateMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
 	}
@@ -1116,14 +1132,14 @@ type DesiredLRP struct {
 	TrustedSystemCertificatesPath string
 	VolumeMounts                  []*VolumeMount
 	Network                       *Network
-	ProtoPlacementTags            []string
+	PlacementTags                 []string
 	MaxPids                       int32
 	CertificateProperties         *CertificateProperties
 	ImageUsername                 string
 	ImagePassword                 string
 	CheckDefinition               *CheckDefinition
 	ImageLayers                   []*ImageLayer
-	MetricTags                    map[string]*ProtoMetricTagValue
+	MetricTags                    map[string]*MetricTagValue
 	Sidecars                      []*Sidecar
 	LogRateLimit                  *LogRateLimit
 }
@@ -1256,11 +1272,11 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if !this.Network.Equal(that1.Network) {
 		return false
 	}
-	if len(this.ProtoPlacementTags) != len(that1.ProtoPlacementTags) {
+	if len(this.PlacementTags) != len(that1.PlacementTags) {
 		return false
 	}
-	for i := range this.ProtoPlacementTags {
-		if this.ProtoPlacementTags[i] != that1.ProtoPlacementTags[i] {
+	for i := range this.PlacementTags {
+		if this.PlacementTags[i] != that1.PlacementTags[i] {
 			return false
 		}
 	}
@@ -1468,7 +1484,7 @@ func (m *DesiredLRP) GetPorts() []uint32 {
 	if m != nil {
 		return m.Ports
 	}
-	return 0
+	return nil
 }
 func (m *DesiredLRP) SetPorts(value []uint32) {
 	if m != nil {
@@ -1614,15 +1630,15 @@ func (m *DesiredLRP) SetNetwork(value *Network) {
 		m.Network = value
 	}
 }
-func (m *DesiredLRP) GetProtoPlacementTags() []string {
+func (m *DesiredLRP) GetPlacementTags() []string {
 	if m != nil {
-		return m.ProtoPlacementTags
+		return m.PlacementTags
 	}
 	return nil
 }
-func (m *DesiredLRP) SetProtoPlacementTags(value []string) {
+func (m *DesiredLRP) SetPlacementTags(value []string) {
 	if m != nil {
-		m.ProtoPlacementTags = value
+		m.PlacementTags = value
 	}
 }
 func (m *DesiredLRP) GetMaxPids() int32 {
@@ -1694,13 +1710,13 @@ func (m *DesiredLRP) SetImageLayers(value []*ImageLayer) {
 		m.ImageLayers = value
 	}
 }
-func (m *DesiredLRP) GetMetricTags() map[string]*ProtoMetricTagValue {
+func (m *DesiredLRP) GetMetricTags() map[string]*MetricTagValue {
 	if m != nil {
 		return m.MetricTags
 	}
 	return nil
 }
-func (m *DesiredLRP) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+func (m *DesiredLRP) SetMetricTags(value map[string]*MetricTagValue) {
 	if m != nil {
 		m.MetricTags = value
 	}
@@ -1756,14 +1772,14 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 		TrustedSystemCertificatesPath: x.TrustedSystemCertificatesPath,
 		VolumeMounts:                  VolumeMountProtoMap(x.VolumeMounts),
 		Network:                       x.Network.ToProto(),
-		ProtoPlacementTags:            x.ProtoPlacementTags,
+		PlacementTags:                 x.PlacementTags,
 		MaxPids:                       x.MaxPids,
 		CertificateProperties:         x.CertificateProperties.ToProto(),
 		ImageUsername:                 x.ImageUsername,
 		ImagePassword:                 x.ImagePassword,
 		CheckDefinition:               x.CheckDefinition.ToProto(),
 		ImageLayers:                   ImageLayerProtoMap(x.ImageLayers),
-		MetricTags:                    x.MetricTags,
+		MetricTags:                    DesiredLRPMetricTagsProtoMap(x.MetricTags),
 		Sidecars:                      SidecarProtoMap(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
 	}
@@ -1772,6 +1788,14 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 
 func DesiredLRPProtoMap(values []*DesiredLRP) []*ProtoDesiredLRP {
 	result := make([]*ProtoDesiredLRP, len(values))
+	for i, val := range values {
+		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
 	}

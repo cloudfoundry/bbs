@@ -460,7 +460,7 @@ func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
 		PlacementError:   x.PlacementError,
 		Since:            x.Since,
 		ModificationTag:  x.ModificationTag.ToProto(),
-		Presence:         ProtoActualLRPInfo_Presence(x.Presence),
+		Presence:         ProtoActualLRP_Presence(x.Presence),
 		Routable:         x.Routable,
 		AvailabilityZone: x.AvailabilityZone,
 	}
