@@ -147,7 +147,7 @@ func (event *ActualLRPInstanceChangedEvent) EventType() string {
 }
 
 func (event *ActualLRPInstanceChangedEvent) Key() string {
-	return event.GetInstanceGuid()
+	return event.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -169,7 +169,7 @@ func (event *ActualLRPChangedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
 func NewActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
@@ -208,7 +208,7 @@ func (event *ActualLRPRemovedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
 func NewActualLRPInstanceRemovedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceRemovedEvent {
@@ -226,7 +226,7 @@ func (event *ActualLRPInstanceRemovedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetInstanceGuid()
+	return event.ActualLrp.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -247,7 +247,7 @@ func (event *ActualLRPCreatedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
 func NewActualLRPInstanceCreatedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceCreatedEvent {
@@ -265,7 +265,7 @@ func (event *ActualLRPInstanceCreatedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetInstanceGuid()
+	return event.ActualLrp.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
 func (request *EventsByCellId) Validate() error {
