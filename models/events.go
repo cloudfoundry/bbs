@@ -119,23 +119,23 @@ func NewActualLRPInstanceChangedEvent(before, after *ActualLRP, traceId string) 
 		actualLRPInstanceKey ActualLRPInstanceKey
 	)
 
-	if (before != nil && before.ActualLRPKey != ActualLRPKey{}) {
-		actualLRPKey = before.ActualLRPKey
+	if (before != nil && before.ActualLrpKey != ActualLRPKey{}) {
+		actualLRPKey = before.ActualLrpKey
 	}
-	if (after != nil && after.ActualLRPKey != ActualLRPKey{}) {
-		actualLRPKey = after.ActualLRPKey
+	if (after != nil && after.ActualLrpKey != ActualLRPKey{}) {
+		actualLRPKey = after.ActualLrpKey
 	}
 
-	if (before != nil && before.ActualLRPInstanceKey != ActualLRPInstanceKey{}) {
-		actualLRPInstanceKey = before.ActualLRPInstanceKey
+	if (before != nil && before.ActualLrpInstanceKey != ActualLRPInstanceKey{}) {
+		actualLRPInstanceKey = before.ActualLrpInstanceKey
 	}
-	if (after != nil && after.ActualLRPInstanceKey != ActualLRPInstanceKey{}) {
-		actualLRPInstanceKey = after.ActualLRPInstanceKey
+	if (after != nil && after.ActualLrpInstanceKey != ActualLRPInstanceKey{}) {
+		actualLRPInstanceKey = after.ActualLrpInstanceKey
 	}
 
 	return &ActualLRPInstanceChangedEvent{
-		ActualLRPKey:         actualLRPKey,
-		ActualLRPInstanceKey: actualLRPInstanceKey,
+		ActualLrpKey:         actualLRPKey,
+		ActualLrpInstanceKey: actualLRPInstanceKey,
 		Before:               before.ToActualLRPInfo(),
 		After:                after.ToActualLRPInfo(),
 		TraceId:              traceId,
@@ -174,8 +174,8 @@ func (event *ActualLRPChangedEvent) Key() string {
 
 func NewActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
 	return &ActualLRPCrashedEvent{
-		ActualLRPKey:         after.ActualLRPKey,
-		ActualLRPInstanceKey: before.ActualLRPInstanceKey,
+		ActualLrpKey:         after.ActualLrpKey,
+		ActualLrpInstanceKey: before.ActualLrpInstanceKey,
 		CrashCount:           after.CrashCount,
 		CrashReason:          after.CrashReason,
 		Since:                after.Since,
@@ -187,7 +187,7 @@ func (event *ActualLRPCrashedEvent) EventType() string {
 }
 
 func (event *ActualLRPCrashedEvent) Key() string {
-	return event.ActualLRPInstanceKey.InstanceGuid
+	return event.ActualLrpInstanceKey.InstanceGuid
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
