@@ -251,7 +251,7 @@ func (m *SecurityGroupRule) GetPorts() []uint32 {
 	if m != nil {
 		return m.Ports
 	}
-	return 0
+	return nil
 }
 func (m *SecurityGroupRule) SetPorts(value []uint32) {
 	if m != nil {

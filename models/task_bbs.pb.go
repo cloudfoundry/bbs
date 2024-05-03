@@ -38,7 +38,7 @@ type TaskDefinition struct {
 	ImagePassword                 string
 	ImageLayers                   []*ImageLayer
 	LogRateLimit                  *LogRateLimit
-	MetricTags                    map[string]*ProtoMetricTagValue
+	MetricTags                    map[string]*MetricTagValue
 }
 
 func (this *TaskDefinition) Equal(that interface{}) bool {
@@ -469,13 +469,13 @@ func (m *TaskDefinition) SetLogRateLimit(value *LogRateLimit) {
 		m.LogRateLimit = value
 	}
 }
-func (m *TaskDefinition) GetMetricTags() map[string]*ProtoMetricTagValue {
+func (m *TaskDefinition) GetMetricTags() map[string]*MetricTagValue {
 	if m != nil {
 		return m.MetricTags
 	}
 	return nil
 }
-func (m *TaskDefinition) SetMetricTags(value map[string]*ProtoMetricTagValue) {
+func (m *TaskDefinition) SetMetricTags(value map[string]*MetricTagValue) {
 	if m != nil {
 		m.MetricTags = value
 	}
@@ -508,13 +508,21 @@ func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
 		ImagePassword:                 x.ImagePassword,
 		ImageLayers:                   ImageLayerProtoMap(x.ImageLayers),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
-		MetricTags:                    x.MetricTags,
+		MetricTags:                    TaskDefinitionMetricTagsProtoMap(x.MetricTags),
 	}
 	return proto
 }
 
 func TaskDefinitionProtoMap(values []*TaskDefinition) []*ProtoTaskDefinition {
 	result := make([]*ProtoTaskDefinition, len(values))
+	for i, val := range values {
+		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskDefinitionMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
 	}

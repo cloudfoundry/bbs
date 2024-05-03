@@ -8,8 +8,8 @@ import "bbs.proto";
 message ProtoMetricTagValue {
   enum DynamicValue {
     DynamicValueInvalid = 0;
-    INDEX               = 1 [(bbs.bbs_enumvalue_customname) = "MetricTagynamicValueIndex"];
-    INSTANCE_GUID       = 2 [(bbs.bbs_enumvalue_customname) = "MetricTagynamicValueInstanceGuid"];
+    INDEX               = 1 [(bbs.bbs_enumvalue_customname) = "MetricTagDynamicValueIndex"];
+    INSTANCE_GUID       = 2 [(bbs.bbs_enumvalue_customname) = "MetricTagDynamicValueInstanceGuid"];
   }
 
   // Note: we only expect one of the following set of fields to be

@@ -13,9 +13,9 @@ import (
 type MetricTagValue_DynamicValue int32
 
 const (
-	MetricTagValue_DynamicValueInvalid              MetricTagValue_DynamicValue = 0
-	MetricTagValue_MetricTagynamicValueIndex        MetricTagValue_DynamicValue = 1
-	MetricTagValue_MetricTagynamicValueInstanceGuid MetricTagValue_DynamicValue = 2
+	MetricTagValue_DynamicValueInvalid               MetricTagValue_DynamicValue = 0
+	MetricTagValue_MetricTagDynamicValueIndex        MetricTagValue_DynamicValue = 1
+	MetricTagValue_MetricTagDynamicValueInstanceGuid MetricTagValue_DynamicValue = 2
 )
 
 // Enum value maps for MetricTagValue_DynamicValue
@@ -101,7 +101,7 @@ func (m *MetricTagValue) SetDynamic(value MetricTagValue_DynamicValue) {
 func (x *MetricTagValue) ToProto() *ProtoMetricTagValue {
 	proto := &ProtoMetricTagValue{
 		Static:  x.Static,
-		Dynamic: ProtoMetricTagValue_Dynamic(x.Dynamic),
+		Dynamic: ProtoMetricTagValue_DynamicValue(x.Dynamic),
 	}
 	return proto
 }
