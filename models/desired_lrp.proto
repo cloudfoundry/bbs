@@ -28,7 +28,7 @@ message ProtoDesiredLRPSchedulingInfo {
   ProtoRoutes routes = 5;
   ProtoModificationTag modification_tag = 6;
   ProtoVolumePlacement volume_placement = 7;
-  repeated string ProtoPlacementTags = 8 [json_name ="placement_tags"];
+  repeated string PlacementTags = 8 [json_name ="placement_tags"];
 }
 
 message ProtoDesiredLRPRunInfo {
@@ -127,7 +127,7 @@ message ProtoDesiredLRP {
   string trusted_system_certificates_path = 24;
   repeated ProtoVolumeMount volume_mounts = 25;
   ProtoNetwork network = 26;
-  repeated string ProtoPlacementTags = 28 [json_name ="placement_tags"];
+  repeated string PlacementTags = 28 [json_name ="placement_tags"];
   int32 max_pids = 29 [json_name = "max_pids"];
 
   optional ProtoCertificateProperties certificate_properties = 30;
