@@ -28,9 +28,9 @@ func (m *MetricTagValue) Validate() error {
 
 func (v MetricTagValue_DynamicValue) Valid() bool {
 	switch v {
-	case MetricTagDynamicValueIndex:
+	case MetricTagValue_MetricTagDynamicValueIndex:
 		return true
-	case MetricTagDynamicValueInstanceGuid:
+	case MetricTagValue_MetricTagDynamicValueInstanceGuid:
 		return true
 	default:
 		return false
@@ -42,16 +42,16 @@ func ConvertMetricTags(metricTags map[string]*MetricTagValue, info map[MetricTag
 	for k, v := range metricTags {
 		if v.Dynamic > 0 {
 			switch v.Dynamic {
-			case MetricTagDynamicValueIndex:
-				val, ok := info[MetricTagDynamicValueIndex].(int32)
+			case MetricTagValue_MetricTagDynamicValueIndex:
+				val, ok := info[MetricTagValue_MetricTagDynamicValueIndex].(int32)
 				if !ok {
-					return nil, fmt.Errorf("could not convert value %+v of type %T to int32", info[MetricTagDynamicValueIndex], info[MetricTagDynamicValueIndex])
+					return nil, fmt.Errorf("could not convert value %+v of type %T to int32", info[MetricTagValue_MetricTagDynamicValueIndex], info[MetricTagValue_MetricTagDynamicValueIndex])
 				}
 				tags[k] = strconv.FormatInt(int64(val), 10)
-			case MetricTagDynamicValueInstanceGuid:
-				val, ok := info[MetricTagDynamicValueInstanceGuid].(string)
+			case MetricTagValue_MetricTagDynamicValueInstanceGuid:
+				val, ok := info[MetricTagValue_MetricTagDynamicValueInstanceGuid].(string)
 				if !ok {
-					return nil, fmt.Errorf("could not convert value %+v of type %T to string", info[MetricTagDynamicValueInstanceGuid], info[MetricTagDynamicValueInstanceGuid])
+					return nil, fmt.Errorf("could not convert value %+v of type %T to string", info[MetricTagValue_MetricTagDynamicValueInstanceGuid], info[MetricTagValue_MetricTagDynamicValueInstanceGuid])
 				}
 				tags[k] = val
 			}
