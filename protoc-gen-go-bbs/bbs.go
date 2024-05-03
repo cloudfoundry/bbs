@@ -204,6 +204,10 @@ func genSetter(g *protogen.GeneratedFile, copysafeName string, fieldName string,
 }
 
 func getDefaultValueString(field *protogen.Field) string {
+	if field.Desc.Cardinality() == protoreflect.Repeated {
+		return "nil"
+	}
+
 	switch kind := field.Desc.Kind(); kind {
 	case protoreflect.BytesKind, protoreflect.GroupKind, protoreflect.MessageKind:
 		return "nil"
