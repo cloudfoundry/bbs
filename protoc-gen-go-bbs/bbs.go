@@ -239,11 +239,15 @@ func getActualType(g *protogen.GeneratedFile, field *protogen.Field) string {
 		if *debug {
 			log.Printf("Map Field Detected: %+v\n\n", field.Message)
 		}
-		mapValueType := field.Desc.MapValue().Kind().String()
-		if mapValueType == protoreflect.BytesKind.String() {
+		mapValueKind := field.Desc.MapValue().Kind()
+		mapValueType := mapValueKind.String()
+		if mapValueKind == protoreflect.BytesKind {
 			mapValueType = "[]byte"
-		} else if mapValueType == protoreflect.MessageKind.String() {
-			mapValueType = "*" + string(field.Desc.MapValue().Message().Name())
+		} else if mapValueKind == protoreflect.MessageKind {
+			valueField := field.Desc.MapValue().Message().FullName()
+			rawGoIdent := strings.Split(string(valueField), ".")
+			valueFieldType, _ := strings.CutPrefix(rawGoIdent[1], *prefix)
+			mapValueType = "*" + valueFieldType
 		}
 
 		fieldType = "map[" + field.Desc.MapKey().Kind().String() + "]" + mapValueType
@@ -361,7 +365,12 @@ func (bbsGenerateHelper) genToProtoMethod(g *protogen.GeneratedFile, msg *protog
 					if field.Desc.IsList() {
 						g.P(protoFieldName, ": ", fieldCopysafeName, "ProtoMap(x.", getFieldName(protoFieldName), "),")
 					} else if field.Desc.IsMap() {
-						g.P(protoFieldName, ": ", "x.", protoFieldName, ",")
+						mapValueKind := field.Desc.MapValue().Kind()
+						if mapValueKind == protoreflect.MessageKind {
+							g.P(protoFieldName, ": ", copysafeName, getFieldName(protoFieldName), "ProtoMap(x.", protoFieldName, "),")
+						} else {
+							g.P(protoFieldName, ": ", "x.", protoFieldName, ",")
+						}
 					} else {
 						panic("Unrecognized Repeated field found")
 					}
@@ -397,6 +406,32 @@ func (bbsGenerateHelper) genProtoMapMethod(g *protogen.GeneratedFile, msg *proto
 		g.P("return result")
 		g.P("}")
 		g.P()
+
+		for _, field := range msg.Fields {
+			if field.Desc.IsMap() {
+				mapValueKind := field.Desc.MapValue().Kind()
+				if mapValueKind == protoreflect.MessageKind {
+					valueField := field.Desc.MapValue().Message().FullName()
+					rawGoIdent := strings.Split(string(valueField), ".")
+					protoValueFieldType := rawGoIdent[1]
+					valueFieldType, _ := strings.CutPrefix(protoValueFieldType, *prefix)
+					mapValueType := "*" + valueFieldType
+					mapKeyType := field.Desc.MapKey().Kind().String()
+					fieldType := "map[" + mapKeyType + "]" + mapValueType
+					protoMapValueType := "*" + protoValueFieldType
+					protoFieldType := "map[" + mapKeyType + "]" + protoMapValueType
+
+					g.P("func ", copysafeName, getFieldName(field.GoName), "ProtoMap(values ", fieldType, ") ", protoFieldType, " {")
+					g.P("result := make(map[", mapKeyType, "]*", protoValueFieldType, ", len(values))")
+					g.P("for i, val := range values {")
+					g.P("result[i] = val.ToProto()")
+					g.P("}")
+					g.P("return result")
+					g.P("}")
+					g.P()
+				}
+			}
+		}
 	}
 }
 
