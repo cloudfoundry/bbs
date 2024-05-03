@@ -2,13 +2,11 @@ package models
 
 import (
 	"code.cloudfoundry.org/bbs/format"
-	"github.com/gogo/protobuf/proto"
 )
 
 type Event interface {
 	EventType() string
 	Key() string
-	proto.Message
 }
 
 const (
