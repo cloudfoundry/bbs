@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"flag"
@@ -32,6 +32,10 @@ func main() {
 		plugin.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 
 		for _, file := range plugin.Files {
+			if file.GeneratedFilenamePrefix == "bbs" {
+				// ignore the bbs.proto file for our plugin always
+				file.Generate = false
+			}
 			if !file.Generate {
 				continue
 			}
