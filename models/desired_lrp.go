@@ -572,7 +572,7 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 func (s DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(s.DesiredLRPKey, s.DesiredLRPResource, s.Routes)
+	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, s.Routes)
 
 	if s.GetInstances() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"instances"})
@@ -675,7 +675,7 @@ func NewDesiredLRPRunInfo(
 func (runInfo DesiredLRPRunInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(runInfo.DesiredLRPKey)
+	validationError = validationError.Check(runInfo.DesiredLrpKey)
 
 	if runInfo.Setup != nil {
 		if err := runInfo.Setup.Validate(); err != nil {
