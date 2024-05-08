@@ -6,10 +6,6 @@
 
 package models
 
-import (
-	bytes "bytes"
-)
-
 // Prevent copylock errors when using ProtoDesiredLRPSchedulingInfo directly
 type DesiredLRPSchedulingInfo struct {
 	DesiredLrpKey      *DesiredLRPKey
@@ -56,7 +52,7 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if !this.DesiredLrpResource.Equal(that1.DesiredLrpResource) {
 		return false
 	}
-	if !this.Routes.Equal(that1.Routes) {
+	if !this.Routes.Equal(*that1.Routes) {
 		return false
 	}
 	if !this.ModificationTag.Equal(that1.ModificationTag) {
@@ -716,69 +712,6 @@ func DesiredLRPRunInfoMetricTagsProtoMap(values map[string]*MetricTagValue) map[
 	return result
 }
 
-// Prevent copylock errors when using ProtoRoutes directly
-type Routes struct {
-	Routes map[string][]byte
-}
-
-func (this *Routes) Equal(that interface{}) bool {
-
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Routes)
-	if !ok {
-		that2, ok := that.(Routes)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	if len(this.Routes) != len(that1.Routes) {
-		return false
-	}
-	for i := range this.Routes {
-		if !bytes.Equal(this.Routes[i], that1.Routes[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (m *Routes) GetRoutes() map[string][]byte {
-	if m != nil {
-		return m.Routes
-	}
-	return nil
-}
-func (m *Routes) SetRoutes(value map[string][]byte) {
-	if m != nil {
-		m.Routes = value
-	}
-}
-func (x *Routes) ToProto() *ProtoRoutes {
-	proto := &ProtoRoutes{
-		Routes: x.Routes,
-	}
-	return proto
-}
-
-func RoutesProtoMap(values []*Routes) []*ProtoRoutes {
-	result := make([]*ProtoRoutes, len(values))
-	for i, val := range values {
-		result[i] = val.ToProto()
-	}
-	return result
-}
-
 // Prevent copylock errors when using ProtoDesiredLRPUpdate directly
 type DesiredLRPUpdate struct {
 	Instances  *int32
@@ -812,7 +745,7 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	if this.Instances != that1.Instances {
 		return false
 	}
-	if !this.Routes.Equal(that1.Routes) {
+	if !this.Routes.Equal(*that1.Routes) {
 		return false
 	}
 	if this.Annotation != that1.Annotation {
@@ -1221,7 +1154,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Routes.Equal(that1.Routes) {
+	if !this.Routes.Equal(*that1.Routes) {
 		return false
 	}
 	if this.LogSource != that1.LogSource {

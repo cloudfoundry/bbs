@@ -352,8 +352,8 @@ func (desired DesiredLRP) Validate() error {
 
 	totalRoutesLength := 0
 	if desired.Routes != nil {
-		for _, value := range desired.Routes.Routes {
-			totalRoutesLength += len(value)
+		for _, value := range *desired.Routes {
+			totalRoutesLength += len(*value)
 			if totalRoutesLength > maximumRouteLength {
 				validationError = validationError.Append(ErrInvalidField{"routes"})
 				break
@@ -392,8 +392,8 @@ func (desired *DesiredLRPUpdate) Validate() error {
 
 	totalRoutesLength := 0
 	if desired.Routes != nil {
-		for _, value := range desired.Routes.Routes {
-			totalRoutesLength += len(value)
+		for _, value := range *desired.Routes {
+			totalRoutesLength += len(*value)
 			if totalRoutesLength > maximumRouteLength {
 				validationError = validationError.Append(ErrInvalidField{"routes"})
 				break
@@ -419,14 +419,14 @@ func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup
 		return true
 	}
 
-	desiredRoutes, desiredRoutesPresent := (desired.Routes.Routes)[routerGroup]
-	requestRoutes, requestRoutesPresent := (routes.Routes)[routerGroup]
+	desiredRoutes, desiredRoutesPresent := (*desired.Routes)[routerGroup]
+	requestRoutes, requestRoutesPresent := (*routes)[routerGroup]
 	if desiredRoutesPresent != requestRoutesPresent {
 		return true
 	}
 
 	if desiredRoutesPresent && requestRoutesPresent {
-		return !bytes.Equal(desiredRoutes, requestRoutes)
+		return !bytes.Equal(*desiredRoutes, *requestRoutes)
 	}
 
 	return true

@@ -127,7 +127,12 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 				g.P("return false")
 				g.P("}")
 			} else if field.Message != nil {
-				g.P("if !this.", fieldName, ".Equal(that1.", fieldName, ") {")
+				pointer := ""
+				if fieldName == "Routes" {
+					pointer = "*"
+					log.Printf("Adding dereference because of Routes")
+				}
+				g.P("if !this.", fieldName, ".Equal(", pointer, "that1.", fieldName, ") {")
 				g.P("return false")
 			} else {
 				g.P("if this.", fieldName, " != that1.", fieldName, " {")
@@ -467,7 +472,7 @@ func protocVersion(plugin *protogen.Plugin) string {
 	return fmt.Sprintf("v%d.%d.%d%s", v.GetMajor(), v.GetMinor(), v.GetPatch(), suffix)
 }
 
-var ignoredMessages []string = []string{}
+var ignoredMessages []string = []string{"ProtoRoutes"}
 
 func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 	for _, msg := range file.Messages {
