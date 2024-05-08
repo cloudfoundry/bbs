@@ -4,13 +4,14 @@
 // 	protoc        v5.26.1
 // source: bbs.proto
 
-package models
+package main
 
 import (
+	reflect "reflect"
+
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
-	reflect "reflect"
 )
 
 const (
