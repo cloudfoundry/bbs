@@ -1,23 +1,23 @@
 package models
 
-// import (
-// 	"bytes"
-// 	"encoding/json"
-// )
+import (
+	bytes "bytes"
+	"encoding/json"
+)
 
-// type Routes map[string]*json.RawMessage
+type Routes map[string]*json.RawMessage
 
-// func (r *Routes) protoRoutes() *ProtoRoutes {
-// 	pr := &ProtoRoutes{
-// 		Routes: map[string][]byte{},
-// 	}
+func (r *Routes) ToProto() *ProtoRoutes {
+	pr := &ProtoRoutes{
+		Routes: map[string][]byte{},
+	}
 
-// 	for k, v := range *r {
-// 		pr.Routes[k] = *v
-// 	}
+	for k, v := range *r {
+		pr.Routes[k] = *v
+	}
 
-// 	return pr
-// }
+	return pr
+}
 
 // func (r *Routes) Marshal() ([]byte, error) {
 // 	return r.protoRoutes().Marshal()
@@ -56,19 +56,19 @@ package models
 // 	return r.protoRoutes().Size()
 // }
 
-// func (r *Routes) Equal(other Routes) bool {
-// 	for k, v := range *r {
-// 		if !bytes.Equal(*v, *other[k]) {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
+func (r *Routes) Equal(other Routes) bool {
+	for k, v := range *r {
+		if !bytes.Equal(*v, *other[k]) {
+			return false
+		}
+	}
+	return true
+}
 
 func (r Routes) Validate() error {
 	totalRoutesLength := 0
-	for _, value := range r.Routes {
-		totalRoutesLength += len(value)
+	for _, value := range r {
+		totalRoutesLength += len(*value)
 		if totalRoutesLength > maximumRouteLength {
 			return ErrInvalidField{"routes"}
 		}
