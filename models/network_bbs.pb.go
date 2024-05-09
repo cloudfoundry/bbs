@@ -61,10 +61,25 @@ func (x *Network) ToProto() *ProtoNetwork {
 	return proto
 }
 
-func NetworkProtoMap(values []*Network) []*ProtoNetwork {
+func (x *ProtoNetwork) FromProto() *Network {
+	copysafe := &Network{
+		Properties: x.Properties,
+	}
+	return copysafe
+}
+
+func NetworkToProtoSlice(values []*Network) []*ProtoNetwork {
 	result := make([]*ProtoNetwork, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func NetworkFromProtoSlice(values []*ProtoNetwork) []*Network {
+	result := make([]*Network, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

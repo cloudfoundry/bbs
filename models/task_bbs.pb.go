@@ -483,7 +483,7 @@ func (m *TaskDefinition) SetMetricTags(value map[string]*MetricTagValue) {
 func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
 	proto := &ProtoTaskDefinition{
 		RootFs:                        x.RootFs,
-		EnvironmentVariables:          EnvironmentVariableProtoMap(x.EnvironmentVariables),
+		EnvironmentVariables:          EnvironmentVariableToProtoSlice(x.EnvironmentVariables),
 		Action:                        x.Action.ToProto(),
 		DiskMb:                        x.DiskMb,
 		MemoryMb:                      x.MemoryMb,
@@ -495,25 +495,58 @@ func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
 		ResultFile:                    x.ResultFile,
 		CompletionCallbackUrl:         x.CompletionCallbackUrl,
 		Annotation:                    x.Annotation,
-		EgressRules:                   SecurityGroupRuleProtoMap(x.EgressRules),
-		CachedDependencies:            CachedDependencyProtoMap(x.CachedDependencies),
+		EgressRules:                   SecurityGroupRuleToProtoSlice(x.EgressRules),
+		CachedDependencies:            CachedDependencyToProtoSlice(x.CachedDependencies),
 		LegacyDownloadUser:            x.LegacyDownloadUser,
 		TrustedSystemCertificatesPath: x.TrustedSystemCertificatesPath,
-		VolumeMounts:                  VolumeMountProtoMap(x.VolumeMounts),
+		VolumeMounts:                  VolumeMountToProtoSlice(x.VolumeMounts),
 		Network:                       x.Network.ToProto(),
 		PlacementTags:                 x.PlacementTags,
 		MaxPids:                       x.MaxPids,
 		CertificateProperties:         x.CertificateProperties.ToProto(),
 		ImageUsername:                 x.ImageUsername,
 		ImagePassword:                 x.ImagePassword,
-		ImageLayers:                   ImageLayerProtoMap(x.ImageLayers),
+		ImageLayers:                   ImageLayerToProtoSlice(x.ImageLayers),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
-		MetricTags:                    TaskDefinitionMetricTagsProtoMap(x.MetricTags),
+		MetricTags:                    TaskDefinitionMetricTagsToProtoMap(x.MetricTags),
 	}
 	return proto
 }
 
-func TaskDefinitionProtoMap(values []*TaskDefinition) []*ProtoTaskDefinition {
+func (x *ProtoTaskDefinition) FromProto() *TaskDefinition {
+	copysafe := &TaskDefinition{
+		RootFs:                        x.RootFs,
+		EnvironmentVariables:          EnvironmentVariableFromProtoSlice(x.EnvironmentVariables),
+		Action:                        x.Action.FromProto(),
+		DiskMb:                        x.DiskMb,
+		MemoryMb:                      x.MemoryMb,
+		CpuWeight:                     x.CpuWeight,
+		Privileged:                    x.Privileged,
+		LogSource:                     x.LogSource,
+		LogGuid:                       x.LogGuid,
+		MetricsGuid:                   x.MetricsGuid,
+		ResultFile:                    x.ResultFile,
+		CompletionCallbackUrl:         x.CompletionCallbackUrl,
+		Annotation:                    x.Annotation,
+		EgressRules:                   SecurityGroupRuleFromProtoSlice(x.EgressRules),
+		CachedDependencies:            CachedDependencyFromProtoSlice(x.CachedDependencies),
+		LegacyDownloadUser:            x.LegacyDownloadUser,
+		TrustedSystemCertificatesPath: x.TrustedSystemCertificatesPath,
+		VolumeMounts:                  VolumeMountFromProtoSlice(x.VolumeMounts),
+		Network:                       x.Network.FromProto(),
+		PlacementTags:                 x.PlacementTags,
+		MaxPids:                       x.MaxPids,
+		CertificateProperties:         x.CertificateProperties.FromProto(),
+		ImageUsername:                 x.ImageUsername,
+		ImagePassword:                 x.ImagePassword,
+		ImageLayers:                   ImageLayerFromProtoSlice(x.ImageLayers),
+		LogRateLimit:                  x.LogRateLimit.FromProto(),
+		MetricTags:                    TaskDefinitionMetricTagsFromProtoMap(x.MetricTags),
+	}
+	return copysafe
+}
+
+func TaskDefinitionToProtoSlice(values []*TaskDefinition) []*ProtoTaskDefinition {
 	result := make([]*ProtoTaskDefinition, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -521,10 +554,26 @@ func TaskDefinitionProtoMap(values []*TaskDefinition) []*ProtoTaskDefinition {
 	return result
 }
 
-func TaskDefinitionMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+func TaskDefinitionMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskDefinitionFromProtoSlice(values []*ProtoTaskDefinition) []*TaskDefinition {
+	result := make([]*TaskDefinition, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
+	}
+	return result
+}
+
+func TaskDefinitionMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	result := make(map[string]*MetricTagValue, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -807,10 +856,37 @@ func (x *Task) ToProto() *ProtoTask {
 	return proto
 }
 
-func TaskProtoMap(values []*Task) []*ProtoTask {
+func (x *ProtoTask) FromProto() *Task {
+	copysafe := &Task{
+		TaskDefinition:   x.TaskDefinition.FromProto(),
+		TaskGuid:         x.TaskGuid,
+		Domain:           x.Domain,
+		CreatedAt:        x.CreatedAt,
+		UpdatedAt:        x.UpdatedAt,
+		FirstCompletedAt: x.FirstCompletedAt,
+		State:            Task_State(x.State),
+		CellId:           x.CellId,
+		Result:           x.Result,
+		Failed:           x.Failed,
+		FailureReason:    x.FailureReason,
+		RejectionCount:   x.RejectionCount,
+		RejectionReason:  x.RejectionReason,
+	}
+	return copysafe
+}
+
+func TaskToProtoSlice(values []*Task) []*ProtoTask {
 	result := make([]*ProtoTask, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskFromProtoSlice(values []*ProtoTask) []*Task {
+	result := make([]*Task, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

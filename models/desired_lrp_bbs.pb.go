@@ -173,10 +173,32 @@ func (x *DesiredLRPSchedulingInfo) ToProto() *ProtoDesiredLRPSchedulingInfo {
 	return proto
 }
 
-func DesiredLRPSchedulingInfoProtoMap(values []*DesiredLRPSchedulingInfo) []*ProtoDesiredLRPSchedulingInfo {
+func (x *ProtoDesiredLRPSchedulingInfo) FromProto() *DesiredLRPSchedulingInfo {
+	copysafe := &DesiredLRPSchedulingInfo{
+		DesiredLrpKey:      x.DesiredLrpKey.FromProto(),
+		Annotation:         x.Annotation,
+		Instances:          x.Instances,
+		DesiredLrpResource: x.DesiredLrpResource.FromProto(),
+		Routes:             x.Routes.FromProto(),
+		ModificationTag:    x.ModificationTag.FromProto(),
+		VolumePlacement:    x.VolumePlacement.FromProto(),
+		PlacementTags:      x.PlacementTags,
+	}
+	return copysafe
+}
+
+func DesiredLRPSchedulingInfoToProtoSlice(values []*DesiredLRPSchedulingInfo) []*ProtoDesiredLRPSchedulingInfo {
 	result := make([]*ProtoDesiredLRPSchedulingInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPSchedulingInfoFromProtoSlice(values []*ProtoDesiredLRPSchedulingInfo) []*DesiredLRPSchedulingInfo {
+	result := make([]*DesiredLRPSchedulingInfo, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -666,7 +688,7 @@ func (m *DesiredLRPRunInfo) SetLogRateLimit(value *LogRateLimit) {
 func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 	proto := &ProtoDesiredLRPRunInfo{
 		DesiredLrpKey:                 x.DesiredLrpKey.ToProto(),
-		EnvironmentVariables:          EnvironmentVariableProtoMap(x.EnvironmentVariables),
+		EnvironmentVariables:          EnvironmentVariableToProtoSlice(x.EnvironmentVariables),
 		Setup:                         x.Setup.ToProto(),
 		Action:                        x.Action.ToProto(),
 		Monitor:                       x.Monitor.ToProto(),
@@ -674,29 +696,62 @@ func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 		Privileged:                    x.Privileged,
 		CpuWeight:                     x.CpuWeight,
 		Ports:                         x.Ports,
-		EgressRules:                   SecurityGroupRuleProtoMap(x.EgressRules),
+		EgressRules:                   SecurityGroupRuleToProtoSlice(x.EgressRules),
 		LogSource:                     x.LogSource,
 		MetricsGuid:                   x.MetricsGuid,
 		CreatedAt:                     x.CreatedAt,
-		CachedDependencies:            CachedDependencyProtoMap(x.CachedDependencies),
+		CachedDependencies:            CachedDependencyToProtoSlice(x.CachedDependencies),
 		LegacyDownloadUser:            x.LegacyDownloadUser,
 		TrustedSystemCertificatesPath: x.TrustedSystemCertificatesPath,
-		VolumeMounts:                  VolumeMountProtoMap(x.VolumeMounts),
+		VolumeMounts:                  VolumeMountToProtoSlice(x.VolumeMounts),
 		Network:                       x.Network.ToProto(),
 		StartTimeoutMs:                x.StartTimeoutMs,
 		CertificateProperties:         x.CertificateProperties.ToProto(),
 		ImageUsername:                 x.ImageUsername,
 		ImagePassword:                 x.ImagePassword,
 		CheckDefinition:               x.CheckDefinition.ToProto(),
-		ImageLayers:                   ImageLayerProtoMap(x.ImageLayers),
-		MetricTags:                    DesiredLRPRunInfoMetricTagsProtoMap(x.MetricTags),
-		Sidecars:                      SidecarProtoMap(x.Sidecars),
+		ImageLayers:                   ImageLayerToProtoSlice(x.ImageLayers),
+		MetricTags:                    DesiredLRPRunInfoMetricTagsToProtoMap(x.MetricTags),
+		Sidecars:                      SidecarToProtoSlice(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
 	}
 	return proto
 }
 
-func DesiredLRPRunInfoProtoMap(values []*DesiredLRPRunInfo) []*ProtoDesiredLRPRunInfo {
+func (x *ProtoDesiredLRPRunInfo) FromProto() *DesiredLRPRunInfo {
+	copysafe := &DesiredLRPRunInfo{
+		DesiredLrpKey:                 x.DesiredLrpKey.FromProto(),
+		EnvironmentVariables:          EnvironmentVariableFromProtoSlice(x.EnvironmentVariables),
+		Setup:                         x.Setup.FromProto(),
+		Action:                        x.Action.FromProto(),
+		Monitor:                       x.Monitor.FromProto(),
+		DeprecatedStartTimeoutS:       x.DeprecatedStartTimeoutS,
+		Privileged:                    x.Privileged,
+		CpuWeight:                     x.CpuWeight,
+		Ports:                         x.Ports,
+		EgressRules:                   SecurityGroupRuleFromProtoSlice(x.EgressRules),
+		LogSource:                     x.LogSource,
+		MetricsGuid:                   x.MetricsGuid,
+		CreatedAt:                     x.CreatedAt,
+		CachedDependencies:            CachedDependencyFromProtoSlice(x.CachedDependencies),
+		LegacyDownloadUser:            x.LegacyDownloadUser,
+		TrustedSystemCertificatesPath: x.TrustedSystemCertificatesPath,
+		VolumeMounts:                  VolumeMountFromProtoSlice(x.VolumeMounts),
+		Network:                       x.Network.FromProto(),
+		StartTimeoutMs:                x.StartTimeoutMs,
+		CertificateProperties:         x.CertificateProperties.FromProto(),
+		ImageUsername:                 x.ImageUsername,
+		ImagePassword:                 x.ImagePassword,
+		CheckDefinition:               x.CheckDefinition.FromProto(),
+		ImageLayers:                   ImageLayerFromProtoSlice(x.ImageLayers),
+		MetricTags:                    DesiredLRPRunInfoMetricTagsFromProtoMap(x.MetricTags),
+		Sidecars:                      SidecarFromProtoSlice(x.Sidecars),
+		LogRateLimit:                  x.LogRateLimit.FromProto(),
+	}
+	return copysafe
+}
+
+func DesiredLRPRunInfoToProtoSlice(values []*DesiredLRPRunInfo) []*ProtoDesiredLRPRunInfo {
 	result := make([]*ProtoDesiredLRPRunInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -704,10 +759,26 @@ func DesiredLRPRunInfoProtoMap(values []*DesiredLRPRunInfo) []*ProtoDesiredLRPRu
 	return result
 }
 
-func DesiredLRPRunInfoMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+func DesiredLRPRunInfoMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPRunInfoFromProtoSlice(values []*ProtoDesiredLRPRunInfo) []*DesiredLRPRunInfo {
+	result := make([]*DesiredLRPRunInfo, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
+	}
+	return result
+}
+
+func DesiredLRPRunInfoMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	result := make(map[string]*MetricTagValue, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -819,12 +890,22 @@ func (x *DesiredLRPUpdate) ToProto() *ProtoDesiredLRPUpdate {
 		Instances:  x.Instances,
 		Routes:     x.Routes.ToProto(),
 		Annotation: x.Annotation,
-		MetricTags: DesiredLRPUpdateMetricTagsProtoMap(x.MetricTags),
+		MetricTags: DesiredLRPUpdateMetricTagsToProtoMap(x.MetricTags),
 	}
 	return proto
 }
 
-func DesiredLRPUpdateProtoMap(values []*DesiredLRPUpdate) []*ProtoDesiredLRPUpdate {
+func (x *ProtoDesiredLRPUpdate) FromProto() *DesiredLRPUpdate {
+	copysafe := &DesiredLRPUpdate{
+		Instances:  x.Instances,
+		Routes:     x.Routes.FromProto(),
+		Annotation: x.Annotation,
+		MetricTags: DesiredLRPUpdateMetricTagsFromProtoMap(x.MetricTags),
+	}
+	return copysafe
+}
+
+func DesiredLRPUpdateToProtoSlice(values []*DesiredLRPUpdate) []*ProtoDesiredLRPUpdate {
 	result := make([]*ProtoDesiredLRPUpdate, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -832,10 +913,26 @@ func DesiredLRPUpdateProtoMap(values []*DesiredLRPUpdate) []*ProtoDesiredLRPUpda
 	return result
 }
 
-func DesiredLRPUpdateMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+func DesiredLRPUpdateMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPUpdateFromProtoSlice(values []*ProtoDesiredLRPUpdate) []*DesiredLRPUpdate {
+	result := make([]*DesiredLRPUpdate, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
+	}
+	return result
+}
+
+func DesiredLRPUpdateMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	result := make(map[string]*MetricTagValue, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -922,10 +1019,27 @@ func (x *DesiredLRPKey) ToProto() *ProtoDesiredLRPKey {
 	return proto
 }
 
-func DesiredLRPKeyProtoMap(values []*DesiredLRPKey) []*ProtoDesiredLRPKey {
+func (x *ProtoDesiredLRPKey) FromProto() *DesiredLRPKey {
+	copysafe := &DesiredLRPKey{
+		ProcessGuid: x.ProcessGuid,
+		Domain:      x.Domain,
+		LogGuid:     x.LogGuid,
+	}
+	return copysafe
+}
+
+func DesiredLRPKeyToProtoSlice(values []*DesiredLRPKey) []*ProtoDesiredLRPKey {
 	result := make([]*ProtoDesiredLRPKey, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPKeyFromProtoSlice(values []*ProtoDesiredLRPKey) []*DesiredLRPKey {
+	result := make([]*DesiredLRPKey, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1028,10 +1142,28 @@ func (x *DesiredLRPResource) ToProto() *ProtoDesiredLRPResource {
 	return proto
 }
 
-func DesiredLRPResourceProtoMap(values []*DesiredLRPResource) []*ProtoDesiredLRPResource {
+func (x *ProtoDesiredLRPResource) FromProto() *DesiredLRPResource {
+	copysafe := &DesiredLRPResource{
+		MemoryMb: x.MemoryMb,
+		DiskMb:   x.DiskMb,
+		RootFs:   x.RootFs,
+		MaxPids:  x.MaxPids,
+	}
+	return copysafe
+}
+
+func DesiredLRPResourceToProtoSlice(values []*DesiredLRPResource) []*ProtoDesiredLRPResource {
 	result := make([]*ProtoDesiredLRPResource, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPResourceFromProtoSlice(values []*ProtoDesiredLRPResource) []*DesiredLRPResource {
+	result := make([]*DesiredLRPResource, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1682,7 +1814,7 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 		Domain:                        x.Domain,
 		RootFs:                        x.RootFs,
 		Instances:                     x.Instances,
-		EnvironmentVariables:          EnvironmentVariableProtoMap(x.EnvironmentVariables),
+		EnvironmentVariables:          EnvironmentVariableToProtoSlice(x.EnvironmentVariables),
 		Setup:                         x.Setup.ToProto(),
 		Action:                        x.Action.ToProto(),
 		StartTimeoutMs:                x.StartTimeoutMs,
@@ -1698,12 +1830,12 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 		LogGuid:                       x.LogGuid,
 		MetricsGuid:                   x.MetricsGuid,
 		Annotation:                    x.Annotation,
-		EgressRules:                   SecurityGroupRuleProtoMap(x.EgressRules),
+		EgressRules:                   SecurityGroupRuleToProtoSlice(x.EgressRules),
 		ModificationTag:               x.ModificationTag.ToProto(),
-		CachedDependencies:            CachedDependencyProtoMap(x.CachedDependencies),
+		CachedDependencies:            CachedDependencyToProtoSlice(x.CachedDependencies),
 		LegacyDownloadUser:            x.LegacyDownloadUser,
 		TrustedSystemCertificatesPath: x.TrustedSystemCertificatesPath,
-		VolumeMounts:                  VolumeMountProtoMap(x.VolumeMounts),
+		VolumeMounts:                  VolumeMountToProtoSlice(x.VolumeMounts),
 		Network:                       x.Network.ToProto(),
 		PlacementTags:                 x.PlacementTags,
 		MaxPids:                       x.MaxPids,
@@ -1711,15 +1843,58 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 		ImageUsername:                 x.ImageUsername,
 		ImagePassword:                 x.ImagePassword,
 		CheckDefinition:               x.CheckDefinition.ToProto(),
-		ImageLayers:                   ImageLayerProtoMap(x.ImageLayers),
-		MetricTags:                    DesiredLRPMetricTagsProtoMap(x.MetricTags),
-		Sidecars:                      SidecarProtoMap(x.Sidecars),
+		ImageLayers:                   ImageLayerToProtoSlice(x.ImageLayers),
+		MetricTags:                    DesiredLRPMetricTagsToProtoMap(x.MetricTags),
+		Sidecars:                      SidecarToProtoSlice(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
 	}
 	return proto
 }
 
-func DesiredLRPProtoMap(values []*DesiredLRP) []*ProtoDesiredLRP {
+func (x *ProtoDesiredLRP) FromProto() *DesiredLRP {
+	copysafe := &DesiredLRP{
+		ProcessGuid:                   x.ProcessGuid,
+		Domain:                        x.Domain,
+		RootFs:                        x.RootFs,
+		Instances:                     x.Instances,
+		EnvironmentVariables:          EnvironmentVariableFromProtoSlice(x.EnvironmentVariables),
+		Setup:                         x.Setup.FromProto(),
+		Action:                        x.Action.FromProto(),
+		StartTimeoutMs:                x.StartTimeoutMs,
+		DeprecatedStartTimeoutS:       x.DeprecatedStartTimeoutS,
+		Monitor:                       x.Monitor.FromProto(),
+		DiskMb:                        x.DiskMb,
+		MemoryMb:                      x.MemoryMb,
+		CpuWeight:                     x.CpuWeight,
+		Privileged:                    x.Privileged,
+		Ports:                         x.Ports,
+		Routes:                        x.Routes.FromProto(),
+		LogSource:                     x.LogSource,
+		LogGuid:                       x.LogGuid,
+		MetricsGuid:                   x.MetricsGuid,
+		Annotation:                    x.Annotation,
+		EgressRules:                   SecurityGroupRuleFromProtoSlice(x.EgressRules),
+		ModificationTag:               x.ModificationTag.FromProto(),
+		CachedDependencies:            CachedDependencyFromProtoSlice(x.CachedDependencies),
+		LegacyDownloadUser:            x.LegacyDownloadUser,
+		TrustedSystemCertificatesPath: x.TrustedSystemCertificatesPath,
+		VolumeMounts:                  VolumeMountFromProtoSlice(x.VolumeMounts),
+		Network:                       x.Network.FromProto(),
+		PlacementTags:                 x.PlacementTags,
+		MaxPids:                       x.MaxPids,
+		CertificateProperties:         x.CertificateProperties.FromProto(),
+		ImageUsername:                 x.ImageUsername,
+		ImagePassword:                 x.ImagePassword,
+		CheckDefinition:               x.CheckDefinition.FromProto(),
+		ImageLayers:                   ImageLayerFromProtoSlice(x.ImageLayers),
+		MetricTags:                    DesiredLRPMetricTagsFromProtoMap(x.MetricTags),
+		Sidecars:                      SidecarFromProtoSlice(x.Sidecars),
+		LogRateLimit:                  x.LogRateLimit.FromProto(),
+	}
+	return copysafe
+}
+
+func DesiredLRPToProtoSlice(values []*DesiredLRP) []*ProtoDesiredLRP {
 	result := make([]*ProtoDesiredLRP, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1727,10 +1902,26 @@ func DesiredLRPProtoMap(values []*DesiredLRP) []*ProtoDesiredLRP {
 	return result
 }
 
-func DesiredLRPMetricTagsProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+func DesiredLRPMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPFromProtoSlice(values []*ProtoDesiredLRP) []*DesiredLRP {
+	result := make([]*DesiredLRP, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
+	}
+	return result
+}
+
+func DesiredLRPMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	result := make(map[string]*MetricTagValue, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

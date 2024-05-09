@@ -56,10 +56,25 @@ func (x *ActualLRPLifecycleResponse) ToProto() *ProtoActualLRPLifecycleResponse 
 	return proto
 }
 
-func ActualLRPLifecycleResponseProtoMap(values []*ActualLRPLifecycleResponse) []*ProtoActualLRPLifecycleResponse {
+func (x *ProtoActualLRPLifecycleResponse) FromProto() *ActualLRPLifecycleResponse {
+	copysafe := &ActualLRPLifecycleResponse{
+		Error: x.Error.FromProto(),
+	}
+	return copysafe
+}
+
+func ActualLRPLifecycleResponseToProtoSlice(values []*ActualLRPLifecycleResponse) []*ProtoActualLRPLifecycleResponse {
 	result := make([]*ProtoActualLRPLifecycleResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPLifecycleResponseFromProtoSlice(values []*ProtoActualLRPLifecycleResponse) []*ActualLRPLifecycleResponse {
+	result := make([]*ActualLRPLifecycleResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -130,15 +145,31 @@ func (m *ActualLRPGroupsResponse) SetActualLrpGroups(value []*ActualLRPGroup) {
 func (x *ActualLRPGroupsResponse) ToProto() *ProtoActualLRPGroupsResponse {
 	proto := &ProtoActualLRPGroupsResponse{
 		Error:           x.Error.ToProto(),
-		ActualLrpGroups: ActualLRPGroupProtoMap(x.ActualLrpGroups),
+		ActualLrpGroups: ActualLRPGroupToProtoSlice(x.ActualLrpGroups),
 	}
 	return proto
 }
 
-func ActualLRPGroupsResponseProtoMap(values []*ActualLRPGroupsResponse) []*ProtoActualLRPGroupsResponse {
+func (x *ProtoActualLRPGroupsResponse) FromProto() *ActualLRPGroupsResponse {
+	copysafe := &ActualLRPGroupsResponse{
+		Error:           x.Error.FromProto(),
+		ActualLrpGroups: ActualLRPGroupFromProtoSlice(x.ActualLrpGroups),
+	}
+	return copysafe
+}
+
+func ActualLRPGroupsResponseToProtoSlice(values []*ActualLRPGroupsResponse) []*ProtoActualLRPGroupsResponse {
 	result := make([]*ProtoActualLRPGroupsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPGroupsResponseFromProtoSlice(values []*ProtoActualLRPGroupsResponse) []*ActualLRPGroupsResponse {
+	result := make([]*ActualLRPGroupsResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -209,10 +240,26 @@ func (x *ActualLRPGroupResponse) ToProto() *ProtoActualLRPGroupResponse {
 	return proto
 }
 
-func ActualLRPGroupResponseProtoMap(values []*ActualLRPGroupResponse) []*ProtoActualLRPGroupResponse {
+func (x *ProtoActualLRPGroupResponse) FromProto() *ActualLRPGroupResponse {
+	copysafe := &ActualLRPGroupResponse{
+		Error:          x.Error.FromProto(),
+		ActualLrpGroup: x.ActualLrpGroup.FromProto(),
+	}
+	return copysafe
+}
+
+func ActualLRPGroupResponseToProtoSlice(values []*ActualLRPGroupResponse) []*ProtoActualLRPGroupResponse {
 	result := make([]*ProtoActualLRPGroupResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPGroupResponseFromProtoSlice(values []*ProtoActualLRPGroupResponse) []*ActualLRPGroupResponse {
+	result := make([]*ActualLRPGroupResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -283,10 +330,26 @@ func (x *ActualLRPGroupsRequest) ToProto() *ProtoActualLRPGroupsRequest {
 	return proto
 }
 
-func ActualLRPGroupsRequestProtoMap(values []*ActualLRPGroupsRequest) []*ProtoActualLRPGroupsRequest {
+func (x *ProtoActualLRPGroupsRequest) FromProto() *ActualLRPGroupsRequest {
+	copysafe := &ActualLRPGroupsRequest{
+		Domain: x.Domain,
+		CellId: x.CellId,
+	}
+	return copysafe
+}
+
+func ActualLRPGroupsRequestToProtoSlice(values []*ActualLRPGroupsRequest) []*ProtoActualLRPGroupsRequest {
 	result := make([]*ProtoActualLRPGroupsRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPGroupsRequestFromProtoSlice(values []*ProtoActualLRPGroupsRequest) []*ActualLRPGroupsRequest {
+	result := make([]*ActualLRPGroupsRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -341,10 +404,25 @@ func (x *ActualLRPGroupsByProcessGuidRequest) ToProto() *ProtoActualLRPGroupsByP
 	return proto
 }
 
-func ActualLRPGroupsByProcessGuidRequestProtoMap(values []*ActualLRPGroupsByProcessGuidRequest) []*ProtoActualLRPGroupsByProcessGuidRequest {
+func (x *ProtoActualLRPGroupsByProcessGuidRequest) FromProto() *ActualLRPGroupsByProcessGuidRequest {
+	copysafe := &ActualLRPGroupsByProcessGuidRequest{
+		ProcessGuid: x.ProcessGuid,
+	}
+	return copysafe
+}
+
+func ActualLRPGroupsByProcessGuidRequestToProtoSlice(values []*ActualLRPGroupsByProcessGuidRequest) []*ProtoActualLRPGroupsByProcessGuidRequest {
 	result := make([]*ProtoActualLRPGroupsByProcessGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPGroupsByProcessGuidRequestFromProtoSlice(values []*ProtoActualLRPGroupsByProcessGuidRequest) []*ActualLRPGroupsByProcessGuidRequest {
+	result := make([]*ActualLRPGroupsByProcessGuidRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -415,10 +493,26 @@ func (x *ActualLRPGroupByProcessGuidAndIndexRequest) ToProto() *ProtoActualLRPGr
 	return proto
 }
 
-func ActualLRPGroupByProcessGuidAndIndexRequestProtoMap(values []*ActualLRPGroupByProcessGuidAndIndexRequest) []*ProtoActualLRPGroupByProcessGuidAndIndexRequest {
+func (x *ProtoActualLRPGroupByProcessGuidAndIndexRequest) FromProto() *ActualLRPGroupByProcessGuidAndIndexRequest {
+	copysafe := &ActualLRPGroupByProcessGuidAndIndexRequest{
+		ProcessGuid: x.ProcessGuid,
+		Index:       x.Index,
+	}
+	return copysafe
+}
+
+func ActualLRPGroupByProcessGuidAndIndexRequestToProtoSlice(values []*ActualLRPGroupByProcessGuidAndIndexRequest) []*ProtoActualLRPGroupByProcessGuidAndIndexRequest {
 	result := make([]*ProtoActualLRPGroupByProcessGuidAndIndexRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPGroupByProcessGuidAndIndexRequestFromProtoSlice(values []*ProtoActualLRPGroupByProcessGuidAndIndexRequest) []*ActualLRPGroupByProcessGuidAndIndexRequest {
+	result := make([]*ActualLRPGroupByProcessGuidAndIndexRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -505,10 +599,27 @@ func (x *ClaimActualLRPRequest) ToProto() *ProtoClaimActualLRPRequest {
 	return proto
 }
 
-func ClaimActualLRPRequestProtoMap(values []*ClaimActualLRPRequest) []*ProtoClaimActualLRPRequest {
+func (x *ProtoClaimActualLRPRequest) FromProto() *ClaimActualLRPRequest {
+	copysafe := &ClaimActualLRPRequest{
+		ProcessGuid:          x.ProcessGuid,
+		Index:                x.Index,
+		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
+	}
+	return copysafe
+}
+
+func ClaimActualLRPRequestToProtoSlice(values []*ClaimActualLRPRequest) []*ProtoClaimActualLRPRequest {
 	result := make([]*ProtoClaimActualLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ClaimActualLRPRequestFromProtoSlice(values []*ProtoClaimActualLRPRequest) []*ClaimActualLRPRequest {
+	result := make([]*ClaimActualLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -664,7 +775,7 @@ func (x *StartActualLRPRequest) ToProto() *ProtoStartActualLRPRequest {
 		ActualLrpKey:            x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.ToProto(),
 		ActualLrpNetInfo:        x.ActualLrpNetInfo.ToProto(),
-		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLrpInternalRoutes),
+		ActualLrpInternalRoutes: ActualLRPInternalRouteToProtoSlice(x.ActualLrpInternalRoutes),
 		MetricTags:              x.MetricTags,
 		Routable:                x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,
@@ -672,10 +783,31 @@ func (x *StartActualLRPRequest) ToProto() *ProtoStartActualLRPRequest {
 	return proto
 }
 
-func StartActualLRPRequestProtoMap(values []*StartActualLRPRequest) []*ProtoStartActualLRPRequest {
+func (x *ProtoStartActualLRPRequest) FromProto() *StartActualLRPRequest {
+	copysafe := &StartActualLRPRequest{
+		ActualLrpKey:            x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.FromProto(),
+		ActualLrpNetInfo:        x.ActualLrpNetInfo.FromProto(),
+		ActualLrpInternalRoutes: ActualLRPInternalRouteFromProtoSlice(x.ActualLrpInternalRoutes),
+		MetricTags:              x.MetricTags,
+		Routable:                x.Routable,
+		AvailabilityZone:        x.AvailabilityZone,
+	}
+	return copysafe
+}
+
+func StartActualLRPRequestToProtoSlice(values []*StartActualLRPRequest) []*ProtoStartActualLRPRequest {
 	result := make([]*ProtoStartActualLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func StartActualLRPRequestFromProtoSlice(values []*ProtoStartActualLRPRequest) []*StartActualLRPRequest {
+	result := make([]*StartActualLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -762,10 +894,27 @@ func (x *CrashActualLRPRequest) ToProto() *ProtoCrashActualLRPRequest {
 	return proto
 }
 
-func CrashActualLRPRequestProtoMap(values []*CrashActualLRPRequest) []*ProtoCrashActualLRPRequest {
+func (x *ProtoCrashActualLRPRequest) FromProto() *CrashActualLRPRequest {
+	copysafe := &CrashActualLRPRequest{
+		ActualLrpKey:         x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
+		ErrorMessage:         x.ErrorMessage,
+	}
+	return copysafe
+}
+
+func CrashActualLRPRequestToProtoSlice(values []*CrashActualLRPRequest) []*ProtoCrashActualLRPRequest {
 	result := make([]*ProtoCrashActualLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CrashActualLRPRequestFromProtoSlice(values []*ProtoCrashActualLRPRequest) []*CrashActualLRPRequest {
+	result := make([]*CrashActualLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -836,10 +985,26 @@ func (x *FailActualLRPRequest) ToProto() *ProtoFailActualLRPRequest {
 	return proto
 }
 
-func FailActualLRPRequestProtoMap(values []*FailActualLRPRequest) []*ProtoFailActualLRPRequest {
+func (x *ProtoFailActualLRPRequest) FromProto() *FailActualLRPRequest {
+	copysafe := &FailActualLRPRequest{
+		ActualLrpKey: x.ActualLrpKey.FromProto(),
+		ErrorMessage: x.ErrorMessage,
+	}
+	return copysafe
+}
+
+func FailActualLRPRequestToProtoSlice(values []*FailActualLRPRequest) []*ProtoFailActualLRPRequest {
 	result := make([]*ProtoFailActualLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func FailActualLRPRequestFromProtoSlice(values []*ProtoFailActualLRPRequest) []*FailActualLRPRequest {
+	result := make([]*FailActualLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -894,10 +1059,25 @@ func (x *RetireActualLRPRequest) ToProto() *ProtoRetireActualLRPRequest {
 	return proto
 }
 
-func RetireActualLRPRequestProtoMap(values []*RetireActualLRPRequest) []*ProtoRetireActualLRPRequest {
+func (x *ProtoRetireActualLRPRequest) FromProto() *RetireActualLRPRequest {
+	copysafe := &RetireActualLRPRequest{
+		ActualLrpKey: x.ActualLrpKey.FromProto(),
+	}
+	return copysafe
+}
+
+func RetireActualLRPRequestToProtoSlice(values []*RetireActualLRPRequest) []*ProtoRetireActualLRPRequest {
 	result := make([]*ProtoRetireActualLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func RetireActualLRPRequestFromProtoSlice(values []*ProtoRetireActualLRPRequest) []*RetireActualLRPRequest {
+	result := make([]*RetireActualLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -984,10 +1164,27 @@ func (x *RemoveActualLRPRequest) ToProto() *ProtoRemoveActualLRPRequest {
 	return proto
 }
 
-func RemoveActualLRPRequestProtoMap(values []*RemoveActualLRPRequest) []*ProtoRemoveActualLRPRequest {
+func (x *ProtoRemoveActualLRPRequest) FromProto() *RemoveActualLRPRequest {
+	copysafe := &RemoveActualLRPRequest{
+		ProcessGuid:          x.ProcessGuid,
+		Index:                x.Index,
+		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
+	}
+	return copysafe
+}
+
+func RemoveActualLRPRequestToProtoSlice(values []*RemoveActualLRPRequest) []*ProtoRemoveActualLRPRequest {
 	result := make([]*ProtoRemoveActualLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func RemoveActualLRPRequestFromProtoSlice(values []*ProtoRemoveActualLRPRequest) []*RemoveActualLRPRequest {
+	result := make([]*RemoveActualLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1058,15 +1255,31 @@ func (m *ActualLRPsResponse) SetActualLrps(value []*ActualLRP) {
 func (x *ActualLRPsResponse) ToProto() *ProtoActualLRPsResponse {
 	proto := &ProtoActualLRPsResponse{
 		Error:      x.Error.ToProto(),
-		ActualLrps: ActualLRPProtoMap(x.ActualLrps),
+		ActualLrps: ActualLRPToProtoSlice(x.ActualLrps),
 	}
 	return proto
 }
 
-func ActualLRPsResponseProtoMap(values []*ActualLRPsResponse) []*ProtoActualLRPsResponse {
+func (x *ProtoActualLRPsResponse) FromProto() *ActualLRPsResponse {
+	copysafe := &ActualLRPsResponse{
+		Error:      x.Error.FromProto(),
+		ActualLrps: ActualLRPFromProtoSlice(x.ActualLrps),
+	}
+	return copysafe
+}
+
+func ActualLRPsResponseToProtoSlice(values []*ActualLRPsResponse) []*ProtoActualLRPsResponse {
 	result := make([]*ProtoActualLRPsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPsResponseFromProtoSlice(values []*ProtoActualLRPsResponse) []*ActualLRPsResponse {
+	result := make([]*ActualLRPsResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1172,10 +1385,28 @@ func (x *ActualLRPsRequest) ToProto() *ProtoActualLRPsRequest {
 	return proto
 }
 
-func ActualLRPsRequestProtoMap(values []*ActualLRPsRequest) []*ProtoActualLRPsRequest {
+func (x *ProtoActualLRPsRequest) FromProto() *ActualLRPsRequest {
+	copysafe := &ActualLRPsRequest{
+		Domain:      x.Domain,
+		CellId:      x.CellId,
+		ProcessGuid: x.ProcessGuid,
+		Index:       x.Index,
+	}
+	return copysafe
+}
+
+func ActualLRPsRequestToProtoSlice(values []*ActualLRPsRequest) []*ProtoActualLRPsRequest {
 	result := make([]*ProtoActualLRPsRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPsRequestFromProtoSlice(values []*ProtoActualLRPsRequest) []*ActualLRPsRequest {
+	result := make([]*ActualLRPsRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

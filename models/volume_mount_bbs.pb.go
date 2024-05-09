@@ -72,10 +72,26 @@ func (x *SharedDevice) ToProto() *ProtoSharedDevice {
 	return proto
 }
 
-func SharedDeviceProtoMap(values []*SharedDevice) []*ProtoSharedDevice {
+func (x *ProtoSharedDevice) FromProto() *SharedDevice {
+	copysafe := &SharedDevice{
+		VolumeId:    x.VolumeId,
+		MountConfig: x.MountConfig,
+	}
+	return copysafe
+}
+
+func SharedDeviceToProtoSlice(values []*SharedDevice) []*ProtoSharedDevice {
 	result := make([]*ProtoSharedDevice, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func SharedDeviceFromProtoSlice(values []*ProtoSharedDevice) []*SharedDevice {
+	result := make([]*SharedDevice, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -178,10 +194,28 @@ func (x *VolumeMount) ToProto() *ProtoVolumeMount {
 	return proto
 }
 
-func VolumeMountProtoMap(values []*VolumeMount) []*ProtoVolumeMount {
+func (x *ProtoVolumeMount) FromProto() *VolumeMount {
+	copysafe := &VolumeMount{
+		Driver:       x.Driver,
+		ContainerDir: x.ContainerDir,
+		Mode:         x.Mode,
+		Shared:       x.Shared.FromProto(),
+	}
+	return copysafe
+}
+
+func VolumeMountToProtoSlice(values []*VolumeMount) []*ProtoVolumeMount {
 	result := make([]*ProtoVolumeMount, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func VolumeMountFromProtoSlice(values []*ProtoVolumeMount) []*VolumeMount {
+	result := make([]*VolumeMount, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -241,10 +275,25 @@ func (x *VolumePlacement) ToProto() *ProtoVolumePlacement {
 	return proto
 }
 
-func VolumePlacementProtoMap(values []*VolumePlacement) []*ProtoVolumePlacement {
+func (x *ProtoVolumePlacement) FromProto() *VolumePlacement {
+	copysafe := &VolumePlacement{
+		DriverNames: x.DriverNames,
+	}
+	return copysafe
+}
+
+func VolumePlacementToProtoSlice(values []*VolumePlacement) []*ProtoVolumePlacement {
 	result := make([]*ProtoVolumePlacement, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func VolumePlacementFromProtoSlice(values []*ProtoVolumePlacement) []*VolumePlacement {
+	result := make([]*VolumePlacement, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

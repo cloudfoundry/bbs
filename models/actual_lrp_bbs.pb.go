@@ -76,10 +76,26 @@ func (x *ActualLRPGroup) ToProto() *ProtoActualLRPGroup {
 	return proto
 }
 
-func ActualLRPGroupProtoMap(values []*ActualLRPGroup) []*ProtoActualLRPGroup {
+func (x *ProtoActualLRPGroup) FromProto() *ActualLRPGroup {
+	copysafe := &ActualLRPGroup{
+		Instance:   x.Instance.FromProto(),
+		Evacuating: x.Evacuating.FromProto(),
+	}
+	return copysafe
+}
+
+func ActualLRPGroupToProtoSlice(values []*ActualLRPGroup) []*ProtoActualLRPGroup {
 	result := make([]*ProtoActualLRPGroup, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPGroupFromProtoSlice(values []*ProtoActualLRPGroup) []*ActualLRPGroup {
+	result := make([]*ActualLRPGroup, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -182,10 +198,28 @@ func (x *PortMapping) ToProto() *ProtoPortMapping {
 	return proto
 }
 
-func PortMappingProtoMap(values []*PortMapping) []*ProtoPortMapping {
+func (x *ProtoPortMapping) FromProto() *PortMapping {
+	copysafe := &PortMapping{
+		ContainerPort:         x.ContainerPort,
+		HostPort:              x.HostPort,
+		ContainerTlsProxyPort: x.ContainerTlsProxyPort,
+		HostTlsProxyPort:      x.HostTlsProxyPort,
+	}
+	return copysafe
+}
+
+func PortMappingToProtoSlice(values []*PortMapping) []*ProtoPortMapping {
 	result := make([]*ProtoPortMapping, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func PortMappingFromProtoSlice(values []*ProtoPortMapping) []*PortMapping {
+	result := make([]*PortMapping, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -272,10 +306,27 @@ func (x *ActualLRPKey) ToProto() *ProtoActualLRPKey {
 	return proto
 }
 
-func ActualLRPKeyProtoMap(values []*ActualLRPKey) []*ProtoActualLRPKey {
+func (x *ProtoActualLRPKey) FromProto() *ActualLRPKey {
+	copysafe := &ActualLRPKey{
+		ProcessGuid: x.ProcessGuid,
+		Index:       x.Index,
+		Domain:      x.Domain,
+	}
+	return copysafe
+}
+
+func ActualLRPKeyToProtoSlice(values []*ActualLRPKey) []*ProtoActualLRPKey {
 	result := make([]*ProtoActualLRPKey, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPKeyFromProtoSlice(values []*ProtoActualLRPKey) []*ActualLRPKey {
+	result := make([]*ActualLRPKey, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -346,10 +397,26 @@ func (x *ActualLRPInstanceKey) ToProto() *ProtoActualLRPInstanceKey {
 	return proto
 }
 
-func ActualLRPInstanceKeyProtoMap(values []*ActualLRPInstanceKey) []*ProtoActualLRPInstanceKey {
+func (x *ProtoActualLRPInstanceKey) FromProto() *ActualLRPInstanceKey {
+	copysafe := &ActualLRPInstanceKey{
+		InstanceGuid: x.InstanceGuid,
+		CellId:       x.CellId,
+	}
+	return copysafe
+}
+
+func ActualLRPInstanceKeyToProtoSlice(values []*ActualLRPInstanceKey) []*ProtoActualLRPInstanceKey {
 	result := make([]*ProtoActualLRPInstanceKey, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPInstanceKeyFromProtoSlice(values []*ProtoActualLRPInstanceKey) []*ActualLRPInstanceKey {
+	result := make([]*ActualLRPInstanceKey, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -480,17 +547,35 @@ func (m *ActualLRPNetInfo) SetPreferredAddress(value ActualLRPNetInfo_PreferredA
 func (x *ActualLRPNetInfo) ToProto() *ProtoActualLRPNetInfo {
 	proto := &ProtoActualLRPNetInfo{
 		Address:          x.Address,
-		Ports:            PortMappingProtoMap(x.Ports),
+		Ports:            PortMappingToProtoSlice(x.Ports),
 		InstanceAddress:  x.InstanceAddress,
 		PreferredAddress: ProtoActualLRPNetInfo_PreferredAddress(x.PreferredAddress),
 	}
 	return proto
 }
 
-func ActualLRPNetInfoProtoMap(values []*ActualLRPNetInfo) []*ProtoActualLRPNetInfo {
+func (x *ProtoActualLRPNetInfo) FromProto() *ActualLRPNetInfo {
+	copysafe := &ActualLRPNetInfo{
+		Address:          x.Address,
+		Ports:            PortMappingFromProtoSlice(x.Ports),
+		InstanceAddress:  x.InstanceAddress,
+		PreferredAddress: ActualLRPNetInfo_PreferredAddress(x.PreferredAddress),
+	}
+	return copysafe
+}
+
+func ActualLRPNetInfoToProtoSlice(values []*ActualLRPNetInfo) []*ProtoActualLRPNetInfo {
 	result := make([]*ProtoActualLRPNetInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPNetInfoFromProtoSlice(values []*ProtoActualLRPNetInfo) []*ActualLRPNetInfo {
+	result := make([]*ActualLRPNetInfo, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -545,10 +630,25 @@ func (x *ActualLRPInternalRoute) ToProto() *ProtoActualLRPInternalRoute {
 	return proto
 }
 
-func ActualLRPInternalRouteProtoMap(values []*ActualLRPInternalRoute) []*ProtoActualLRPInternalRoute {
+func (x *ProtoActualLRPInternalRoute) FromProto() *ActualLRPInternalRoute {
+	copysafe := &ActualLRPInternalRoute{
+		Hostname: x.Hostname,
+	}
+	return copysafe
+}
+
+func ActualLRPInternalRouteToProtoSlice(values []*ActualLRPInternalRoute) []*ProtoActualLRPInternalRoute {
 	result := make([]*ProtoActualLRPInternalRoute, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPInternalRouteFromProtoSlice(values []*ProtoActualLRPInternalRoute) []*ActualLRPInternalRoute {
+	result := make([]*ActualLRPInternalRoute, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -846,7 +946,7 @@ func (x *ActualLRP) ToProto() *ProtoActualLRP {
 		Since:                   x.Since,
 		ModificationTag:         x.ModificationTag.ToProto(),
 		Presence:                ProtoActualLRP_Presence(x.Presence),
-		ActualLrpInternalRoutes: ActualLRPInternalRouteProtoMap(x.ActualLrpInternalRoutes),
+		ActualLrpInternalRoutes: ActualLRPInternalRouteToProtoSlice(x.ActualLrpInternalRoutes),
 		MetricTags:              x.MetricTags,
 		Routable:                x.Routable,
 		AvailabilityZone:        x.AvailabilityZone,
@@ -854,10 +954,38 @@ func (x *ActualLRP) ToProto() *ProtoActualLRP {
 	return proto
 }
 
-func ActualLRPProtoMap(values []*ActualLRP) []*ProtoActualLRP {
+func (x *ProtoActualLRP) FromProto() *ActualLRP {
+	copysafe := &ActualLRP{
+		ActualLrpKey:            x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.FromProto(),
+		ActualLrpNetInfo:        x.ActualLrpNetInfo.FromProto(),
+		CrashCount:              x.CrashCount,
+		CrashReason:             x.CrashReason,
+		State:                   x.State,
+		PlacementError:          x.PlacementError,
+		Since:                   x.Since,
+		ModificationTag:         x.ModificationTag.FromProto(),
+		Presence:                ActualLRP_Presence(x.Presence),
+		ActualLrpInternalRoutes: ActualLRPInternalRouteFromProtoSlice(x.ActualLrpInternalRoutes),
+		MetricTags:              x.MetricTags,
+		Routable:                x.Routable,
+		AvailabilityZone:        x.AvailabilityZone,
+	}
+	return copysafe
+}
+
+func ActualLRPToProtoSlice(values []*ActualLRP) []*ProtoActualLRP {
 	result := make([]*ProtoActualLRP, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPFromProtoSlice(values []*ProtoActualLRP) []*ActualLRP {
+	result := make([]*ActualLRP, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

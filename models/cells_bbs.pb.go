@@ -88,10 +88,27 @@ func (x *CellCapacity) ToProto() *ProtoCellCapacity {
 	return proto
 }
 
-func CellCapacityProtoMap(values []*CellCapacity) []*ProtoCellCapacity {
+func (x *ProtoCellCapacity) FromProto() *CellCapacity {
+	copysafe := &CellCapacity{
+		MemoryMb:   x.MemoryMb,
+		DiskMb:     x.DiskMb,
+		Containers: x.Containers,
+	}
+	return copysafe
+}
+
+func CellCapacityToProtoSlice(values []*CellCapacity) []*ProtoCellCapacity {
 	result := make([]*ProtoCellCapacity, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CellCapacityFromProtoSlice(values []*ProtoCellCapacity) []*CellCapacity {
+	result := make([]*CellCapacity, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -265,7 +282,7 @@ func (x *CellPresence) ToProto() *ProtoCellPresence {
 		RepAddress:            x.RepAddress,
 		Zone:                  x.Zone,
 		Capacity:              x.Capacity.ToProto(),
-		RootfsProviders:       ProviderProtoMap(x.RootfsProviders),
+		RootfsProviders:       ProviderToProtoSlice(x.RootfsProviders),
 		PlacementTags:         x.PlacementTags,
 		OptionalPlacementTags: x.OptionalPlacementTags,
 		RepUrl:                x.RepUrl,
@@ -273,10 +290,32 @@ func (x *CellPresence) ToProto() *ProtoCellPresence {
 	return proto
 }
 
-func CellPresenceProtoMap(values []*CellPresence) []*ProtoCellPresence {
+func (x *ProtoCellPresence) FromProto() *CellPresence {
+	copysafe := &CellPresence{
+		CellId:                x.CellId,
+		RepAddress:            x.RepAddress,
+		Zone:                  x.Zone,
+		Capacity:              x.Capacity.FromProto(),
+		RootfsProviders:       ProviderFromProtoSlice(x.RootfsProviders),
+		PlacementTags:         x.PlacementTags,
+		OptionalPlacementTags: x.OptionalPlacementTags,
+		RepUrl:                x.RepUrl,
+	}
+	return copysafe
+}
+
+func CellPresenceToProtoSlice(values []*CellPresence) []*ProtoCellPresence {
 	result := make([]*ProtoCellPresence, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CellPresenceFromProtoSlice(values []*ProtoCellPresence) []*CellPresence {
+	result := make([]*CellPresence, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -352,10 +391,26 @@ func (x *Provider) ToProto() *ProtoProvider {
 	return proto
 }
 
-func ProviderProtoMap(values []*Provider) []*ProtoProvider {
+func (x *ProtoProvider) FromProto() *Provider {
+	copysafe := &Provider{
+		Name:       x.Name,
+		Properties: x.Properties,
+	}
+	return copysafe
+}
+
+func ProviderToProtoSlice(values []*Provider) []*ProtoProvider {
 	result := make([]*ProtoProvider, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ProviderFromProtoSlice(values []*ProtoProvider) []*Provider {
+	result := make([]*Provider, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -426,15 +481,31 @@ func (m *CellsResponse) SetCells(value []*CellPresence) {
 func (x *CellsResponse) ToProto() *ProtoCellsResponse {
 	proto := &ProtoCellsResponse{
 		Error: x.Error.ToProto(),
-		Cells: CellPresenceProtoMap(x.Cells),
+		Cells: CellPresenceToProtoSlice(x.Cells),
 	}
 	return proto
 }
 
-func CellsResponseProtoMap(values []*CellsResponse) []*ProtoCellsResponse {
+func (x *ProtoCellsResponse) FromProto() *CellsResponse {
+	copysafe := &CellsResponse{
+		Error: x.Error.FromProto(),
+		Cells: CellPresenceFromProtoSlice(x.Cells),
+	}
+	return copysafe
+}
+
+func CellsResponseToProtoSlice(values []*CellsResponse) []*ProtoCellsResponse {
 	result := make([]*ProtoCellsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CellsResponseFromProtoSlice(values []*ProtoCellsResponse) []*CellsResponse {
+	result := make([]*CellsResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

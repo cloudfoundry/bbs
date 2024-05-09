@@ -56,10 +56,25 @@ func (x *ActualLRPCreatedEvent) ToProto() *ProtoActualLRPCreatedEvent {
 	return proto
 }
 
-func ActualLRPCreatedEventProtoMap(values []*ActualLRPCreatedEvent) []*ProtoActualLRPCreatedEvent {
+func (x *ProtoActualLRPCreatedEvent) FromProto() *ActualLRPCreatedEvent {
+	copysafe := &ActualLRPCreatedEvent{
+		ActualLrpGroup: x.ActualLrpGroup.FromProto(),
+	}
+	return copysafe
+}
+
+func ActualLRPCreatedEventToProtoSlice(values []*ActualLRPCreatedEvent) []*ProtoActualLRPCreatedEvent {
 	result := make([]*ProtoActualLRPCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPCreatedEventFromProtoSlice(values []*ProtoActualLRPCreatedEvent) []*ActualLRPCreatedEvent {
+	result := make([]*ActualLRPCreatedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -130,10 +145,26 @@ func (x *ActualLRPChangedEvent) ToProto() *ProtoActualLRPChangedEvent {
 	return proto
 }
 
-func ActualLRPChangedEventProtoMap(values []*ActualLRPChangedEvent) []*ProtoActualLRPChangedEvent {
+func (x *ProtoActualLRPChangedEvent) FromProto() *ActualLRPChangedEvent {
+	copysafe := &ActualLRPChangedEvent{
+		Before: x.Before.FromProto(),
+		After:  x.After.FromProto(),
+	}
+	return copysafe
+}
+
+func ActualLRPChangedEventToProtoSlice(values []*ActualLRPChangedEvent) []*ProtoActualLRPChangedEvent {
 	result := make([]*ProtoActualLRPChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPChangedEventFromProtoSlice(values []*ProtoActualLRPChangedEvent) []*ActualLRPChangedEvent {
+	result := make([]*ActualLRPChangedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -188,10 +219,25 @@ func (x *ActualLRPRemovedEvent) ToProto() *ProtoActualLRPRemovedEvent {
 	return proto
 }
 
-func ActualLRPRemovedEventProtoMap(values []*ActualLRPRemovedEvent) []*ProtoActualLRPRemovedEvent {
+func (x *ProtoActualLRPRemovedEvent) FromProto() *ActualLRPRemovedEvent {
+	copysafe := &ActualLRPRemovedEvent{
+		ActualLrpGroup: x.ActualLrpGroup.FromProto(),
+	}
+	return copysafe
+}
+
+func ActualLRPRemovedEventToProtoSlice(values []*ActualLRPRemovedEvent) []*ProtoActualLRPRemovedEvent {
 	result := make([]*ProtoActualLRPRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPRemovedEventFromProtoSlice(values []*ProtoActualLRPRemovedEvent) []*ActualLRPRemovedEvent {
+	result := make([]*ActualLRPRemovedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -262,10 +308,26 @@ func (x *ActualLRPInstanceCreatedEvent) ToProto() *ProtoActualLRPInstanceCreated
 	return proto
 }
 
-func ActualLRPInstanceCreatedEventProtoMap(values []*ActualLRPInstanceCreatedEvent) []*ProtoActualLRPInstanceCreatedEvent {
+func (x *ProtoActualLRPInstanceCreatedEvent) FromProto() *ActualLRPInstanceCreatedEvent {
+	copysafe := &ActualLRPInstanceCreatedEvent{
+		ActualLrp: x.ActualLrp.FromProto(),
+		TraceId:   x.TraceId,
+	}
+	return copysafe
+}
+
+func ActualLRPInstanceCreatedEventToProtoSlice(values []*ActualLRPInstanceCreatedEvent) []*ProtoActualLRPInstanceCreatedEvent {
 	result := make([]*ProtoActualLRPInstanceCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPInstanceCreatedEventFromProtoSlice(values []*ProtoActualLRPInstanceCreatedEvent) []*ActualLRPInstanceCreatedEvent {
+	result := make([]*ActualLRPInstanceCreatedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -467,10 +529,34 @@ func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
 	return proto
 }
 
-func ActualLRPInfoProtoMap(values []*ActualLRPInfo) []*ProtoActualLRPInfo {
+func (x *ProtoActualLRPInfo) FromProto() *ActualLRPInfo {
+	copysafe := &ActualLRPInfo{
+		ActualLrpNetInfo: x.ActualLrpNetInfo.FromProto(),
+		CrashCount:       x.CrashCount,
+		CrashReason:      x.CrashReason,
+		State:            x.State,
+		PlacementError:   x.PlacementError,
+		Since:            x.Since,
+		ModificationTag:  x.ModificationTag.FromProto(),
+		Presence:         ActualLRP_Presence(x.Presence),
+		Routable:         x.Routable,
+		AvailabilityZone: x.AvailabilityZone,
+	}
+	return copysafe
+}
+
+func ActualLRPInfoToProtoSlice(values []*ActualLRPInfo) []*ProtoActualLRPInfo {
 	result := make([]*ProtoActualLRPInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPInfoFromProtoSlice(values []*ProtoActualLRPInfo) []*ActualLRPInfo {
+	result := make([]*ActualLRPInfo, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -589,10 +675,29 @@ func (x *ActualLRPInstanceChangedEvent) ToProto() *ProtoActualLRPInstanceChanged
 	return proto
 }
 
-func ActualLRPInstanceChangedEventProtoMap(values []*ActualLRPInstanceChangedEvent) []*ProtoActualLRPInstanceChangedEvent {
+func (x *ProtoActualLRPInstanceChangedEvent) FromProto() *ActualLRPInstanceChangedEvent {
+	copysafe := &ActualLRPInstanceChangedEvent{
+		ActualLrpKey:         x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
+		Before:               x.Before.FromProto(),
+		After:                x.After.FromProto(),
+		TraceId:              x.TraceId,
+	}
+	return copysafe
+}
+
+func ActualLRPInstanceChangedEventToProtoSlice(values []*ActualLRPInstanceChangedEvent) []*ProtoActualLRPInstanceChangedEvent {
 	result := make([]*ProtoActualLRPInstanceChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPInstanceChangedEventFromProtoSlice(values []*ProtoActualLRPInstanceChangedEvent) []*ActualLRPInstanceChangedEvent {
+	result := make([]*ActualLRPInstanceChangedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -663,10 +768,26 @@ func (x *ActualLRPInstanceRemovedEvent) ToProto() *ProtoActualLRPInstanceRemoved
 	return proto
 }
 
-func ActualLRPInstanceRemovedEventProtoMap(values []*ActualLRPInstanceRemovedEvent) []*ProtoActualLRPInstanceRemovedEvent {
+func (x *ProtoActualLRPInstanceRemovedEvent) FromProto() *ActualLRPInstanceRemovedEvent {
+	copysafe := &ActualLRPInstanceRemovedEvent{
+		ActualLrp: x.ActualLrp.FromProto(),
+		TraceId:   x.TraceId,
+	}
+	return copysafe
+}
+
+func ActualLRPInstanceRemovedEventToProtoSlice(values []*ActualLRPInstanceRemovedEvent) []*ProtoActualLRPInstanceRemovedEvent {
 	result := make([]*ProtoActualLRPInstanceRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPInstanceRemovedEventFromProtoSlice(values []*ProtoActualLRPInstanceRemovedEvent) []*ActualLRPInstanceRemovedEvent {
+	result := make([]*ActualLRPInstanceRemovedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -737,10 +858,26 @@ func (x *DesiredLRPCreatedEvent) ToProto() *ProtoDesiredLRPCreatedEvent {
 	return proto
 }
 
-func DesiredLRPCreatedEventProtoMap(values []*DesiredLRPCreatedEvent) []*ProtoDesiredLRPCreatedEvent {
+func (x *ProtoDesiredLRPCreatedEvent) FromProto() *DesiredLRPCreatedEvent {
+	copysafe := &DesiredLRPCreatedEvent{
+		DesiredLrp: x.DesiredLrp.FromProto(),
+		TraceId:    x.TraceId,
+	}
+	return copysafe
+}
+
+func DesiredLRPCreatedEventToProtoSlice(values []*DesiredLRPCreatedEvent) []*ProtoDesiredLRPCreatedEvent {
 	result := make([]*ProtoDesiredLRPCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPCreatedEventFromProtoSlice(values []*ProtoDesiredLRPCreatedEvent) []*DesiredLRPCreatedEvent {
+	result := make([]*DesiredLRPCreatedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -827,10 +964,27 @@ func (x *DesiredLRPChangedEvent) ToProto() *ProtoDesiredLRPChangedEvent {
 	return proto
 }
 
-func DesiredLRPChangedEventProtoMap(values []*DesiredLRPChangedEvent) []*ProtoDesiredLRPChangedEvent {
+func (x *ProtoDesiredLRPChangedEvent) FromProto() *DesiredLRPChangedEvent {
+	copysafe := &DesiredLRPChangedEvent{
+		Before:  x.Before.FromProto(),
+		After:   x.After.FromProto(),
+		TraceId: x.TraceId,
+	}
+	return copysafe
+}
+
+func DesiredLRPChangedEventToProtoSlice(values []*DesiredLRPChangedEvent) []*ProtoDesiredLRPChangedEvent {
 	result := make([]*ProtoDesiredLRPChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPChangedEventFromProtoSlice(values []*ProtoDesiredLRPChangedEvent) []*DesiredLRPChangedEvent {
+	result := make([]*DesiredLRPChangedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -901,10 +1055,26 @@ func (x *DesiredLRPRemovedEvent) ToProto() *ProtoDesiredLRPRemovedEvent {
 	return proto
 }
 
-func DesiredLRPRemovedEventProtoMap(values []*DesiredLRPRemovedEvent) []*ProtoDesiredLRPRemovedEvent {
+func (x *ProtoDesiredLRPRemovedEvent) FromProto() *DesiredLRPRemovedEvent {
+	copysafe := &DesiredLRPRemovedEvent{
+		DesiredLrp: x.DesiredLrp.FromProto(),
+		TraceId:    x.TraceId,
+	}
+	return copysafe
+}
+
+func DesiredLRPRemovedEventToProtoSlice(values []*DesiredLRPRemovedEvent) []*ProtoDesiredLRPRemovedEvent {
 	result := make([]*ProtoDesiredLRPRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPRemovedEventFromProtoSlice(values []*ProtoDesiredLRPRemovedEvent) []*DesiredLRPRemovedEvent {
+	result := make([]*DesiredLRPRemovedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1023,10 +1193,29 @@ func (x *ActualLRPCrashedEvent) ToProto() *ProtoActualLRPCrashedEvent {
 	return proto
 }
 
-func ActualLRPCrashedEventProtoMap(values []*ActualLRPCrashedEvent) []*ProtoActualLRPCrashedEvent {
+func (x *ProtoActualLRPCrashedEvent) FromProto() *ActualLRPCrashedEvent {
+	copysafe := &ActualLRPCrashedEvent{
+		ActualLrpKey:         x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
+		CrashCount:           x.CrashCount,
+		CrashReason:          x.CrashReason,
+		Since:                x.Since,
+	}
+	return copysafe
+}
+
+func ActualLRPCrashedEventToProtoSlice(values []*ActualLRPCrashedEvent) []*ProtoActualLRPCrashedEvent {
 	result := make([]*ProtoActualLRPCrashedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActualLRPCrashedEventFromProtoSlice(values []*ProtoActualLRPCrashedEvent) []*ActualLRPCrashedEvent {
+	result := make([]*ActualLRPCrashedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1081,10 +1270,25 @@ func (x *EventsByCellId) ToProto() *ProtoEventsByCellId {
 	return proto
 }
 
-func EventsByCellIdProtoMap(values []*EventsByCellId) []*ProtoEventsByCellId {
+func (x *ProtoEventsByCellId) FromProto() *EventsByCellId {
+	copysafe := &EventsByCellId{
+		CellId: x.CellId,
+	}
+	return copysafe
+}
+
+func EventsByCellIdToProtoSlice(values []*EventsByCellId) []*ProtoEventsByCellId {
 	result := make([]*ProtoEventsByCellId, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func EventsByCellIdFromProtoSlice(values []*ProtoEventsByCellId) []*EventsByCellId {
+	result := make([]*EventsByCellId, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1139,10 +1343,25 @@ func (x *TaskCreatedEvent) ToProto() *ProtoTaskCreatedEvent {
 	return proto
 }
 
-func TaskCreatedEventProtoMap(values []*TaskCreatedEvent) []*ProtoTaskCreatedEvent {
+func (x *ProtoTaskCreatedEvent) FromProto() *TaskCreatedEvent {
+	copysafe := &TaskCreatedEvent{
+		Task: x.Task.FromProto(),
+	}
+	return copysafe
+}
+
+func TaskCreatedEventToProtoSlice(values []*TaskCreatedEvent) []*ProtoTaskCreatedEvent {
 	result := make([]*ProtoTaskCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskCreatedEventFromProtoSlice(values []*ProtoTaskCreatedEvent) []*TaskCreatedEvent {
+	result := make([]*TaskCreatedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1213,10 +1432,26 @@ func (x *TaskChangedEvent) ToProto() *ProtoTaskChangedEvent {
 	return proto
 }
 
-func TaskChangedEventProtoMap(values []*TaskChangedEvent) []*ProtoTaskChangedEvent {
+func (x *ProtoTaskChangedEvent) FromProto() *TaskChangedEvent {
+	copysafe := &TaskChangedEvent{
+		Before: x.Before.FromProto(),
+		After:  x.After.FromProto(),
+	}
+	return copysafe
+}
+
+func TaskChangedEventToProtoSlice(values []*TaskChangedEvent) []*ProtoTaskChangedEvent {
 	result := make([]*ProtoTaskChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskChangedEventFromProtoSlice(values []*ProtoTaskChangedEvent) []*TaskChangedEvent {
+	result := make([]*TaskChangedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1271,10 +1506,25 @@ func (x *TaskRemovedEvent) ToProto() *ProtoTaskRemovedEvent {
 	return proto
 }
 
-func TaskRemovedEventProtoMap(values []*TaskRemovedEvent) []*ProtoTaskRemovedEvent {
+func (x *ProtoTaskRemovedEvent) FromProto() *TaskRemovedEvent {
+	copysafe := &TaskRemovedEvent{
+		Task: x.Task.FromProto(),
+	}
+	return copysafe
+}
+
+func TaskRemovedEventToProtoSlice(values []*TaskRemovedEvent) []*ProtoTaskRemovedEvent {
 	result := make([]*ProtoTaskRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskRemovedEventFromProtoSlice(values []*ProtoTaskRemovedEvent) []*TaskRemovedEvent {
+	result := make([]*TaskRemovedEvent, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

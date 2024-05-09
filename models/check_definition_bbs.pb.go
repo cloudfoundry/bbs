@@ -91,17 +91,34 @@ func (m *CheckDefinition) SetReadinessChecks(value []*Check) {
 }
 func (x *CheckDefinition) ToProto() *ProtoCheckDefinition {
 	proto := &ProtoCheckDefinition{
-		Checks:          CheckProtoMap(x.Checks),
+		Checks:          CheckToProtoSlice(x.Checks),
 		LogSource:       x.LogSource,
-		ReadinessChecks: CheckProtoMap(x.ReadinessChecks),
+		ReadinessChecks: CheckToProtoSlice(x.ReadinessChecks),
 	}
 	return proto
 }
 
-func CheckDefinitionProtoMap(values []*CheckDefinition) []*ProtoCheckDefinition {
+func (x *ProtoCheckDefinition) FromProto() *CheckDefinition {
+	copysafe := &CheckDefinition{
+		Checks:          CheckFromProtoSlice(x.Checks),
+		LogSource:       x.LogSource,
+		ReadinessChecks: CheckFromProtoSlice(x.ReadinessChecks),
+	}
+	return copysafe
+}
+
+func CheckDefinitionToProtoSlice(values []*CheckDefinition) []*ProtoCheckDefinition {
 	result := make([]*ProtoCheckDefinition, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CheckDefinitionFromProtoSlice(values []*ProtoCheckDefinition) []*CheckDefinition {
+	result := make([]*CheckDefinition, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -172,10 +189,26 @@ func (x *Check) ToProto() *ProtoCheck {
 	return proto
 }
 
-func CheckProtoMap(values []*Check) []*ProtoCheck {
+func (x *ProtoCheck) FromProto() *Check {
+	copysafe := &Check{
+		TcpCheck:  x.TcpCheck.FromProto(),
+		HttpCheck: x.HttpCheck.FromProto(),
+	}
+	return copysafe
+}
+
+func CheckToProtoSlice(values []*Check) []*ProtoCheck {
 	result := make([]*ProtoCheck, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CheckFromProtoSlice(values []*ProtoCheck) []*Check {
+	result := make([]*Check, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -262,10 +295,27 @@ func (x *TCPCheck) ToProto() *ProtoTCPCheck {
 	return proto
 }
 
-func TCPCheckProtoMap(values []*TCPCheck) []*ProtoTCPCheck {
+func (x *ProtoTCPCheck) FromProto() *TCPCheck {
+	copysafe := &TCPCheck{
+		Port:             x.Port,
+		ConnectTimeoutMs: x.ConnectTimeoutMs,
+		IntervalMs:       x.IntervalMs,
+	}
+	return copysafe
+}
+
+func TCPCheckToProtoSlice(values []*TCPCheck) []*ProtoTCPCheck {
 	result := make([]*ProtoTCPCheck, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TCPCheckFromProtoSlice(values []*ProtoTCPCheck) []*TCPCheck {
+	result := make([]*TCPCheck, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -368,10 +418,28 @@ func (x *HTTPCheck) ToProto() *ProtoHTTPCheck {
 	return proto
 }
 
-func HTTPCheckProtoMap(values []*HTTPCheck) []*ProtoHTTPCheck {
+func (x *ProtoHTTPCheck) FromProto() *HTTPCheck {
+	copysafe := &HTTPCheck{
+		Port:             x.Port,
+		RequestTimeoutMs: x.RequestTimeoutMs,
+		Path:             x.Path,
+		IntervalMs:       x.IntervalMs,
+	}
+	return copysafe
+}
+
+func HTTPCheckToProtoSlice(values []*HTTPCheck) []*ProtoHTTPCheck {
 	result := make([]*ProtoHTTPCheck, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func HTTPCheckFromProtoSlice(values []*ProtoHTTPCheck) []*HTTPCheck {
+	result := make([]*HTTPCheck, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

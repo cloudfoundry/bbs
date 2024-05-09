@@ -72,10 +72,26 @@ func (x *ModificationTag) ToProto() *ProtoModificationTag {
 	return proto
 }
 
-func ModificationTagProtoMap(values []*ModificationTag) []*ProtoModificationTag {
+func (x *ProtoModificationTag) FromProto() *ModificationTag {
+	copysafe := &ModificationTag{
+		Epoch: x.Epoch,
+		Index: x.Index,
+	}
+	return copysafe
+}
+
+func ModificationTagToProtoSlice(values []*ModificationTag) []*ProtoModificationTag {
 	result := make([]*ProtoModificationTag, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ModificationTagFromProtoSlice(values []*ProtoModificationTag) []*ModificationTag {
+	result := make([]*ModificationTag, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

@@ -88,10 +88,27 @@ func (x *Sidecar) ToProto() *ProtoSidecar {
 	return proto
 }
 
-func SidecarProtoMap(values []*Sidecar) []*ProtoSidecar {
+func (x *ProtoSidecar) FromProto() *Sidecar {
+	copysafe := &Sidecar{
+		Action:   x.Action.FromProto(),
+		DiskMb:   x.DiskMb,
+		MemoryMb: x.MemoryMb,
+	}
+	return copysafe
+}
+
+func SidecarToProtoSlice(values []*Sidecar) []*ProtoSidecar {
 	result := make([]*ProtoSidecar, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func SidecarFromProtoSlice(values []*ProtoSidecar) []*Sidecar {
+	result := make([]*Sidecar, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

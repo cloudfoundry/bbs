@@ -56,10 +56,25 @@ func (x *PingResponse) ToProto() *ProtoPingResponse {
 	return proto
 }
 
-func PingResponseProtoMap(values []*PingResponse) []*ProtoPingResponse {
+func (x *ProtoPingResponse) FromProto() *PingResponse {
+	copysafe := &PingResponse{
+		Available: x.Available,
+	}
+	return copysafe
+}
+
+func PingResponseToProtoSlice(values []*PingResponse) []*ProtoPingResponse {
 	result := make([]*ProtoPingResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func PingResponseFromProtoSlice(values []*ProtoPingResponse) []*PingResponse {
+	result := make([]*PingResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

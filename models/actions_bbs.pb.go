@@ -184,10 +184,33 @@ func (x *Action) ToProto() *ProtoAction {
 	return proto
 }
 
-func ActionProtoMap(values []*Action) []*ProtoAction {
+func (x *ProtoAction) FromProto() *Action {
+	copysafe := &Action{
+		DownloadAction:     x.DownloadAction.FromProto(),
+		UploadAction:       x.UploadAction.FromProto(),
+		RunAction:          x.RunAction.FromProto(),
+		TimeoutAction:      x.TimeoutAction.FromProto(),
+		EmitProgressAction: x.EmitProgressAction.FromProto(),
+		TryAction:          x.TryAction.FromProto(),
+		ParallelAction:     x.ParallelAction.FromProto(),
+		SerialAction:       x.SerialAction.FromProto(),
+		CodependentAction:  x.CodependentAction.FromProto(),
+	}
+	return copysafe
+}
+
+func ActionToProtoSlice(values []*Action) []*ProtoAction {
 	result := make([]*ProtoAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ActionFromProtoSlice(values []*ProtoAction) []*Action {
+	result := make([]*Action, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -354,10 +377,32 @@ func (x *DownloadAction) ToProto() *ProtoDownloadAction {
 	return proto
 }
 
-func DownloadActionProtoMap(values []*DownloadAction) []*ProtoDownloadAction {
+func (x *ProtoDownloadAction) FromProto() *DownloadAction {
+	copysafe := &DownloadAction{
+		Artifact:          x.Artifact,
+		From:              x.From,
+		To:                x.To,
+		CacheKey:          x.CacheKey,
+		LogSource:         x.LogSource,
+		User:              x.User,
+		ChecksumAlgorithm: x.ChecksumAlgorithm,
+		ChecksumValue:     x.ChecksumValue,
+	}
+	return copysafe
+}
+
+func DownloadActionToProtoSlice(values []*DownloadAction) []*ProtoDownloadAction {
 	result := make([]*ProtoDownloadAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DownloadActionFromProtoSlice(values []*ProtoDownloadAction) []*DownloadAction {
+	result := make([]*DownloadAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -476,10 +521,29 @@ func (x *UploadAction) ToProto() *ProtoUploadAction {
 	return proto
 }
 
-func UploadActionProtoMap(values []*UploadAction) []*ProtoUploadAction {
+func (x *ProtoUploadAction) FromProto() *UploadAction {
+	copysafe := &UploadAction{
+		Artifact:  x.Artifact,
+		From:      x.From,
+		To:        x.To,
+		LogSource: x.LogSource,
+		User:      x.User,
+	}
+	return copysafe
+}
+
+func UploadActionToProtoSlice(values []*UploadAction) []*ProtoUploadAction {
 	result := make([]*ProtoUploadAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func UploadActionFromProtoSlice(values []*ProtoUploadAction) []*UploadAction {
+	result := make([]*UploadAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -647,7 +711,7 @@ func (x *RunAction) ToProto() *ProtoRunAction {
 		Path:              x.Path,
 		Args:              x.Args,
 		Dir:               x.Dir,
-		Env:               EnvironmentVariableProtoMap(x.Env),
+		Env:               EnvironmentVariableToProtoSlice(x.Env),
 		ResourceLimits:    x.ResourceLimits.ToProto(),
 		User:              x.User,
 		LogSource:         x.LogSource,
@@ -656,10 +720,32 @@ func (x *RunAction) ToProto() *ProtoRunAction {
 	return proto
 }
 
-func RunActionProtoMap(values []*RunAction) []*ProtoRunAction {
+func (x *ProtoRunAction) FromProto() *RunAction {
+	copysafe := &RunAction{
+		Path:              x.Path,
+		Args:              x.Args,
+		Dir:               x.Dir,
+		Env:               EnvironmentVariableFromProtoSlice(x.Env),
+		ResourceLimits:    x.ResourceLimits.FromProto(),
+		User:              x.User,
+		LogSource:         x.LogSource,
+		SuppressLogOutput: x.SuppressLogOutput,
+	}
+	return copysafe
+}
+
+func RunActionToProtoSlice(values []*RunAction) []*ProtoRunAction {
 	result := make([]*ProtoRunAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func RunActionFromProtoSlice(values []*ProtoRunAction) []*RunAction {
+	result := make([]*RunAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -764,10 +850,28 @@ func (x *TimeoutAction) ToProto() *ProtoTimeoutAction {
 	return proto
 }
 
-func TimeoutActionProtoMap(values []*TimeoutAction) []*ProtoTimeoutAction {
+func (x *ProtoTimeoutAction) FromProto() *TimeoutAction {
+	copysafe := &TimeoutAction{
+		Action:              x.Action.FromProto(),
+		DeprecatedTimeoutNs: x.DeprecatedTimeoutNs,
+		LogSource:           x.LogSource,
+		TimeoutMs:           x.TimeoutMs,
+	}
+	return copysafe
+}
+
+func TimeoutActionToProtoSlice(values []*TimeoutAction) []*ProtoTimeoutAction {
 	result := make([]*ProtoTimeoutAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TimeoutActionFromProtoSlice(values []*ProtoTimeoutAction) []*TimeoutAction {
+	result := make([]*TimeoutAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -886,10 +990,29 @@ func (x *EmitProgressAction) ToProto() *ProtoEmitProgressAction {
 	return proto
 }
 
-func EmitProgressActionProtoMap(values []*EmitProgressAction) []*ProtoEmitProgressAction {
+func (x *ProtoEmitProgressAction) FromProto() *EmitProgressAction {
+	copysafe := &EmitProgressAction{
+		Action:               x.Action.FromProto(),
+		StartMessage:         x.StartMessage,
+		SuccessMessage:       x.SuccessMessage,
+		FailureMessagePrefix: x.FailureMessagePrefix,
+		LogSource:            x.LogSource,
+	}
+	return copysafe
+}
+
+func EmitProgressActionToProtoSlice(values []*EmitProgressAction) []*ProtoEmitProgressAction {
 	result := make([]*ProtoEmitProgressAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func EmitProgressActionFromProtoSlice(values []*ProtoEmitProgressAction) []*EmitProgressAction {
+	result := make([]*EmitProgressAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -960,10 +1083,26 @@ func (x *TryAction) ToProto() *ProtoTryAction {
 	return proto
 }
 
-func TryActionProtoMap(values []*TryAction) []*ProtoTryAction {
+func (x *ProtoTryAction) FromProto() *TryAction {
+	copysafe := &TryAction{
+		Action:    x.Action.FromProto(),
+		LogSource: x.LogSource,
+	}
+	return copysafe
+}
+
+func TryActionToProtoSlice(values []*TryAction) []*ProtoTryAction {
 	result := make([]*ProtoTryAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TryActionFromProtoSlice(values []*ProtoTryAction) []*TryAction {
+	result := make([]*TryAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1033,16 +1172,32 @@ func (m *ParallelAction) SetLogSource(value string) {
 }
 func (x *ParallelAction) ToProto() *ProtoParallelAction {
 	proto := &ProtoParallelAction{
-		Actions:   ActionProtoMap(x.Actions),
+		Actions:   ActionToProtoSlice(x.Actions),
 		LogSource: x.LogSource,
 	}
 	return proto
 }
 
-func ParallelActionProtoMap(values []*ParallelAction) []*ProtoParallelAction {
+func (x *ProtoParallelAction) FromProto() *ParallelAction {
+	copysafe := &ParallelAction{
+		Actions:   ActionFromProtoSlice(x.Actions),
+		LogSource: x.LogSource,
+	}
+	return copysafe
+}
+
+func ParallelActionToProtoSlice(values []*ParallelAction) []*ProtoParallelAction {
 	result := make([]*ProtoParallelAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ParallelActionFromProtoSlice(values []*ProtoParallelAction) []*ParallelAction {
+	result := make([]*ParallelAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1112,16 +1267,32 @@ func (m *SerialAction) SetLogSource(value string) {
 }
 func (x *SerialAction) ToProto() *ProtoSerialAction {
 	proto := &ProtoSerialAction{
-		Actions:   ActionProtoMap(x.Actions),
+		Actions:   ActionToProtoSlice(x.Actions),
 		LogSource: x.LogSource,
 	}
 	return proto
 }
 
-func SerialActionProtoMap(values []*SerialAction) []*ProtoSerialAction {
+func (x *ProtoSerialAction) FromProto() *SerialAction {
+	copysafe := &SerialAction{
+		Actions:   ActionFromProtoSlice(x.Actions),
+		LogSource: x.LogSource,
+	}
+	return copysafe
+}
+
+func SerialActionToProtoSlice(values []*SerialAction) []*ProtoSerialAction {
 	result := make([]*ProtoSerialAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func SerialActionFromProtoSlice(values []*ProtoSerialAction) []*SerialAction {
+	result := make([]*SerialAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1191,16 +1362,32 @@ func (m *CodependentAction) SetLogSource(value string) {
 }
 func (x *CodependentAction) ToProto() *ProtoCodependentAction {
 	proto := &ProtoCodependentAction{
-		Actions:   ActionProtoMap(x.Actions),
+		Actions:   ActionToProtoSlice(x.Actions),
 		LogSource: x.LogSource,
 	}
 	return proto
 }
 
-func CodependentActionProtoMap(values []*CodependentAction) []*ProtoCodependentAction {
+func (x *ProtoCodependentAction) FromProto() *CodependentAction {
+	copysafe := &CodependentAction{
+		Actions:   ActionFromProtoSlice(x.Actions),
+		LogSource: x.LogSource,
+	}
+	return copysafe
+}
+
+func CodependentActionToProtoSlice(values []*CodependentAction) []*ProtoCodependentAction {
 	result := make([]*ProtoCodependentAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CodependentActionFromProtoSlice(values []*ProtoCodependentAction) []*CodependentAction {
+	result := make([]*CodependentAction, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1279,10 +1466,26 @@ func (x *ResourceLimits) ToProto() *ProtoResourceLimits {
 	return proto
 }
 
-func ResourceLimitsProtoMap(values []*ResourceLimits) []*ProtoResourceLimits {
+func (x *ProtoResourceLimits) FromProto() *ResourceLimits {
+	copysafe := &ResourceLimits{
+		Nofile: x.Nofile,
+		Nproc:  x.Nproc,
+	}
+	return copysafe
+}
+
+func ResourceLimitsToProtoSlice(values []*ResourceLimits) []*ProtoResourceLimits {
 	result := make([]*ProtoResourceLimits, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ResourceLimitsFromProtoSlice(values []*ProtoResourceLimits) []*ResourceLimits {
+	result := make([]*ResourceLimits, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

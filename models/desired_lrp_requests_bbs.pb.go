@@ -56,10 +56,25 @@ func (x *DesiredLRPLifecycleResponse) ToProto() *ProtoDesiredLRPLifecycleRespons
 	return proto
 }
 
-func DesiredLRPLifecycleResponseProtoMap(values []*DesiredLRPLifecycleResponse) []*ProtoDesiredLRPLifecycleResponse {
+func (x *ProtoDesiredLRPLifecycleResponse) FromProto() *DesiredLRPLifecycleResponse {
+	copysafe := &DesiredLRPLifecycleResponse{
+		Error: x.Error.FromProto(),
+	}
+	return copysafe
+}
+
+func DesiredLRPLifecycleResponseToProtoSlice(values []*DesiredLRPLifecycleResponse) []*ProtoDesiredLRPLifecycleResponse {
 	result := make([]*ProtoDesiredLRPLifecycleResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPLifecycleResponseFromProtoSlice(values []*ProtoDesiredLRPLifecycleResponse) []*DesiredLRPLifecycleResponse {
+	result := make([]*DesiredLRPLifecycleResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -130,15 +145,31 @@ func (m *DesiredLRPsResponse) SetDesiredLrps(value []*DesiredLRP) {
 func (x *DesiredLRPsResponse) ToProto() *ProtoDesiredLRPsResponse {
 	proto := &ProtoDesiredLRPsResponse{
 		Error:       x.Error.ToProto(),
-		DesiredLrps: DesiredLRPProtoMap(x.DesiredLrps),
+		DesiredLrps: DesiredLRPToProtoSlice(x.DesiredLrps),
 	}
 	return proto
 }
 
-func DesiredLRPsResponseProtoMap(values []*DesiredLRPsResponse) []*ProtoDesiredLRPsResponse {
+func (x *ProtoDesiredLRPsResponse) FromProto() *DesiredLRPsResponse {
+	copysafe := &DesiredLRPsResponse{
+		Error:       x.Error.FromProto(),
+		DesiredLrps: DesiredLRPFromProtoSlice(x.DesiredLrps),
+	}
+	return copysafe
+}
+
+func DesiredLRPsResponseToProtoSlice(values []*DesiredLRPsResponse) []*ProtoDesiredLRPsResponse {
 	result := make([]*ProtoDesiredLRPsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPsResponseFromProtoSlice(values []*ProtoDesiredLRPsResponse) []*DesiredLRPsResponse {
+	result := make([]*DesiredLRPsResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -214,10 +245,26 @@ func (x *DesiredLRPsRequest) ToProto() *ProtoDesiredLRPsRequest {
 	return proto
 }
 
-func DesiredLRPsRequestProtoMap(values []*DesiredLRPsRequest) []*ProtoDesiredLRPsRequest {
+func (x *ProtoDesiredLRPsRequest) FromProto() *DesiredLRPsRequest {
+	copysafe := &DesiredLRPsRequest{
+		Domain:       x.Domain,
+		ProcessGuids: x.ProcessGuids,
+	}
+	return copysafe
+}
+
+func DesiredLRPsRequestToProtoSlice(values []*DesiredLRPsRequest) []*ProtoDesiredLRPsRequest {
 	result := make([]*ProtoDesiredLRPsRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPsRequestFromProtoSlice(values []*ProtoDesiredLRPsRequest) []*DesiredLRPsRequest {
+	result := make([]*DesiredLRPsRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -288,10 +335,26 @@ func (x *DesiredLRPResponse) ToProto() *ProtoDesiredLRPResponse {
 	return proto
 }
 
-func DesiredLRPResponseProtoMap(values []*DesiredLRPResponse) []*ProtoDesiredLRPResponse {
+func (x *ProtoDesiredLRPResponse) FromProto() *DesiredLRPResponse {
+	copysafe := &DesiredLRPResponse{
+		Error:      x.Error.FromProto(),
+		DesiredLrp: x.DesiredLrp.FromProto(),
+	}
+	return copysafe
+}
+
+func DesiredLRPResponseToProtoSlice(values []*DesiredLRPResponse) []*ProtoDesiredLRPResponse {
 	result := make([]*ProtoDesiredLRPResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPResponseFromProtoSlice(values []*ProtoDesiredLRPResponse) []*DesiredLRPResponse {
+	result := make([]*DesiredLRPResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -362,15 +425,31 @@ func (m *DesiredLRPSchedulingInfosResponse) SetDesiredLrpSchedulingInfos(value [
 func (x *DesiredLRPSchedulingInfosResponse) ToProto() *ProtoDesiredLRPSchedulingInfosResponse {
 	proto := &ProtoDesiredLRPSchedulingInfosResponse{
 		Error:                     x.Error.ToProto(),
-		DesiredLrpSchedulingInfos: DesiredLRPSchedulingInfoProtoMap(x.DesiredLrpSchedulingInfos),
+		DesiredLrpSchedulingInfos: DesiredLRPSchedulingInfoToProtoSlice(x.DesiredLrpSchedulingInfos),
 	}
 	return proto
 }
 
-func DesiredLRPSchedulingInfosResponseProtoMap(values []*DesiredLRPSchedulingInfosResponse) []*ProtoDesiredLRPSchedulingInfosResponse {
+func (x *ProtoDesiredLRPSchedulingInfosResponse) FromProto() *DesiredLRPSchedulingInfosResponse {
+	copysafe := &DesiredLRPSchedulingInfosResponse{
+		Error:                     x.Error.FromProto(),
+		DesiredLrpSchedulingInfos: DesiredLRPSchedulingInfoFromProtoSlice(x.DesiredLrpSchedulingInfos),
+	}
+	return copysafe
+}
+
+func DesiredLRPSchedulingInfosResponseToProtoSlice(values []*DesiredLRPSchedulingInfosResponse) []*ProtoDesiredLRPSchedulingInfosResponse {
 	result := make([]*ProtoDesiredLRPSchedulingInfosResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPSchedulingInfosResponseFromProtoSlice(values []*ProtoDesiredLRPSchedulingInfosResponse) []*DesiredLRPSchedulingInfosResponse {
+	result := make([]*DesiredLRPSchedulingInfosResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -441,10 +520,26 @@ func (x *DesiredLRPSchedulingInfoByProcessGuidResponse) ToProto() *ProtoDesiredL
 	return proto
 }
 
-func DesiredLRPSchedulingInfoByProcessGuidResponseProtoMap(values []*DesiredLRPSchedulingInfoByProcessGuidResponse) []*ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
+func (x *ProtoDesiredLRPSchedulingInfoByProcessGuidResponse) FromProto() *DesiredLRPSchedulingInfoByProcessGuidResponse {
+	copysafe := &DesiredLRPSchedulingInfoByProcessGuidResponse{
+		Error:                    x.Error.FromProto(),
+		DesiredLrpSchedulingInfo: x.DesiredLrpSchedulingInfo.FromProto(),
+	}
+	return copysafe
+}
+
+func DesiredLRPSchedulingInfoByProcessGuidResponseToProtoSlice(values []*DesiredLRPSchedulingInfoByProcessGuidResponse) []*ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
 	result := make([]*ProtoDesiredLRPSchedulingInfoByProcessGuidResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPSchedulingInfoByProcessGuidResponseFromProtoSlice(values []*ProtoDesiredLRPSchedulingInfoByProcessGuidResponse) []*DesiredLRPSchedulingInfoByProcessGuidResponse {
+	result := make([]*DesiredLRPSchedulingInfoByProcessGuidResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -499,10 +594,25 @@ func (x *DesiredLRPByProcessGuidRequest) ToProto() *ProtoDesiredLRPByProcessGuid
 	return proto
 }
 
-func DesiredLRPByProcessGuidRequestProtoMap(values []*DesiredLRPByProcessGuidRequest) []*ProtoDesiredLRPByProcessGuidRequest {
+func (x *ProtoDesiredLRPByProcessGuidRequest) FromProto() *DesiredLRPByProcessGuidRequest {
+	copysafe := &DesiredLRPByProcessGuidRequest{
+		ProcessGuid: x.ProcessGuid,
+	}
+	return copysafe
+}
+
+func DesiredLRPByProcessGuidRequestToProtoSlice(values []*DesiredLRPByProcessGuidRequest) []*ProtoDesiredLRPByProcessGuidRequest {
 	result := make([]*ProtoDesiredLRPByProcessGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesiredLRPByProcessGuidRequestFromProtoSlice(values []*ProtoDesiredLRPByProcessGuidRequest) []*DesiredLRPByProcessGuidRequest {
+	result := make([]*DesiredLRPByProcessGuidRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -557,10 +667,25 @@ func (x *DesireLRPRequest) ToProto() *ProtoDesireLRPRequest {
 	return proto
 }
 
-func DesireLRPRequestProtoMap(values []*DesireLRPRequest) []*ProtoDesireLRPRequest {
+func (x *ProtoDesireLRPRequest) FromProto() *DesireLRPRequest {
+	copysafe := &DesireLRPRequest{
+		DesiredLrp: x.DesiredLrp.FromProto(),
+	}
+	return copysafe
+}
+
+func DesireLRPRequestToProtoSlice(values []*DesireLRPRequest) []*ProtoDesireLRPRequest {
 	result := make([]*ProtoDesireLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesireLRPRequestFromProtoSlice(values []*ProtoDesireLRPRequest) []*DesireLRPRequest {
+	result := make([]*DesireLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -631,10 +756,26 @@ func (x *UpdateDesiredLRPRequest) ToProto() *ProtoUpdateDesiredLRPRequest {
 	return proto
 }
 
-func UpdateDesiredLRPRequestProtoMap(values []*UpdateDesiredLRPRequest) []*ProtoUpdateDesiredLRPRequest {
+func (x *ProtoUpdateDesiredLRPRequest) FromProto() *UpdateDesiredLRPRequest {
+	copysafe := &UpdateDesiredLRPRequest{
+		ProcessGuid: x.ProcessGuid,
+		Update:      x.Update.FromProto(),
+	}
+	return copysafe
+}
+
+func UpdateDesiredLRPRequestToProtoSlice(values []*UpdateDesiredLRPRequest) []*ProtoUpdateDesiredLRPRequest {
 	result := make([]*ProtoUpdateDesiredLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func UpdateDesiredLRPRequestFromProtoSlice(values []*ProtoUpdateDesiredLRPRequest) []*UpdateDesiredLRPRequest {
+	result := make([]*UpdateDesiredLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -689,10 +830,25 @@ func (x *RemoveDesiredLRPRequest) ToProto() *ProtoRemoveDesiredLRPRequest {
 	return proto
 }
 
-func RemoveDesiredLRPRequestProtoMap(values []*RemoveDesiredLRPRequest) []*ProtoRemoveDesiredLRPRequest {
+func (x *ProtoRemoveDesiredLRPRequest) FromProto() *RemoveDesiredLRPRequest {
+	copysafe := &RemoveDesiredLRPRequest{
+		ProcessGuid: x.ProcessGuid,
+	}
+	return copysafe
+}
+
+func RemoveDesiredLRPRequestToProtoSlice(values []*RemoveDesiredLRPRequest) []*ProtoRemoveDesiredLRPRequest {
 	result := make([]*ProtoRemoveDesiredLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func RemoveDesiredLRPRequestFromProtoSlice(values []*ProtoRemoveDesiredLRPRequest) []*RemoveDesiredLRPRequest {
+	result := make([]*RemoveDesiredLRPRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

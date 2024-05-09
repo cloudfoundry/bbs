@@ -77,10 +77,26 @@ func (x *DomainsResponse) ToProto() *ProtoDomainsResponse {
 	return proto
 }
 
-func DomainsResponseProtoMap(values []*DomainsResponse) []*ProtoDomainsResponse {
+func (x *ProtoDomainsResponse) FromProto() *DomainsResponse {
+	copysafe := &DomainsResponse{
+		Error:   x.Error.FromProto(),
+		Domains: x.Domains,
+	}
+	return copysafe
+}
+
+func DomainsResponseToProtoSlice(values []*DomainsResponse) []*ProtoDomainsResponse {
 	result := make([]*ProtoDomainsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DomainsResponseFromProtoSlice(values []*ProtoDomainsResponse) []*DomainsResponse {
+	result := make([]*DomainsResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -135,10 +151,25 @@ func (x *UpsertDomainResponse) ToProto() *ProtoUpsertDomainResponse {
 	return proto
 }
 
-func UpsertDomainResponseProtoMap(values []*UpsertDomainResponse) []*ProtoUpsertDomainResponse {
+func (x *ProtoUpsertDomainResponse) FromProto() *UpsertDomainResponse {
+	copysafe := &UpsertDomainResponse{
+		Error: x.Error.FromProto(),
+	}
+	return copysafe
+}
+
+func UpsertDomainResponseToProtoSlice(values []*UpsertDomainResponse) []*ProtoUpsertDomainResponse {
 	result := make([]*ProtoUpsertDomainResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func UpsertDomainResponseFromProtoSlice(values []*ProtoUpsertDomainResponse) []*UpsertDomainResponse {
+	result := make([]*UpsertDomainResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -209,10 +240,26 @@ func (x *UpsertDomainRequest) ToProto() *ProtoUpsertDomainRequest {
 	return proto
 }
 
-func UpsertDomainRequestProtoMap(values []*UpsertDomainRequest) []*ProtoUpsertDomainRequest {
+func (x *ProtoUpsertDomainRequest) FromProto() *UpsertDomainRequest {
+	copysafe := &UpsertDomainRequest{
+		Domain: x.Domain,
+		Ttl:    x.Ttl,
+	}
+	return copysafe
+}
+
+func UpsertDomainRequestToProtoSlice(values []*UpsertDomainRequest) []*ProtoUpsertDomainRequest {
 	result := make([]*ProtoUpsertDomainRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func UpsertDomainRequestFromProtoSlice(values []*ProtoUpsertDomainRequest) []*UpsertDomainRequest {
+	result := make([]*UpsertDomainRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

@@ -172,10 +172,26 @@ func (x *Error) ToProto() *ProtoError {
 	return proto
 }
 
-func ErrorProtoMap(values []*Error) []*ProtoError {
+func (x *ProtoError) FromProto() *Error {
+	copysafe := &Error{
+		Type:    Error_Type(x.Type),
+		Message: x.Message,
+	}
+	return copysafe
+}
+
+func ErrorToProtoSlice(values []*Error) []*ProtoError {
 	result := make([]*ProtoError, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ErrorFromProtoSlice(values []*ProtoError) []*Error {
+	result := make([]*Error, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

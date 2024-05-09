@@ -152,10 +152,31 @@ func (x *CachedDependency) ToProto() *ProtoCachedDependency {
 	return proto
 }
 
-func CachedDependencyProtoMap(values []*CachedDependency) []*ProtoCachedDependency {
+func (x *ProtoCachedDependency) FromProto() *CachedDependency {
+	copysafe := &CachedDependency{
+		Name:              x.Name,
+		From:              x.From,
+		To:                x.To,
+		CacheKey:          x.CacheKey,
+		LogSource:         x.LogSource,
+		ChecksumAlgorithm: x.ChecksumAlgorithm,
+		ChecksumValue:     x.ChecksumValue,
+	}
+	return copysafe
+}
+
+func CachedDependencyToProtoSlice(values []*CachedDependency) []*ProtoCachedDependency {
 	result := make([]*ProtoCachedDependency, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CachedDependencyFromProtoSlice(values []*ProtoCachedDependency) []*CachedDependency {
+	result := make([]*CachedDependency, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
