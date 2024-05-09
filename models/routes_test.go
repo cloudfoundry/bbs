@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -26,9 +26,11 @@ var _ = Describe("Routes", func() {
 			err = json.Unmarshal(b, &aJson)
 			Expect(err).NotTo(HaveOccurred())
 
-			b, err = proto.Marshal(&update)
+			protoUpdate := update.ToProto()
+			b, err = proto.Marshal(protoUpdate)
 			Expect(err).NotTo(HaveOccurred())
-			err = proto.Unmarshal(b, &aProto)
+			protoA := aProto.ToProto()
+			err = proto.Unmarshal(b, protoA)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
