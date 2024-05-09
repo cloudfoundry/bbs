@@ -106,10 +106,26 @@ func (x *MetricTagValue) ToProto() *ProtoMetricTagValue {
 	return proto
 }
 
-func MetricTagValueProtoMap(values []*MetricTagValue) []*ProtoMetricTagValue {
+func (x *ProtoMetricTagValue) FromProto() *MetricTagValue {
+	copysafe := &MetricTagValue{
+		Static:  x.Static,
+		Dynamic: MetricTagValue_DynamicValue(x.Dynamic),
+	}
+	return copysafe
+}
+
+func MetricTagValueToProtoSlice(values []*MetricTagValue) []*ProtoMetricTagValue {
 	result := make([]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func MetricTagValueFromProtoSlice(values []*ProtoMetricTagValue) []*MetricTagValue {
+	result := make([]*MetricTagValue, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

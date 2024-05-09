@@ -72,10 +72,26 @@ func (x *PortRange) ToProto() *ProtoPortRange {
 	return proto
 }
 
-func PortRangeProtoMap(values []*PortRange) []*ProtoPortRange {
+func (x *ProtoPortRange) FromProto() *PortRange {
+	copysafe := &PortRange{
+		Start: x.Start,
+		End:   x.End,
+	}
+	return copysafe
+}
+
+func PortRangeToProtoSlice(values []*PortRange) []*ProtoPortRange {
 	result := make([]*ProtoPortRange, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func PortRangeFromProtoSlice(values []*ProtoPortRange) []*PortRange {
+	result := make([]*PortRange, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -146,10 +162,26 @@ func (x *ICMPInfo) ToProto() *ProtoICMPInfo {
 	return proto
 }
 
-func ICMPInfoProtoMap(values []*ICMPInfo) []*ProtoICMPInfo {
+func (x *ProtoICMPInfo) FromProto() *ICMPInfo {
+	copysafe := &ICMPInfo{
+		Type: x.Type,
+		Code: x.Code,
+	}
+	return copysafe
+}
+
+func ICMPInfoToProtoSlice(values []*ICMPInfo) []*ProtoICMPInfo {
 	result := make([]*ProtoICMPInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ICMPInfoFromProtoSlice(values []*ProtoICMPInfo) []*ICMPInfo {
+	result := make([]*ICMPInfo, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -315,10 +347,31 @@ func (x *SecurityGroupRule) ToProto() *ProtoSecurityGroupRule {
 	return proto
 }
 
-func SecurityGroupRuleProtoMap(values []*SecurityGroupRule) []*ProtoSecurityGroupRule {
+func (x *ProtoSecurityGroupRule) FromProto() *SecurityGroupRule {
+	copysafe := &SecurityGroupRule{
+		Protocol:     x.Protocol,
+		Destinations: x.Destinations,
+		Ports:        x.Ports,
+		PortRange:    x.PortRange.FromProto(),
+		IcmpInfo:     x.IcmpInfo.FromProto(),
+		Log:          x.Log,
+		Annotations:  x.Annotations,
+	}
+	return copysafe
+}
+
+func SecurityGroupRuleToProtoSlice(values []*SecurityGroupRule) []*ProtoSecurityGroupRule {
 	result := make([]*ProtoSecurityGroupRule, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func SecurityGroupRuleFromProtoSlice(values []*ProtoSecurityGroupRule) []*SecurityGroupRule {
+	result := make([]*SecurityGroupRule, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

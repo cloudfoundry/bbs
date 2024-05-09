@@ -249,10 +249,31 @@ func (x *ImageLayer) ToProto() *ProtoImageLayer {
 	return proto
 }
 
-func ImageLayerProtoMap(values []*ImageLayer) []*ProtoImageLayer {
+func (x *ProtoImageLayer) FromProto() *ImageLayer {
+	copysafe := &ImageLayer{
+		Name:            x.Name,
+		Url:             x.Url,
+		DestinationPath: x.DestinationPath,
+		LayerType:       ImageLayer_Type(x.LayerType),
+		MediaType:       ImageLayer_MediaType(x.MediaType),
+		DigestAlgorithm: ImageLayer_DigestAlgorithm(x.DigestAlgorithm),
+		DigestValue:     x.DigestValue,
+	}
+	return copysafe
+}
+
+func ImageLayerToProtoSlice(values []*ImageLayer) []*ProtoImageLayer {
 	result := make([]*ProtoImageLayer, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func ImageLayerFromProtoSlice(values []*ProtoImageLayer) []*ImageLayer {
+	result := make([]*ImageLayer, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

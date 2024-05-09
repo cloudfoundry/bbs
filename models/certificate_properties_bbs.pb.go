@@ -61,10 +61,25 @@ func (x *CertificateProperties) ToProto() *ProtoCertificateProperties {
 	return proto
 }
 
-func CertificatePropertiesProtoMap(values []*CertificateProperties) []*ProtoCertificateProperties {
+func (x *ProtoCertificateProperties) FromProto() *CertificateProperties {
+	copysafe := &CertificateProperties{
+		OrganizationalUnit: x.OrganizationalUnit,
+	}
+	return copysafe
+}
+
+func CertificatePropertiesToProtoSlice(values []*CertificateProperties) []*ProtoCertificateProperties {
 	result := make([]*ProtoCertificateProperties, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CertificatePropertiesFromProtoSlice(values []*ProtoCertificateProperties) []*CertificateProperties {
+	result := make([]*CertificateProperties, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

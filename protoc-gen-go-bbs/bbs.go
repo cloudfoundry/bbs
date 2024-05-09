@@ -16,7 +16,9 @@ import (
 type bbsGenerateHelperInterface interface {
 	genCopysafeStruct(g *protogen.GeneratedFile, msg *protogen.Message)
 	genToProtoMethod(g *protogen.GeneratedFile, msg *protogen.Message)
-	genProtoMapMethod(g *protogen.GeneratedFile, msg *protogen.Message)
+	genFromProtoMethod(g *protogen.GeneratedFile, msg *protogen.Message)
+	genToProtoSliceMethod(g *protogen.GeneratedFile, msg *protogen.Message)
+	genFromProtoSliceMethod(g *protogen.GeneratedFile, msg *protogen.Message)
 	genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message)
 	genAccessors(g *protogen.GeneratedFile, msg *protogen.Message)
 	genEqual(g *protogen.GeneratedFile, msg *protogen.Message)
@@ -368,11 +370,11 @@ func (bbsGenerateHelper) genToProtoMethod(g *protogen.GeneratedFile, msg *protog
 				fieldCopysafeName = getFieldName(fieldCopysafeName)
 				if field.Desc.Cardinality() == protoreflect.Repeated {
 					if field.Desc.IsList() {
-						g.P(protoFieldName, ": ", fieldCopysafeName, "ProtoMap(x.", getFieldName(protoFieldName), "),")
+						g.P(protoFieldName, ": ", fieldCopysafeName, "ToProtoSlice(x.", getFieldName(protoFieldName), "),")
 					} else if field.Desc.IsMap() {
 						mapValueKind := field.Desc.MapValue().Kind()
 						if mapValueKind == protoreflect.MessageKind {
-							g.P(protoFieldName, ": ", copysafeName, getFieldName(protoFieldName), "ProtoMap(x.", protoFieldName, "),")
+							g.P(protoFieldName, ": ", copysafeName, getFieldName(protoFieldName), "ToProtoMap(x.", protoFieldName, "),")
 						} else {
 							g.P(protoFieldName, ": ", "x.", protoFieldName, ",")
 						}
@@ -400,10 +402,54 @@ func (bbsGenerateHelper) genToProtoMethod(g *protogen.GeneratedFile, msg *protog
 	}
 }
 
-func (bbsGenerateHelper) genProtoMapMethod(g *protogen.GeneratedFile, msg *protogen.Message) {
+func (bbsGenerateHelper) genFromProtoMethod(g *protogen.GeneratedFile, msg *protogen.Message) {
 	unsafeName := getUnsafeName(g, msg.GoIdent)
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
-		g.P("func ", copysafeName, "ProtoMap(values []*", copysafeName, ") []*", unsafeName, " {")
+		g.P("func(x *", unsafeName, ") FromProto() *", copysafeName, " {")
+		g.P("copysafe := &", copysafeName, "{")
+		for _, field := range msg.Fields {
+			protoFieldName := field.GoName
+			if field.Message != nil {
+				fieldCopysafeName, _ := getCopysafeName(g, field.Message.GoIdent)
+				fieldCopysafeName = getFieldName(fieldCopysafeName)
+				if field.Desc.Cardinality() == protoreflect.Repeated {
+					if field.Desc.IsList() {
+						g.P(protoFieldName, ": ", fieldCopysafeName, "FromProtoSlice(x.", getFieldName(protoFieldName), "),")
+					} else if field.Desc.IsMap() {
+						mapValueKind := field.Desc.MapValue().Kind()
+						if mapValueKind == protoreflect.MessageKind {
+							g.P(protoFieldName, ": ", copysafeName, getFieldName(protoFieldName), "FromProtoMap(x.", protoFieldName, "),")
+						} else {
+							g.P(protoFieldName, ": ", "x.", protoFieldName, ",")
+						}
+					} else {
+						panic("Unrecognized Repeated field found")
+					}
+				} else {
+					g.P(protoFieldName, ": x.", getFieldName(protoFieldName), ".FromProto(),")
+				}
+			} else if field.Enum != nil {
+				g.P(protoFieldName, ": ", getActualType(g, field), "(x.", protoFieldName, "),")
+			} else {
+				// we weren't using oneof correctly, so we're not going to support it
+				// if field.Oneof != nil {
+				// 	g.P(protoFieldName, ": &x.", protoFieldName, ",")
+				// } else {
+				g.P(protoFieldName, ": x.", protoFieldName, ",")
+				// }
+			}
+		}
+		g.P("}")
+		g.P("return copysafe")
+		g.P("}")
+		g.P()
+	}
+}
+
+func (bbsGenerateHelper) genToProtoSliceMethod(g *protogen.GeneratedFile, msg *protogen.Message) {
+	unsafeName := getUnsafeName(g, msg.GoIdent)
+	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
+		g.P("func ", copysafeName, "ToProtoSlice(values []*", copysafeName, ") []*", unsafeName, " {")
 		g.P("result := make([]*", unsafeName, ", len(values))")
 		g.P("for i, val := range values {")
 		g.P("result[i] = val.ToProto()")
@@ -426,10 +472,50 @@ func (bbsGenerateHelper) genProtoMapMethod(g *protogen.GeneratedFile, msg *proto
 					protoMapValueType := "*" + protoValueFieldType
 					protoFieldType := "map[" + mapKeyType + "]" + protoMapValueType
 
-					g.P("func ", copysafeName, getFieldName(field.GoName), "ProtoMap(values ", fieldType, ") ", protoFieldType, " {")
+					g.P("func ", copysafeName, getFieldName(field.GoName), "ToProtoMap(values ", fieldType, ") ", protoFieldType, " {")
 					g.P("result := make(map[", mapKeyType, "]*", protoValueFieldType, ", len(values))")
 					g.P("for i, val := range values {")
 					g.P("result[i] = val.ToProto()")
+					g.P("}")
+					g.P("return result")
+					g.P("}")
+					g.P()
+				}
+			}
+		}
+	}
+}
+
+func (bbsGenerateHelper) genFromProtoSliceMethod(g *protogen.GeneratedFile, msg *protogen.Message) {
+	unsafeName := getUnsafeName(g, msg.GoIdent)
+	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
+		g.P("func ", copysafeName, "FromProtoSlice(values []*", unsafeName, ") []*", copysafeName, " {")
+		g.P("result := make([]*", copysafeName, ", len(values))")
+		g.P("for i, val := range values {")
+		g.P("result[i] = val.FromProto()")
+		g.P("}")
+		g.P("return result")
+		g.P("}")
+		g.P()
+
+		for _, field := range msg.Fields {
+			if field.Desc.IsMap() {
+				mapValueKind := field.Desc.MapValue().Kind()
+				if mapValueKind == protoreflect.MessageKind {
+					valueField := field.Desc.MapValue().Message().FullName()
+					rawGoIdent := strings.Split(string(valueField), ".")
+					protoValueFieldType := rawGoIdent[1]
+					valueFieldType, _ := strings.CutPrefix(protoValueFieldType, *prefix)
+					mapValueType := "*" + valueFieldType
+					mapKeyType := field.Desc.MapKey().Kind().String()
+					fieldType := "map[" + mapKeyType + "]" + mapValueType
+					protoMapValueType := "*" + protoValueFieldType
+					protoFieldType := "map[" + mapKeyType + "]" + protoMapValueType
+
+					g.P("func ", copysafeName, getFieldName(field.GoName), "FromProtoMap(values ", protoFieldType, ") ", fieldType, " {")
+					g.P("result := make(map[", mapKeyType, "]*", valueFieldType, ", len(values))")
+					g.P("for i, val := range values {")
+					g.P("result[i] = val.FromProto()")
 					g.P("}")
 					g.P("return result")
 					g.P("}")
@@ -487,6 +573,8 @@ func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 		helper.genFriendlyEnums(g, msg)
 		helper.genCopysafeStruct(g, msg)
 		helper.genToProtoMethod(g, msg)
-		helper.genProtoMapMethod(g, msg)
+		helper.genFromProtoMethod(g, msg)
+		helper.genToProtoSliceMethod(g, msg)
+		helper.genFromProtoSliceMethod(g, msg)
 	}
 }

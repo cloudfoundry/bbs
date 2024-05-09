@@ -56,10 +56,25 @@ func (x *TaskLifecycleResponse) ToProto() *ProtoTaskLifecycleResponse {
 	return proto
 }
 
-func TaskLifecycleResponseProtoMap(values []*TaskLifecycleResponse) []*ProtoTaskLifecycleResponse {
+func (x *ProtoTaskLifecycleResponse) FromProto() *TaskLifecycleResponse {
+	copysafe := &TaskLifecycleResponse{
+		Error: x.Error.FromProto(),
+	}
+	return copysafe
+}
+
+func TaskLifecycleResponseToProtoSlice(values []*TaskLifecycleResponse) []*ProtoTaskLifecycleResponse {
 	result := make([]*ProtoTaskLifecycleResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskLifecycleResponseFromProtoSlice(values []*ProtoTaskLifecycleResponse) []*TaskLifecycleResponse {
+	result := make([]*TaskLifecycleResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -146,10 +161,27 @@ func (x *DesireTaskRequest) ToProto() *ProtoDesireTaskRequest {
 	return proto
 }
 
-func DesireTaskRequestProtoMap(values []*DesireTaskRequest) []*ProtoDesireTaskRequest {
+func (x *ProtoDesireTaskRequest) FromProto() *DesireTaskRequest {
+	copysafe := &DesireTaskRequest{
+		TaskDefinition: x.TaskDefinition.FromProto(),
+		TaskGuid:       x.TaskGuid,
+		Domain:         x.Domain,
+	}
+	return copysafe
+}
+
+func DesireTaskRequestToProtoSlice(values []*DesireTaskRequest) []*ProtoDesireTaskRequest {
 	result := make([]*ProtoDesireTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func DesireTaskRequestFromProtoSlice(values []*ProtoDesireTaskRequest) []*DesireTaskRequest {
+	result := make([]*DesireTaskRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -220,10 +252,26 @@ func (x *StartTaskRequest) ToProto() *ProtoStartTaskRequest {
 	return proto
 }
 
-func StartTaskRequestProtoMap(values []*StartTaskRequest) []*ProtoStartTaskRequest {
+func (x *ProtoStartTaskRequest) FromProto() *StartTaskRequest {
+	copysafe := &StartTaskRequest{
+		TaskGuid: x.TaskGuid,
+		CellId:   x.CellId,
+	}
+	return copysafe
+}
+
+func StartTaskRequestToProtoSlice(values []*StartTaskRequest) []*ProtoStartTaskRequest {
 	result := make([]*ProtoStartTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func StartTaskRequestFromProtoSlice(values []*ProtoStartTaskRequest) []*StartTaskRequest {
+	result := make([]*StartTaskRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -294,10 +342,26 @@ func (x *StartTaskResponse) ToProto() *ProtoStartTaskResponse {
 	return proto
 }
 
-func StartTaskResponseProtoMap(values []*StartTaskResponse) []*ProtoStartTaskResponse {
+func (x *ProtoStartTaskResponse) FromProto() *StartTaskResponse {
+	copysafe := &StartTaskResponse{
+		Error:       x.Error.FromProto(),
+		ShouldStart: x.ShouldStart,
+	}
+	return copysafe
+}
+
+func StartTaskResponseToProtoSlice(values []*StartTaskResponse) []*ProtoStartTaskResponse {
 	result := make([]*ProtoStartTaskResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func StartTaskResponseFromProtoSlice(values []*ProtoStartTaskResponse) []*StartTaskResponse {
+	result := make([]*StartTaskResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -368,10 +432,26 @@ func (x *FailTaskRequest) ToProto() *ProtoFailTaskRequest {
 	return proto
 }
 
-func FailTaskRequestProtoMap(values []*FailTaskRequest) []*ProtoFailTaskRequest {
+func (x *ProtoFailTaskRequest) FromProto() *FailTaskRequest {
+	copysafe := &FailTaskRequest{
+		TaskGuid:      x.TaskGuid,
+		FailureReason: x.FailureReason,
+	}
+	return copysafe
+}
+
+func FailTaskRequestToProtoSlice(values []*FailTaskRequest) []*ProtoFailTaskRequest {
 	result := make([]*ProtoFailTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func FailTaskRequestFromProtoSlice(values []*ProtoFailTaskRequest) []*FailTaskRequest {
+	result := make([]*FailTaskRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -442,10 +522,26 @@ func (x *RejectTaskRequest) ToProto() *ProtoRejectTaskRequest {
 	return proto
 }
 
-func RejectTaskRequestProtoMap(values []*RejectTaskRequest) []*ProtoRejectTaskRequest {
+func (x *ProtoRejectTaskRequest) FromProto() *RejectTaskRequest {
+	copysafe := &RejectTaskRequest{
+		TaskGuid:        x.TaskGuid,
+		RejectionReason: x.RejectionReason,
+	}
+	return copysafe
+}
+
+func RejectTaskRequestToProtoSlice(values []*RejectTaskRequest) []*ProtoRejectTaskRequest {
 	result := make([]*ProtoRejectTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func RejectTaskRequestFromProtoSlice(values []*ProtoRejectTaskRequest) []*RejectTaskRequest {
+	result := make([]*RejectTaskRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -500,10 +596,25 @@ func (x *TaskGuidRequest) ToProto() *ProtoTaskGuidRequest {
 	return proto
 }
 
-func TaskGuidRequestProtoMap(values []*TaskGuidRequest) []*ProtoTaskGuidRequest {
+func (x *ProtoTaskGuidRequest) FromProto() *TaskGuidRequest {
+	copysafe := &TaskGuidRequest{
+		TaskGuid: x.TaskGuid,
+	}
+	return copysafe
+}
+
+func TaskGuidRequestToProtoSlice(values []*TaskGuidRequest) []*ProtoTaskGuidRequest {
 	result := make([]*ProtoTaskGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskGuidRequestFromProtoSlice(values []*ProtoTaskGuidRequest) []*TaskGuidRequest {
+	result := make([]*TaskGuidRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -622,10 +733,29 @@ func (x *CompleteTaskRequest) ToProto() *ProtoCompleteTaskRequest {
 	return proto
 }
 
-func CompleteTaskRequestProtoMap(values []*CompleteTaskRequest) []*ProtoCompleteTaskRequest {
+func (x *ProtoCompleteTaskRequest) FromProto() *CompleteTaskRequest {
+	copysafe := &CompleteTaskRequest{
+		TaskGuid:      x.TaskGuid,
+		CellId:        x.CellId,
+		Failed:        x.Failed,
+		FailureReason: x.FailureReason,
+		Result:        x.Result,
+	}
+	return copysafe
+}
+
+func CompleteTaskRequestToProtoSlice(values []*CompleteTaskRequest) []*ProtoCompleteTaskRequest {
 	result := make([]*ProtoCompleteTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func CompleteTaskRequestFromProtoSlice(values []*ProtoCompleteTaskRequest) []*CompleteTaskRequest {
+	result := make([]*CompleteTaskRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -760,10 +890,30 @@ func (x *TaskCallbackResponse) ToProto() *ProtoTaskCallbackResponse {
 	return proto
 }
 
-func TaskCallbackResponseProtoMap(values []*TaskCallbackResponse) []*ProtoTaskCallbackResponse {
+func (x *ProtoTaskCallbackResponse) FromProto() *TaskCallbackResponse {
+	copysafe := &TaskCallbackResponse{
+		TaskGuid:      x.TaskGuid,
+		Failed:        x.Failed,
+		FailureReason: x.FailureReason,
+		Result:        x.Result,
+		Annotation:    x.Annotation,
+		CreatedAt:     x.CreatedAt,
+	}
+	return copysafe
+}
+
+func TaskCallbackResponseToProtoSlice(values []*TaskCallbackResponse) []*ProtoTaskCallbackResponse {
 	result := make([]*ProtoTaskCallbackResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskCallbackResponseFromProtoSlice(values []*ProtoTaskCallbackResponse) []*TaskCallbackResponse {
+	result := make([]*TaskCallbackResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -834,10 +984,26 @@ func (x *TasksRequest) ToProto() *ProtoTasksRequest {
 	return proto
 }
 
-func TasksRequestProtoMap(values []*TasksRequest) []*ProtoTasksRequest {
+func (x *ProtoTasksRequest) FromProto() *TasksRequest {
+	copysafe := &TasksRequest{
+		Domain: x.Domain,
+		CellId: x.CellId,
+	}
+	return copysafe
+}
+
+func TasksRequestToProtoSlice(values []*TasksRequest) []*ProtoTasksRequest {
 	result := make([]*ProtoTasksRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TasksRequestFromProtoSlice(values []*ProtoTasksRequest) []*TasksRequest {
+	result := make([]*TasksRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -908,15 +1074,31 @@ func (m *TasksResponse) SetTasks(value []*Task) {
 func (x *TasksResponse) ToProto() *ProtoTasksResponse {
 	proto := &ProtoTasksResponse{
 		Error: x.Error.ToProto(),
-		Tasks: TaskProtoMap(x.Tasks),
+		Tasks: TaskToProtoSlice(x.Tasks),
 	}
 	return proto
 }
 
-func TasksResponseProtoMap(values []*TasksResponse) []*ProtoTasksResponse {
+func (x *ProtoTasksResponse) FromProto() *TasksResponse {
+	copysafe := &TasksResponse{
+		Error: x.Error.FromProto(),
+		Tasks: TaskFromProtoSlice(x.Tasks),
+	}
+	return copysafe
+}
+
+func TasksResponseToProtoSlice(values []*TasksResponse) []*ProtoTasksResponse {
 	result := make([]*ProtoTasksResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TasksResponseFromProtoSlice(values []*ProtoTasksResponse) []*TasksResponse {
+	result := make([]*TasksResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -971,10 +1153,25 @@ func (x *TaskByGuidRequest) ToProto() *ProtoTaskByGuidRequest {
 	return proto
 }
 
-func TaskByGuidRequestProtoMap(values []*TaskByGuidRequest) []*ProtoTaskByGuidRequest {
+func (x *ProtoTaskByGuidRequest) FromProto() *TaskByGuidRequest {
+	copysafe := &TaskByGuidRequest{
+		TaskGuid: x.TaskGuid,
+	}
+	return copysafe
+}
+
+func TaskByGuidRequestToProtoSlice(values []*TaskByGuidRequest) []*ProtoTaskByGuidRequest {
 	result := make([]*ProtoTaskByGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskByGuidRequestFromProtoSlice(values []*ProtoTaskByGuidRequest) []*TaskByGuidRequest {
+	result := make([]*TaskByGuidRequest, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
@@ -1045,10 +1242,26 @@ func (x *TaskResponse) ToProto() *ProtoTaskResponse {
 	return proto
 }
 
-func TaskResponseProtoMap(values []*TaskResponse) []*ProtoTaskResponse {
+func (x *ProtoTaskResponse) FromProto() *TaskResponse {
+	copysafe := &TaskResponse{
+		Error: x.Error.FromProto(),
+		Task:  x.Task.FromProto(),
+	}
+	return copysafe
+}
+
+func TaskResponseToProtoSlice(values []*TaskResponse) []*ProtoTaskResponse {
 	result := make([]*ProtoTaskResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func TaskResponseFromProtoSlice(values []*ProtoTaskResponse) []*TaskResponse {
+	result := make([]*TaskResponse, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

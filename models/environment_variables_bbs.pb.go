@@ -72,10 +72,26 @@ func (x *EnvironmentVariable) ToProto() *ProtoEnvironmentVariable {
 	return proto
 }
 
-func EnvironmentVariableProtoMap(values []*EnvironmentVariable) []*ProtoEnvironmentVariable {
+func (x *ProtoEnvironmentVariable) FromProto() *EnvironmentVariable {
+	copysafe := &EnvironmentVariable{
+		Name:  x.Name,
+		Value: x.Value,
+	}
+	return copysafe
+}
+
+func EnvironmentVariableToProtoSlice(values []*EnvironmentVariable) []*ProtoEnvironmentVariable {
 	result := make([]*ProtoEnvironmentVariable, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func EnvironmentVariableFromProtoSlice(values []*ProtoEnvironmentVariable) []*EnvironmentVariable {
+	result := make([]*EnvironmentVariable, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }

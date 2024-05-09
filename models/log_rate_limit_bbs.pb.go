@@ -56,10 +56,25 @@ func (x *LogRateLimit) ToProto() *ProtoLogRateLimit {
 	return proto
 }
 
-func LogRateLimitProtoMap(values []*LogRateLimit) []*ProtoLogRateLimit {
+func (x *ProtoLogRateLimit) FromProto() *LogRateLimit {
+	copysafe := &LogRateLimit{
+		BytesPerSecond: x.BytesPerSecond,
+	}
+	return copysafe
+}
+
+func LogRateLimitToProtoSlice(values []*LogRateLimit) []*ProtoLogRateLimit {
 	result := make([]*ProtoLogRateLimit, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
+	}
+	return result
+}
+
+func LogRateLimitFromProtoSlice(values []*ProtoLogRateLimit) []*LogRateLimit {
+	result := make([]*LogRateLimit, len(values))
+	for i, val := range values {
+		result[i] = val.FromProto()
 	}
 	return result
 }
