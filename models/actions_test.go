@@ -293,8 +293,8 @@ var _ = Describe("Actions", func() {
 			nproc  uint64 = 20
 		)
 		resourceLimits := &models.ResourceLimits{}
-		resourceLimits.SetNofile(nofile)
-		resourceLimits.SetNproc(nproc)
+		resourceLimits.SetNofile(&nofile)
+		resourceLimits.SetNproc(&nproc)
 		itSerializesAndDeserializes(
 			`{
 					"user": "me",
@@ -359,7 +359,7 @@ var _ = Describe("Actions", func() {
 		var nofile uint64 = 10
 
 		resourceLimits := &models.ResourceLimits{}
-		resourceLimits.SetNofile(nofile)
+		resourceLimits.SetNofile(&nofile)
 
 		itSerializesAndDeserializes(
 			`{

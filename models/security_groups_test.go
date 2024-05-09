@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("SecurityGroupRule", func() {
@@ -393,14 +393,14 @@ var _ = Describe("SecurityGroupRule", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 
-			protoSerialization, err := proto.Marshal(&securityGroup)
+			protoSerialization, err := proto.Marshal(securityGroup.ToProto())
 			Expect(err).NotTo(HaveOccurred())
 
-			var protoDeserialization models.SecurityGroupRule
+			var protoDeserialization models.ProtoSecurityGroupRule
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(protoDeserialization).To(Equal(securityGroup))
+			Expect(protoDeserialization.FromProto()).To(Equal(securityGroup))
 		})
 
 		Context("when annotations are empty", func() {

@@ -8,9 +8,9 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	. "code.cloudfoundry.org/bbs/test_helpers"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Task", func() {
@@ -123,14 +123,14 @@ var _ = Describe("Task", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(taskPayload))
 
-			protoSerialization, err := proto.Marshal(&task)
+			protoSerialization, err := proto.Marshal(task.ToProto())
 			Expect(err).NotTo(HaveOccurred())
 
-			var protoDeserialization models.Task
+			var protoDeserialization models.ProtoTask
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(protoDeserialization).To(Equal(task))
+			Expect(protoDeserialization.FromProto()).To(Equal(task))
 		})
 	})
 
@@ -435,7 +435,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "", MediaType: models.MediaTypeTgz}, // invalid destination path
+							{Url: "some-url", DestinationPath: "", MediaType: models.ImageLayer_MediaTypeTgz}, // invalid destination path
 						},
 					},
 				},
@@ -454,7 +454,7 @@ var _ = Describe("Task", func() {
 						ImageUsername: "jake",
 						ImagePassword: "pass",
 						ImageLayers: []*models.ImageLayer{
-							{Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}, // exclusive layers require legacy_download_user to be set
+							{Url: "some-url", DestinationPath: "/tmp", MediaType: models.ImageLayer_MediaTypeTgz, LayerType: models.ImageLayer_LayerTypeExclusive}, // exclusive layers require legacy_download_user to be set
 						},
 					},
 				},
@@ -476,42 +476,42 @@ var _ = Describe("Task", func() {
 		Context("V3->V2", func() {
 			Context("when there are no image layers", func() {
 				BeforeEach(func() {
-					task.ImageLayers = nil
+					task.TaskDefinition.ImageLayers = nil
 				})
 
 				It("does not add any cached dependencies to the TaskDefinition", func() {
 					convertedTask := task.VersionDownTo(format.V2)
-					Expect(convertedTask.CachedDependencies).To(BeEmpty())
+					Expect(convertedTask.TaskDefinition.CachedDependencies).To(BeEmpty())
 				})
 
 				It("does not add any Download Actions", func() {
 					convertedTask := task.VersionDownTo(format.V2)
-					Expect(convertedTask.Action).To(Equal(task.Action))
+					Expect(convertedTask.TaskDefinition.Action).To(Equal(task.TaskDefinition.Action))
 				})
 			})
 
 			Context("when there are shared image layers", func() {
 				BeforeEach(func() {
-					task.ImageLayers = []*models.ImageLayer{
+					task.TaskDefinition.ImageLayers = []*models.ImageLayer{
 						{
 							Name:            "dep0",
 							Url:             "u0",
 							DestinationPath: "/tmp/0",
-							LayerType:       models.LayerTypeShared,
-							MediaType:       models.MediaTypeTgz,
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							LayerType:       models.ImageLayer_LayerTypeShared,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
-							LayerType:       models.LayerTypeShared,
-							MediaType:       models.MediaTypeTgz,
+							LayerType:       models.ImageLayer_LayerTypeShared,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
 						},
 					}
 
-					task.CachedDependencies = []*models.CachedDependency{
+					task.TaskDefinition.CachedDependencies = []*models.CachedDependency{
 						{
 							Name:      "dep2",
 							From:      "u2",
@@ -524,7 +524,7 @@ var _ = Describe("Task", func() {
 
 				It("converts them to cached dependencies and prepends them to the list", func() {
 					convertedTask := task.VersionDownTo(format.V2)
-					Expect(convertedTask.CachedDependencies).To(DeepEqual([]*models.CachedDependency{
+					Expect(convertedTask.TaskDefinition.CachedDependencies).To(DeepEqual([]*models.CachedDependency{
 						{
 							Name:              "dep0",
 							From:              "u0",
@@ -553,7 +553,7 @@ var _ = Describe("Task", func() {
 
 				It("sets removes the existing image layers", func() {
 					convertedTask := task.VersionDownTo(format.V2)
-					Expect(convertedTask.ImageLayers).To(BeNil())
+					Expect(convertedTask.TaskDefinition.ImageLayers).To(BeNil())
 				})
 			})
 
@@ -563,28 +563,28 @@ var _ = Describe("Task", func() {
 				)
 
 				BeforeEach(func() {
-					task.ImageLayers = []*models.ImageLayer{
+					task.TaskDefinition.ImageLayers = []*models.ImageLayer{
 						{
 							Name:            "dep0",
 							Url:             "u0",
 							DestinationPath: "/tmp/0",
-							LayerType:       models.LayerTypeExclusive,
-							MediaType:       models.MediaTypeTgz,
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							LayerType:       models.ImageLayer_LayerTypeExclusive,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
-							LayerType:       models.LayerTypeExclusive,
-							MediaType:       models.MediaTypeTgz,
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							LayerType:       models.ImageLayer_LayerTypeExclusive,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "some-other-sha",
 						},
 					}
-					task.LegacyDownloadUser = "the user"
-					task.Action = models.WrapAction(models.Timeout(
+					task.TaskDefinition.LegacyDownloadUser = "the user"
+					task.TaskDefinition.Action = models.WrapAction(models.Timeout(
 						&models.RunAction{
 							Path: "/the/path",
 							User: "the user",
@@ -617,26 +617,26 @@ var _ = Describe("Task", func() {
 				It("converts them to download actions with the correct user and prepends them to the action", func() {
 					convertedTask := task.VersionDownTo(format.V2)
 
-					Expect(convertedTask.Action.GetValue()).To(DeepEqual(
+					Expect(convertedTask.TaskDefinition.Action.GetValue()).To(DeepEqual(
 						models.Serial(
 							models.Parallel(&downloadAction1, &downloadAction2),
-							task.Action.GetValue().(models.ActionInterface),
+							task.TaskDefinition.Action.GetValue().(models.ActionInterface),
 						)))
 				})
 
 				It("sets removes the existing image layers", func() {
 					convertedTask := task.VersionDownTo(format.V2)
-					Expect(convertedTask.ImageLayers).To(BeNil())
+					Expect(convertedTask.TaskDefinition.ImageLayers).To(BeNil())
 				})
 
 				Context("when there is no existing action", func() {
 					BeforeEach(func() {
-						task.Action = nil
+						task.TaskDefinition.Action = nil
 					})
 
 					It("creates an action with exclusive layers converted to download actions", func() {
 						convertedLRP := task.VersionDownTo(format.V2)
-						Expect(convertedLRP.Action.GetValue()).To(DeepEqual(
+						Expect(convertedLRP.TaskDefinition.Action.GetValue()).To(DeepEqual(
 							models.Parallel(&downloadAction1, &downloadAction2),
 						))
 					})
