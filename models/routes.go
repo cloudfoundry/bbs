@@ -19,6 +19,16 @@ func (r *Routes) ToProto() *ProtoRoutes {
 	return pr
 }
 
+func (pr *ProtoRoutes) FromProto() *Routes {
+	r := Routes{}
+
+	for k, v := range pr.Routes {
+		*r[k] = v
+	}
+
+	return &r
+}
+
 // func (r *Routes) Marshal() ([]byte, error) {
 // 	return r.protoRoutes().Marshal()
 // }
