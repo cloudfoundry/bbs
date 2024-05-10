@@ -2,11 +2,13 @@ package models
 
 import (
 	"code.cloudfoundry.org/bbs/format"
+	"google.golang.org/protobuf/proto"
 )
 
 type Event interface {
 	EventType() string
 	Key() string
+	ToEventProto() proto.Message
 }
 
 const (
@@ -81,6 +83,10 @@ func (event *DesiredLRPCreatedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
 }
 
+func (event *DesiredLRPCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewDesiredLRPChangedEvent(before, after *DesiredLRP, traceId string) *DesiredLRPChangedEvent {
 	return &DesiredLRPChangedEvent{
 		Before:  before,
@@ -97,6 +103,10 @@ func (event *DesiredLRPChangedEvent) Key() string {
 	return event.Before.GetProcessGuid()
 }
 
+func (event *DesiredLRPChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewDesiredLRPRemovedEvent(desiredLRP *DesiredLRP, traceId string) *DesiredLRPRemovedEvent {
 	return &DesiredLRPRemovedEvent{
 		DesiredLrp: desiredLRP,
@@ -110,6 +120,10 @@ func (event *DesiredLRPRemovedEvent) EventType() string {
 
 func (event DesiredLRPRemovedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
+}
+
+func (event *DesiredLRPRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 // FIXME: change the signature
@@ -150,6 +164,10 @@ func (event *ActualLRPInstanceChangedEvent) Key() string {
 	return event.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
+func (event *ActualLRPInstanceChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 // Deprecated: use the ActualLRPInstance versions of this instead
 func NewActualLRPChangedEvent(before, after *ActualLRPGroup) *ActualLRPChangedEvent {
 	return &ActualLRPChangedEvent{
@@ -172,6 +190,11 @@ func (event *ActualLRPChangedEvent) Key() string {
 	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
+// Deprecated: use the ActualLRPInstance versions of this instead
+func (event *ActualLRPChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
 	return &ActualLRPCrashedEvent{
 		ActualLrpKey:         after.ActualLrpKey,
@@ -188,6 +211,10 @@ func (event *ActualLRPCrashedEvent) EventType() string {
 
 func (event *ActualLRPCrashedEvent) Key() string {
 	return event.ActualLrpInstanceKey.InstanceGuid
+}
+
+func (event *ActualLRPCrashedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -211,6 +238,11 @@ func (event *ActualLRPRemovedEvent) Key() string {
 	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
+// Deprecated: use the ActualLRPInstance versions of this instead
+func (event *ActualLRPRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewActualLRPInstanceRemovedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceRemovedEvent {
 	return &ActualLRPInstanceRemovedEvent{
 		ActualLrp: actualLrp,
@@ -227,6 +259,10 @@ func (event *ActualLRPInstanceRemovedEvent) Key() string {
 		return ""
 	}
 	return event.ActualLrp.GetActualLrpInstanceKey().GetInstanceGuid()
+}
+
+func (event *ActualLRPInstanceRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -250,6 +286,10 @@ func (event *ActualLRPCreatedEvent) Key() string {
 	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
 }
 
+func (event *ActualLRPCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewActualLRPInstanceCreatedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceCreatedEvent {
 	return &ActualLRPInstanceCreatedEvent{
 		ActualLrp: actualLrp,
@@ -266,6 +306,10 @@ func (event *ActualLRPInstanceCreatedEvent) Key() string {
 		return ""
 	}
 	return event.ActualLrp.GetActualLrpInstanceKey().GetInstanceGuid()
+}
+
+func (event *ActualLRPInstanceCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 func (request *EventsByCellId) Validate() error {
@@ -286,6 +330,10 @@ func (event *TaskCreatedEvent) Key() string {
 	return event.Task.GetTaskGuid()
 }
 
+func (event *TaskCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewTaskChangedEvent(before, after *Task) *TaskChangedEvent {
 	return &TaskChangedEvent{
 		Before: before,
@@ -301,6 +349,10 @@ func (event *TaskChangedEvent) Key() string {
 	return event.Before.GetTaskGuid()
 }
 
+func (event *TaskChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewTaskRemovedEvent(task *Task) *TaskRemovedEvent {
 	return &TaskRemovedEvent{
 		Task: task,
@@ -313,4 +365,8 @@ func (event *TaskRemovedEvent) EventType() string {
 
 func (event TaskRemovedEvent) Key() string {
 	return event.Task.GetTaskGuid()
+}
+
+func (event *TaskRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
