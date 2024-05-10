@@ -34,14 +34,10 @@ func PreloadedRootFS(stack string) string {
 
 func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
-	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = runInfo.EnvironmentVariables[i]
-	}
+	copy(runInfo.EnvironmentVariables, environmentVariables)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
-	for i := range runInfo.EgressRules {
-		egressRules[i] = runInfo.EgressRules[i]
-	}
+	copy(runInfo.EgressRules, egressRules)
 
 	desiredLrpKey := schedInfo.GetDesiredLrpKey()
 	desiredLrpResource := schedInfo.GetDesiredLrpResource()
@@ -88,14 +84,10 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 
 func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
-	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = runInfo.EnvironmentVariables[i]
-	}
+	copy(runInfo.EnvironmentVariables, environmentVariables)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
-	for i := range runInfo.EgressRules {
-		egressRules[i] = runInfo.EgressRules[i]
-	}
+	copy(runInfo.EgressRules, egressRules)
 
 	desiredLRP.EnvironmentVariables = environmentVariables
 	desiredLRP.CachedDependencies = runInfo.CachedDependencies
@@ -265,14 +257,10 @@ func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	environmentVariables := make([]*EnvironmentVariable, len(d.EnvironmentVariables))
-	for i := range d.EnvironmentVariables {
-		environmentVariables[i] = d.EnvironmentVariables[i]
-	}
+	copy(d.EnvironmentVariables, environmentVariables)
 
 	egressRules := make([]*SecurityGroupRule, len(d.EgressRules))
-	for i := range d.EgressRules {
-		egressRules[i] = d.EgressRules[i]
-	}
+	copy(d.EgressRules, egressRules)
 
 	return NewDesiredLRPRunInfo(
 		d.DesiredLRPKey(),
