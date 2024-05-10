@@ -18,9 +18,9 @@ import (
 	cfhttp "code.cloudfoundry.org/cfhttp/v2"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/tlsconfig"
-	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
 	"github.com/vito/go-sse/sse"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -327,7 +327,7 @@ type client struct {
 
 func (c *client) Ping(logger lager.Logger, traceID string) bool {
 	response := models.PingResponse{}
-	err := c.doRequest(logger, traceID, PingRoute_r0, nil, nil, nil, &response)
+	err := c.doRequest(logger, traceID, PingRoute_r0, nil, nil, nil, response.ToProto())
 	if err != nil {
 		return false
 	}
@@ -336,7 +336,7 @@ func (c *client) Ping(logger lager.Logger, traceID string) bool {
 
 func (c *client) Domains(logger lager.Logger, traceID string) ([]string, error) {
 	response := models.DomainsResponse{}
-	err := c.doRequest(logger, traceID, DomainsRoute_r0, nil, nil, nil, &response)
+	err := c.doRequest(logger, traceID, DomainsRoute_r0, nil, nil, nil, response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +349,7 @@ func (c *client) UpsertDomain(logger lager.Logger, traceID string, domain string
 		Ttl:    uint32(ttl.Seconds()),
 	}
 	response := models.UpsertDomainResponse{}
-	err := c.doRequest(logger, traceID, UpsertDomainRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, UpsertDomainRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return err
 	}
@@ -363,10 +363,10 @@ func (c *client) ActualLRPs(logger lager.Logger, traceID string, filter models.A
 		ProcessGuid: filter.ProcessGuid,
 	}
 	if filter.Index != nil {
-		request.SetIndex(*filter.Index)
+		request.SetIndex(filter.Index)
 	}
 	response := models.ActualLRPsResponse{}
-	err := c.doRequest(logger, traceID, ActualLRPsRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, ActualLRPsRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +381,7 @@ func (c *client) ActualLRPGroups(logger lager.Logger, traceID string, filter mod
 		CellId: filter.CellID,
 	}
 	response := models.ActualLRPGroupsResponse{}
-	err := c.doRequest(logger, traceID, ActualLRPGroupsRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, ActualLRPGroupsRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +395,7 @@ func (c *client) ActualLRPGroupsByProcessGuid(logger lager.Logger, traceID strin
 		ProcessGuid: processGuid,
 	}
 	response := models.ActualLRPGroupsResponse{}
-	err := c.doRequest(logger, traceID, ActualLRPGroupsByProcessGuidRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, ActualLRPGroupsByProcessGuidRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +410,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, traceI
 		Index:       int32(index),
 	}
 	response := models.ActualLRPGroupResponse{}
-	err := c.doRequest(logger, traceID, ActualLRPGroupByProcessGuidAndIndexRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, ActualLRPGroupByProcessGuidAndIndexRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (c *client) ClaimActualLRP(logger lager.Logger, traceID string, key *models
 		ActualLrpInstanceKey: instanceKey,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, traceID, ClaimActualLRPRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, ClaimActualLRPRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return err
 	}
@@ -451,14 +451,15 @@ func (c *client) StartActualLRP(logger lager.Logger,
 		MetricTags:              metricTags,
 		AvailabilityZone:        availabilityZone,
 	}
-	request.SetRoutable(routable)
-	err := c.doRequest(logger, traceID, StartActualLRPRoute_r1, nil, nil, request, &response)
+	request.SetRoutable(&routable)
+	err := c.doRequest(logger, traceID, StartActualLRPRoute_r1, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil && err == EndpointNotFoundErr {
-		err = c.doRequest(logger, traceID, StartActualLRPRoute_r0, nil, nil, &models.StartActualLRPRequest{
+		startActualLrpRequest := &models.StartActualLRPRequest{
 			ActualLrpKey:         key,
 			ActualLrpInstanceKey: instanceKey,
 			ActualLrpNetInfo:     netInfo,
-		}, &response)
+		}
+		err = c.doRequest(logger, traceID, StartActualLRPRoute_r0, nil, nil, startActualLrpRequest.ToProto(), response.ToProto())
 	}
 
 	if err != nil {
@@ -474,7 +475,7 @@ func (c *client) CrashActualLRP(logger lager.Logger, traceID string, key *models
 		ErrorMessage:         errorMessage,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, traceID, CrashActualLRPRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, CrashActualLRPRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return err
 
@@ -488,7 +489,7 @@ func (c *client) FailActualLRP(logger lager.Logger, traceID string, key *models.
 		ErrorMessage: errorMessage,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, traceID, FailActualLRPRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, FailActualLRPRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return err
 
@@ -501,7 +502,7 @@ func (c *client) RetireActualLRP(logger lager.Logger, traceID string, key *model
 		ActualLrpKey: key,
 	}
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, traceID, RetireActualLRPRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, RetireActualLRPRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return err
 
@@ -517,7 +518,7 @@ func (c *client) RemoveActualLRP(logger lager.Logger, traceID string, key *model
 	}
 
 	response := models.ActualLRPLifecycleResponse{}
-	err := c.doRequest(logger, traceID, RemoveActualLRPRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, RemoveActualLRPRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return err
 	}
@@ -525,25 +526,28 @@ func (c *client) RemoveActualLRP(logger lager.Logger, traceID string, key *model
 }
 
 func (c *client) EvacuateClaimedActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
-	return c.doEvacRequest(logger, traceID, EvacuateClaimedActualLRPRoute_r0, KeepContainer, &models.EvacuateClaimedActualLRPRequest{
+	request := &models.EvacuateClaimedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
-	})
+	}
+	return c.doEvacRequest(logger, traceID, EvacuateClaimedActualLRPRoute_r0, KeepContainer, request.ToProto())
 }
 
 func (c *client) EvacuateCrashedActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, errorMessage string) (bool, error) {
-	return c.doEvacRequest(logger, traceID, EvacuateCrashedActualLRPRoute_r0, DeleteContainer, &models.EvacuateCrashedActualLRPRequest{
+	request := &models.EvacuateCrashedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
 		ErrorMessage:         errorMessage,
-	})
+	}
+	return c.doEvacRequest(logger, traceID, EvacuateCrashedActualLRPRoute_r0, DeleteContainer, request.ToProto())
 }
 
 func (c *client) EvacuateStoppedActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) (bool, error) {
-	return c.doEvacRequest(logger, traceID, EvacuateStoppedActualLRPRoute_r0, DeleteContainer, &models.EvacuateStoppedActualLRPRequest{
+	request := &models.EvacuateStoppedActualLRPRequest{
 		ActualLrpKey:         key,
 		ActualLrpInstanceKey: instanceKey,
-	})
+	}
+	return c.doEvacRequest(logger, traceID, EvacuateStoppedActualLRPRoute_r0, DeleteContainer, request.ToProto())
 }
 
 func (c *client) EvacuateRunningActualLRP(logger lager.Logger,
@@ -564,14 +568,15 @@ func (c *client) EvacuateRunningActualLRP(logger lager.Logger,
 		MetricTags:              metricTags,
 		AvailabilityZone:        availabilityZone,
 	}
-	request.SetRoutable(routable)
-	keepContainer, err := c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r1, KeepContainer, request)
+	request.SetRoutable(&routable)
+	keepContainer, err := c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r1, KeepContainer, request.ToProto())
 	if err != nil && err == EndpointNotFoundErr {
-		keepContainer, err = c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r0, KeepContainer, &models.EvacuateRunningActualLRPRequest{
+		evacRunningActualLrpRequest := &models.EvacuateRunningActualLRPRequest{
 			ActualLrpKey:         key,
 			ActualLrpInstanceKey: instanceKey,
 			ActualLrpNetInfo:     netInfo,
-		})
+		}
+		keepContainer, err = c.doEvacRequest(logger, traceID, EvacuateRunningActualLRPRoute_r0, KeepContainer, evacRunningActualLrpRequest.ToProto())
 	}
 
 	return keepContainer, err
@@ -584,7 +589,7 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, traceID string, 
 	}
 
 	response := models.RemoveEvacuatingActualLRPResponse{}
-	err := c.doRequest(logger, traceID, RemoveEvacuatingActualLRPRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, RemoveEvacuatingActualLRPRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return err
 	}
@@ -595,7 +600,7 @@ func (c *client) RemoveEvacuatingActualLRP(logger lager.Logger, traceID string, 
 func (c *client) DesiredLRPs(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	request := models.DesiredLRPsRequest(filter)
 	response := models.DesiredLRPsResponse{}
-	err := c.doRequest(logger, traceID, DesiredLRPsRoute_r3, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, DesiredLRPsRoute_r3, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -608,7 +613,7 @@ func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, traceID string, pr
 		ProcessGuid: processGuid,
 	}
 	response := models.DesiredLRPResponse{}
-	err := c.doRequest(logger, traceID, DesiredLRPByProcessGuidRoute_r3, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, DesiredLRPByProcessGuidRoute_r3, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -619,7 +624,7 @@ func (c *client) DesiredLRPByProcessGuid(logger lager.Logger, traceID string, pr
 func (c *client) DesiredLRPSchedulingInfos(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error) {
 	request := models.DesiredLRPsRequest(filter)
 	response := models.DesiredLRPSchedulingInfosResponse{}
-	err := c.doRequest(logger, traceID, DesiredLRPSchedulingInfosRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, DesiredLRPSchedulingInfosRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -632,7 +637,7 @@ func (c *client) DesiredLRPSchedulingInfoByProcessGuid(logger lager.Logger, trac
 		ProcessGuid: processGuid,
 	}
 	response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
-	err := c.doRequest(logger, traceID, DesiredLRPSchedulingInfoByProcessGuid_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, DesiredLRPSchedulingInfoByProcessGuid_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -643,7 +648,7 @@ func (c *client) DesiredLRPSchedulingInfoByProcessGuid(logger lager.Logger, trac
 func (c *client) DesiredLRPRoutingInfos(logger lager.Logger, traceID string, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {
 	request := models.DesiredLRPsRequest(filter)
 	response := models.DesiredLRPsResponse{}
-	err := c.doRequest(logger, traceID, DesiredLRPRoutingInfosRoute_r0, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, DesiredLRPRoutingInfosRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -653,7 +658,7 @@ func (c *client) DesiredLRPRoutingInfos(logger lager.Logger, traceID string, fil
 
 func (c *client) doDesiredLRPLifecycleRequest(logger lager.Logger, traceID string, route string, request proto.Message) error {
 	response := models.DesiredLRPLifecycleResponse{}
-	err := c.doRequest(logger, traceID, route, nil, nil, request, &response)
+	err := c.doRequest(logger, traceID, route, nil, nil, request, response.ToProto())
 	if err != nil {
 		return err
 	}
@@ -664,7 +669,7 @@ func (c *client) DesireLRP(logger lager.Logger, traceID string, desiredLRP *mode
 	request := models.DesireLRPRequest{
 		DesiredLrp: desiredLRP,
 	}
-	return c.doDesiredLRPLifecycleRequest(logger, traceID, DesireDesiredLRPRoute_r2, &request)
+	return c.doDesiredLRPLifecycleRequest(logger, traceID, DesireDesiredLRPRoute_r2, request.ToProto())
 }
 
 func (c *client) UpdateDesiredLRP(logger lager.Logger, traceID string, processGuid string, update *models.DesiredLRPUpdate) error {
@@ -672,20 +677,20 @@ func (c *client) UpdateDesiredLRP(logger lager.Logger, traceID string, processGu
 		ProcessGuid: processGuid,
 		Update:      update,
 	}
-	return c.doDesiredLRPLifecycleRequest(logger, traceID, UpdateDesiredLRPRoute_r0, &request)
+	return c.doDesiredLRPLifecycleRequest(logger, traceID, UpdateDesiredLRPRoute_r0, request.ToProto())
 }
 
 func (c *client) RemoveDesiredLRP(logger lager.Logger, traceID string, processGuid string) error {
 	request := models.RemoveDesiredLRPRequest{
 		ProcessGuid: processGuid,
 	}
-	return c.doDesiredLRPLifecycleRequest(logger, traceID, RemoveDesiredLRPRoute_r0, &request)
+	return c.doDesiredLRPLifecycleRequest(logger, traceID, RemoveDesiredLRPRoute_r0, request.ToProto())
 }
 
 func (c *client) Tasks(logger lager.Logger, traceID string) ([]*models.Task, error) {
 	request := models.TasksRequest{}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -699,7 +704,7 @@ func (c *client) TasksWithFilter(logger lager.Logger, traceID string, filter mod
 		CellId: filter.CellID,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -711,7 +716,7 @@ func (c *client) TasksByDomain(logger lager.Logger, traceID string, domain strin
 		Domain: domain,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -724,7 +729,7 @@ func (c *client) TasksByCellID(logger lager.Logger, traceID string, cellId strin
 		CellId: cellId,
 	}
 	response := models.TasksResponse{}
-	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, TasksRoute_r3, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -737,7 +742,7 @@ func (c *client) TaskByGuid(logger lager.Logger, traceID string, taskGuid string
 		TaskGuid: taskGuid,
 	}
 	response := models.TaskResponse{}
-	err := c.doRequest(logger, traceID, TaskByGuidRoute_r3, nil, nil, &request, &response)
+	err := c.doRequest(logger, traceID, TaskByGuidRoute_r3, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -747,7 +752,7 @@ func (c *client) TaskByGuid(logger lager.Logger, traceID string, taskGuid string
 
 func (c *client) doTaskLifecycleRequest(logger lager.Logger, traceID string, route string, request proto.Message) error {
 	response := models.TaskLifecycleResponse{}
-	err := c.doRequest(logger, traceID, route, nil, nil, request, &response)
+	err := c.doRequest(logger, traceID, route, nil, nil, request, response.ToProto())
 	if err != nil {
 		return err
 	}
@@ -761,7 +766,7 @@ func (c *client) DesireTask(logger lager.Logger, traceID string, taskGuid, domai
 		Domain:         domain,
 		TaskDefinition: taskDef,
 	}
-	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
+	return c.doTaskLifecycleRequest(logger, traceID, route, request.ToProto())
 }
 
 func (c *client) StartTask(logger lager.Logger, traceID string, taskGuid string, cellId string) (bool, error) {
@@ -770,7 +775,7 @@ func (c *client) StartTask(logger lager.Logger, traceID string, taskGuid string,
 		CellId:   cellId,
 	}
 	response := &models.StartTaskResponse{}
-	err := c.doRequest(logger, traceID, StartTaskRoute_r0, nil, nil, request, response)
+	err := c.doRequest(logger, traceID, StartTaskRoute_r0, nil, nil, request.ToProto(), response.ToProto())
 	if err != nil {
 		return false, err
 	}
@@ -782,7 +787,7 @@ func (c *client) CancelTask(logger lager.Logger, traceID string, taskGuid string
 		TaskGuid: taskGuid,
 	}
 	route := CancelTaskRoute_r0
-	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
+	return c.doTaskLifecycleRequest(logger, traceID, route, request.ToProto())
 }
 
 func (c *client) ResolvingTask(logger lager.Logger, traceID string, taskGuid string) error {
@@ -790,7 +795,7 @@ func (c *client) ResolvingTask(logger lager.Logger, traceID string, taskGuid str
 		TaskGuid: taskGuid,
 	}
 	route := ResolvingTaskRoute_r0
-	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
+	return c.doTaskLifecycleRequest(logger, traceID, route, request.ToProto())
 }
 
 func (c *client) DeleteTask(logger lager.Logger, traceID string, taskGuid string) error {
@@ -798,7 +803,7 @@ func (c *client) DeleteTask(logger lager.Logger, traceID string, taskGuid string
 		TaskGuid: taskGuid,
 	}
 	route := DeleteTaskRoute_r0
-	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
+	return c.doTaskLifecycleRequest(logger, traceID, route, request.ToProto())
 }
 
 // Deprecated: use CancelTask instead
@@ -808,7 +813,7 @@ func (c *client) FailTask(logger lager.Logger, traceID string, taskGuid string, 
 		FailureReason: failureReason,
 	}
 	route := FailTaskRoute_r0
-	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
+	return c.doTaskLifecycleRequest(logger, traceID, route, request.ToProto())
 }
 
 func (c *client) RejectTask(logger lager.Logger, traceID string, taskGuid string, rejectionReason string) error {
@@ -817,7 +822,7 @@ func (c *client) RejectTask(logger lager.Logger, traceID string, taskGuid string
 		RejectionReason: rejectionReason,
 	}
 	route := RejectTaskRoute_r0
-	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
+	return c.doTaskLifecycleRequest(logger, traceID, route, request.ToProto())
 }
 
 func (c *client) CompleteTask(logger lager.Logger, traceID string, taskGuid string, cellId string, failed bool, failureReason, result string) error {
@@ -829,14 +834,14 @@ func (c *client) CompleteTask(logger lager.Logger, traceID string, taskGuid stri
 		Result:        result,
 	}
 	route := CompleteTaskRoute_r0
-	return c.doTaskLifecycleRequest(logger, traceID, route, &request)
+	return c.doTaskLifecycleRequest(logger, traceID, route, request.ToProto())
 }
 
 func (c *client) subscribeToEvents(route string, cellId string) (events.EventSource, error) {
 	request := models.EventsByCellId{
 		CellId: cellId,
 	}
-	messageBody, err := proto.Marshal(&request)
+	messageBody, err := proto.Marshal(request.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -889,7 +894,7 @@ func (c *client) SubscribeToInstanceEventsByCellID(logger lager.Logger, cellId s
 
 func (c *client) Cells(logger lager.Logger, traceID string) ([]*models.CellPresence, error) {
 	response := models.CellsResponse{}
-	err := c.doRequest(logger, traceID, CellsRoute_r0, nil, nil, nil, &response)
+	err := c.doRequest(logger, traceID, CellsRoute_r0, nil, nil, nil, response.ToProto())
 	if err != nil {
 		return nil, err
 	}
@@ -920,7 +925,7 @@ func (c *client) createRequest(traceID string, requestName string, params rata.P
 
 func (c *client) doEvacRequest(logger lager.Logger, traceID string, route string, defaultKeepContainer bool, request proto.Message) (bool, error) {
 	var response models.EvacuationResponse
-	err := c.doRequest(logger, traceID, route, nil, nil, request, &response)
+	err := c.doRequest(logger, traceID, route, nil, nil, request, response.ToProto())
 	if err != nil {
 		return defaultKeepContainer, err
 	}
