@@ -65,6 +65,10 @@ func (m *PortRange) SetEnd(value uint32) {
 	}
 }
 func (x *PortRange) ToProto() *ProtoPortRange {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoPortRange{
 		Start: x.Start,
 		End:   x.End,
@@ -73,6 +77,10 @@ func (x *PortRange) ToProto() *ProtoPortRange {
 }
 
 func (x *ProtoPortRange) FromProto() *PortRange {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &PortRange{
 		Start: x.Start,
 		End:   x.End,
@@ -155,6 +163,10 @@ func (m *ICMPInfo) SetCode(value int32) {
 	}
 }
 func (x *ICMPInfo) ToProto() *ProtoICMPInfo {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoICMPInfo{
 		Type: x.Type,
 		Code: x.Code,
@@ -163,6 +175,10 @@ func (x *ICMPInfo) ToProto() *ProtoICMPInfo {
 }
 
 func (x *ProtoICMPInfo) FromProto() *ICMPInfo {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ICMPInfo{
 		Type: x.Type,
 		Code: x.Code,
@@ -335,6 +351,10 @@ func (m *SecurityGroupRule) SetAnnotations(value []string) {
 	}
 }
 func (x *SecurityGroupRule) ToProto() *ProtoSecurityGroupRule {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoSecurityGroupRule{
 		Protocol:     x.Protocol,
 		Destinations: x.Destinations,
@@ -348,6 +368,10 @@ func (x *SecurityGroupRule) ToProto() *ProtoSecurityGroupRule {
 }
 
 func (x *ProtoSecurityGroupRule) FromProto() *SecurityGroupRule {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &SecurityGroupRule{
 		Protocol:     x.Protocol,
 		Destinations: x.Destinations,

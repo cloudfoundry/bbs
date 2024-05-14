@@ -55,6 +55,10 @@ func (m *Network) SetProperties(value map[string]string) {
 	}
 }
 func (x *Network) ToProto() *ProtoNetwork {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoNetwork{
 		Properties: x.Properties,
 	}
@@ -62,6 +66,10 @@ func (x *Network) ToProto() *ProtoNetwork {
 }
 
 func (x *ProtoNetwork) FromProto() *Network {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &Network{
 		Properties: x.Properties,
 	}

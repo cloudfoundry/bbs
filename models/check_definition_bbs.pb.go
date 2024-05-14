@@ -90,6 +90,10 @@ func (m *CheckDefinition) SetReadinessChecks(value []*Check) {
 	}
 }
 func (x *CheckDefinition) ToProto() *ProtoCheckDefinition {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCheckDefinition{
 		Checks:          CheckToProtoSlice(x.Checks),
 		LogSource:       x.LogSource,
@@ -99,6 +103,10 @@ func (x *CheckDefinition) ToProto() *ProtoCheckDefinition {
 }
 
 func (x *ProtoCheckDefinition) FromProto() *CheckDefinition {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CheckDefinition{
 		Checks:          CheckFromProtoSlice(x.Checks),
 		LogSource:       x.LogSource,
@@ -182,6 +190,10 @@ func (m *Check) SetHttpCheck(value *HTTPCheck) {
 	}
 }
 func (x *Check) ToProto() *ProtoCheck {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCheck{
 		TcpCheck:  x.TcpCheck.ToProto(),
 		HttpCheck: x.HttpCheck.ToProto(),
@@ -190,6 +202,10 @@ func (x *Check) ToProto() *ProtoCheck {
 }
 
 func (x *ProtoCheck) FromProto() *Check {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &Check{
 		TcpCheck:  x.TcpCheck.FromProto(),
 		HttpCheck: x.HttpCheck.FromProto(),
@@ -287,6 +303,10 @@ func (m *TCPCheck) SetIntervalMs(value uint64) {
 	}
 }
 func (x *TCPCheck) ToProto() *ProtoTCPCheck {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTCPCheck{
 		Port:             x.Port,
 		ConnectTimeoutMs: x.ConnectTimeoutMs,
@@ -296,6 +316,10 @@ func (x *TCPCheck) ToProto() *ProtoTCPCheck {
 }
 
 func (x *ProtoTCPCheck) FromProto() *TCPCheck {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TCPCheck{
 		Port:             x.Port,
 		ConnectTimeoutMs: x.ConnectTimeoutMs,
@@ -409,6 +433,10 @@ func (m *HTTPCheck) SetIntervalMs(value uint64) {
 	}
 }
 func (x *HTTPCheck) ToProto() *ProtoHTTPCheck {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoHTTPCheck{
 		Port:             x.Port,
 		RequestTimeoutMs: x.RequestTimeoutMs,
@@ -419,6 +447,10 @@ func (x *HTTPCheck) ToProto() *ProtoHTTPCheck {
 }
 
 func (x *ProtoHTTPCheck) FromProto() *HTTPCheck {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &HTTPCheck{
 		Port:             x.Port,
 		RequestTimeoutMs: x.RequestTimeoutMs,

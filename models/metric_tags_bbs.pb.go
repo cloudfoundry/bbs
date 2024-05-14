@@ -99,6 +99,10 @@ func (m *MetricTagValue) SetDynamic(value MetricTagValue_DynamicValue) {
 	}
 }
 func (x *MetricTagValue) ToProto() *ProtoMetricTagValue {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoMetricTagValue{
 		Static:  x.Static,
 		Dynamic: ProtoMetricTagValue_DynamicValue(x.Dynamic),
@@ -107,6 +111,10 @@ func (x *MetricTagValue) ToProto() *ProtoMetricTagValue {
 }
 
 func (x *ProtoMetricTagValue) FromProto() *MetricTagValue {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &MetricTagValue{
 		Static:  x.Static,
 		Dynamic: MetricTagValue_DynamicValue(x.Dynamic),

@@ -50,6 +50,10 @@ func (m *LogRateLimit) SetBytesPerSecond(value int64) {
 	}
 }
 func (x *LogRateLimit) ToProto() *ProtoLogRateLimit {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoLogRateLimit{
 		BytesPerSecond: x.BytesPerSecond,
 	}
@@ -57,6 +61,10 @@ func (x *LogRateLimit) ToProto() *ProtoLogRateLimit {
 }
 
 func (x *ProtoLogRateLimit) FromProto() *LogRateLimit {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &LogRateLimit{
 		BytesPerSecond: x.BytesPerSecond,
 	}

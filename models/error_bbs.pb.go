@@ -165,6 +165,10 @@ func (m *Error) SetMessage(value string) {
 	}
 }
 func (x *Error) ToProto() *ProtoError {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoError{
 		Type:    ProtoError_Type(x.Type),
 		Message: x.Message,
@@ -173,6 +177,10 @@ func (x *Error) ToProto() *ProtoError {
 }
 
 func (x *ProtoError) FromProto() *Error {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &Error{
 		Type:    Error_Type(x.Type),
 		Message: x.Message,

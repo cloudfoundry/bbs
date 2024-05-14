@@ -65,6 +65,10 @@ func (m *EnvironmentVariable) SetValue(value string) {
 	}
 }
 func (x *EnvironmentVariable) ToProto() *ProtoEnvironmentVariable {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEnvironmentVariable{
 		Name:  x.Name,
 		Value: x.Value,
@@ -73,6 +77,10 @@ func (x *EnvironmentVariable) ToProto() *ProtoEnvironmentVariable {
 }
 
 func (x *ProtoEnvironmentVariable) FromProto() *EnvironmentVariable {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EnvironmentVariable{
 		Name:  x.Name,
 		Value: x.Value,

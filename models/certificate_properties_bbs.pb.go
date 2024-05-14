@@ -55,6 +55,10 @@ func (m *CertificateProperties) SetOrganizationalUnit(value []string) {
 	}
 }
 func (x *CertificateProperties) ToProto() *ProtoCertificateProperties {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCertificateProperties{
 		OrganizationalUnit: x.OrganizationalUnit,
 	}
@@ -62,6 +66,10 @@ func (x *CertificateProperties) ToProto() *ProtoCertificateProperties {
 }
 
 func (x *ProtoCertificateProperties) FromProto() *CertificateProperties {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CertificateProperties{
 		OrganizationalUnit: x.OrganizationalUnit,
 	}

@@ -160,6 +160,10 @@ func (m *DesiredLRPSchedulingInfo) SetPlacementTags(value []string) {
 	}
 }
 func (x *DesiredLRPSchedulingInfo) ToProto() *ProtoDesiredLRPSchedulingInfo {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPSchedulingInfo{
 		DesiredLrpKey:      x.DesiredLrpKey.ToProto(),
 		Annotation:         x.Annotation,
@@ -174,6 +178,10 @@ func (x *DesiredLRPSchedulingInfo) ToProto() *ProtoDesiredLRPSchedulingInfo {
 }
 
 func (x *ProtoDesiredLRPSchedulingInfo) FromProto() *DesiredLRPSchedulingInfo {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPSchedulingInfo{
 		DesiredLrpKey:      x.DesiredLrpKey.FromProto(),
 		Annotation:         x.Annotation,
@@ -686,6 +694,10 @@ func (m *DesiredLRPRunInfo) SetLogRateLimit(value *LogRateLimit) {
 	}
 }
 func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPRunInfo{
 		DesiredLrpKey:                 x.DesiredLrpKey.ToProto(),
 		EnvironmentVariables:          EnvironmentVariableToProtoSlice(x.EnvironmentVariables),
@@ -719,6 +731,10 @@ func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 }
 
 func (x *ProtoDesiredLRPRunInfo) FromProto() *DesiredLRPRunInfo {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPRunInfo{
 		DesiredLrpKey:                 x.DesiredLrpKey.FromProto(),
 		EnvironmentVariables:          EnvironmentVariableFromProtoSlice(x.EnvironmentVariables),
@@ -886,6 +902,10 @@ func (m *DesiredLRPUpdate) SetMetricTags(value map[string]*MetricTagValue) {
 	}
 }
 func (x *DesiredLRPUpdate) ToProto() *ProtoDesiredLRPUpdate {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPUpdate{
 		Instances:  x.Instances,
 		Routes:     x.Routes.ToProto(),
@@ -896,6 +916,10 @@ func (x *DesiredLRPUpdate) ToProto() *ProtoDesiredLRPUpdate {
 }
 
 func (x *ProtoDesiredLRPUpdate) FromProto() *DesiredLRPUpdate {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPUpdate{
 		Instances:  x.Instances,
 		Routes:     x.Routes.FromProto(),
@@ -1011,6 +1035,10 @@ func (m *DesiredLRPKey) SetLogGuid(value string) {
 	}
 }
 func (x *DesiredLRPKey) ToProto() *ProtoDesiredLRPKey {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPKey{
 		ProcessGuid: x.ProcessGuid,
 		Domain:      x.Domain,
@@ -1020,6 +1048,10 @@ func (x *DesiredLRPKey) ToProto() *ProtoDesiredLRPKey {
 }
 
 func (x *ProtoDesiredLRPKey) FromProto() *DesiredLRPKey {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPKey{
 		ProcessGuid: x.ProcessGuid,
 		Domain:      x.Domain,
@@ -1133,6 +1165,10 @@ func (m *DesiredLRPResource) SetMaxPids(value int32) {
 	}
 }
 func (x *DesiredLRPResource) ToProto() *ProtoDesiredLRPResource {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPResource{
 		MemoryMb: x.MemoryMb,
 		DiskMb:   x.DiskMb,
@@ -1143,6 +1179,10 @@ func (x *DesiredLRPResource) ToProto() *ProtoDesiredLRPResource {
 }
 
 func (x *ProtoDesiredLRPResource) FromProto() *DesiredLRPResource {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPResource{
 		MemoryMb: x.MemoryMb,
 		DiskMb:   x.DiskMb,
@@ -1809,6 +1849,10 @@ func (m *DesiredLRP) SetLogRateLimit(value *LogRateLimit) {
 	}
 }
 func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRP{
 		ProcessGuid:                   x.ProcessGuid,
 		Domain:                        x.Domain,
@@ -1852,6 +1896,10 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 }
 
 func (x *ProtoDesiredLRP) FromProto() *DesiredLRP {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRP{
 		ProcessGuid:                   x.ProcessGuid,
 		Domain:                        x.Domain,

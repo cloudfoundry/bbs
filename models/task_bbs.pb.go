@@ -481,6 +481,10 @@ func (m *TaskDefinition) SetMetricTags(value map[string]*MetricTagValue) {
 	}
 }
 func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskDefinition{
 		RootFs:                        x.RootFs,
 		EnvironmentVariables:          EnvironmentVariableToProtoSlice(x.EnvironmentVariables),
@@ -514,6 +518,10 @@ func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
 }
 
 func (x *ProtoTaskDefinition) FromProto() *TaskDefinition {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskDefinition{
 		RootFs:                        x.RootFs,
 		EnvironmentVariables:          EnvironmentVariableFromProtoSlice(x.EnvironmentVariables),
@@ -838,6 +846,10 @@ func (m *Task) SetRejectionReason(value string) {
 	}
 }
 func (x *Task) ToProto() *ProtoTask {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTask{
 		TaskDefinition:   x.TaskDefinition.ToProto(),
 		TaskGuid:         x.TaskGuid,
@@ -857,6 +869,10 @@ func (x *Task) ToProto() *ProtoTask {
 }
 
 func (x *ProtoTask) FromProto() *Task {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &Task{
 		TaskDefinition:   x.TaskDefinition.FromProto(),
 		TaskGuid:         x.TaskGuid,

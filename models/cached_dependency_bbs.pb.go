@@ -140,6 +140,10 @@ func (m *CachedDependency) SetChecksumValue(value string) {
 	}
 }
 func (x *CachedDependency) ToProto() *ProtoCachedDependency {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCachedDependency{
 		Name:              x.Name,
 		From:              x.From,
@@ -153,6 +157,10 @@ func (x *CachedDependency) ToProto() *ProtoCachedDependency {
 }
 
 func (x *ProtoCachedDependency) FromProto() *CachedDependency {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CachedDependency{
 		Name:              x.Name,
 		From:              x.From,

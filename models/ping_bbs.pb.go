@@ -50,6 +50,10 @@ func (m *PingResponse) SetAvailable(value bool) {
 	}
 }
 func (x *PingResponse) ToProto() *ProtoPingResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoPingResponse{
 		Available: x.Available,
 	}
@@ -57,6 +61,10 @@ func (x *PingResponse) ToProto() *ProtoPingResponse {
 }
 
 func (x *ProtoPingResponse) FromProto() *PingResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &PingResponse{
 		Available: x.Available,
 	}

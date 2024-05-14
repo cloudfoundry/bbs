@@ -65,6 +65,10 @@ func (m *SharedDevice) SetMountConfig(value string) {
 	}
 }
 func (x *SharedDevice) ToProto() *ProtoSharedDevice {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoSharedDevice{
 		VolumeId:    x.VolumeId,
 		MountConfig: x.MountConfig,
@@ -73,6 +77,10 @@ func (x *SharedDevice) ToProto() *ProtoSharedDevice {
 }
 
 func (x *ProtoSharedDevice) FromProto() *SharedDevice {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &SharedDevice{
 		VolumeId:    x.VolumeId,
 		MountConfig: x.MountConfig,
@@ -185,6 +193,10 @@ func (m *VolumeMount) SetShared(value *SharedDevice) {
 	}
 }
 func (x *VolumeMount) ToProto() *ProtoVolumeMount {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoVolumeMount{
 		Driver:       x.Driver,
 		ContainerDir: x.ContainerDir,
@@ -195,6 +207,10 @@ func (x *VolumeMount) ToProto() *ProtoVolumeMount {
 }
 
 func (x *ProtoVolumeMount) FromProto() *VolumeMount {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &VolumeMount{
 		Driver:       x.Driver,
 		ContainerDir: x.ContainerDir,
@@ -269,6 +285,10 @@ func (m *VolumePlacement) SetDriverNames(value []string) {
 	}
 }
 func (x *VolumePlacement) ToProto() *ProtoVolumePlacement {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoVolumePlacement{
 		DriverNames: x.DriverNames,
 	}
@@ -276,6 +296,10 @@ func (x *VolumePlacement) ToProto() *ProtoVolumePlacement {
 }
 
 func (x *ProtoVolumePlacement) FromProto() *VolumePlacement {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &VolumePlacement{
 		DriverNames: x.DriverNames,
 	}

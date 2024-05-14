@@ -65,6 +65,10 @@ func (m *EvacuationResponse) SetKeepContainer(value bool) {
 	}
 }
 func (x *EvacuationResponse) ToProto() *ProtoEvacuationResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEvacuationResponse{
 		Error:         x.Error.ToProto(),
 		KeepContainer: x.KeepContainer,
@@ -73,6 +77,10 @@ func (x *EvacuationResponse) ToProto() *ProtoEvacuationResponse {
 }
 
 func (x *ProtoEvacuationResponse) FromProto() *EvacuationResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EvacuationResponse{
 		Error:         x.Error.FromProto(),
 		KeepContainer: x.KeepContainer,
@@ -155,6 +163,10 @@ func (m *EvacuateClaimedActualLRPRequest) SetActualLrpInstanceKey(value *ActualL
 	}
 }
 func (x *EvacuateClaimedActualLRPRequest) ToProto() *ProtoEvacuateClaimedActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEvacuateClaimedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
@@ -163,6 +175,10 @@ func (x *EvacuateClaimedActualLRPRequest) ToProto() *ProtoEvacuateClaimedActualL
 }
 
 func (x *ProtoEvacuateClaimedActualLRPRequest) FromProto() *EvacuateClaimedActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EvacuateClaimedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
@@ -333,6 +349,10 @@ func (m *EvacuateRunningActualLRPRequest) SetAvailabilityZone(value string) {
 	}
 }
 func (x *EvacuateRunningActualLRPRequest) ToProto() *ProtoEvacuateRunningActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEvacuateRunningActualLRPRequest{
 		ActualLrpKey:            x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.ToProto(),
@@ -346,6 +366,10 @@ func (x *EvacuateRunningActualLRPRequest) ToProto() *ProtoEvacuateRunningActualL
 }
 
 func (x *ProtoEvacuateRunningActualLRPRequest) FromProto() *EvacuateRunningActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EvacuateRunningActualLRPRequest{
 		ActualLrpKey:            x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.FromProto(),
@@ -433,6 +457,10 @@ func (m *EvacuateStoppedActualLRPRequest) SetActualLrpInstanceKey(value *ActualL
 	}
 }
 func (x *EvacuateStoppedActualLRPRequest) ToProto() *ProtoEvacuateStoppedActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEvacuateStoppedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
@@ -441,6 +469,10 @@ func (x *EvacuateStoppedActualLRPRequest) ToProto() *ProtoEvacuateStoppedActualL
 }
 
 func (x *ProtoEvacuateStoppedActualLRPRequest) FromProto() *EvacuateStoppedActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EvacuateStoppedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
@@ -538,6 +570,10 @@ func (m *EvacuateCrashedActualLRPRequest) SetErrorMessage(value string) {
 	}
 }
 func (x *EvacuateCrashedActualLRPRequest) ToProto() *ProtoEvacuateCrashedActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEvacuateCrashedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
@@ -547,6 +583,10 @@ func (x *EvacuateCrashedActualLRPRequest) ToProto() *ProtoEvacuateCrashedActualL
 }
 
 func (x *ProtoEvacuateCrashedActualLRPRequest) FromProto() *EvacuateCrashedActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EvacuateCrashedActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
@@ -630,6 +670,10 @@ func (m *RemoveEvacuatingActualLRPRequest) SetActualLrpInstanceKey(value *Actual
 	}
 }
 func (x *RemoveEvacuatingActualLRPRequest) ToProto() *ProtoRemoveEvacuatingActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoRemoveEvacuatingActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
@@ -638,6 +682,10 @@ func (x *RemoveEvacuatingActualLRPRequest) ToProto() *ProtoRemoveEvacuatingActua
 }
 
 func (x *ProtoRemoveEvacuatingActualLRPRequest) FromProto() *RemoveEvacuatingActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &RemoveEvacuatingActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
@@ -705,6 +753,10 @@ func (m *RemoveEvacuatingActualLRPResponse) SetError(value *Error) {
 	}
 }
 func (x *RemoveEvacuatingActualLRPResponse) ToProto() *ProtoRemoveEvacuatingActualLRPResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoRemoveEvacuatingActualLRPResponse{
 		Error: x.Error.ToProto(),
 	}
@@ -712,6 +764,10 @@ func (x *RemoveEvacuatingActualLRPResponse) ToProto() *ProtoRemoveEvacuatingActu
 }
 
 func (x *ProtoRemoveEvacuatingActualLRPResponse) FromProto() *RemoveEvacuatingActualLRPResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &RemoveEvacuatingActualLRPResponse{
 		Error: x.Error.FromProto(),
 	}
