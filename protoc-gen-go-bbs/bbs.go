@@ -362,6 +362,10 @@ func (bbsGenerateHelper) genToProtoMethod(g *protogen.GeneratedFile, msg *protog
 	unsafeName := getUnsafeName(g, msg.GoIdent)
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
 		g.P("func(x *", copysafeName, ") ToProto() *", unsafeName, " {")
+		g.P("if x == nil {")
+		g.P("return nil")
+		g.P("}")
+		g.P()
 		g.P("proto := &", unsafeName, "{")
 		for _, field := range msg.Fields {
 			protoFieldName := field.GoName
@@ -406,6 +410,10 @@ func (bbsGenerateHelper) genFromProtoMethod(g *protogen.GeneratedFile, msg *prot
 	unsafeName := getUnsafeName(g, msg.GoIdent)
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
 		g.P("func(x *", unsafeName, ") FromProto() *", copysafeName, " {")
+		g.P("if x == nil {")
+		g.P("return nil")
+		g.P("}")
+		g.P()
 		g.P("copysafe := &", copysafeName, "{")
 		for _, field := range msg.Fields {
 			protoFieldName := field.GoName
