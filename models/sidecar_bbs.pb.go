@@ -80,6 +80,10 @@ func (m *Sidecar) SetMemoryMb(value int32) {
 	}
 }
 func (x *Sidecar) ToProto() *ProtoSidecar {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoSidecar{
 		Action:   x.Action.ToProto(),
 		DiskMb:   x.DiskMb,
@@ -89,6 +93,10 @@ func (x *Sidecar) ToProto() *ProtoSidecar {
 }
 
 func (x *ProtoSidecar) FromProto() *Sidecar {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &Sidecar{
 		Action:   x.Action.FromProto(),
 		DiskMb:   x.DiskMb,

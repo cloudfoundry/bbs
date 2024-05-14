@@ -50,6 +50,10 @@ func (m *ActualLRPCreatedEvent) SetActualLrpGroup(value *ActualLRPGroup) {
 	}
 }
 func (x *ActualLRPCreatedEvent) ToProto() *ProtoActualLRPCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPCreatedEvent{
 		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
 	}
@@ -57,6 +61,10 @@ func (x *ActualLRPCreatedEvent) ToProto() *ProtoActualLRPCreatedEvent {
 }
 
 func (x *ProtoActualLRPCreatedEvent) FromProto() *ActualLRPCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPCreatedEvent{
 		ActualLrpGroup: x.ActualLrpGroup.FromProto(),
 	}
@@ -138,6 +146,10 @@ func (m *ActualLRPChangedEvent) SetAfter(value *ActualLRPGroup) {
 	}
 }
 func (x *ActualLRPChangedEvent) ToProto() *ProtoActualLRPChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPChangedEvent{
 		Before: x.Before.ToProto(),
 		After:  x.After.ToProto(),
@@ -146,6 +158,10 @@ func (x *ActualLRPChangedEvent) ToProto() *ProtoActualLRPChangedEvent {
 }
 
 func (x *ProtoActualLRPChangedEvent) FromProto() *ActualLRPChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPChangedEvent{
 		Before: x.Before.FromProto(),
 		After:  x.After.FromProto(),
@@ -213,6 +229,10 @@ func (m *ActualLRPRemovedEvent) SetActualLrpGroup(value *ActualLRPGroup) {
 	}
 }
 func (x *ActualLRPRemovedEvent) ToProto() *ProtoActualLRPRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPRemovedEvent{
 		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
 	}
@@ -220,6 +240,10 @@ func (x *ActualLRPRemovedEvent) ToProto() *ProtoActualLRPRemovedEvent {
 }
 
 func (x *ProtoActualLRPRemovedEvent) FromProto() *ActualLRPRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPRemovedEvent{
 		ActualLrpGroup: x.ActualLrpGroup.FromProto(),
 	}
@@ -301,6 +325,10 @@ func (m *ActualLRPInstanceCreatedEvent) SetTraceId(value string) {
 	}
 }
 func (x *ActualLRPInstanceCreatedEvent) ToProto() *ProtoActualLRPInstanceCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPInstanceCreatedEvent{
 		ActualLrp: x.ActualLrp.ToProto(),
 		TraceId:   x.TraceId,
@@ -309,6 +337,10 @@ func (x *ActualLRPInstanceCreatedEvent) ToProto() *ProtoActualLRPInstanceCreated
 }
 
 func (x *ProtoActualLRPInstanceCreatedEvent) FromProto() *ActualLRPInstanceCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPInstanceCreatedEvent{
 		ActualLrp: x.ActualLrp.FromProto(),
 		TraceId:   x.TraceId,
@@ -514,6 +546,10 @@ func (m *ActualLRPInfo) SetAvailabilityZone(value string) {
 	}
 }
 func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPInfo{
 		ActualLrpNetInfo: x.ActualLrpNetInfo.ToProto(),
 		CrashCount:       x.CrashCount,
@@ -530,6 +566,10 @@ func (x *ActualLRPInfo) ToProto() *ProtoActualLRPInfo {
 }
 
 func (x *ProtoActualLRPInfo) FromProto() *ActualLRPInfo {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPInfo{
 		ActualLrpNetInfo: x.ActualLrpNetInfo.FromProto(),
 		CrashCount:       x.CrashCount,
@@ -665,6 +705,10 @@ func (m *ActualLRPInstanceChangedEvent) SetTraceId(value string) {
 	}
 }
 func (x *ActualLRPInstanceChangedEvent) ToProto() *ProtoActualLRPInstanceChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPInstanceChangedEvent{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
@@ -676,6 +720,10 @@ func (x *ActualLRPInstanceChangedEvent) ToProto() *ProtoActualLRPInstanceChanged
 }
 
 func (x *ProtoActualLRPInstanceChangedEvent) FromProto() *ActualLRPInstanceChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPInstanceChangedEvent{
 		ActualLrpKey:         x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
@@ -761,6 +809,10 @@ func (m *ActualLRPInstanceRemovedEvent) SetTraceId(value string) {
 	}
 }
 func (x *ActualLRPInstanceRemovedEvent) ToProto() *ProtoActualLRPInstanceRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPInstanceRemovedEvent{
 		ActualLrp: x.ActualLrp.ToProto(),
 		TraceId:   x.TraceId,
@@ -769,6 +821,10 @@ func (x *ActualLRPInstanceRemovedEvent) ToProto() *ProtoActualLRPInstanceRemoved
 }
 
 func (x *ProtoActualLRPInstanceRemovedEvent) FromProto() *ActualLRPInstanceRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPInstanceRemovedEvent{
 		ActualLrp: x.ActualLrp.FromProto(),
 		TraceId:   x.TraceId,
@@ -851,6 +907,10 @@ func (m *DesiredLRPCreatedEvent) SetTraceId(value string) {
 	}
 }
 func (x *DesiredLRPCreatedEvent) ToProto() *ProtoDesiredLRPCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPCreatedEvent{
 		DesiredLrp: x.DesiredLrp.ToProto(),
 		TraceId:    x.TraceId,
@@ -859,6 +919,10 @@ func (x *DesiredLRPCreatedEvent) ToProto() *ProtoDesiredLRPCreatedEvent {
 }
 
 func (x *ProtoDesiredLRPCreatedEvent) FromProto() *DesiredLRPCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPCreatedEvent{
 		DesiredLrp: x.DesiredLrp.FromProto(),
 		TraceId:    x.TraceId,
@@ -956,6 +1020,10 @@ func (m *DesiredLRPChangedEvent) SetTraceId(value string) {
 	}
 }
 func (x *DesiredLRPChangedEvent) ToProto() *ProtoDesiredLRPChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPChangedEvent{
 		Before:  x.Before.ToProto(),
 		After:   x.After.ToProto(),
@@ -965,6 +1033,10 @@ func (x *DesiredLRPChangedEvent) ToProto() *ProtoDesiredLRPChangedEvent {
 }
 
 func (x *ProtoDesiredLRPChangedEvent) FromProto() *DesiredLRPChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPChangedEvent{
 		Before:  x.Before.FromProto(),
 		After:   x.After.FromProto(),
@@ -1048,6 +1120,10 @@ func (m *DesiredLRPRemovedEvent) SetTraceId(value string) {
 	}
 }
 func (x *DesiredLRPRemovedEvent) ToProto() *ProtoDesiredLRPRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPRemovedEvent{
 		DesiredLrp: x.DesiredLrp.ToProto(),
 		TraceId:    x.TraceId,
@@ -1056,6 +1132,10 @@ func (x *DesiredLRPRemovedEvent) ToProto() *ProtoDesiredLRPRemovedEvent {
 }
 
 func (x *ProtoDesiredLRPRemovedEvent) FromProto() *DesiredLRPRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPRemovedEvent{
 		DesiredLrp: x.DesiredLrp.FromProto(),
 		TraceId:    x.TraceId,
@@ -1183,6 +1263,10 @@ func (m *ActualLRPCrashedEvent) SetSince(value int64) {
 	}
 }
 func (x *ActualLRPCrashedEvent) ToProto() *ProtoActualLRPCrashedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPCrashedEvent{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
@@ -1194,6 +1278,10 @@ func (x *ActualLRPCrashedEvent) ToProto() *ProtoActualLRPCrashedEvent {
 }
 
 func (x *ProtoActualLRPCrashedEvent) FromProto() *ActualLRPCrashedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPCrashedEvent{
 		ActualLrpKey:         x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
@@ -1264,6 +1352,10 @@ func (m *EventsByCellId) SetCellId(value string) {
 	}
 }
 func (x *EventsByCellId) ToProto() *ProtoEventsByCellId {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEventsByCellId{
 		CellId: x.CellId,
 	}
@@ -1271,6 +1363,10 @@ func (x *EventsByCellId) ToProto() *ProtoEventsByCellId {
 }
 
 func (x *ProtoEventsByCellId) FromProto() *EventsByCellId {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EventsByCellId{
 		CellId: x.CellId,
 	}
@@ -1337,6 +1433,10 @@ func (m *TaskCreatedEvent) SetTask(value *Task) {
 	}
 }
 func (x *TaskCreatedEvent) ToProto() *ProtoTaskCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskCreatedEvent{
 		Task: x.Task.ToProto(),
 	}
@@ -1344,6 +1444,10 @@ func (x *TaskCreatedEvent) ToProto() *ProtoTaskCreatedEvent {
 }
 
 func (x *ProtoTaskCreatedEvent) FromProto() *TaskCreatedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskCreatedEvent{
 		Task: x.Task.FromProto(),
 	}
@@ -1425,6 +1529,10 @@ func (m *TaskChangedEvent) SetAfter(value *Task) {
 	}
 }
 func (x *TaskChangedEvent) ToProto() *ProtoTaskChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskChangedEvent{
 		Before: x.Before.ToProto(),
 		After:  x.After.ToProto(),
@@ -1433,6 +1541,10 @@ func (x *TaskChangedEvent) ToProto() *ProtoTaskChangedEvent {
 }
 
 func (x *ProtoTaskChangedEvent) FromProto() *TaskChangedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskChangedEvent{
 		Before: x.Before.FromProto(),
 		After:  x.After.FromProto(),
@@ -1500,6 +1612,10 @@ func (m *TaskRemovedEvent) SetTask(value *Task) {
 	}
 }
 func (x *TaskRemovedEvent) ToProto() *ProtoTaskRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskRemovedEvent{
 		Task: x.Task.ToProto(),
 	}
@@ -1507,6 +1623,10 @@ func (x *TaskRemovedEvent) ToProto() *ProtoTaskRemovedEvent {
 }
 
 func (x *ProtoTaskRemovedEvent) FromProto() *TaskRemovedEvent {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskRemovedEvent{
 		Task: x.Task.FromProto(),
 	}

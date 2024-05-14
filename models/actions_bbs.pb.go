@@ -170,6 +170,10 @@ func (m *Action) SetCodependentAction(value *CodependentAction) {
 	}
 }
 func (x *Action) ToProto() *ProtoAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoAction{
 		DownloadAction:     x.DownloadAction.ToProto(),
 		UploadAction:       x.UploadAction.ToProto(),
@@ -185,6 +189,10 @@ func (x *Action) ToProto() *ProtoAction {
 }
 
 func (x *ProtoAction) FromProto() *Action {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &Action{
 		DownloadAction:     x.DownloadAction.FromProto(),
 		UploadAction:       x.UploadAction.FromProto(),
@@ -364,6 +372,10 @@ func (m *DownloadAction) SetChecksumValue(value string) {
 	}
 }
 func (x *DownloadAction) ToProto() *ProtoDownloadAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDownloadAction{
 		Artifact:          x.Artifact,
 		From:              x.From,
@@ -378,6 +390,10 @@ func (x *DownloadAction) ToProto() *ProtoDownloadAction {
 }
 
 func (x *ProtoDownloadAction) FromProto() *DownloadAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DownloadAction{
 		Artifact:          x.Artifact,
 		From:              x.From,
@@ -511,6 +527,10 @@ func (m *UploadAction) SetUser(value string) {
 	}
 }
 func (x *UploadAction) ToProto() *ProtoUploadAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoUploadAction{
 		Artifact:  x.Artifact,
 		From:      x.From,
@@ -522,6 +542,10 @@ func (x *UploadAction) ToProto() *ProtoUploadAction {
 }
 
 func (x *ProtoUploadAction) FromProto() *UploadAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &UploadAction{
 		Artifact:  x.Artifact,
 		From:      x.From,
@@ -707,6 +731,10 @@ func (m *RunAction) SetSuppressLogOutput(value bool) {
 	}
 }
 func (x *RunAction) ToProto() *ProtoRunAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoRunAction{
 		Path:              x.Path,
 		Args:              x.Args,
@@ -721,6 +749,10 @@ func (x *RunAction) ToProto() *ProtoRunAction {
 }
 
 func (x *ProtoRunAction) FromProto() *RunAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &RunAction{
 		Path:              x.Path,
 		Args:              x.Args,
@@ -841,6 +873,10 @@ func (m *TimeoutAction) SetTimeoutMs(value int64) {
 	}
 }
 func (x *TimeoutAction) ToProto() *ProtoTimeoutAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTimeoutAction{
 		Action:              x.Action.ToProto(),
 		DeprecatedTimeoutNs: x.DeprecatedTimeoutNs,
@@ -851,6 +887,10 @@ func (x *TimeoutAction) ToProto() *ProtoTimeoutAction {
 }
 
 func (x *ProtoTimeoutAction) FromProto() *TimeoutAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TimeoutAction{
 		Action:              x.Action.FromProto(),
 		DeprecatedTimeoutNs: x.DeprecatedTimeoutNs,
@@ -980,6 +1020,10 @@ func (m *EmitProgressAction) SetLogSource(value string) {
 	}
 }
 func (x *EmitProgressAction) ToProto() *ProtoEmitProgressAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoEmitProgressAction{
 		Action:               x.Action.ToProto(),
 		StartMessage:         x.StartMessage,
@@ -991,6 +1035,10 @@ func (x *EmitProgressAction) ToProto() *ProtoEmitProgressAction {
 }
 
 func (x *ProtoEmitProgressAction) FromProto() *EmitProgressAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &EmitProgressAction{
 		Action:               x.Action.FromProto(),
 		StartMessage:         x.StartMessage,
@@ -1076,6 +1124,10 @@ func (m *TryAction) SetLogSource(value string) {
 	}
 }
 func (x *TryAction) ToProto() *ProtoTryAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTryAction{
 		Action:    x.Action.ToProto(),
 		LogSource: x.LogSource,
@@ -1084,6 +1136,10 @@ func (x *TryAction) ToProto() *ProtoTryAction {
 }
 
 func (x *ProtoTryAction) FromProto() *TryAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TryAction{
 		Action:    x.Action.FromProto(),
 		LogSource: x.LogSource,
@@ -1171,6 +1227,10 @@ func (m *ParallelAction) SetLogSource(value string) {
 	}
 }
 func (x *ParallelAction) ToProto() *ProtoParallelAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoParallelAction{
 		Actions:   ActionToProtoSlice(x.Actions),
 		LogSource: x.LogSource,
@@ -1179,6 +1239,10 @@ func (x *ParallelAction) ToProto() *ProtoParallelAction {
 }
 
 func (x *ProtoParallelAction) FromProto() *ParallelAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ParallelAction{
 		Actions:   ActionFromProtoSlice(x.Actions),
 		LogSource: x.LogSource,
@@ -1266,6 +1330,10 @@ func (m *SerialAction) SetLogSource(value string) {
 	}
 }
 func (x *SerialAction) ToProto() *ProtoSerialAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoSerialAction{
 		Actions:   ActionToProtoSlice(x.Actions),
 		LogSource: x.LogSource,
@@ -1274,6 +1342,10 @@ func (x *SerialAction) ToProto() *ProtoSerialAction {
 }
 
 func (x *ProtoSerialAction) FromProto() *SerialAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &SerialAction{
 		Actions:   ActionFromProtoSlice(x.Actions),
 		LogSource: x.LogSource,
@@ -1361,6 +1433,10 @@ func (m *CodependentAction) SetLogSource(value string) {
 	}
 }
 func (x *CodependentAction) ToProto() *ProtoCodependentAction {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCodependentAction{
 		Actions:   ActionToProtoSlice(x.Actions),
 		LogSource: x.LogSource,
@@ -1369,6 +1445,10 @@ func (x *CodependentAction) ToProto() *ProtoCodependentAction {
 }
 
 func (x *ProtoCodependentAction) FromProto() *CodependentAction {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CodependentAction{
 		Actions:   ActionFromProtoSlice(x.Actions),
 		LogSource: x.LogSource,
@@ -1459,6 +1539,10 @@ func (m *ResourceLimits) SetNproc(value *uint64) {
 	}
 }
 func (x *ResourceLimits) ToProto() *ProtoResourceLimits {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoResourceLimits{
 		Nofile: x.Nofile,
 		Nproc:  x.Nproc,
@@ -1467,6 +1551,10 @@ func (x *ResourceLimits) ToProto() *ProtoResourceLimits {
 }
 
 func (x *ProtoResourceLimits) FromProto() *ResourceLimits {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ResourceLimits{
 		Nofile: x.Nofile,
 		Nproc:  x.Nproc,

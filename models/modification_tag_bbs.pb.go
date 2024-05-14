@@ -65,6 +65,10 @@ func (m *ModificationTag) SetIndex(value uint32) {
 	}
 }
 func (x *ModificationTag) ToProto() *ProtoModificationTag {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoModificationTag{
 		Epoch: x.Epoch,
 		Index: x.Index,
@@ -73,6 +77,10 @@ func (x *ModificationTag) ToProto() *ProtoModificationTag {
 }
 
 func (x *ProtoModificationTag) FromProto() *ModificationTag {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ModificationTag{
 		Epoch: x.Epoch,
 		Index: x.Index,

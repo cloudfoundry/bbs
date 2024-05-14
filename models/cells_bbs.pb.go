@@ -80,6 +80,10 @@ func (m *CellCapacity) SetContainers(value int32) {
 	}
 }
 func (x *CellCapacity) ToProto() *ProtoCellCapacity {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCellCapacity{
 		MemoryMb:   x.MemoryMb,
 		DiskMb:     x.DiskMb,
@@ -89,6 +93,10 @@ func (x *CellCapacity) ToProto() *ProtoCellCapacity {
 }
 
 func (x *ProtoCellCapacity) FromProto() *CellCapacity {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CellCapacity{
 		MemoryMb:   x.MemoryMb,
 		DiskMb:     x.DiskMb,
@@ -277,6 +285,10 @@ func (m *CellPresence) SetRepUrl(value string) {
 	}
 }
 func (x *CellPresence) ToProto() *ProtoCellPresence {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCellPresence{
 		CellId:                x.CellId,
 		RepAddress:            x.RepAddress,
@@ -291,6 +303,10 @@ func (x *CellPresence) ToProto() *ProtoCellPresence {
 }
 
 func (x *ProtoCellPresence) FromProto() *CellPresence {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CellPresence{
 		CellId:                x.CellId,
 		RepAddress:            x.RepAddress,
@@ -384,6 +400,10 @@ func (m *Provider) SetProperties(value []string) {
 	}
 }
 func (x *Provider) ToProto() *ProtoProvider {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoProvider{
 		Name:       x.Name,
 		Properties: x.Properties,
@@ -392,6 +412,10 @@ func (x *Provider) ToProto() *ProtoProvider {
 }
 
 func (x *ProtoProvider) FromProto() *Provider {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &Provider{
 		Name:       x.Name,
 		Properties: x.Properties,
@@ -479,6 +503,10 @@ func (m *CellsResponse) SetCells(value []*CellPresence) {
 	}
 }
 func (x *CellsResponse) ToProto() *ProtoCellsResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCellsResponse{
 		Error: x.Error.ToProto(),
 		Cells: CellPresenceToProtoSlice(x.Cells),
@@ -487,6 +515,10 @@ func (x *CellsResponse) ToProto() *ProtoCellsResponse {
 }
 
 func (x *ProtoCellsResponse) FromProto() *CellsResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CellsResponse{
 		Error: x.Error.FromProto(),
 		Cells: CellPresenceFromProtoSlice(x.Cells),

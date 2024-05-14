@@ -50,6 +50,10 @@ func (m *TaskLifecycleResponse) SetError(value *Error) {
 	}
 }
 func (x *TaskLifecycleResponse) ToProto() *ProtoTaskLifecycleResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskLifecycleResponse{
 		Error: x.Error.ToProto(),
 	}
@@ -57,6 +61,10 @@ func (x *TaskLifecycleResponse) ToProto() *ProtoTaskLifecycleResponse {
 }
 
 func (x *ProtoTaskLifecycleResponse) FromProto() *TaskLifecycleResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskLifecycleResponse{
 		Error: x.Error.FromProto(),
 	}
@@ -153,6 +161,10 @@ func (m *DesireTaskRequest) SetDomain(value string) {
 	}
 }
 func (x *DesireTaskRequest) ToProto() *ProtoDesireTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesireTaskRequest{
 		TaskDefinition: x.TaskDefinition.ToProto(),
 		TaskGuid:       x.TaskGuid,
@@ -162,6 +174,10 @@ func (x *DesireTaskRequest) ToProto() *ProtoDesireTaskRequest {
 }
 
 func (x *ProtoDesireTaskRequest) FromProto() *DesireTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesireTaskRequest{
 		TaskDefinition: x.TaskDefinition.FromProto(),
 		TaskGuid:       x.TaskGuid,
@@ -245,6 +261,10 @@ func (m *StartTaskRequest) SetCellId(value string) {
 	}
 }
 func (x *StartTaskRequest) ToProto() *ProtoStartTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoStartTaskRequest{
 		TaskGuid: x.TaskGuid,
 		CellId:   x.CellId,
@@ -253,6 +273,10 @@ func (x *StartTaskRequest) ToProto() *ProtoStartTaskRequest {
 }
 
 func (x *ProtoStartTaskRequest) FromProto() *StartTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &StartTaskRequest{
 		TaskGuid: x.TaskGuid,
 		CellId:   x.CellId,
@@ -335,6 +359,10 @@ func (m *StartTaskResponse) SetShouldStart(value bool) {
 	}
 }
 func (x *StartTaskResponse) ToProto() *ProtoStartTaskResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoStartTaskResponse{
 		Error:       x.Error.ToProto(),
 		ShouldStart: x.ShouldStart,
@@ -343,6 +371,10 @@ func (x *StartTaskResponse) ToProto() *ProtoStartTaskResponse {
 }
 
 func (x *ProtoStartTaskResponse) FromProto() *StartTaskResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &StartTaskResponse{
 		Error:       x.Error.FromProto(),
 		ShouldStart: x.ShouldStart,
@@ -425,6 +457,10 @@ func (m *FailTaskRequest) SetFailureReason(value string) {
 	}
 }
 func (x *FailTaskRequest) ToProto() *ProtoFailTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoFailTaskRequest{
 		TaskGuid:      x.TaskGuid,
 		FailureReason: x.FailureReason,
@@ -433,6 +469,10 @@ func (x *FailTaskRequest) ToProto() *ProtoFailTaskRequest {
 }
 
 func (x *ProtoFailTaskRequest) FromProto() *FailTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &FailTaskRequest{
 		TaskGuid:      x.TaskGuid,
 		FailureReason: x.FailureReason,
@@ -515,6 +555,10 @@ func (m *RejectTaskRequest) SetRejectionReason(value string) {
 	}
 }
 func (x *RejectTaskRequest) ToProto() *ProtoRejectTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoRejectTaskRequest{
 		TaskGuid:        x.TaskGuid,
 		RejectionReason: x.RejectionReason,
@@ -523,6 +567,10 @@ func (x *RejectTaskRequest) ToProto() *ProtoRejectTaskRequest {
 }
 
 func (x *ProtoRejectTaskRequest) FromProto() *RejectTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &RejectTaskRequest{
 		TaskGuid:        x.TaskGuid,
 		RejectionReason: x.RejectionReason,
@@ -590,6 +638,10 @@ func (m *TaskGuidRequest) SetTaskGuid(value string) {
 	}
 }
 func (x *TaskGuidRequest) ToProto() *ProtoTaskGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskGuidRequest{
 		TaskGuid: x.TaskGuid,
 	}
@@ -597,6 +649,10 @@ func (x *TaskGuidRequest) ToProto() *ProtoTaskGuidRequest {
 }
 
 func (x *ProtoTaskGuidRequest) FromProto() *TaskGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskGuidRequest{
 		TaskGuid: x.TaskGuid,
 	}
@@ -723,6 +779,10 @@ func (m *CompleteTaskRequest) SetResult(value string) {
 	}
 }
 func (x *CompleteTaskRequest) ToProto() *ProtoCompleteTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCompleteTaskRequest{
 		TaskGuid:      x.TaskGuid,
 		CellId:        x.CellId,
@@ -734,6 +794,10 @@ func (x *CompleteTaskRequest) ToProto() *ProtoCompleteTaskRequest {
 }
 
 func (x *ProtoCompleteTaskRequest) FromProto() *CompleteTaskRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CompleteTaskRequest{
 		TaskGuid:      x.TaskGuid,
 		CellId:        x.CellId,
@@ -879,6 +943,10 @@ func (m *TaskCallbackResponse) SetCreatedAt(value int64) {
 	}
 }
 func (x *TaskCallbackResponse) ToProto() *ProtoTaskCallbackResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskCallbackResponse{
 		TaskGuid:      x.TaskGuid,
 		Failed:        x.Failed,
@@ -891,6 +959,10 @@ func (x *TaskCallbackResponse) ToProto() *ProtoTaskCallbackResponse {
 }
 
 func (x *ProtoTaskCallbackResponse) FromProto() *TaskCallbackResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskCallbackResponse{
 		TaskGuid:      x.TaskGuid,
 		Failed:        x.Failed,
@@ -977,6 +1049,10 @@ func (m *TasksRequest) SetCellId(value string) {
 	}
 }
 func (x *TasksRequest) ToProto() *ProtoTasksRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTasksRequest{
 		Domain: x.Domain,
 		CellId: x.CellId,
@@ -985,6 +1061,10 @@ func (x *TasksRequest) ToProto() *ProtoTasksRequest {
 }
 
 func (x *ProtoTasksRequest) FromProto() *TasksRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TasksRequest{
 		Domain: x.Domain,
 		CellId: x.CellId,
@@ -1072,6 +1152,10 @@ func (m *TasksResponse) SetTasks(value []*Task) {
 	}
 }
 func (x *TasksResponse) ToProto() *ProtoTasksResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTasksResponse{
 		Error: x.Error.ToProto(),
 		Tasks: TaskToProtoSlice(x.Tasks),
@@ -1080,6 +1164,10 @@ func (x *TasksResponse) ToProto() *ProtoTasksResponse {
 }
 
 func (x *ProtoTasksResponse) FromProto() *TasksResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TasksResponse{
 		Error: x.Error.FromProto(),
 		Tasks: TaskFromProtoSlice(x.Tasks),
@@ -1147,6 +1235,10 @@ func (m *TaskByGuidRequest) SetTaskGuid(value string) {
 	}
 }
 func (x *TaskByGuidRequest) ToProto() *ProtoTaskByGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskByGuidRequest{
 		TaskGuid: x.TaskGuid,
 	}
@@ -1154,6 +1246,10 @@ func (x *TaskByGuidRequest) ToProto() *ProtoTaskByGuidRequest {
 }
 
 func (x *ProtoTaskByGuidRequest) FromProto() *TaskByGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskByGuidRequest{
 		TaskGuid: x.TaskGuid,
 	}
@@ -1235,6 +1331,10 @@ func (m *TaskResponse) SetTask(value *Task) {
 	}
 }
 func (x *TaskResponse) ToProto() *ProtoTaskResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoTaskResponse{
 		Error: x.Error.ToProto(),
 		Task:  x.Task.ToProto(),
@@ -1243,6 +1343,10 @@ func (x *TaskResponse) ToProto() *ProtoTaskResponse {
 }
 
 func (x *ProtoTaskResponse) FromProto() *TaskResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &TaskResponse{
 		Error: x.Error.FromProto(),
 		Task:  x.Task.FromProto(),

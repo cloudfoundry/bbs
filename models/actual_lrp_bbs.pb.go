@@ -69,6 +69,10 @@ func (m *ActualLRPGroup) SetEvacuating(value *ActualLRP) {
 	}
 }
 func (x *ActualLRPGroup) ToProto() *ProtoActualLRPGroup {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPGroup{
 		Instance:   x.Instance.ToProto(),
 		Evacuating: x.Evacuating.ToProto(),
@@ -77,6 +81,10 @@ func (x *ActualLRPGroup) ToProto() *ProtoActualLRPGroup {
 }
 
 func (x *ProtoActualLRPGroup) FromProto() *ActualLRPGroup {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPGroup{
 		Instance:   x.Instance.FromProto(),
 		Evacuating: x.Evacuating.FromProto(),
@@ -189,6 +197,10 @@ func (m *PortMapping) SetHostTlsProxyPort(value uint32) {
 	}
 }
 func (x *PortMapping) ToProto() *ProtoPortMapping {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoPortMapping{
 		ContainerPort:         x.ContainerPort,
 		HostPort:              x.HostPort,
@@ -199,6 +211,10 @@ func (x *PortMapping) ToProto() *ProtoPortMapping {
 }
 
 func (x *ProtoPortMapping) FromProto() *PortMapping {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &PortMapping{
 		ContainerPort:         x.ContainerPort,
 		HostPort:              x.HostPort,
@@ -298,6 +314,10 @@ func (m *ActualLRPKey) SetDomain(value string) {
 	}
 }
 func (x *ActualLRPKey) ToProto() *ProtoActualLRPKey {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPKey{
 		ProcessGuid: x.ProcessGuid,
 		Index:       x.Index,
@@ -307,6 +327,10 @@ func (x *ActualLRPKey) ToProto() *ProtoActualLRPKey {
 }
 
 func (x *ProtoActualLRPKey) FromProto() *ActualLRPKey {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPKey{
 		ProcessGuid: x.ProcessGuid,
 		Index:       x.Index,
@@ -390,6 +414,10 @@ func (m *ActualLRPInstanceKey) SetCellId(value string) {
 	}
 }
 func (x *ActualLRPInstanceKey) ToProto() *ProtoActualLRPInstanceKey {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPInstanceKey{
 		InstanceGuid: x.InstanceGuid,
 		CellId:       x.CellId,
@@ -398,6 +426,10 @@ func (x *ActualLRPInstanceKey) ToProto() *ProtoActualLRPInstanceKey {
 }
 
 func (x *ProtoActualLRPInstanceKey) FromProto() *ActualLRPInstanceKey {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPInstanceKey{
 		InstanceGuid: x.InstanceGuid,
 		CellId:       x.CellId,
@@ -545,6 +577,10 @@ func (m *ActualLRPNetInfo) SetPreferredAddress(value ActualLRPNetInfo_PreferredA
 	}
 }
 func (x *ActualLRPNetInfo) ToProto() *ProtoActualLRPNetInfo {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPNetInfo{
 		Address:          x.Address,
 		Ports:            PortMappingToProtoSlice(x.Ports),
@@ -555,6 +591,10 @@ func (x *ActualLRPNetInfo) ToProto() *ProtoActualLRPNetInfo {
 }
 
 func (x *ProtoActualLRPNetInfo) FromProto() *ActualLRPNetInfo {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPNetInfo{
 		Address:          x.Address,
 		Ports:            PortMappingFromProtoSlice(x.Ports),
@@ -624,6 +664,10 @@ func (m *ActualLRPInternalRoute) SetHostname(value string) {
 	}
 }
 func (x *ActualLRPInternalRoute) ToProto() *ProtoActualLRPInternalRoute {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPInternalRoute{
 		Hostname: x.Hostname,
 	}
@@ -631,6 +675,10 @@ func (x *ActualLRPInternalRoute) ToProto() *ProtoActualLRPInternalRoute {
 }
 
 func (x *ProtoActualLRPInternalRoute) FromProto() *ActualLRPInternalRoute {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPInternalRoute{
 		Hostname: x.Hostname,
 	}
@@ -935,6 +983,10 @@ func (m *ActualLRP) SetAvailabilityZone(value string) {
 	}
 }
 func (x *ActualLRP) ToProto() *ProtoActualLRP {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRP{
 		ActualLrpKey:            x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.ToProto(),
@@ -955,6 +1007,10 @@ func (x *ActualLRP) ToProto() *ProtoActualLRP {
 }
 
 func (x *ProtoActualLRP) FromProto() *ActualLRP {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRP{
 		ActualLrpKey:            x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.FromProto(),

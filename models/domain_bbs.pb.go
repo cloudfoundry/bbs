@@ -70,6 +70,10 @@ func (m *DomainsResponse) SetDomains(value []string) {
 	}
 }
 func (x *DomainsResponse) ToProto() *ProtoDomainsResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDomainsResponse{
 		Error:   x.Error.ToProto(),
 		Domains: x.Domains,
@@ -78,6 +82,10 @@ func (x *DomainsResponse) ToProto() *ProtoDomainsResponse {
 }
 
 func (x *ProtoDomainsResponse) FromProto() *DomainsResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DomainsResponse{
 		Error:   x.Error.FromProto(),
 		Domains: x.Domains,
@@ -145,6 +153,10 @@ func (m *UpsertDomainResponse) SetError(value *Error) {
 	}
 }
 func (x *UpsertDomainResponse) ToProto() *ProtoUpsertDomainResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoUpsertDomainResponse{
 		Error: x.Error.ToProto(),
 	}
@@ -152,6 +164,10 @@ func (x *UpsertDomainResponse) ToProto() *ProtoUpsertDomainResponse {
 }
 
 func (x *ProtoUpsertDomainResponse) FromProto() *UpsertDomainResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &UpsertDomainResponse{
 		Error: x.Error.FromProto(),
 	}
@@ -233,6 +249,10 @@ func (m *UpsertDomainRequest) SetTtl(value uint32) {
 	}
 }
 func (x *UpsertDomainRequest) ToProto() *ProtoUpsertDomainRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoUpsertDomainRequest{
 		Domain: x.Domain,
 		Ttl:    x.Ttl,
@@ -241,6 +261,10 @@ func (x *UpsertDomainRequest) ToProto() *ProtoUpsertDomainRequest {
 }
 
 func (x *ProtoUpsertDomainRequest) FromProto() *UpsertDomainRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &UpsertDomainRequest{
 		Domain: x.Domain,
 		Ttl:    x.Ttl,

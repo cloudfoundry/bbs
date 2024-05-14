@@ -237,6 +237,10 @@ func (m *ImageLayer) SetDigestValue(value string) {
 	}
 }
 func (x *ImageLayer) ToProto() *ProtoImageLayer {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoImageLayer{
 		Name:            x.Name,
 		Url:             x.Url,
@@ -250,6 +254,10 @@ func (x *ImageLayer) ToProto() *ProtoImageLayer {
 }
 
 func (x *ProtoImageLayer) FromProto() *ImageLayer {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ImageLayer{
 		Name:            x.Name,
 		Url:             x.Url,

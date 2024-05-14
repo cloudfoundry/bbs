@@ -50,6 +50,10 @@ func (m *DesiredLRPLifecycleResponse) SetError(value *Error) {
 	}
 }
 func (x *DesiredLRPLifecycleResponse) ToProto() *ProtoDesiredLRPLifecycleResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPLifecycleResponse{
 		Error: x.Error.ToProto(),
 	}
@@ -57,6 +61,10 @@ func (x *DesiredLRPLifecycleResponse) ToProto() *ProtoDesiredLRPLifecycleRespons
 }
 
 func (x *ProtoDesiredLRPLifecycleResponse) FromProto() *DesiredLRPLifecycleResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPLifecycleResponse{
 		Error: x.Error.FromProto(),
 	}
@@ -143,6 +151,10 @@ func (m *DesiredLRPsResponse) SetDesiredLrps(value []*DesiredLRP) {
 	}
 }
 func (x *DesiredLRPsResponse) ToProto() *ProtoDesiredLRPsResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPsResponse{
 		Error:       x.Error.ToProto(),
 		DesiredLrps: DesiredLRPToProtoSlice(x.DesiredLrps),
@@ -151,6 +163,10 @@ func (x *DesiredLRPsResponse) ToProto() *ProtoDesiredLRPsResponse {
 }
 
 func (x *ProtoDesiredLRPsResponse) FromProto() *DesiredLRPsResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPsResponse{
 		Error:       x.Error.FromProto(),
 		DesiredLrps: DesiredLRPFromProtoSlice(x.DesiredLrps),
@@ -238,6 +254,10 @@ func (m *DesiredLRPsRequest) SetProcessGuids(value []string) {
 	}
 }
 func (x *DesiredLRPsRequest) ToProto() *ProtoDesiredLRPsRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPsRequest{
 		Domain:       x.Domain,
 		ProcessGuids: x.ProcessGuids,
@@ -246,6 +266,10 @@ func (x *DesiredLRPsRequest) ToProto() *ProtoDesiredLRPsRequest {
 }
 
 func (x *ProtoDesiredLRPsRequest) FromProto() *DesiredLRPsRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPsRequest{
 		Domain:       x.Domain,
 		ProcessGuids: x.ProcessGuids,
@@ -328,6 +352,10 @@ func (m *DesiredLRPResponse) SetDesiredLrp(value *DesiredLRP) {
 	}
 }
 func (x *DesiredLRPResponse) ToProto() *ProtoDesiredLRPResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPResponse{
 		Error:      x.Error.ToProto(),
 		DesiredLrp: x.DesiredLrp.ToProto(),
@@ -336,6 +364,10 @@ func (x *DesiredLRPResponse) ToProto() *ProtoDesiredLRPResponse {
 }
 
 func (x *ProtoDesiredLRPResponse) FromProto() *DesiredLRPResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPResponse{
 		Error:      x.Error.FromProto(),
 		DesiredLrp: x.DesiredLrp.FromProto(),
@@ -423,6 +455,10 @@ func (m *DesiredLRPSchedulingInfosResponse) SetDesiredLrpSchedulingInfos(value [
 	}
 }
 func (x *DesiredLRPSchedulingInfosResponse) ToProto() *ProtoDesiredLRPSchedulingInfosResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPSchedulingInfosResponse{
 		Error:                     x.Error.ToProto(),
 		DesiredLrpSchedulingInfos: DesiredLRPSchedulingInfoToProtoSlice(x.DesiredLrpSchedulingInfos),
@@ -431,6 +467,10 @@ func (x *DesiredLRPSchedulingInfosResponse) ToProto() *ProtoDesiredLRPScheduling
 }
 
 func (x *ProtoDesiredLRPSchedulingInfosResponse) FromProto() *DesiredLRPSchedulingInfosResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPSchedulingInfosResponse{
 		Error:                     x.Error.FromProto(),
 		DesiredLrpSchedulingInfos: DesiredLRPSchedulingInfoFromProtoSlice(x.DesiredLrpSchedulingInfos),
@@ -513,6 +553,10 @@ func (m *DesiredLRPSchedulingInfoByProcessGuidResponse) SetDesiredLrpSchedulingI
 	}
 }
 func (x *DesiredLRPSchedulingInfoByProcessGuidResponse) ToProto() *ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPSchedulingInfoByProcessGuidResponse{
 		Error:                    x.Error.ToProto(),
 		DesiredLrpSchedulingInfo: x.DesiredLrpSchedulingInfo.ToProto(),
@@ -521,6 +565,10 @@ func (x *DesiredLRPSchedulingInfoByProcessGuidResponse) ToProto() *ProtoDesiredL
 }
 
 func (x *ProtoDesiredLRPSchedulingInfoByProcessGuidResponse) FromProto() *DesiredLRPSchedulingInfoByProcessGuidResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPSchedulingInfoByProcessGuidResponse{
 		Error:                    x.Error.FromProto(),
 		DesiredLrpSchedulingInfo: x.DesiredLrpSchedulingInfo.FromProto(),
@@ -588,6 +636,10 @@ func (m *DesiredLRPByProcessGuidRequest) SetProcessGuid(value string) {
 	}
 }
 func (x *DesiredLRPByProcessGuidRequest) ToProto() *ProtoDesiredLRPByProcessGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesiredLRPByProcessGuidRequest{
 		ProcessGuid: x.ProcessGuid,
 	}
@@ -595,6 +647,10 @@ func (x *DesiredLRPByProcessGuidRequest) ToProto() *ProtoDesiredLRPByProcessGuid
 }
 
 func (x *ProtoDesiredLRPByProcessGuidRequest) FromProto() *DesiredLRPByProcessGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesiredLRPByProcessGuidRequest{
 		ProcessGuid: x.ProcessGuid,
 	}
@@ -661,6 +717,10 @@ func (m *DesireLRPRequest) SetDesiredLrp(value *DesiredLRP) {
 	}
 }
 func (x *DesireLRPRequest) ToProto() *ProtoDesireLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoDesireLRPRequest{
 		DesiredLrp: x.DesiredLrp.ToProto(),
 	}
@@ -668,6 +728,10 @@ func (x *DesireLRPRequest) ToProto() *ProtoDesireLRPRequest {
 }
 
 func (x *ProtoDesireLRPRequest) FromProto() *DesireLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &DesireLRPRequest{
 		DesiredLrp: x.DesiredLrp.FromProto(),
 	}
@@ -749,6 +813,10 @@ func (m *UpdateDesiredLRPRequest) SetUpdate(value *DesiredLRPUpdate) {
 	}
 }
 func (x *UpdateDesiredLRPRequest) ToProto() *ProtoUpdateDesiredLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoUpdateDesiredLRPRequest{
 		ProcessGuid: x.ProcessGuid,
 		Update:      x.Update.ToProto(),
@@ -757,6 +825,10 @@ func (x *UpdateDesiredLRPRequest) ToProto() *ProtoUpdateDesiredLRPRequest {
 }
 
 func (x *ProtoUpdateDesiredLRPRequest) FromProto() *UpdateDesiredLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &UpdateDesiredLRPRequest{
 		ProcessGuid: x.ProcessGuid,
 		Update:      x.Update.FromProto(),
@@ -824,6 +896,10 @@ func (m *RemoveDesiredLRPRequest) SetProcessGuid(value string) {
 	}
 }
 func (x *RemoveDesiredLRPRequest) ToProto() *ProtoRemoveDesiredLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoRemoveDesiredLRPRequest{
 		ProcessGuid: x.ProcessGuid,
 	}
@@ -831,6 +907,10 @@ func (x *RemoveDesiredLRPRequest) ToProto() *ProtoRemoveDesiredLRPRequest {
 }
 
 func (x *ProtoRemoveDesiredLRPRequest) FromProto() *RemoveDesiredLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &RemoveDesiredLRPRequest{
 		ProcessGuid: x.ProcessGuid,
 	}

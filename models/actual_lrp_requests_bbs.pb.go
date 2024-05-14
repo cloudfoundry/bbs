@@ -50,6 +50,10 @@ func (m *ActualLRPLifecycleResponse) SetError(value *Error) {
 	}
 }
 func (x *ActualLRPLifecycleResponse) ToProto() *ProtoActualLRPLifecycleResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPLifecycleResponse{
 		Error: x.Error.ToProto(),
 	}
@@ -57,6 +61,10 @@ func (x *ActualLRPLifecycleResponse) ToProto() *ProtoActualLRPLifecycleResponse 
 }
 
 func (x *ProtoActualLRPLifecycleResponse) FromProto() *ActualLRPLifecycleResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPLifecycleResponse{
 		Error: x.Error.FromProto(),
 	}
@@ -143,6 +151,10 @@ func (m *ActualLRPGroupsResponse) SetActualLrpGroups(value []*ActualLRPGroup) {
 	}
 }
 func (x *ActualLRPGroupsResponse) ToProto() *ProtoActualLRPGroupsResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPGroupsResponse{
 		Error:           x.Error.ToProto(),
 		ActualLrpGroups: ActualLRPGroupToProtoSlice(x.ActualLrpGroups),
@@ -151,6 +163,10 @@ func (x *ActualLRPGroupsResponse) ToProto() *ProtoActualLRPGroupsResponse {
 }
 
 func (x *ProtoActualLRPGroupsResponse) FromProto() *ActualLRPGroupsResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPGroupsResponse{
 		Error:           x.Error.FromProto(),
 		ActualLrpGroups: ActualLRPGroupFromProtoSlice(x.ActualLrpGroups),
@@ -233,6 +249,10 @@ func (m *ActualLRPGroupResponse) SetActualLrpGroup(value *ActualLRPGroup) {
 	}
 }
 func (x *ActualLRPGroupResponse) ToProto() *ProtoActualLRPGroupResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPGroupResponse{
 		Error:          x.Error.ToProto(),
 		ActualLrpGroup: x.ActualLrpGroup.ToProto(),
@@ -241,6 +261,10 @@ func (x *ActualLRPGroupResponse) ToProto() *ProtoActualLRPGroupResponse {
 }
 
 func (x *ProtoActualLRPGroupResponse) FromProto() *ActualLRPGroupResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPGroupResponse{
 		Error:          x.Error.FromProto(),
 		ActualLrpGroup: x.ActualLrpGroup.FromProto(),
@@ -323,6 +347,10 @@ func (m *ActualLRPGroupsRequest) SetCellId(value string) {
 	}
 }
 func (x *ActualLRPGroupsRequest) ToProto() *ProtoActualLRPGroupsRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPGroupsRequest{
 		Domain: x.Domain,
 		CellId: x.CellId,
@@ -331,6 +359,10 @@ func (x *ActualLRPGroupsRequest) ToProto() *ProtoActualLRPGroupsRequest {
 }
 
 func (x *ProtoActualLRPGroupsRequest) FromProto() *ActualLRPGroupsRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPGroupsRequest{
 		Domain: x.Domain,
 		CellId: x.CellId,
@@ -398,6 +430,10 @@ func (m *ActualLRPGroupsByProcessGuidRequest) SetProcessGuid(value string) {
 	}
 }
 func (x *ActualLRPGroupsByProcessGuidRequest) ToProto() *ProtoActualLRPGroupsByProcessGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: x.ProcessGuid,
 	}
@@ -405,6 +441,10 @@ func (x *ActualLRPGroupsByProcessGuidRequest) ToProto() *ProtoActualLRPGroupsByP
 }
 
 func (x *ProtoActualLRPGroupsByProcessGuidRequest) FromProto() *ActualLRPGroupsByProcessGuidRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPGroupsByProcessGuidRequest{
 		ProcessGuid: x.ProcessGuid,
 	}
@@ -486,6 +526,10 @@ func (m *ActualLRPGroupByProcessGuidAndIndexRequest) SetIndex(value int32) {
 	}
 }
 func (x *ActualLRPGroupByProcessGuidAndIndexRequest) ToProto() *ProtoActualLRPGroupByProcessGuidAndIndexRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPGroupByProcessGuidAndIndexRequest{
 		ProcessGuid: x.ProcessGuid,
 		Index:       x.Index,
@@ -494,6 +538,10 @@ func (x *ActualLRPGroupByProcessGuidAndIndexRequest) ToProto() *ProtoActualLRPGr
 }
 
 func (x *ProtoActualLRPGroupByProcessGuidAndIndexRequest) FromProto() *ActualLRPGroupByProcessGuidAndIndexRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPGroupByProcessGuidAndIndexRequest{
 		ProcessGuid: x.ProcessGuid,
 		Index:       x.Index,
@@ -591,6 +639,10 @@ func (m *ClaimActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstance
 	}
 }
 func (x *ClaimActualLRPRequest) ToProto() *ProtoClaimActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoClaimActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
 		Index:                x.Index,
@@ -600,6 +652,10 @@ func (x *ClaimActualLRPRequest) ToProto() *ProtoClaimActualLRPRequest {
 }
 
 func (x *ProtoClaimActualLRPRequest) FromProto() *ClaimActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ClaimActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
 		Index:                x.Index,
@@ -771,6 +827,10 @@ func (m *StartActualLRPRequest) SetAvailabilityZone(value string) {
 	}
 }
 func (x *StartActualLRPRequest) ToProto() *ProtoStartActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoStartActualLRPRequest{
 		ActualLrpKey:            x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.ToProto(),
@@ -784,6 +844,10 @@ func (x *StartActualLRPRequest) ToProto() *ProtoStartActualLRPRequest {
 }
 
 func (x *ProtoStartActualLRPRequest) FromProto() *StartActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &StartActualLRPRequest{
 		ActualLrpKey:            x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.FromProto(),
@@ -886,6 +950,10 @@ func (m *CrashActualLRPRequest) SetErrorMessage(value string) {
 	}
 }
 func (x *CrashActualLRPRequest) ToProto() *ProtoCrashActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoCrashActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.ToProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.ToProto(),
@@ -895,6 +963,10 @@ func (x *CrashActualLRPRequest) ToProto() *ProtoCrashActualLRPRequest {
 }
 
 func (x *ProtoCrashActualLRPRequest) FromProto() *CrashActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &CrashActualLRPRequest{
 		ActualLrpKey:         x.ActualLrpKey.FromProto(),
 		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
@@ -978,6 +1050,10 @@ func (m *FailActualLRPRequest) SetErrorMessage(value string) {
 	}
 }
 func (x *FailActualLRPRequest) ToProto() *ProtoFailActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoFailActualLRPRequest{
 		ActualLrpKey: x.ActualLrpKey.ToProto(),
 		ErrorMessage: x.ErrorMessage,
@@ -986,6 +1062,10 @@ func (x *FailActualLRPRequest) ToProto() *ProtoFailActualLRPRequest {
 }
 
 func (x *ProtoFailActualLRPRequest) FromProto() *FailActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &FailActualLRPRequest{
 		ActualLrpKey: x.ActualLrpKey.FromProto(),
 		ErrorMessage: x.ErrorMessage,
@@ -1053,6 +1133,10 @@ func (m *RetireActualLRPRequest) SetActualLrpKey(value *ActualLRPKey) {
 	}
 }
 func (x *RetireActualLRPRequest) ToProto() *ProtoRetireActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoRetireActualLRPRequest{
 		ActualLrpKey: x.ActualLrpKey.ToProto(),
 	}
@@ -1060,6 +1144,10 @@ func (x *RetireActualLRPRequest) ToProto() *ProtoRetireActualLRPRequest {
 }
 
 func (x *ProtoRetireActualLRPRequest) FromProto() *RetireActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &RetireActualLRPRequest{
 		ActualLrpKey: x.ActualLrpKey.FromProto(),
 	}
@@ -1156,6 +1244,10 @@ func (m *RemoveActualLRPRequest) SetActualLrpInstanceKey(value *ActualLRPInstanc
 	}
 }
 func (x *RemoveActualLRPRequest) ToProto() *ProtoRemoveActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoRemoveActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
 		Index:                x.Index,
@@ -1165,6 +1257,10 @@ func (x *RemoveActualLRPRequest) ToProto() *ProtoRemoveActualLRPRequest {
 }
 
 func (x *ProtoRemoveActualLRPRequest) FromProto() *RemoveActualLRPRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &RemoveActualLRPRequest{
 		ProcessGuid:          x.ProcessGuid,
 		Index:                x.Index,
@@ -1253,6 +1349,10 @@ func (m *ActualLRPsResponse) SetActualLrps(value []*ActualLRP) {
 	}
 }
 func (x *ActualLRPsResponse) ToProto() *ProtoActualLRPsResponse {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPsResponse{
 		Error:      x.Error.ToProto(),
 		ActualLrps: ActualLRPToProtoSlice(x.ActualLrps),
@@ -1261,6 +1361,10 @@ func (x *ActualLRPsResponse) ToProto() *ProtoActualLRPsResponse {
 }
 
 func (x *ProtoActualLRPsResponse) FromProto() *ActualLRPsResponse {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPsResponse{
 		Error:      x.Error.FromProto(),
 		ActualLrps: ActualLRPFromProtoSlice(x.ActualLrps),
@@ -1376,6 +1480,10 @@ func (m *ActualLRPsRequest) SetIndex(value *int32) {
 	}
 }
 func (x *ActualLRPsRequest) ToProto() *ProtoActualLRPsRequest {
+	if x == nil {
+		return nil
+	}
+
 	proto := &ProtoActualLRPsRequest{
 		Domain:      x.Domain,
 		CellId:      x.CellId,
@@ -1386,6 +1494,10 @@ func (x *ActualLRPsRequest) ToProto() *ProtoActualLRPsRequest {
 }
 
 func (x *ProtoActualLRPsRequest) FromProto() *ActualLRPsRequest {
+	if x == nil {
+		return nil
+	}
+
 	copysafe := &ActualLRPsRequest{
 		Domain:      x.Domain,
 		CellId:      x.CellId,
