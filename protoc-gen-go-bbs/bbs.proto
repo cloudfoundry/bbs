@@ -7,6 +7,7 @@ import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.FieldOptions {
   optional string bbs_json_name = 1000;
+  optional bool bbs_by_value = 1010;
 }
 
 extend google.protobuf.EnumValueOptions {
