@@ -8,6 +8,9 @@ import (
 type Routes map[string]*json.RawMessage
 
 func (r *Routes) ToProto() *ProtoRoutes {
+	if r == nil {
+		return nil
+	}
 	pr := &ProtoRoutes{
 		Routes: map[string][]byte{},
 	}
@@ -20,10 +23,14 @@ func (r *Routes) ToProto() *ProtoRoutes {
 }
 
 func (pr *ProtoRoutes) FromProto() *Routes {
-	r := Routes{}
+	if pr == nil {
+		return nil
+	}
 
+	r := Routes{}
 	for k, v := range pr.Routes {
-		*r[k] = v
+		raw := json.RawMessage(v)
+		r[k] = &raw
 	}
 
 	return &r
