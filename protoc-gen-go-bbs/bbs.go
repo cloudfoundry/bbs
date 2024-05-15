@@ -471,6 +471,9 @@ func (bbsGenerateHelper) genToProtoSliceMethod(g *protogen.GeneratedFile, msg *p
 	unsafeName := getUnsafeName(g, msg.GoIdent)
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
 		g.P("func ", copysafeName, "ToProtoSlice(values []*", copysafeName, ") []*", unsafeName, " {")
+		g.P("if values == nil {")
+		g.P("return nil")
+		g.P("}")
 		g.P("result := make([]*", unsafeName, ", len(values))")
 		g.P("for i, val := range values {")
 		g.P("result[i] = val.ToProto()")
@@ -494,6 +497,9 @@ func (bbsGenerateHelper) genToProtoSliceMethod(g *protogen.GeneratedFile, msg *p
 					protoFieldType := "map[" + mapKeyType + "]" + protoMapValueType
 
 					g.P("func ", copysafeName, getFieldName(field.GoName), "ToProtoMap(values ", fieldType, ") ", protoFieldType, " {")
+					g.P("if values == nil {")
+					g.P("return nil")
+					g.P("}")
 					g.P("result := make(map[", mapKeyType, "]*", protoValueFieldType, ", len(values))")
 					g.P("for i, val := range values {")
 					g.P("result[i] = val.ToProto()")
@@ -511,6 +517,9 @@ func (bbsGenerateHelper) genFromProtoSliceMethod(g *protogen.GeneratedFile, msg 
 	unsafeName := getUnsafeName(g, msg.GoIdent)
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
 		g.P("func ", copysafeName, "FromProtoSlice(values []*", unsafeName, ") []*", copysafeName, " {")
+		g.P("if values == nil {")
+		g.P("return nil")
+		g.P("}")
 		g.P("result := make([]*", copysafeName, ", len(values))")
 		g.P("for i, val := range values {")
 		g.P("result[i] = val.FromProto()")
@@ -534,6 +543,9 @@ func (bbsGenerateHelper) genFromProtoSliceMethod(g *protogen.GeneratedFile, msg 
 					protoFieldType := "map[" + mapKeyType + "]" + protoMapValueType
 
 					g.P("func ", copysafeName, getFieldName(field.GoName), "FromProtoMap(values ", protoFieldType, ") ", fieldType, " {")
+					g.P("if values == nil {")
+					g.P("return nil")
+					g.P("}")
 					g.P("result := make(map[", mapKeyType, "]*", valueFieldType, ", len(values))")
 					g.P("for i, val := range values {")
 					g.P("result[i] = val.FromProto()")
