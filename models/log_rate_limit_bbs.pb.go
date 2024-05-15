@@ -72,6 +72,9 @@ func (x *ProtoLogRateLimit) FromProto() *LogRateLimit {
 }
 
 func LogRateLimitToProtoSlice(values []*LogRateLimit) []*ProtoLogRateLimit {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoLogRateLimit, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -80,6 +83,9 @@ func LogRateLimitToProtoSlice(values []*LogRateLimit) []*ProtoLogRateLimit {
 }
 
 func LogRateLimitFromProtoSlice(values []*ProtoLogRateLimit) []*LogRateLimit {
+	if values == nil {
+		return nil
+	}
 	result := make([]*LogRateLimit, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

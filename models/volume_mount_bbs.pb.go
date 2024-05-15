@@ -89,6 +89,9 @@ func (x *ProtoSharedDevice) FromProto() *SharedDevice {
 }
 
 func SharedDeviceToProtoSlice(values []*SharedDevice) []*ProtoSharedDevice {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoSharedDevice, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -97,6 +100,9 @@ func SharedDeviceToProtoSlice(values []*SharedDevice) []*ProtoSharedDevice {
 }
 
 func SharedDeviceFromProtoSlice(values []*ProtoSharedDevice) []*SharedDevice {
+	if values == nil {
+		return nil
+	}
 	result := make([]*SharedDevice, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -143,7 +149,7 @@ func (this *VolumeMount) Equal(that interface{}) bool {
 	if this.Mode != that1.Mode {
 		return false
 	}
-	if !this.Shared.Equal(that1.Shared) {
+	if !this.Shared.Equal(*that1.Shared) {
 		return false
 	}
 	return true
@@ -221,6 +227,9 @@ func (x *ProtoVolumeMount) FromProto() *VolumeMount {
 }
 
 func VolumeMountToProtoSlice(values []*VolumeMount) []*ProtoVolumeMount {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoVolumeMount, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -229,6 +238,9 @@ func VolumeMountToProtoSlice(values []*VolumeMount) []*ProtoVolumeMount {
 }
 
 func VolumeMountFromProtoSlice(values []*ProtoVolumeMount) []*VolumeMount {
+	if values == nil {
+		return nil
+	}
 	result := make([]*VolumeMount, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -307,6 +319,9 @@ func (x *ProtoVolumePlacement) FromProto() *VolumePlacement {
 }
 
 func VolumePlacementToProtoSlice(values []*VolumePlacement) []*ProtoVolumePlacement {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoVolumePlacement, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -315,6 +330,9 @@ func VolumePlacementToProtoSlice(values []*VolumePlacement) []*ProtoVolumePlacem
 }
 
 func VolumePlacementFromProtoSlice(values []*ProtoVolumePlacement) []*VolumePlacement {
+	if values == nil {
+		return nil
+	}
 	result := make([]*VolumePlacement, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

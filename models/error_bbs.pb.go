@@ -189,6 +189,9 @@ func (x *ProtoError) FromProto() *Error {
 }
 
 func ErrorToProtoSlice(values []*Error) []*ProtoError {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoError, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -197,6 +200,9 @@ func ErrorToProtoSlice(values []*Error) []*ProtoError {
 }
 
 func ErrorFromProtoSlice(values []*ProtoError) []*Error {
+	if values == nil {
+		return nil
+	}
 	result := make([]*Error, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

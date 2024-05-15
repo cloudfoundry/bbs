@@ -35,7 +35,7 @@ func (this *Sidecar) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Action.Equal(that1.Action) {
+	if !this.Action.Equal(*that1.Action) {
 		return false
 	}
 	if this.DiskMb != that1.DiskMb {
@@ -106,6 +106,9 @@ func (x *ProtoSidecar) FromProto() *Sidecar {
 }
 
 func SidecarToProtoSlice(values []*Sidecar) []*ProtoSidecar {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoSidecar, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -114,6 +117,9 @@ func SidecarToProtoSlice(values []*Sidecar) []*ProtoSidecar {
 }
 
 func SidecarFromProtoSlice(values []*ProtoSidecar) []*Sidecar {
+	if values == nil {
+		return nil
+	}
 	result := make([]*Sidecar, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

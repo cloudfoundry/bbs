@@ -20,6 +20,21 @@ var _ = Describe("Routes", func() {
 			update = models.DesiredLRPUpdate{
 				Routes: routes,
 			}
+			/*
+				The point of these tests is to go from non-proto struct
+				to JSON/Protobuf (binary) representation and back.
+				With the new protobuf requirements we have to add a step
+				to convert to the Proto struct before we can get the
+				Proto binary representation.
+
+				Old way:
+				DesiredLRPUpdate -> Protobuf binary -> DesiredLRPUpdate
+
+				New way:
+				DesiredLRPUpdate -> ProtoDesiredLRPUpdate -> Protobuf binary -> ProtoDesiredLRPUpdate -> DesiredLRPUpdate
+
+				2024-05-15: It remains to be seen if this extra layer is going to cause performance issues
+			*/
 
 			b, err := json.Marshal(update)
 			Expect(err).NotTo(HaveOccurred())
@@ -29,9 +44,10 @@ var _ = Describe("Routes", func() {
 			protoUpdate := update.ToProto()
 			b, err = proto.Marshal(protoUpdate)
 			Expect(err).NotTo(HaveOccurred())
-			protoA := aProto.ToProto()
+			protoA := aProto.ToProto() // aProto is empty ProtoDesiredLRPUpdate
 			err = proto.Unmarshal(b, protoA)
 			Expect(err).NotTo(HaveOccurred())
+			aProto = *protoA.FromProto() // make sure we convert back to non-proto
 		})
 
 		It("marshals JSON properly", func() {

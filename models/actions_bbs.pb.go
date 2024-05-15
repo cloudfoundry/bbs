@@ -41,31 +41,31 @@ func (this *Action) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DownloadAction.Equal(that1.DownloadAction) {
+	if !this.DownloadAction.Equal(*that1.DownloadAction) {
 		return false
 	}
-	if !this.UploadAction.Equal(that1.UploadAction) {
+	if !this.UploadAction.Equal(*that1.UploadAction) {
 		return false
 	}
-	if !this.RunAction.Equal(that1.RunAction) {
+	if !this.RunAction.Equal(*that1.RunAction) {
 		return false
 	}
-	if !this.TimeoutAction.Equal(that1.TimeoutAction) {
+	if !this.TimeoutAction.Equal(*that1.TimeoutAction) {
 		return false
 	}
-	if !this.EmitProgressAction.Equal(that1.EmitProgressAction) {
+	if !this.EmitProgressAction.Equal(*that1.EmitProgressAction) {
 		return false
 	}
-	if !this.TryAction.Equal(that1.TryAction) {
+	if !this.TryAction.Equal(*that1.TryAction) {
 		return false
 	}
-	if !this.ParallelAction.Equal(that1.ParallelAction) {
+	if !this.ParallelAction.Equal(*that1.ParallelAction) {
 		return false
 	}
-	if !this.SerialAction.Equal(that1.SerialAction) {
+	if !this.SerialAction.Equal(*that1.SerialAction) {
 		return false
 	}
-	if !this.CodependentAction.Equal(that1.CodependentAction) {
+	if !this.CodependentAction.Equal(*that1.CodependentAction) {
 		return false
 	}
 	return true
@@ -208,6 +208,9 @@ func (x *ProtoAction) FromProto() *Action {
 }
 
 func ActionToProtoSlice(values []*Action) []*ProtoAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -216,6 +219,9 @@ func ActionToProtoSlice(values []*Action) []*ProtoAction {
 }
 
 func ActionFromProtoSlice(values []*ProtoAction) []*Action {
+	if values == nil {
+		return nil
+	}
 	result := make([]*Action, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -408,6 +414,9 @@ func (x *ProtoDownloadAction) FromProto() *DownloadAction {
 }
 
 func DownloadActionToProtoSlice(values []*DownloadAction) []*ProtoDownloadAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDownloadAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -416,6 +425,9 @@ func DownloadActionToProtoSlice(values []*DownloadAction) []*ProtoDownloadAction
 }
 
 func DownloadActionFromProtoSlice(values []*ProtoDownloadAction) []*DownloadAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DownloadAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -557,6 +569,9 @@ func (x *ProtoUploadAction) FromProto() *UploadAction {
 }
 
 func UploadActionToProtoSlice(values []*UploadAction) []*ProtoUploadAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoUploadAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -565,6 +580,9 @@ func UploadActionToProtoSlice(values []*UploadAction) []*ProtoUploadAction {
 }
 
 func UploadActionFromProtoSlice(values []*ProtoUploadAction) []*UploadAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*UploadAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -628,7 +646,7 @@ func (this *RunAction) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.ResourceLimits.Equal(that1.ResourceLimits) {
+	if !this.ResourceLimits.Equal(*that1.ResourceLimits) {
 		return false
 	}
 	if this.User != that1.User {
@@ -767,6 +785,9 @@ func (x *ProtoRunAction) FromProto() *RunAction {
 }
 
 func RunActionToProtoSlice(values []*RunAction) []*ProtoRunAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoRunAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -775,6 +796,9 @@ func RunActionToProtoSlice(values []*RunAction) []*ProtoRunAction {
 }
 
 func RunActionFromProtoSlice(values []*ProtoRunAction) []*RunAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*RunAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -812,7 +836,7 @@ func (this *TimeoutAction) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Action.Equal(that1.Action) {
+	if !this.Action.Equal(*that1.Action) {
 		return false
 	}
 	if this.DeprecatedTimeoutNs != that1.DeprecatedTimeoutNs {
@@ -901,6 +925,9 @@ func (x *ProtoTimeoutAction) FromProto() *TimeoutAction {
 }
 
 func TimeoutActionToProtoSlice(values []*TimeoutAction) []*ProtoTimeoutAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTimeoutAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -909,6 +936,9 @@ func TimeoutActionToProtoSlice(values []*TimeoutAction) []*ProtoTimeoutAction {
 }
 
 func TimeoutActionFromProtoSlice(values []*ProtoTimeoutAction) []*TimeoutAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TimeoutAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -947,7 +977,7 @@ func (this *EmitProgressAction) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Action.Equal(that1.Action) {
+	if !this.Action.Equal(*that1.Action) {
 		return false
 	}
 	if this.StartMessage != that1.StartMessage {
@@ -1050,6 +1080,9 @@ func (x *ProtoEmitProgressAction) FromProto() *EmitProgressAction {
 }
 
 func EmitProgressActionToProtoSlice(values []*EmitProgressAction) []*ProtoEmitProgressAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoEmitProgressAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1058,6 +1091,9 @@ func EmitProgressActionToProtoSlice(values []*EmitProgressAction) []*ProtoEmitPr
 }
 
 func EmitProgressActionFromProtoSlice(values []*ProtoEmitProgressAction) []*EmitProgressAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*EmitProgressAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1093,7 +1129,7 @@ func (this *TryAction) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Action.Equal(that1.Action) {
+	if !this.Action.Equal(*that1.Action) {
 		return false
 	}
 	if this.LogSource != that1.LogSource {
@@ -1148,6 +1184,9 @@ func (x *ProtoTryAction) FromProto() *TryAction {
 }
 
 func TryActionToProtoSlice(values []*TryAction) []*ProtoTryAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTryAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1156,6 +1195,9 @@ func TryActionToProtoSlice(values []*TryAction) []*ProtoTryAction {
 }
 
 func TryActionFromProtoSlice(values []*ProtoTryAction) []*TryAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TryAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1251,6 +1293,9 @@ func (x *ProtoParallelAction) FromProto() *ParallelAction {
 }
 
 func ParallelActionToProtoSlice(values []*ParallelAction) []*ProtoParallelAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoParallelAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1259,6 +1304,9 @@ func ParallelActionToProtoSlice(values []*ParallelAction) []*ProtoParallelAction
 }
 
 func ParallelActionFromProtoSlice(values []*ProtoParallelAction) []*ParallelAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ParallelAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1354,6 +1402,9 @@ func (x *ProtoSerialAction) FromProto() *SerialAction {
 }
 
 func SerialActionToProtoSlice(values []*SerialAction) []*ProtoSerialAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoSerialAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1362,6 +1413,9 @@ func SerialActionToProtoSlice(values []*SerialAction) []*ProtoSerialAction {
 }
 
 func SerialActionFromProtoSlice(values []*ProtoSerialAction) []*SerialAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*SerialAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1457,6 +1511,9 @@ func (x *ProtoCodependentAction) FromProto() *CodependentAction {
 }
 
 func CodependentActionToProtoSlice(values []*CodependentAction) []*ProtoCodependentAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCodependentAction, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1465,6 +1522,9 @@ func CodependentActionToProtoSlice(values []*CodependentAction) []*ProtoCodepend
 }
 
 func CodependentActionFromProtoSlice(values []*ProtoCodependentAction) []*CodependentAction {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CodependentAction, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1563,6 +1623,9 @@ func (x *ProtoResourceLimits) FromProto() *ResourceLimits {
 }
 
 func ResourceLimitsToProtoSlice(values []*ResourceLimits) []*ProtoResourceLimits {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoResourceLimits, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1571,6 +1634,9 @@ func ResourceLimitsToProtoSlice(values []*ResourceLimits) []*ProtoResourceLimits
 }
 
 func ResourceLimitsFromProtoSlice(values []*ProtoResourceLimits) []*ResourceLimits {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ResourceLimits, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

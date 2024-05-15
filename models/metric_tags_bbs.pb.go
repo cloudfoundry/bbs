@@ -123,6 +123,9 @@ func (x *ProtoMetricTagValue) FromProto() *MetricTagValue {
 }
 
 func MetricTagValueToProtoSlice(values []*MetricTagValue) []*ProtoMetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -131,6 +134,9 @@ func MetricTagValueToProtoSlice(values []*MetricTagValue) []*ProtoMetricTagValue
 }
 
 func MetricTagValueFromProtoSlice(values []*ProtoMetricTagValue) []*MetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make([]*MetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

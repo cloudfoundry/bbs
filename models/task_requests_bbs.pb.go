@@ -33,7 +33,7 @@ func (this *TaskLifecycleResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	return true
@@ -72,6 +72,9 @@ func (x *ProtoTaskLifecycleResponse) FromProto() *TaskLifecycleResponse {
 }
 
 func TaskLifecycleResponseToProtoSlice(values []*TaskLifecycleResponse) []*ProtoTaskLifecycleResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskLifecycleResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -80,6 +83,9 @@ func TaskLifecycleResponseToProtoSlice(values []*TaskLifecycleResponse) []*Proto
 }
 
 func TaskLifecycleResponseFromProtoSlice(values []*ProtoTaskLifecycleResponse) []*TaskLifecycleResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskLifecycleResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -116,7 +122,7 @@ func (this *DesireTaskRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.TaskDefinition.Equal(that1.TaskDefinition) {
+	if !this.TaskDefinition.Equal(*that1.TaskDefinition) {
 		return false
 	}
 	if this.TaskGuid != that1.TaskGuid {
@@ -187,6 +193,9 @@ func (x *ProtoDesireTaskRequest) FromProto() *DesireTaskRequest {
 }
 
 func DesireTaskRequestToProtoSlice(values []*DesireTaskRequest) []*ProtoDesireTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesireTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -195,6 +204,9 @@ func DesireTaskRequestToProtoSlice(values []*DesireTaskRequest) []*ProtoDesireTa
 }
 
 func DesireTaskRequestFromProtoSlice(values []*ProtoDesireTaskRequest) []*DesireTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesireTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -285,6 +297,9 @@ func (x *ProtoStartTaskRequest) FromProto() *StartTaskRequest {
 }
 
 func StartTaskRequestToProtoSlice(values []*StartTaskRequest) []*ProtoStartTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoStartTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -293,6 +308,9 @@ func StartTaskRequestToProtoSlice(values []*StartTaskRequest) []*ProtoStartTaskR
 }
 
 func StartTaskRequestFromProtoSlice(values []*ProtoStartTaskRequest) []*StartTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*StartTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -328,7 +346,7 @@ func (this *StartTaskResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	if this.ShouldStart != that1.ShouldStart {
@@ -383,6 +401,9 @@ func (x *ProtoStartTaskResponse) FromProto() *StartTaskResponse {
 }
 
 func StartTaskResponseToProtoSlice(values []*StartTaskResponse) []*ProtoStartTaskResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoStartTaskResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -391,6 +412,9 @@ func StartTaskResponseToProtoSlice(values []*StartTaskResponse) []*ProtoStartTas
 }
 
 func StartTaskResponseFromProtoSlice(values []*ProtoStartTaskResponse) []*StartTaskResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*StartTaskResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -481,6 +505,9 @@ func (x *ProtoFailTaskRequest) FromProto() *FailTaskRequest {
 }
 
 func FailTaskRequestToProtoSlice(values []*FailTaskRequest) []*ProtoFailTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoFailTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -489,6 +516,9 @@ func FailTaskRequestToProtoSlice(values []*FailTaskRequest) []*ProtoFailTaskRequ
 }
 
 func FailTaskRequestFromProtoSlice(values []*ProtoFailTaskRequest) []*FailTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*FailTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -579,6 +609,9 @@ func (x *ProtoRejectTaskRequest) FromProto() *RejectTaskRequest {
 }
 
 func RejectTaskRequestToProtoSlice(values []*RejectTaskRequest) []*ProtoRejectTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoRejectTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -587,6 +620,9 @@ func RejectTaskRequestToProtoSlice(values []*RejectTaskRequest) []*ProtoRejectTa
 }
 
 func RejectTaskRequestFromProtoSlice(values []*ProtoRejectTaskRequest) []*RejectTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*RejectTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -660,6 +696,9 @@ func (x *ProtoTaskGuidRequest) FromProto() *TaskGuidRequest {
 }
 
 func TaskGuidRequestToProtoSlice(values []*TaskGuidRequest) []*ProtoTaskGuidRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -668,6 +707,9 @@ func TaskGuidRequestToProtoSlice(values []*TaskGuidRequest) []*ProtoTaskGuidRequ
 }
 
 func TaskGuidRequestFromProtoSlice(values []*ProtoTaskGuidRequest) []*TaskGuidRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -809,6 +851,9 @@ func (x *ProtoCompleteTaskRequest) FromProto() *CompleteTaskRequest {
 }
 
 func CompleteTaskRequestToProtoSlice(values []*CompleteTaskRequest) []*ProtoCompleteTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCompleteTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -817,6 +862,9 @@ func CompleteTaskRequestToProtoSlice(values []*CompleteTaskRequest) []*ProtoComp
 }
 
 func CompleteTaskRequestFromProtoSlice(values []*ProtoCompleteTaskRequest) []*CompleteTaskRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CompleteTaskRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -975,6 +1023,9 @@ func (x *ProtoTaskCallbackResponse) FromProto() *TaskCallbackResponse {
 }
 
 func TaskCallbackResponseToProtoSlice(values []*TaskCallbackResponse) []*ProtoTaskCallbackResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskCallbackResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -983,6 +1034,9 @@ func TaskCallbackResponseToProtoSlice(values []*TaskCallbackResponse) []*ProtoTa
 }
 
 func TaskCallbackResponseFromProtoSlice(values []*ProtoTaskCallbackResponse) []*TaskCallbackResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskCallbackResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1073,6 +1127,9 @@ func (x *ProtoTasksRequest) FromProto() *TasksRequest {
 }
 
 func TasksRequestToProtoSlice(values []*TasksRequest) []*ProtoTasksRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTasksRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1081,6 +1138,9 @@ func TasksRequestToProtoSlice(values []*TasksRequest) []*ProtoTasksRequest {
 }
 
 func TasksRequestFromProtoSlice(values []*ProtoTasksRequest) []*TasksRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TasksRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1116,7 +1176,7 @@ func (this *TasksResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	if len(this.Tasks) != len(that1.Tasks) {
@@ -1176,6 +1236,9 @@ func (x *ProtoTasksResponse) FromProto() *TasksResponse {
 }
 
 func TasksResponseToProtoSlice(values []*TasksResponse) []*ProtoTasksResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTasksResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1184,6 +1247,9 @@ func TasksResponseToProtoSlice(values []*TasksResponse) []*ProtoTasksResponse {
 }
 
 func TasksResponseFromProtoSlice(values []*ProtoTasksResponse) []*TasksResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TasksResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1257,6 +1323,9 @@ func (x *ProtoTaskByGuidRequest) FromProto() *TaskByGuidRequest {
 }
 
 func TaskByGuidRequestToProtoSlice(values []*TaskByGuidRequest) []*ProtoTaskByGuidRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskByGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1265,6 +1334,9 @@ func TaskByGuidRequestToProtoSlice(values []*TaskByGuidRequest) []*ProtoTaskByGu
 }
 
 func TaskByGuidRequestFromProtoSlice(values []*ProtoTaskByGuidRequest) []*TaskByGuidRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskByGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1300,10 +1372,10 @@ func (this *TaskResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
-	if !this.Task.Equal(that1.Task) {
+	if !this.Task.Equal(*that1.Task) {
 		return false
 	}
 	return true
@@ -1355,6 +1427,9 @@ func (x *ProtoTaskResponse) FromProto() *TaskResponse {
 }
 
 func TaskResponseToProtoSlice(values []*TaskResponse) []*ProtoTaskResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1363,6 +1438,9 @@ func TaskResponseToProtoSlice(values []*TaskResponse) []*ProtoTaskResponse {
 }
 
 func TaskResponseFromProtoSlice(values []*ProtoTaskResponse) []*TaskResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

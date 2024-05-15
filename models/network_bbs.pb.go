@@ -77,6 +77,9 @@ func (x *ProtoNetwork) FromProto() *Network {
 }
 
 func NetworkToProtoSlice(values []*Network) []*ProtoNetwork {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoNetwork, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -85,6 +88,9 @@ func NetworkToProtoSlice(values []*Network) []*ProtoNetwork {
 }
 
 func NetworkFromProtoSlice(values []*ProtoNetwork) []*Network {
+	if values == nil {
+		return nil
+	}
 	result := make([]*Network, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

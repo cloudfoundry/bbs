@@ -89,6 +89,9 @@ func (x *ProtoPortRange) FromProto() *PortRange {
 }
 
 func PortRangeToProtoSlice(values []*PortRange) []*ProtoPortRange {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoPortRange, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -97,6 +100,9 @@ func PortRangeToProtoSlice(values []*PortRange) []*ProtoPortRange {
 }
 
 func PortRangeFromProtoSlice(values []*ProtoPortRange) []*PortRange {
+	if values == nil {
+		return nil
+	}
 	result := make([]*PortRange, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -187,6 +193,9 @@ func (x *ProtoICMPInfo) FromProto() *ICMPInfo {
 }
 
 func ICMPInfoToProtoSlice(values []*ICMPInfo) []*ProtoICMPInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoICMPInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -195,6 +204,9 @@ func ICMPInfoToProtoSlice(values []*ICMPInfo) []*ProtoICMPInfo {
 }
 
 func ICMPInfoFromProtoSlice(values []*ProtoICMPInfo) []*ICMPInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ICMPInfo, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -254,10 +266,10 @@ func (this *SecurityGroupRule) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.PortRange.Equal(that1.PortRange) {
+	if !this.PortRange.Equal(*that1.PortRange) {
 		return false
 	}
-	if !this.IcmpInfo.Equal(that1.IcmpInfo) {
+	if !this.IcmpInfo.Equal(*that1.IcmpInfo) {
 		return false
 	}
 	if this.Log != that1.Log {
@@ -385,6 +397,9 @@ func (x *ProtoSecurityGroupRule) FromProto() *SecurityGroupRule {
 }
 
 func SecurityGroupRuleToProtoSlice(values []*SecurityGroupRule) []*ProtoSecurityGroupRule {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoSecurityGroupRule, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -393,6 +408,9 @@ func SecurityGroupRuleToProtoSlice(values []*SecurityGroupRule) []*ProtoSecurity
 }
 
 func SecurityGroupRuleFromProtoSlice(values []*ProtoSecurityGroupRule) []*SecurityGroupRule {
+	if values == nil {
+		return nil
+	}
 	result := make([]*SecurityGroupRule, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

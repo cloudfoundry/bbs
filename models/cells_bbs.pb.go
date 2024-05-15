@@ -106,6 +106,9 @@ func (x *ProtoCellCapacity) FromProto() *CellCapacity {
 }
 
 func CellCapacityToProtoSlice(values []*CellCapacity) []*ProtoCellCapacity {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCellCapacity, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -114,6 +117,9 @@ func CellCapacityToProtoSlice(values []*CellCapacity) []*ProtoCellCapacity {
 }
 
 func CellCapacityFromProtoSlice(values []*ProtoCellCapacity) []*CellCapacity {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CellCapacity, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -164,7 +170,7 @@ func (this *CellPresence) Equal(that interface{}) bool {
 	if this.Zone != that1.Zone {
 		return false
 	}
-	if !this.Capacity.Equal(that1.Capacity) {
+	if !this.Capacity.Equal(*that1.Capacity) {
 		return false
 	}
 	if len(this.RootfsProviders) != len(that1.RootfsProviders) {
@@ -321,6 +327,9 @@ func (x *ProtoCellPresence) FromProto() *CellPresence {
 }
 
 func CellPresenceToProtoSlice(values []*CellPresence) []*ProtoCellPresence {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCellPresence, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -329,6 +338,9 @@ func CellPresenceToProtoSlice(values []*CellPresence) []*ProtoCellPresence {
 }
 
 func CellPresenceFromProtoSlice(values []*ProtoCellPresence) []*CellPresence {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CellPresence, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -424,6 +436,9 @@ func (x *ProtoProvider) FromProto() *Provider {
 }
 
 func ProviderToProtoSlice(values []*Provider) []*ProtoProvider {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoProvider, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -432,6 +447,9 @@ func ProviderToProtoSlice(values []*Provider) []*ProtoProvider {
 }
 
 func ProviderFromProtoSlice(values []*ProtoProvider) []*Provider {
+	if values == nil {
+		return nil
+	}
 	result := make([]*Provider, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -467,7 +485,7 @@ func (this *CellsResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	if len(this.Cells) != len(that1.Cells) {
@@ -527,6 +545,9 @@ func (x *ProtoCellsResponse) FromProto() *CellsResponse {
 }
 
 func CellsResponseToProtoSlice(values []*CellsResponse) []*ProtoCellsResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCellsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -535,6 +556,9 @@ func CellsResponseToProtoSlice(values []*CellsResponse) []*ProtoCellsResponse {
 }
 
 func CellsResponseFromProtoSlice(values []*ProtoCellsResponse) []*CellsResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CellsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

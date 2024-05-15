@@ -72,6 +72,9 @@ func (x *ProtoPingResponse) FromProto() *PingResponse {
 }
 
 func PingResponseToProtoSlice(values []*PingResponse) []*ProtoPingResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoPingResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -80,6 +83,9 @@ func PingResponseToProtoSlice(values []*PingResponse) []*ProtoPingResponse {
 }
 
 func PingResponseFromProtoSlice(values []*ProtoPingResponse) []*PingResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*PingResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

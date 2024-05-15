@@ -33,7 +33,7 @@ func (this *ActualLRPCreatedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+	if !this.ActualLrpGroup.Equal(*that1.ActualLrpGroup) {
 		return false
 	}
 	return true
@@ -72,6 +72,9 @@ func (x *ProtoActualLRPCreatedEvent) FromProto() *ActualLRPCreatedEvent {
 }
 
 func ActualLRPCreatedEventToProtoSlice(values []*ActualLRPCreatedEvent) []*ProtoActualLRPCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -80,6 +83,9 @@ func ActualLRPCreatedEventToProtoSlice(values []*ActualLRPCreatedEvent) []*Proto
 }
 
 func ActualLRPCreatedEventFromProtoSlice(values []*ProtoActualLRPCreatedEvent) []*ActualLRPCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -115,10 +121,10 @@ func (this *ActualLRPChangedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Before.Equal(that1.Before) {
+	if !this.Before.Equal(*that1.Before) {
 		return false
 	}
-	if !this.After.Equal(that1.After) {
+	if !this.After.Equal(*that1.After) {
 		return false
 	}
 	return true
@@ -170,6 +176,9 @@ func (x *ProtoActualLRPChangedEvent) FromProto() *ActualLRPChangedEvent {
 }
 
 func ActualLRPChangedEventToProtoSlice(values []*ActualLRPChangedEvent) []*ProtoActualLRPChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -178,6 +187,9 @@ func ActualLRPChangedEventToProtoSlice(values []*ActualLRPChangedEvent) []*Proto
 }
 
 func ActualLRPChangedEventFromProtoSlice(values []*ProtoActualLRPChangedEvent) []*ActualLRPChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -212,7 +224,7 @@ func (this *ActualLRPRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+	if !this.ActualLrpGroup.Equal(*that1.ActualLrpGroup) {
 		return false
 	}
 	return true
@@ -251,6 +263,9 @@ func (x *ProtoActualLRPRemovedEvent) FromProto() *ActualLRPRemovedEvent {
 }
 
 func ActualLRPRemovedEventToProtoSlice(values []*ActualLRPRemovedEvent) []*ProtoActualLRPRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -259,6 +274,9 @@ func ActualLRPRemovedEventToProtoSlice(values []*ActualLRPRemovedEvent) []*Proto
 }
 
 func ActualLRPRemovedEventFromProtoSlice(values []*ProtoActualLRPRemovedEvent) []*ActualLRPRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -294,7 +312,7 @@ func (this *ActualLRPInstanceCreatedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrp.Equal(that1.ActualLrp) {
+	if !this.ActualLrp.Equal(*that1.ActualLrp) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -349,6 +367,9 @@ func (x *ProtoActualLRPInstanceCreatedEvent) FromProto() *ActualLRPInstanceCreat
 }
 
 func ActualLRPInstanceCreatedEventToProtoSlice(values []*ActualLRPInstanceCreatedEvent) []*ProtoActualLRPInstanceCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPInstanceCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -357,6 +378,9 @@ func ActualLRPInstanceCreatedEventToProtoSlice(values []*ActualLRPInstanceCreate
 }
 
 func ActualLRPInstanceCreatedEventFromProtoSlice(values []*ProtoActualLRPInstanceCreatedEvent) []*ActualLRPInstanceCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPInstanceCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -400,7 +424,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+	if !this.ActualLrpNetInfo.Equal(*that1.ActualLrpNetInfo) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -418,7 +442,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	if this.Since != that1.Since {
 		return false
 	}
-	if !this.ModificationTag.Equal(that1.ModificationTag) {
+	if !this.ModificationTag.Equal(*that1.ModificationTag) {
 		return false
 	}
 	if this.Presence != that1.Presence {
@@ -586,6 +610,9 @@ func (x *ProtoActualLRPInfo) FromProto() *ActualLRPInfo {
 }
 
 func ActualLRPInfoToProtoSlice(values []*ActualLRPInfo) []*ProtoActualLRPInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -594,6 +621,9 @@ func ActualLRPInfoToProtoSlice(values []*ActualLRPInfo) []*ProtoActualLRPInfo {
 }
 
 func ActualLRPInfoFromProtoSlice(values []*ProtoActualLRPInfo) []*ActualLRPInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPInfo, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -632,16 +662,16 @@ func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLrpKey.Equal(*that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(*that1.ActualLrpInstanceKey) {
 		return false
 	}
-	if !this.Before.Equal(that1.Before) {
+	if !this.Before.Equal(*that1.Before) {
 		return false
 	}
-	if !this.After.Equal(that1.After) {
+	if !this.After.Equal(*that1.After) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -735,6 +765,9 @@ func (x *ProtoActualLRPInstanceChangedEvent) FromProto() *ActualLRPInstanceChang
 }
 
 func ActualLRPInstanceChangedEventToProtoSlice(values []*ActualLRPInstanceChangedEvent) []*ProtoActualLRPInstanceChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPInstanceChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -743,6 +776,9 @@ func ActualLRPInstanceChangedEventToProtoSlice(values []*ActualLRPInstanceChange
 }
 
 func ActualLRPInstanceChangedEventFromProtoSlice(values []*ProtoActualLRPInstanceChangedEvent) []*ActualLRPInstanceChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPInstanceChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -778,7 +814,7 @@ func (this *ActualLRPInstanceRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrp.Equal(that1.ActualLrp) {
+	if !this.ActualLrp.Equal(*that1.ActualLrp) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -833,6 +869,9 @@ func (x *ProtoActualLRPInstanceRemovedEvent) FromProto() *ActualLRPInstanceRemov
 }
 
 func ActualLRPInstanceRemovedEventToProtoSlice(values []*ActualLRPInstanceRemovedEvent) []*ProtoActualLRPInstanceRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPInstanceRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -841,6 +880,9 @@ func ActualLRPInstanceRemovedEventToProtoSlice(values []*ActualLRPInstanceRemove
 }
 
 func ActualLRPInstanceRemovedEventFromProtoSlice(values []*ProtoActualLRPInstanceRemovedEvent) []*ActualLRPInstanceRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPInstanceRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -876,7 +918,7 @@ func (this *DesiredLRPCreatedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+	if !this.DesiredLrp.Equal(*that1.DesiredLrp) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -931,6 +973,9 @@ func (x *ProtoDesiredLRPCreatedEvent) FromProto() *DesiredLRPCreatedEvent {
 }
 
 func DesiredLRPCreatedEventToProtoSlice(values []*DesiredLRPCreatedEvent) []*ProtoDesiredLRPCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -939,6 +984,9 @@ func DesiredLRPCreatedEventToProtoSlice(values []*DesiredLRPCreatedEvent) []*Pro
 }
 
 func DesiredLRPCreatedEventFromProtoSlice(values []*ProtoDesiredLRPCreatedEvent) []*DesiredLRPCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -975,10 +1023,10 @@ func (this *DesiredLRPChangedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Before.Equal(that1.Before) {
+	if !this.Before.Equal(*that1.Before) {
 		return false
 	}
-	if !this.After.Equal(that1.After) {
+	if !this.After.Equal(*that1.After) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -1046,6 +1094,9 @@ func (x *ProtoDesiredLRPChangedEvent) FromProto() *DesiredLRPChangedEvent {
 }
 
 func DesiredLRPChangedEventToProtoSlice(values []*DesiredLRPChangedEvent) []*ProtoDesiredLRPChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1054,6 +1105,9 @@ func DesiredLRPChangedEventToProtoSlice(values []*DesiredLRPChangedEvent) []*Pro
 }
 
 func DesiredLRPChangedEventFromProtoSlice(values []*ProtoDesiredLRPChangedEvent) []*DesiredLRPChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1089,7 +1143,7 @@ func (this *DesiredLRPRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+	if !this.DesiredLrp.Equal(*that1.DesiredLrp) {
 		return false
 	}
 	if this.TraceId != that1.TraceId {
@@ -1144,6 +1198,9 @@ func (x *ProtoDesiredLRPRemovedEvent) FromProto() *DesiredLRPRemovedEvent {
 }
 
 func DesiredLRPRemovedEventToProtoSlice(values []*DesiredLRPRemovedEvent) []*ProtoDesiredLRPRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1152,6 +1209,9 @@ func DesiredLRPRemovedEventToProtoSlice(values []*DesiredLRPRemovedEvent) []*Pro
 }
 
 func DesiredLRPRemovedEventFromProtoSlice(values []*ProtoDesiredLRPRemovedEvent) []*DesiredLRPRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1190,10 +1250,10 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLrpKey.Equal(*that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(*that1.ActualLrpInstanceKey) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -1293,6 +1353,9 @@ func (x *ProtoActualLRPCrashedEvent) FromProto() *ActualLRPCrashedEvent {
 }
 
 func ActualLRPCrashedEventToProtoSlice(values []*ActualLRPCrashedEvent) []*ProtoActualLRPCrashedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPCrashedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1301,6 +1364,9 @@ func ActualLRPCrashedEventToProtoSlice(values []*ActualLRPCrashedEvent) []*Proto
 }
 
 func ActualLRPCrashedEventFromProtoSlice(values []*ProtoActualLRPCrashedEvent) []*ActualLRPCrashedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPCrashedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1374,6 +1440,9 @@ func (x *ProtoEventsByCellId) FromProto() *EventsByCellId {
 }
 
 func EventsByCellIdToProtoSlice(values []*EventsByCellId) []*ProtoEventsByCellId {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoEventsByCellId, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1382,6 +1451,9 @@ func EventsByCellIdToProtoSlice(values []*EventsByCellId) []*ProtoEventsByCellId
 }
 
 func EventsByCellIdFromProtoSlice(values []*ProtoEventsByCellId) []*EventsByCellId {
+	if values == nil {
+		return nil
+	}
 	result := make([]*EventsByCellId, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1416,7 +1488,7 @@ func (this *TaskCreatedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Task.Equal(that1.Task) {
+	if !this.Task.Equal(*that1.Task) {
 		return false
 	}
 	return true
@@ -1455,6 +1527,9 @@ func (x *ProtoTaskCreatedEvent) FromProto() *TaskCreatedEvent {
 }
 
 func TaskCreatedEventToProtoSlice(values []*TaskCreatedEvent) []*ProtoTaskCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1463,6 +1538,9 @@ func TaskCreatedEventToProtoSlice(values []*TaskCreatedEvent) []*ProtoTaskCreate
 }
 
 func TaskCreatedEventFromProtoSlice(values []*ProtoTaskCreatedEvent) []*TaskCreatedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskCreatedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1498,10 +1576,10 @@ func (this *TaskChangedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Before.Equal(that1.Before) {
+	if !this.Before.Equal(*that1.Before) {
 		return false
 	}
-	if !this.After.Equal(that1.After) {
+	if !this.After.Equal(*that1.After) {
 		return false
 	}
 	return true
@@ -1553,6 +1631,9 @@ func (x *ProtoTaskChangedEvent) FromProto() *TaskChangedEvent {
 }
 
 func TaskChangedEventToProtoSlice(values []*TaskChangedEvent) []*ProtoTaskChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1561,6 +1642,9 @@ func TaskChangedEventToProtoSlice(values []*TaskChangedEvent) []*ProtoTaskChange
 }
 
 func TaskChangedEventFromProtoSlice(values []*ProtoTaskChangedEvent) []*TaskChangedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskChangedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1595,7 +1679,7 @@ func (this *TaskRemovedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Task.Equal(that1.Task) {
+	if !this.Task.Equal(*that1.Task) {
 		return false
 	}
 	return true
@@ -1634,6 +1718,9 @@ func (x *ProtoTaskRemovedEvent) FromProto() *TaskRemovedEvent {
 }
 
 func TaskRemovedEventToProtoSlice(values []*TaskRemovedEvent) []*ProtoTaskRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1642,6 +1729,9 @@ func TaskRemovedEventToProtoSlice(values []*TaskRemovedEvent) []*ProtoTaskRemove
 }
 
 func TaskRemovedEventFromProtoSlice(values []*ProtoTaskRemovedEvent) []*TaskRemovedEvent {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskRemovedEvent, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

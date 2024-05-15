@@ -52,7 +52,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		RootFs:                        desiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
-		Routes:                        schedInfo.Routes,
+		Routes:                        &schedInfo.Routes,
 		ModificationTag:               schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
@@ -515,7 +515,7 @@ func NewDesiredLRPSchedulingInfo(
 		Annotation:         annotation,
 		Instances:          instances,
 		DesiredLrpResource: &resource,
-		Routes:             &routes,
+		Routes:             routes,
 		ModificationTag:    &modTag,
 		VolumePlacement:    volumePlacement,
 		PlacementTags:      placementTags,
@@ -545,7 +545,7 @@ func (s *DesiredLRPSchedulingInfo) ApplyUpdate(update *DesiredLRPUpdate) {
 		s.Instances = *update.GetInstances()
 	}
 	if update.Routes != nil {
-		s.Routes = update.Routes
+		s.Routes = *update.Routes
 	}
 	if update.AnnotationExists() {
 		s.Annotation = *update.GetAnnotation()

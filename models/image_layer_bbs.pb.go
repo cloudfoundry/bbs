@@ -271,6 +271,9 @@ func (x *ProtoImageLayer) FromProto() *ImageLayer {
 }
 
 func ImageLayerToProtoSlice(values []*ImageLayer) []*ProtoImageLayer {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoImageLayer, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -279,6 +282,9 @@ func ImageLayerToProtoSlice(values []*ImageLayer) []*ProtoImageLayer {
 }
 
 func ImageLayerFromProtoSlice(values []*ProtoImageLayer) []*ImageLayer {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ImageLayer, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

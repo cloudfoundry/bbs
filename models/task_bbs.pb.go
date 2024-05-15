@@ -74,7 +74,7 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Action.Equal(that1.Action) {
+	if !this.Action.Equal(*that1.Action) {
 		return false
 	}
 	if this.DiskMb != that1.DiskMb {
@@ -137,7 +137,7 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Network.Equal(that1.Network) {
+	if !this.Network.Equal(*that1.Network) {
 		return false
 	}
 	if len(this.PlacementTags) != len(that1.PlacementTags) {
@@ -151,7 +151,7 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 	if this.MaxPids != that1.MaxPids {
 		return false
 	}
-	if !this.CertificateProperties.Equal(that1.CertificateProperties) {
+	if !this.CertificateProperties.Equal(*that1.CertificateProperties) {
 		return false
 	}
 	if this.ImageUsername != that1.ImageUsername {
@@ -168,7 +168,7 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.LogRateLimit.Equal(that1.LogRateLimit) {
+	if !this.LogRateLimit.Equal(*that1.LogRateLimit) {
 		return false
 	}
 	if len(this.MetricTags) != len(that1.MetricTags) {
@@ -555,6 +555,9 @@ func (x *ProtoTaskDefinition) FromProto() *TaskDefinition {
 }
 
 func TaskDefinitionToProtoSlice(values []*TaskDefinition) []*ProtoTaskDefinition {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTaskDefinition, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -563,6 +566,9 @@ func TaskDefinitionToProtoSlice(values []*TaskDefinition) []*ProtoTaskDefinition
 }
 
 func TaskDefinitionMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -571,6 +577,9 @@ func TaskDefinitionMetricTagsToProtoMap(values map[string]*MetricTagValue) map[s
 }
 
 func TaskDefinitionFromProtoSlice(values []*ProtoTaskDefinition) []*TaskDefinition {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TaskDefinition, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -579,6 +588,9 @@ func TaskDefinitionFromProtoSlice(values []*ProtoTaskDefinition) []*TaskDefiniti
 }
 
 func TaskDefinitionMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*MetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -661,7 +673,7 @@ func (this *Task) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.TaskDefinition.Equal(that1.TaskDefinition) {
+	if !this.TaskDefinition.Equal(*that1.TaskDefinition) {
 		return false
 	}
 	if this.TaskGuid != that1.TaskGuid {
@@ -892,6 +904,9 @@ func (x *ProtoTask) FromProto() *Task {
 }
 
 func TaskToProtoSlice(values []*Task) []*ProtoTask {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTask, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -900,6 +915,9 @@ func TaskToProtoSlice(values []*Task) []*ProtoTask {
 }
 
 func TaskFromProtoSlice(values []*ProtoTask) []*Task {
+	if values == nil {
+		return nil
+	}
 	result := make([]*Task, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

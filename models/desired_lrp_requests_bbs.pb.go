@@ -33,7 +33,7 @@ func (this *DesiredLRPLifecycleResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	return true
@@ -72,6 +72,9 @@ func (x *ProtoDesiredLRPLifecycleResponse) FromProto() *DesiredLRPLifecycleRespo
 }
 
 func DesiredLRPLifecycleResponseToProtoSlice(values []*DesiredLRPLifecycleResponse) []*ProtoDesiredLRPLifecycleResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPLifecycleResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -80,6 +83,9 @@ func DesiredLRPLifecycleResponseToProtoSlice(values []*DesiredLRPLifecycleRespon
 }
 
 func DesiredLRPLifecycleResponseFromProtoSlice(values []*ProtoDesiredLRPLifecycleResponse) []*DesiredLRPLifecycleResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPLifecycleResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -115,7 +121,7 @@ func (this *DesiredLRPsResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	if len(this.DesiredLrps) != len(that1.DesiredLrps) {
@@ -175,6 +181,9 @@ func (x *ProtoDesiredLRPsResponse) FromProto() *DesiredLRPsResponse {
 }
 
 func DesiredLRPsResponseToProtoSlice(values []*DesiredLRPsResponse) []*ProtoDesiredLRPsResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -183,6 +192,9 @@ func DesiredLRPsResponseToProtoSlice(values []*DesiredLRPsResponse) []*ProtoDesi
 }
 
 func DesiredLRPsResponseFromProtoSlice(values []*ProtoDesiredLRPsResponse) []*DesiredLRPsResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -278,6 +290,9 @@ func (x *ProtoDesiredLRPsRequest) FromProto() *DesiredLRPsRequest {
 }
 
 func DesiredLRPsRequestToProtoSlice(values []*DesiredLRPsRequest) []*ProtoDesiredLRPsRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPsRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -286,6 +301,9 @@ func DesiredLRPsRequestToProtoSlice(values []*DesiredLRPsRequest) []*ProtoDesire
 }
 
 func DesiredLRPsRequestFromProtoSlice(values []*ProtoDesiredLRPsRequest) []*DesiredLRPsRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPsRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -321,10 +339,10 @@ func (this *DesiredLRPResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+	if !this.DesiredLrp.Equal(*that1.DesiredLrp) {
 		return false
 	}
 	return true
@@ -376,6 +394,9 @@ func (x *ProtoDesiredLRPResponse) FromProto() *DesiredLRPResponse {
 }
 
 func DesiredLRPResponseToProtoSlice(values []*DesiredLRPResponse) []*ProtoDesiredLRPResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -384,6 +405,9 @@ func DesiredLRPResponseToProtoSlice(values []*DesiredLRPResponse) []*ProtoDesire
 }
 
 func DesiredLRPResponseFromProtoSlice(values []*ProtoDesiredLRPResponse) []*DesiredLRPResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -419,7 +443,7 @@ func (this *DesiredLRPSchedulingInfosResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	if len(this.DesiredLrpSchedulingInfos) != len(that1.DesiredLrpSchedulingInfos) {
@@ -479,6 +503,9 @@ func (x *ProtoDesiredLRPSchedulingInfosResponse) FromProto() *DesiredLRPScheduli
 }
 
 func DesiredLRPSchedulingInfosResponseToProtoSlice(values []*DesiredLRPSchedulingInfosResponse) []*ProtoDesiredLRPSchedulingInfosResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPSchedulingInfosResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -487,6 +514,9 @@ func DesiredLRPSchedulingInfosResponseToProtoSlice(values []*DesiredLRPSchedulin
 }
 
 func DesiredLRPSchedulingInfosResponseFromProtoSlice(values []*ProtoDesiredLRPSchedulingInfosResponse) []*DesiredLRPSchedulingInfosResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPSchedulingInfosResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -522,10 +552,10 @@ func (this *DesiredLRPSchedulingInfoByProcessGuidResponse) Equal(that interface{
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
-	if !this.DesiredLrpSchedulingInfo.Equal(that1.DesiredLrpSchedulingInfo) {
+	if !this.DesiredLrpSchedulingInfo.Equal(*that1.DesiredLrpSchedulingInfo) {
 		return false
 	}
 	return true
@@ -577,6 +607,9 @@ func (x *ProtoDesiredLRPSchedulingInfoByProcessGuidResponse) FromProto() *Desire
 }
 
 func DesiredLRPSchedulingInfoByProcessGuidResponseToProtoSlice(values []*DesiredLRPSchedulingInfoByProcessGuidResponse) []*ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPSchedulingInfoByProcessGuidResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -585,6 +618,9 @@ func DesiredLRPSchedulingInfoByProcessGuidResponseToProtoSlice(values []*Desired
 }
 
 func DesiredLRPSchedulingInfoByProcessGuidResponseFromProtoSlice(values []*ProtoDesiredLRPSchedulingInfoByProcessGuidResponse) []*DesiredLRPSchedulingInfoByProcessGuidResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPSchedulingInfoByProcessGuidResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -658,6 +694,9 @@ func (x *ProtoDesiredLRPByProcessGuidRequest) FromProto() *DesiredLRPByProcessGu
 }
 
 func DesiredLRPByProcessGuidRequestToProtoSlice(values []*DesiredLRPByProcessGuidRequest) []*ProtoDesiredLRPByProcessGuidRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPByProcessGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -666,6 +705,9 @@ func DesiredLRPByProcessGuidRequestToProtoSlice(values []*DesiredLRPByProcessGui
 }
 
 func DesiredLRPByProcessGuidRequestFromProtoSlice(values []*ProtoDesiredLRPByProcessGuidRequest) []*DesiredLRPByProcessGuidRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPByProcessGuidRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -700,7 +742,7 @@ func (this *DesireLRPRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrp.Equal(that1.DesiredLrp) {
+	if !this.DesiredLrp.Equal(*that1.DesiredLrp) {
 		return false
 	}
 	return true
@@ -739,6 +781,9 @@ func (x *ProtoDesireLRPRequest) FromProto() *DesireLRPRequest {
 }
 
 func DesireLRPRequestToProtoSlice(values []*DesireLRPRequest) []*ProtoDesireLRPRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesireLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -747,6 +792,9 @@ func DesireLRPRequestToProtoSlice(values []*DesireLRPRequest) []*ProtoDesireLRPR
 }
 
 func DesireLRPRequestFromProtoSlice(values []*ProtoDesireLRPRequest) []*DesireLRPRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesireLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -785,7 +833,7 @@ func (this *UpdateDesiredLRPRequest) Equal(that interface{}) bool {
 	if this.ProcessGuid != that1.ProcessGuid {
 		return false
 	}
-	if !this.Update.Equal(that1.Update) {
+	if !this.Update.Equal(*that1.Update) {
 		return false
 	}
 	return true
@@ -837,6 +885,9 @@ func (x *ProtoUpdateDesiredLRPRequest) FromProto() *UpdateDesiredLRPRequest {
 }
 
 func UpdateDesiredLRPRequestToProtoSlice(values []*UpdateDesiredLRPRequest) []*ProtoUpdateDesiredLRPRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoUpdateDesiredLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -845,6 +896,9 @@ func UpdateDesiredLRPRequestToProtoSlice(values []*UpdateDesiredLRPRequest) []*P
 }
 
 func UpdateDesiredLRPRequestFromProtoSlice(values []*ProtoUpdateDesiredLRPRequest) []*UpdateDesiredLRPRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*UpdateDesiredLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -918,6 +972,9 @@ func (x *ProtoRemoveDesiredLRPRequest) FromProto() *RemoveDesiredLRPRequest {
 }
 
 func RemoveDesiredLRPRequestToProtoSlice(values []*RemoveDesiredLRPRequest) []*ProtoRemoveDesiredLRPRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoRemoveDesiredLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -926,6 +983,9 @@ func RemoveDesiredLRPRequestToProtoSlice(values []*RemoveDesiredLRPRequest) []*P
 }
 
 func RemoveDesiredLRPRequestFromProtoSlice(values []*ProtoRemoveDesiredLRPRequest) []*RemoveDesiredLRPRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*RemoveDesiredLRPRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
