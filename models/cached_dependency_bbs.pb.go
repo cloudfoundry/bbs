@@ -174,6 +174,9 @@ func (x *ProtoCachedDependency) FromProto() *CachedDependency {
 }
 
 func CachedDependencyToProtoSlice(values []*CachedDependency) []*ProtoCachedDependency {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCachedDependency, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -182,6 +185,9 @@ func CachedDependencyToProtoSlice(values []*CachedDependency) []*ProtoCachedDepe
 }
 
 func CachedDependencyFromProtoSlice(values []*ProtoCachedDependency) []*CachedDependency {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CachedDependency, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

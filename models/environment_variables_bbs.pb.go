@@ -89,6 +89,9 @@ func (x *ProtoEnvironmentVariable) FromProto() *EnvironmentVariable {
 }
 
 func EnvironmentVariableToProtoSlice(values []*EnvironmentVariable) []*ProtoEnvironmentVariable {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoEnvironmentVariable, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -97,6 +100,9 @@ func EnvironmentVariableToProtoSlice(values []*EnvironmentVariable) []*ProtoEnvi
 }
 
 func EnvironmentVariableFromProtoSlice(values []*ProtoEnvironmentVariable) []*EnvironmentVariable {
+	if values == nil {
+		return nil
+	}
 	result := make([]*EnvironmentVariable, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

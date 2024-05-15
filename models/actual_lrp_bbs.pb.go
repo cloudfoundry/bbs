@@ -38,10 +38,10 @@ func (this *ActualLRPGroup) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Instance.Equal(that1.Instance) {
+	if !this.Instance.Equal(*that1.Instance) {
 		return false
 	}
-	if !this.Evacuating.Equal(that1.Evacuating) {
+	if !this.Evacuating.Equal(*that1.Evacuating) {
 		return false
 	}
 	return true
@@ -93,6 +93,9 @@ func (x *ProtoActualLRPGroup) FromProto() *ActualLRPGroup {
 }
 
 func ActualLRPGroupToProtoSlice(values []*ActualLRPGroup) []*ProtoActualLRPGroup {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPGroup, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -101,6 +104,9 @@ func ActualLRPGroupToProtoSlice(values []*ActualLRPGroup) []*ProtoActualLRPGroup
 }
 
 func ActualLRPGroupFromProtoSlice(values []*ProtoActualLRPGroup) []*ActualLRPGroup {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPGroup, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -225,6 +231,9 @@ func (x *ProtoPortMapping) FromProto() *PortMapping {
 }
 
 func PortMappingToProtoSlice(values []*PortMapping) []*ProtoPortMapping {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoPortMapping, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -233,6 +242,9 @@ func PortMappingToProtoSlice(values []*PortMapping) []*ProtoPortMapping {
 }
 
 func PortMappingFromProtoSlice(values []*ProtoPortMapping) []*PortMapping {
+	if values == nil {
+		return nil
+	}
 	result := make([]*PortMapping, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -340,6 +352,9 @@ func (x *ProtoActualLRPKey) FromProto() *ActualLRPKey {
 }
 
 func ActualLRPKeyToProtoSlice(values []*ActualLRPKey) []*ProtoActualLRPKey {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPKey, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -348,6 +363,9 @@ func ActualLRPKeyToProtoSlice(values []*ActualLRPKey) []*ProtoActualLRPKey {
 }
 
 func ActualLRPKeyFromProtoSlice(values []*ProtoActualLRPKey) []*ActualLRPKey {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPKey, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -438,6 +456,9 @@ func (x *ProtoActualLRPInstanceKey) FromProto() *ActualLRPInstanceKey {
 }
 
 func ActualLRPInstanceKeyToProtoSlice(values []*ActualLRPInstanceKey) []*ProtoActualLRPInstanceKey {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPInstanceKey, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -446,6 +467,9 @@ func ActualLRPInstanceKeyToProtoSlice(values []*ActualLRPInstanceKey) []*ProtoAc
 }
 
 func ActualLRPInstanceKeyFromProtoSlice(values []*ProtoActualLRPInstanceKey) []*ActualLRPInstanceKey {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPInstanceKey, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -605,6 +629,9 @@ func (x *ProtoActualLRPNetInfo) FromProto() *ActualLRPNetInfo {
 }
 
 func ActualLRPNetInfoToProtoSlice(values []*ActualLRPNetInfo) []*ProtoActualLRPNetInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPNetInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -613,6 +640,9 @@ func ActualLRPNetInfoToProtoSlice(values []*ActualLRPNetInfo) []*ProtoActualLRPN
 }
 
 func ActualLRPNetInfoFromProtoSlice(values []*ProtoActualLRPNetInfo) []*ActualLRPNetInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPNetInfo, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -686,6 +716,9 @@ func (x *ProtoActualLRPInternalRoute) FromProto() *ActualLRPInternalRoute {
 }
 
 func ActualLRPInternalRouteToProtoSlice(values []*ActualLRPInternalRoute) []*ProtoActualLRPInternalRoute {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRPInternalRoute, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -694,6 +727,9 @@ func ActualLRPInternalRouteToProtoSlice(values []*ActualLRPInternalRoute) []*Pro
 }
 
 func ActualLRPInternalRouteFromProtoSlice(values []*ProtoActualLRPInternalRoute) []*ActualLRPInternalRoute {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRPInternalRoute, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -771,13 +807,13 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+	if !this.ActualLrpKey.Equal(*that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(*that1.ActualLrpInstanceKey) {
 		return false
 	}
-	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+	if !this.ActualLrpNetInfo.Equal(*that1.ActualLrpNetInfo) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -795,7 +831,7 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	if this.Since != that1.Since {
 		return false
 	}
-	if !this.ModificationTag.Equal(that1.ModificationTag) {
+	if !this.ModificationTag.Equal(*that1.ModificationTag) {
 		return false
 	}
 	if this.Presence != that1.Presence {
@@ -1031,6 +1067,9 @@ func (x *ProtoActualLRP) FromProto() *ActualLRP {
 }
 
 func ActualLRPToProtoSlice(values []*ActualLRP) []*ProtoActualLRP {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoActualLRP, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1039,6 +1078,9 @@ func ActualLRPToProtoSlice(values []*ActualLRP) []*ProtoActualLRP {
 }
 
 func ActualLRPFromProtoSlice(values []*ProtoActualLRP) []*ActualLRP {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ActualLRP, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

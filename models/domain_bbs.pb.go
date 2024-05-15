@@ -34,7 +34,7 @@ func (this *DomainsResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	if len(this.Domains) != len(that1.Domains) {
@@ -94,6 +94,9 @@ func (x *ProtoDomainsResponse) FromProto() *DomainsResponse {
 }
 
 func DomainsResponseToProtoSlice(values []*DomainsResponse) []*ProtoDomainsResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDomainsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -102,6 +105,9 @@ func DomainsResponseToProtoSlice(values []*DomainsResponse) []*ProtoDomainsRespo
 }
 
 func DomainsResponseFromProtoSlice(values []*ProtoDomainsResponse) []*DomainsResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DomainsResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -136,7 +142,7 @@ func (this *UpsertDomainResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.Error.Equal(that1.Error) {
+	if !this.Error.Equal(*that1.Error) {
 		return false
 	}
 	return true
@@ -175,6 +181,9 @@ func (x *ProtoUpsertDomainResponse) FromProto() *UpsertDomainResponse {
 }
 
 func UpsertDomainResponseToProtoSlice(values []*UpsertDomainResponse) []*ProtoUpsertDomainResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoUpsertDomainResponse, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -183,6 +192,9 @@ func UpsertDomainResponseToProtoSlice(values []*UpsertDomainResponse) []*ProtoUp
 }
 
 func UpsertDomainResponseFromProtoSlice(values []*ProtoUpsertDomainResponse) []*UpsertDomainResponse {
+	if values == nil {
+		return nil
+	}
 	result := make([]*UpsertDomainResponse, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -273,6 +285,9 @@ func (x *ProtoUpsertDomainRequest) FromProto() *UpsertDomainRequest {
 }
 
 func UpsertDomainRequestToProtoSlice(values []*UpsertDomainRequest) []*ProtoUpsertDomainRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoUpsertDomainRequest, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -281,6 +296,9 @@ func UpsertDomainRequestToProtoSlice(values []*UpsertDomainRequest) []*ProtoUpse
 }
 
 func UpsertDomainRequestFromProtoSlice(values []*ProtoUpsertDomainRequest) []*UpsertDomainRequest {
+	if values == nil {
+		return nil
+	}
 	result := make([]*UpsertDomainRequest, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

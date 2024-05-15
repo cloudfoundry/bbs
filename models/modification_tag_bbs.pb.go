@@ -89,6 +89,9 @@ func (x *ProtoModificationTag) FromProto() *ModificationTag {
 }
 
 func ModificationTagToProtoSlice(values []*ModificationTag) []*ProtoModificationTag {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoModificationTag, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -97,6 +100,9 @@ func ModificationTagToProtoSlice(values []*ModificationTag) []*ProtoModification
 }
 
 func ModificationTagFromProtoSlice(values []*ProtoModificationTag) []*ModificationTag {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ModificationTag, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

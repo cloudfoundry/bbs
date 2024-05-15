@@ -116,6 +116,9 @@ func (x *ProtoCheckDefinition) FromProto() *CheckDefinition {
 }
 
 func CheckDefinitionToProtoSlice(values []*CheckDefinition) []*ProtoCheckDefinition {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCheckDefinition, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -124,6 +127,9 @@ func CheckDefinitionToProtoSlice(values []*CheckDefinition) []*ProtoCheckDefinit
 }
 
 func CheckDefinitionFromProtoSlice(values []*ProtoCheckDefinition) []*CheckDefinition {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CheckDefinition, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -159,10 +165,10 @@ func (this *Check) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.TcpCheck.Equal(that1.TcpCheck) {
+	if !this.TcpCheck.Equal(*that1.TcpCheck) {
 		return false
 	}
-	if !this.HttpCheck.Equal(that1.HttpCheck) {
+	if !this.HttpCheck.Equal(*that1.HttpCheck) {
 		return false
 	}
 	return true
@@ -214,6 +220,9 @@ func (x *ProtoCheck) FromProto() *Check {
 }
 
 func CheckToProtoSlice(values []*Check) []*ProtoCheck {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCheck, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -222,6 +231,9 @@ func CheckToProtoSlice(values []*Check) []*ProtoCheck {
 }
 
 func CheckFromProtoSlice(values []*ProtoCheck) []*Check {
+	if values == nil {
+		return nil
+	}
 	result := make([]*Check, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -329,6 +341,9 @@ func (x *ProtoTCPCheck) FromProto() *TCPCheck {
 }
 
 func TCPCheckToProtoSlice(values []*TCPCheck) []*ProtoTCPCheck {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoTCPCheck, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -337,6 +352,9 @@ func TCPCheckToProtoSlice(values []*TCPCheck) []*ProtoTCPCheck {
 }
 
 func TCPCheckFromProtoSlice(values []*ProtoTCPCheck) []*TCPCheck {
+	if values == nil {
+		return nil
+	}
 	result := make([]*TCPCheck, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -461,6 +479,9 @@ func (x *ProtoHTTPCheck) FromProto() *HTTPCheck {
 }
 
 func HTTPCheckToProtoSlice(values []*HTTPCheck) []*ProtoHTTPCheck {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoHTTPCheck, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -469,6 +490,9 @@ func HTTPCheckToProtoSlice(values []*HTTPCheck) []*ProtoHTTPCheck {
 }
 
 func HTTPCheckFromProtoSlice(values []*ProtoHTTPCheck) []*HTTPCheck {
+	if values == nil {
+		return nil
+	}
 	result := make([]*HTTPCheck, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

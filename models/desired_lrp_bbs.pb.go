@@ -12,7 +12,7 @@ type DesiredLRPSchedulingInfo struct {
 	Annotation         string
 	Instances          int32
 	DesiredLrpResource *DesiredLRPResource
-	Routes             *Routes
+	Routes             Routes
 	ModificationTag    *ModificationTag
 	VolumePlacement    *VolumePlacement
 	PlacementTags      []string
@@ -40,7 +40,7 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrpKey.Equal(that1.DesiredLrpKey) {
+	if !this.DesiredLrpKey.Equal(*that1.DesiredLrpKey) {
 		return false
 	}
 	if this.Annotation != that1.Annotation {
@@ -49,16 +49,16 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if this.Instances != that1.Instances {
 		return false
 	}
-	if !this.DesiredLrpResource.Equal(that1.DesiredLrpResource) {
+	if !this.DesiredLrpResource.Equal(*that1.DesiredLrpResource) {
 		return false
 	}
-	if !this.Routes.Equal(*that1.Routes) {
+	if !this.Routes.Equal(that1.Routes) {
 		return false
 	}
-	if !this.ModificationTag.Equal(that1.ModificationTag) {
+	if !this.ModificationTag.Equal(*that1.ModificationTag) {
 		return false
 	}
-	if !this.VolumePlacement.Equal(that1.VolumePlacement) {
+	if !this.VolumePlacement.Equal(*that1.VolumePlacement) {
 		return false
 	}
 	if len(this.PlacementTags) != len(that1.PlacementTags) {
@@ -115,13 +115,13 @@ func (m *DesiredLRPSchedulingInfo) SetDesiredLrpResource(value *DesiredLRPResour
 		m.DesiredLrpResource = value
 	}
 }
-func (m *DesiredLRPSchedulingInfo) GetRoutes() *Routes {
+func (m *DesiredLRPSchedulingInfo) GetRoutes() Routes {
 	if m != nil {
 		return m.Routes
 	}
 	return nil
 }
-func (m *DesiredLRPSchedulingInfo) SetRoutes(value *Routes) {
+func (m *DesiredLRPSchedulingInfo) SetRoutes(value Routes) {
 	if m != nil {
 		m.Routes = value
 	}
@@ -187,7 +187,7 @@ func (x *ProtoDesiredLRPSchedulingInfo) FromProto() *DesiredLRPSchedulingInfo {
 		Annotation:         x.Annotation,
 		Instances:          x.Instances,
 		DesiredLrpResource: x.DesiredLrpResource.FromProto(),
-		Routes:             x.Routes.FromProto(),
+		Routes:             *x.Routes.FromProto(),
 		ModificationTag:    x.ModificationTag.FromProto(),
 		VolumePlacement:    x.VolumePlacement.FromProto(),
 		PlacementTags:      x.PlacementTags,
@@ -196,6 +196,9 @@ func (x *ProtoDesiredLRPSchedulingInfo) FromProto() *DesiredLRPSchedulingInfo {
 }
 
 func DesiredLRPSchedulingInfoToProtoSlice(values []*DesiredLRPSchedulingInfo) []*ProtoDesiredLRPSchedulingInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPSchedulingInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -204,6 +207,9 @@ func DesiredLRPSchedulingInfoToProtoSlice(values []*DesiredLRPSchedulingInfo) []
 }
 
 func DesiredLRPSchedulingInfoFromProtoSlice(values []*ProtoDesiredLRPSchedulingInfo) []*DesiredLRPSchedulingInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPSchedulingInfo, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -264,7 +270,7 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrpKey.Equal(that1.DesiredLrpKey) {
+	if !this.DesiredLrpKey.Equal(*that1.DesiredLrpKey) {
 		return false
 	}
 	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
@@ -275,13 +281,13 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Setup.Equal(that1.Setup) {
+	if !this.Setup.Equal(*that1.Setup) {
 		return false
 	}
-	if !this.Action.Equal(that1.Action) {
+	if !this.Action.Equal(*that1.Action) {
 		return false
 	}
-	if !this.Monitor.Equal(that1.Monitor) {
+	if !this.Monitor.Equal(*that1.Monitor) {
 		return false
 	}
 	if this.DeprecatedStartTimeoutS != that1.DeprecatedStartTimeoutS {
@@ -340,13 +346,13 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Network.Equal(that1.Network) {
+	if !this.Network.Equal(*that1.Network) {
 		return false
 	}
 	if this.StartTimeoutMs != that1.StartTimeoutMs {
 		return false
 	}
-	if !this.CertificateProperties.Equal(that1.CertificateProperties) {
+	if !this.CertificateProperties.Equal(*that1.CertificateProperties) {
 		return false
 	}
 	if this.ImageUsername != that1.ImageUsername {
@@ -355,7 +361,7 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	if this.ImagePassword != that1.ImagePassword {
 		return false
 	}
-	if !this.CheckDefinition.Equal(that1.CheckDefinition) {
+	if !this.CheckDefinition.Equal(*that1.CheckDefinition) {
 		return false
 	}
 	if len(this.ImageLayers) != len(that1.ImageLayers) {
@@ -382,7 +388,7 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.LogRateLimit.Equal(that1.LogRateLimit) {
+	if !this.LogRateLimit.Equal(*that1.LogRateLimit) {
 		return false
 	}
 	return true
@@ -768,6 +774,9 @@ func (x *ProtoDesiredLRPRunInfo) FromProto() *DesiredLRPRunInfo {
 }
 
 func DesiredLRPRunInfoToProtoSlice(values []*DesiredLRPRunInfo) []*ProtoDesiredLRPRunInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPRunInfo, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -776,6 +785,9 @@ func DesiredLRPRunInfoToProtoSlice(values []*DesiredLRPRunInfo) []*ProtoDesiredL
 }
 
 func DesiredLRPRunInfoMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -784,6 +796,9 @@ func DesiredLRPRunInfoMetricTagsToProtoMap(values map[string]*MetricTagValue) ma
 }
 
 func DesiredLRPRunInfoFromProtoSlice(values []*ProtoDesiredLRPRunInfo) []*DesiredLRPRunInfo {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPRunInfo, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -792,6 +807,9 @@ func DesiredLRPRunInfoFromProtoSlice(values []*ProtoDesiredLRPRunInfo) []*Desire
 }
 
 func DesiredLRPRunInfoMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*MetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -930,6 +948,9 @@ func (x *ProtoDesiredLRPUpdate) FromProto() *DesiredLRPUpdate {
 }
 
 func DesiredLRPUpdateToProtoSlice(values []*DesiredLRPUpdate) []*ProtoDesiredLRPUpdate {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPUpdate, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -938,6 +959,9 @@ func DesiredLRPUpdateToProtoSlice(values []*DesiredLRPUpdate) []*ProtoDesiredLRP
 }
 
 func DesiredLRPUpdateMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -946,6 +970,9 @@ func DesiredLRPUpdateMetricTagsToProtoMap(values map[string]*MetricTagValue) map
 }
 
 func DesiredLRPUpdateFromProtoSlice(values []*ProtoDesiredLRPUpdate) []*DesiredLRPUpdate {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPUpdate, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -954,6 +981,9 @@ func DesiredLRPUpdateFromProtoSlice(values []*ProtoDesiredLRPUpdate) []*DesiredL
 }
 
 func DesiredLRPUpdateMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*MetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1061,6 +1091,9 @@ func (x *ProtoDesiredLRPKey) FromProto() *DesiredLRPKey {
 }
 
 func DesiredLRPKeyToProtoSlice(values []*DesiredLRPKey) []*ProtoDesiredLRPKey {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPKey, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1069,6 +1102,9 @@ func DesiredLRPKeyToProtoSlice(values []*DesiredLRPKey) []*ProtoDesiredLRPKey {
 }
 
 func DesiredLRPKeyFromProtoSlice(values []*ProtoDesiredLRPKey) []*DesiredLRPKey {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPKey, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1193,6 +1229,9 @@ func (x *ProtoDesiredLRPResource) FromProto() *DesiredLRPResource {
 }
 
 func DesiredLRPResourceToProtoSlice(values []*DesiredLRPResource) []*ProtoDesiredLRPResource {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRPResource, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1201,6 +1240,9 @@ func DesiredLRPResourceToProtoSlice(values []*DesiredLRPResource) []*ProtoDesire
 }
 
 func DesiredLRPResourceFromProtoSlice(values []*ProtoDesiredLRPResource) []*DesiredLRPResource {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRPResource, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1291,10 +1333,10 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Setup.Equal(that1.Setup) {
+	if !this.Setup.Equal(*that1.Setup) {
 		return false
 	}
-	if !this.Action.Equal(that1.Action) {
+	if !this.Action.Equal(*that1.Action) {
 		return false
 	}
 	if this.StartTimeoutMs != that1.StartTimeoutMs {
@@ -1303,7 +1345,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if this.DeprecatedStartTimeoutS != that1.DeprecatedStartTimeoutS {
 		return false
 	}
-	if !this.Monitor.Equal(that1.Monitor) {
+	if !this.Monitor.Equal(*that1.Monitor) {
 		return false
 	}
 	if this.DiskMb != that1.DiskMb {
@@ -1349,7 +1391,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.ModificationTag.Equal(that1.ModificationTag) {
+	if !this.ModificationTag.Equal(*that1.ModificationTag) {
 		return false
 	}
 	if len(this.CachedDependencies) != len(that1.CachedDependencies) {
@@ -1374,7 +1416,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Network.Equal(that1.Network) {
+	if !this.Network.Equal(*that1.Network) {
 		return false
 	}
 	if len(this.PlacementTags) != len(that1.PlacementTags) {
@@ -1388,7 +1430,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if this.MaxPids != that1.MaxPids {
 		return false
 	}
-	if !this.CertificateProperties.Equal(that1.CertificateProperties) {
+	if !this.CertificateProperties.Equal(*that1.CertificateProperties) {
 		return false
 	}
 	if this.ImageUsername != that1.ImageUsername {
@@ -1397,7 +1439,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 	if this.ImagePassword != that1.ImagePassword {
 		return false
 	}
-	if !this.CheckDefinition.Equal(that1.CheckDefinition) {
+	if !this.CheckDefinition.Equal(*that1.CheckDefinition) {
 		return false
 	}
 	if len(this.ImageLayers) != len(that1.ImageLayers) {
@@ -1424,7 +1466,7 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.LogRateLimit.Equal(that1.LogRateLimit) {
+	if !this.LogRateLimit.Equal(*that1.LogRateLimit) {
 		return false
 	}
 	return true
@@ -1943,6 +1985,9 @@ func (x *ProtoDesiredLRP) FromProto() *DesiredLRP {
 }
 
 func DesiredLRPToProtoSlice(values []*DesiredLRP) []*ProtoDesiredLRP {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoDesiredLRP, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1951,6 +1996,9 @@ func DesiredLRPToProtoSlice(values []*DesiredLRP) []*ProtoDesiredLRP {
 }
 
 func DesiredLRPMetricTagsToProtoMap(values map[string]*MetricTagValue) map[string]*ProtoMetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*ProtoMetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -1959,6 +2007,9 @@ func DesiredLRPMetricTagsToProtoMap(values map[string]*MetricTagValue) map[strin
 }
 
 func DesiredLRPFromProtoSlice(values []*ProtoDesiredLRP) []*DesiredLRP {
+	if values == nil {
+		return nil
+	}
 	result := make([]*DesiredLRP, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
@@ -1967,6 +2018,9 @@ func DesiredLRPFromProtoSlice(values []*ProtoDesiredLRP) []*DesiredLRP {
 }
 
 func DesiredLRPMetricTagsFromProtoMap(values map[string]*ProtoMetricTagValue) map[string]*MetricTagValue {
+	if values == nil {
+		return nil
+	}
 	result := make(map[string]*MetricTagValue, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()

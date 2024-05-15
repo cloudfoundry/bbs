@@ -77,6 +77,9 @@ func (x *ProtoCertificateProperties) FromProto() *CertificateProperties {
 }
 
 func CertificatePropertiesToProtoSlice(values []*CertificateProperties) []*ProtoCertificateProperties {
+	if values == nil {
+		return nil
+	}
 	result := make([]*ProtoCertificateProperties, len(values))
 	for i, val := range values {
 		result[i] = val.ToProto()
@@ -85,6 +88,9 @@ func CertificatePropertiesToProtoSlice(values []*CertificateProperties) []*Proto
 }
 
 func CertificatePropertiesFromProtoSlice(values []*ProtoCertificateProperties) []*CertificateProperties {
+	if values == nil {
+		return nil
+	}
 	result := make([]*CertificateProperties, len(values))
 	for i, val := range values {
 		result[i] = val.FromProto()
