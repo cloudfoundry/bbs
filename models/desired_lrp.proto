@@ -4,6 +4,7 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 import "actions.proto";
+import "bbs.proto";
 import "cached_dependency.proto";
 import "certificate_properties.proto";
 import "environment_variables.proto";
@@ -25,7 +26,7 @@ message ProtoDesiredLRPSchedulingInfo {
 
   ProtoDesiredLRPResource desired_lrp_resource = 4;
 
-  ProtoRoutes routes = 5;
+  ProtoRoutes routes = 5 [(bbs.bbs_by_value) = true];
   ProtoModificationTag modification_tag = 6;
   ProtoVolumePlacement volume_placement = 7;
   repeated string PlacementTags = 8 [json_name ="placement_tags"];
@@ -79,7 +80,7 @@ message ProtoRoutes {
 
 message ProtoDesiredLRPUpdate {
   optional int32 instances = 1;
-  optional ProtoRoutes routes = 2;
+  optional ProtoRoutes routes = 2 [(bbs.bbs_by_value) = false];
   optional string annotation = 3;
   map<string, ProtoMetricTagValue> metric_tags = 4;
 }
@@ -115,7 +116,7 @@ message ProtoDesiredLRP {
   uint32 cpu_weight = 12 [json_name = "cpu_weight"];
   bool privileged = 13 [json_name = "privileged"];
   repeated uint32 ports = 14 [packed = false];
-  optional ProtoRoutes routes = 15;
+  optional ProtoRoutes routes = 15 [(bbs.bbs_by_value) = false];
   string log_source = 16 [json_name = "log_source"];
   string log_guid = 17 [json_name = "log_guid"];
   string metrics_guid = 18 [deprecated=true, json_name = "metrics_guid"];
