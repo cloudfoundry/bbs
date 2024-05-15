@@ -53,7 +53,6 @@ func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *proto
 			if *debug {
 				log.Printf("New Field Detected: %+v\n\n", field)
 				log.Printf("Field Options: %+v\n\n", options)
-
 			}
 			fieldName := getFieldName(field.GoName)
 			fieldType := getActualType(g, field)
@@ -129,10 +128,9 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 				g.P("return false")
 				g.P("}")
 			} else if field.Message != nil {
-				pointer := ""
-				if fieldName == "Routes" {
-					pointer = "*"
-					log.Printf("Adding dereference because of Routes")
+				pointer := "*"
+				if isByValueType(field) {
+					pointer = ""
 				}
 				g.P("if !this.", fieldName, ".Equal(", pointer, "that1.", fieldName, ") {")
 				g.P("return false")
@@ -264,7 +262,11 @@ func getActualType(g *protogen.GeneratedFile, field *protogen.Field) string {
 			log.Printf("Message Description: %+v\n\n", field.Message.Desc)
 		}
 		messageType, _ := getCopysafeName(g, field.Message.GoIdent)
-		fieldType += "*" + messageType
+		pointer := "*"
+		if isByValueType(field) {
+			pointer = ""
+		}
+		fieldType += pointer + messageType
 	} else if field.Enum != nil {
 		if *debug {
 			log.Printf("Enum Field Detected: %+v\n\n", field.Enum)
@@ -281,6 +283,11 @@ func getActualType(g *protogen.GeneratedFile, field *protogen.Field) string {
 	}
 
 	return fieldType
+}
+
+func isByValueType(field *protogen.Field) bool {
+	isByValueType := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsByValue)
+	return isByValueType.(bool)
 }
 
 func (bbsGenerateHelper) genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message) {
@@ -434,7 +441,13 @@ func (bbsGenerateHelper) genFromProtoMethod(g *protogen.GeneratedFile, msg *prot
 						panic("Unrecognized Repeated field found")
 					}
 				} else {
-					g.P(protoFieldName, ": x.", getFieldName(protoFieldName), ".FromProto(),")
+					// note the reversal of pointer logic here compared to other isByValueType checks
+					// FromProto() returns a pointer so we need to dereference that before calling FromProto() on a value type
+					pointer := ""
+					if isByValueType(field) {
+						pointer = "*"
+					}
+					g.P(protoFieldName, ": ", pointer, "x.", getFieldName(protoFieldName), ".FromProto(),")
 				}
 			} else if field.Enum != nil {
 				g.P(protoFieldName, ": ", getActualType(g, field), "(x.", protoFieldName, "),")
