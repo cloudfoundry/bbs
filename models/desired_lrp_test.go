@@ -387,7 +387,7 @@ var _ = Describe("DesiredLRP", func() {
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = &models.Routes{}
+			expectedSchedulingInfo.Routes = models.Routes{}
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
@@ -435,7 +435,7 @@ var _ = Describe("DesiredLRP", func() {
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = &models.Routes{
+			expectedSchedulingInfo.Routes = models.Routes{
 				"router": &rawMessage,
 			}
 			expectedSchedulingInfo.ModificationTag.Increment()
