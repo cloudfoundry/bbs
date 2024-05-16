@@ -14,12 +14,12 @@ var _ = Describe("Events", func() {
 		Context("when before is set", func() {
 			BeforeEach(func() {
 				before = &models.ActualLRP{
-					ActualLrpKey: &models.ActualLRPKey{
+					ActualLrpKey: models.ActualLRPKey{
 						ProcessGuid: "before-process-guid",
 						Index:       5,
 						Domain:      "before-domain",
 					},
-					ActualLrpInstanceKey: &models.ActualLRPInstanceKey{
+					ActualLrpInstanceKey: models.ActualLRPInstanceKey{
 						InstanceGuid: "before-instance-guid",
 						CellId:       "before-cell-id",
 					},
@@ -29,12 +29,12 @@ var _ = Describe("Events", func() {
 			Context("when after is set", func() {
 				BeforeEach(func() {
 					after = &models.ActualLRP{
-						ActualLrpKey: &models.ActualLRPKey{
+						ActualLrpKey: models.ActualLRPKey{
 							ProcessGuid: "after-process-guid",
 							Index:       7,
 							Domain:      "after-domain",
 						},
-						ActualLrpInstanceKey: &models.ActualLRPInstanceKey{
+						ActualLrpInstanceKey: models.ActualLRPInstanceKey{
 							InstanceGuid: "after-instance-guid",
 							CellId:       "after-cell-id",
 						},
@@ -51,7 +51,7 @@ var _ = Describe("Events", func() {
 			Context("when after is unclaimed", func() {
 				BeforeEach(func() {
 					after = &models.ActualLRP{
-						ActualLrpKey: &models.ActualLRPKey{
+						ActualLrpKey: models.ActualLRPKey{
 							ProcessGuid: "after-process-guid",
 							Index:       7,
 							Domain:      "after-domain",
@@ -88,12 +88,12 @@ var _ = Describe("Events", func() {
 			Context("when after is set", func() {
 				BeforeEach(func() {
 					after = &models.ActualLRP{
-						ActualLrpKey: &models.ActualLRPKey{
+						ActualLrpKey: models.ActualLRPKey{
 							ProcessGuid: "after-process-guid",
 							Index:       7,
 							Domain:      "after-domain",
 						},
-						ActualLrpInstanceKey: &models.ActualLRPInstanceKey{
+						ActualLrpInstanceKey: models.ActualLRPInstanceKey{
 							InstanceGuid: "after-instance-guid",
 							CellId:       "after-cell-id",
 						},
@@ -109,7 +109,7 @@ var _ = Describe("Events", func() {
 				Context("when before is unclaimed", func() {
 					BeforeEach(func() {
 						before = &models.ActualLRP{
-							ActualLrpKey: &models.ActualLRPKey{
+							ActualLrpKey: models.ActualLRPKey{
 								ProcessGuid: "before-process-guid",
 								Index:       5,
 								Domain:      "before-domain",

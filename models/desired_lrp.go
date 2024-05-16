@@ -39,8 +39,8 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	copy(runInfo.EgressRules, egressRules)
 
-	desiredLrpKey := schedInfo.GetDesiredLrpKey()
-	desiredLrpResource := schedInfo.GetDesiredLrpResource()
+	desiredLrpKey := schedInfo.DesiredLrpKey
+	desiredLrpResource := schedInfo.DesiredLrpResource
 
 	return DesiredLRP{
 		ProcessGuid:                   desiredLrpKey.ProcessGuid,
@@ -53,7 +53,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
 		Routes:                        &schedInfo.Routes,
-		ModificationTag:               schedInfo.ModificationTag,
+		ModificationTag:               &schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
 		Setup:                         runInfo.Setup,
@@ -502,12 +502,12 @@ func NewDesiredLRPSchedulingInfo(
 	placementTags []string,
 ) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
-		DesiredLrpKey:      &key,
+		DesiredLrpKey:      key,
 		Annotation:         annotation,
 		Instances:          instances,
-		DesiredLrpResource: &resource,
+		DesiredLrpResource: resource,
 		Routes:             routes,
-		ModificationTag:    &modTag,
+		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
 		PlacementTags:      placementTags,
 	}
@@ -624,7 +624,7 @@ func NewDesiredLRPRunInfo(
 	logRateLimit *LogRateLimit,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
-		DesiredLrpKey:                 &key,
+		DesiredLrpKey:                 key,
 		CreatedAt:                     createdAt.UnixNano(),
 		EnvironmentVariables:          envVars,
 		CachedDependencies:            cacheDeps,
