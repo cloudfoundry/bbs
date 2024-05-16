@@ -19,23 +19,23 @@ import "sidecar.proto";
 import "log_rate_limit.proto";
 
 message ProtoDesiredLRPSchedulingInfo {
-  ProtoDesiredLRPKey desired_lrp_key = 1;
+  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true];
 
   string annotation = 2 [json_name = "annotation"];
   int32 instances = 3 [json_name = "instances"];
 
-  ProtoDesiredLRPResource desired_lrp_resource = 4;
+  ProtoDesiredLRPResource desired_lrp_resource = 4 [(bbs.bbs_by_value) = true];
 
   ProtoRoutes routes = 5 [(bbs.bbs_by_value) = true];
-  ProtoModificationTag modification_tag = 6;
+  ProtoModificationTag modification_tag = 6 [(bbs.bbs_by_value) = true];
   ProtoVolumePlacement volume_placement = 7;
   repeated string PlacementTags = 8 [json_name ="placement_tags"];
 }
 
 message ProtoDesiredLRPRunInfo {
-  ProtoDesiredLRPKey desired_lrp_key = 1;
+  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true];
 
-  repeated ProtoEnvironmentVariable environment_variables = 2 [json_name = "env"];
+  repeated ProtoEnvironmentVariable environment_variables = 2 [json_name = "env", (bbs.bbs_by_value) = false];
   ProtoAction setup = 3;
   ProtoAction action = 4;
   ProtoAction monitor = 5;
@@ -46,7 +46,7 @@ message ProtoDesiredLRPRunInfo {
 
   uint32 cpu_weight = 8 [json_name = "cpu_weight"];
   repeated uint32 ports = 9 [packed = false];
-  repeated ProtoSecurityGroupRule egress_rules = 10;
+  repeated ProtoSecurityGroupRule egress_rules = 10 [(bbs.bbs_by_value) = false];
   string log_source = 11 [json_name = "log_source"];
   string metrics_guid = 12 [deprecated=true, json_name = "metrics_guid"];
   int64 created_at = 13 [json_name = "created_at"];

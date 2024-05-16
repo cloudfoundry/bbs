@@ -55,15 +55,15 @@ message ProtoActualLRP {
     SUSPECT    = 2 [(bbs.bbs_enumvalue_customname) = "Suspect"];
   }
 
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
-  ProtoActualLRPNetInfo actual_lrp_net_info = 3;
+  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true];
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true];
   int32 crash_count = 4 [json_name = "crash_count"];
   string crash_reason = 5;
   string state = 6 [json_name = "state"];
   string placement_error = 7;
   int64 since = 8 [json_name = "since"];
-  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag"];
+  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag", (bbs.bbs_by_value) = true];
   Presence presence = 10 [json_name = "presence"];
   repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 11;
   map<string, string> metric_tags = 12;
