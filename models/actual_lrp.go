@@ -125,7 +125,7 @@ func (actual ActualLRP) CellIsMissing(cellSet CellSet) bool {
 		return false
 	}
 
-	return !cellSet.HasCellID(actual.GetActualLrpInstanceKey().CellId)
+	return !cellSet.HasCellID(actual.ActualLrpInstanceKey.CellId)
 }
 
 func (actual ActualLRP) ShouldRestartImmediately(calc RestartCalculator) bool {
@@ -227,7 +227,7 @@ func (group ActualLRPGroup) Resolve() (*ActualLRP, bool, error) {
 
 func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLrpKey: &lrpKey,
+		ActualLrpKey: lrpKey,
 		State:        ActualLRPStateUnclaimed,
 		Since:        since,
 	}
@@ -235,8 +235,8 @@ func NewUnclaimedActualLRP(lrpKey ActualLRPKey, since int64) *ActualLRP {
 
 func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLrpKey:         &lrpKey,
-		ActualLrpInstanceKey: &instanceKey,
+		ActualLrpKey:         lrpKey,
+		ActualLrpInstanceKey: instanceKey,
 		State:                ActualLRPStateClaimed,
 		Since:                since,
 	}
@@ -244,9 +244,9 @@ func NewClaimedActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, 
 
 func NewRunningActualLRP(lrpKey ActualLRPKey, instanceKey ActualLRPInstanceKey, netInfo ActualLRPNetInfo, since int64) *ActualLRP {
 	return &ActualLRP{
-		ActualLrpKey:         &lrpKey,
-		ActualLrpInstanceKey: &instanceKey,
-		ActualLrpNetInfo:     &netInfo,
+		ActualLrpKey:         lrpKey,
+		ActualLrpInstanceKey: instanceKey,
+		ActualLrpNetInfo:     netInfo,
 		State:                ActualLRPStateRunning,
 		Since:                since,
 	}
@@ -261,8 +261,8 @@ func (actualLRPInfo *ActualLRPInfo) ToActualLRP(lrpKey ActualLRPKey, lrpInstance
 		return nil
 	}
 	lrp := ActualLRP{
-		ActualLrpKey:         &lrpKey,
-		ActualLrpInstanceKey: &lrpInstanceKey,
+		ActualLrpKey:         lrpKey,
+		ActualLrpInstanceKey: lrpInstanceKey,
 		ActualLrpNetInfo:     actualLRPInfo.ActualLrpNetInfo,
 		AvailabilityZone:     actualLRPInfo.AvailabilityZone,
 		CrashCount:           actualLRPInfo.CrashCount,
@@ -478,14 +478,14 @@ func ResolveActualLRPGroups(lrps []*ActualLRP) []*ActualLRPGroup {
 		// one for the evacuating.  When building the list of actual LRP groups (where
 		// a group is the instance and corresponding evacuating), make sure we don't add the same
 		// actual lrp twice.
-		if mapOfGroups[*actualLRP.ActualLrpKey] == nil {
-			mapOfGroups[*actualLRP.ActualLrpKey] = &ActualLRPGroup{}
-			result = append(result, mapOfGroups[*actualLRP.ActualLrpKey])
+		if mapOfGroups[actualLRP.ActualLrpKey] == nil {
+			mapOfGroups[actualLRP.ActualLrpKey] = &ActualLRPGroup{}
+			result = append(result, mapOfGroups[actualLRP.ActualLrpKey])
 		}
 		if actualLRP.Presence == ActualLRP_Evacuating {
-			mapOfGroups[*actualLRP.ActualLrpKey].Evacuating = actualLRP
-		} else if hasHigherPriority(actualLRP, mapOfGroups[*actualLRP.ActualLrpKey].Instance) {
-			mapOfGroups[*actualLRP.ActualLrpKey].Instance = actualLRP
+			mapOfGroups[actualLRP.ActualLrpKey].Evacuating = actualLRP
+		} else if hasHigherPriority(actualLRP, mapOfGroups[actualLRP.ActualLrpKey].Instance) {
+			mapOfGroups[actualLRP.ActualLrpKey].Instance = actualLRP
 		}
 	}
 

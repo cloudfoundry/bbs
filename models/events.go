@@ -129,21 +129,21 @@ func (event *DesiredLRPRemovedEvent) ToEventProto() proto.Message {
 // FIXME: change the signature
 func NewActualLRPInstanceChangedEvent(before, after *ActualLRP, traceId string) *ActualLRPInstanceChangedEvent {
 	var (
-		actualLRPKey         *ActualLRPKey
-		actualLRPInstanceKey *ActualLRPInstanceKey
+		actualLRPKey         ActualLRPKey
+		actualLRPInstanceKey ActualLRPInstanceKey
 	)
 
-	if (before != nil && before.ActualLrpKey != &ActualLRPKey{}) {
+	if (before != nil && before.ActualLrpKey != ActualLRPKey{}) {
 		actualLRPKey = before.ActualLrpKey
 	}
-	if (after != nil && after.ActualLrpKey != &ActualLRPKey{}) {
+	if (after != nil && after.ActualLrpKey != ActualLRPKey{}) {
 		actualLRPKey = after.ActualLrpKey
 	}
 
-	if (before != nil && before.ActualLrpInstanceKey != &ActualLRPInstanceKey{}) {
+	if (before != nil && before.ActualLrpInstanceKey != ActualLRPInstanceKey{}) {
 		actualLRPInstanceKey = before.ActualLrpInstanceKey
 	}
-	if (after != nil && after.ActualLrpInstanceKey != &ActualLRPInstanceKey{}) {
+	if (after != nil && after.ActualLrpInstanceKey != ActualLRPInstanceKey{}) {
 		actualLRPInstanceKey = after.ActualLrpInstanceKey
 	}
 
@@ -161,7 +161,7 @@ func (event *ActualLRPInstanceChangedEvent) EventType() string {
 }
 
 func (event *ActualLRPInstanceChangedEvent) Key() string {
-	return event.GetActualLrpInstanceKey().GetInstanceGuid()
+	return event.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func (event *ActualLRPInstanceChangedEvent) ToEventProto() proto.Message {
@@ -187,7 +187,7 @@ func (event *ActualLRPChangedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -235,7 +235,7 @@ func (event *ActualLRPRemovedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -258,7 +258,7 @@ func (event *ActualLRPInstanceRemovedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetActualLrpInstanceKey().GetInstanceGuid()
+	return event.ActualLrp.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func (event *ActualLRPInstanceRemovedEvent) ToEventProto() proto.Message {
@@ -283,7 +283,7 @@ func (event *ActualLRPCreatedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetActualLrpInstanceKey().GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func (event *ActualLRPCreatedEvent) ToEventProto() proto.Message {
@@ -305,7 +305,7 @@ func (event *ActualLRPInstanceCreatedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetActualLrpInstanceKey().GetInstanceGuid()
+	return event.ActualLrp.ActualLrpInstanceKey.GetInstanceGuid()
 }
 
 func (event *ActualLRPInstanceCreatedEvent) ToEventProto() proto.Message {

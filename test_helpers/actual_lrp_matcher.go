@@ -11,7 +11,7 @@ func MatchActualLRP(expected *models.ActualLRP) types.GomegaMatcher {
 		newLRP := *lrp
 
 		newLRP.Since = 0
-		newLRP.ModificationTag = &models.ModificationTag{}
+		newLRP.ModificationTag = models.ModificationTag{}
 		return &newLRP
 	}
 

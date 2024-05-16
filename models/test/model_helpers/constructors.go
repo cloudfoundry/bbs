@@ -13,9 +13,9 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLrpInstanceKey := models.NewActualLRPInstanceKey("some-guid", "some-cell")
 	actualLrpNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
 	actualLRP := &models.ActualLRP{
-		ActualLrpKey:            &actualLrpKey,
-		ActualLrpInstanceKey:    &actualLrpInstanceKey,
-		ActualLrpNetInfo:        &actualLrpNetInfo,
+		ActualLrpKey:            actualLrpKey,
+		ActualLrpInstanceKey:    actualLrpInstanceKey,
+		ActualLrpNetInfo:        actualLrpNetInfo,
 		ActualLrpInternalRoutes: NewActualLRPInternalRoutes(),
 		MetricTags:              NewActualLRPMetricTags(),
 		AvailabilityZone:        "some-zone",
@@ -23,7 +23,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 		CrashReason:             "badness",
 		State:                   models.ActualLRPStateRunning,
 		Since:                   1138,
-		ModificationTag: &models.ModificationTag{
+		ModificationTag: models.ModificationTag{
 			Epoch: "some-epoch",
 			Index: 999,
 		},
@@ -52,7 +52,7 @@ func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := NewValidActualLRP(guid, index)
 	actualLRP.Presence = models.ActualLRP_Evacuating
 	actualLrpInstanceKey := models.NewActualLRPInstanceKey("some-guid", "some-evacuating-cell")
-	actualLRP.ActualLrpInstanceKey = &actualLrpInstanceKey
+	actualLRP.ActualLrpInstanceKey = actualLrpInstanceKey
 	return actualLRP
 }
 
