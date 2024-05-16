@@ -769,15 +769,15 @@ func (m ActualLRP_Presence) String() string {
 
 // Prevent copylock errors when using ProtoActualLRP directly
 type ActualLRP struct {
-	ActualLrpKey            *ActualLRPKey
-	ActualLrpInstanceKey    *ActualLRPInstanceKey
-	ActualLrpNetInfo        *ActualLRPNetInfo
+	ActualLrpKey            ActualLRPKey
+	ActualLrpInstanceKey    ActualLRPInstanceKey
+	ActualLrpNetInfo        ActualLRPNetInfo
 	CrashCount              int32
 	CrashReason             string
 	State                   string
 	PlacementError          string
 	Since                   int64
-	ModificationTag         *ModificationTag
+	ModificationTag         ModificationTag
 	Presence                ActualLRP_Presence
 	ActualLrpInternalRoutes []*ActualLRPInternalRoute
 	MetricTags              map[string]string
@@ -807,13 +807,13 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(*that1.ActualLrpKey) {
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(*that1.ActualLrpInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
 		return false
 	}
-	if !this.ActualLrpNetInfo.Equal(*that1.ActualLrpNetInfo) {
+	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -831,7 +831,7 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	if this.Since != that1.Since {
 		return false
 	}
-	if !this.ModificationTag.Equal(*that1.ModificationTag) {
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
 		return false
 	}
 	if this.Presence != that1.Presence {
@@ -861,35 +861,17 @@ func (this *ActualLRP) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRP) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-func (m *ActualLRP) SetActualLrpKey(value *ActualLRPKey) {
+func (m *ActualLRP) SetActualLrpKey(value ActualLRPKey) {
 	if m != nil {
 		m.ActualLrpKey = value
 	}
 }
-func (m *ActualLRP) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-func (m *ActualLRP) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *ActualLRP) SetActualLrpInstanceKey(value ActualLRPInstanceKey) {
 	if m != nil {
 		m.ActualLrpInstanceKey = value
 	}
 }
-func (m *ActualLRP) GetActualLrpNetInfo() *ActualLRPNetInfo {
-	if m != nil {
-		return m.ActualLrpNetInfo
-	}
-	return nil
-}
-func (m *ActualLRP) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+func (m *ActualLRP) SetActualLrpNetInfo(value ActualLRPNetInfo) {
 	if m != nil {
 		m.ActualLrpNetInfo = value
 	}
@@ -949,13 +931,7 @@ func (m *ActualLRP) SetSince(value int64) {
 		m.Since = value
 	}
 }
-func (m *ActualLRP) GetModificationTag() *ModificationTag {
-	if m != nil {
-		return m.ModificationTag
-	}
-	return nil
-}
-func (m *ActualLRP) SetModificationTag(value *ModificationTag) {
+func (m *ActualLRP) SetModificationTag(value ModificationTag) {
 	if m != nil {
 		m.ModificationTag = value
 	}
@@ -1048,15 +1024,15 @@ func (x *ProtoActualLRP) FromProto() *ActualLRP {
 	}
 
 	copysafe := &ActualLRP{
-		ActualLrpKey:            x.ActualLrpKey.FromProto(),
-		ActualLrpInstanceKey:    x.ActualLrpInstanceKey.FromProto(),
-		ActualLrpNetInfo:        x.ActualLrpNetInfo.FromProto(),
+		ActualLrpKey:            *x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey:    *x.ActualLrpInstanceKey.FromProto(),
+		ActualLrpNetInfo:        *x.ActualLrpNetInfo.FromProto(),
 		CrashCount:              x.CrashCount,
 		CrashReason:             x.CrashReason,
 		State:                   x.State,
 		PlacementError:          x.PlacementError,
 		Since:                   x.Since,
-		ModificationTag:         x.ModificationTag.FromProto(),
+		ModificationTag:         *x.ModificationTag.FromProto(),
 		Presence:                ActualLRP_Presence(x.Presence),
 		ActualLrpInternalRoutes: ActualLRPInternalRouteFromProtoSlice(x.ActualLrpInternalRoutes),
 		MetricTags:              x.MetricTags,
