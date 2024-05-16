@@ -4,6 +4,7 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 import "actual_lrp.proto";
+import "bbs.proto";
 import "desired_lrp.proto";
 import "task.proto";
 import "modification_tag.proto";
@@ -30,24 +31,24 @@ message ProtoActualLRPInstanceCreatedEvent  {
 }
 
 message ProtoActualLRPInfo {
-  ProtoActualLRPNetInfo actual_lrp_net_info = 3;
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true];
   int32 crash_count = 4 [json_name =  "crash_count"];
   string crash_reason = 5;
   string state = 6 [json_name =  "state"];
   string placement_error = 7;
   int64 since = 8 [json_name =  "since"];
-  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag"];
-  ProtoActualLRP.Presence presence = 10 [json_name = "presence"];
+  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag",  (bbs.bbs_by_value) = true];
+  ProtoActualLRP.Presence presence = 10 [json_name = "presence", (bbs.bbs_by_value) = true];
   optional bool Routable = 11;
   string availability_zone = 12 [json_name = "availability_zone"];
 }
 
 message ProtoActualLRPInstanceChangedEvent {
-  ProtoActualLRPKey actual_lrp_key                  = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPKey actual_lrp_key                  = 1 [(bbs.bbs_by_value) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true];
   ProtoActualLRPInfo before                         = 3;
   ProtoActualLRPInfo after                          = 4;
-  string trace_id                              = 5 [json_name =  "trace_id"];
+  string trace_id                                   = 5 [json_name =  "trace_id"];
 }
 
 message ProtoActualLRPInstanceRemovedEvent {
@@ -72,8 +73,8 @@ message ProtoDesiredLRPRemovedEvent {
 }
 
 message ProtoActualLRPCrashedEvent {
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true];
   int32 crash_count = 3 [json_name =  "crash_count"];
   string crash_reason = 4;
   int64 since = 5 [json_name =  "since"];

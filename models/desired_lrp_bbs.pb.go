@@ -8,12 +8,12 @@ package models
 
 // Prevent copylock errors when using ProtoDesiredLRPSchedulingInfo directly
 type DesiredLRPSchedulingInfo struct {
-	DesiredLrpKey      *DesiredLRPKey
+	DesiredLrpKey      DesiredLRPKey
 	Annotation         string
 	Instances          int32
-	DesiredLrpResource *DesiredLRPResource
+	DesiredLrpResource DesiredLRPResource
 	Routes             Routes
-	ModificationTag    *ModificationTag
+	ModificationTag    ModificationTag
 	VolumePlacement    *VolumePlacement
 	PlacementTags      []string
 }
@@ -40,7 +40,7 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrpKey.Equal(*that1.DesiredLrpKey) {
+	if !this.DesiredLrpKey.Equal(that1.DesiredLrpKey) {
 		return false
 	}
 	if this.Annotation != that1.Annotation {
@@ -49,13 +49,13 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if this.Instances != that1.Instances {
 		return false
 	}
-	if !this.DesiredLrpResource.Equal(*that1.DesiredLrpResource) {
+	if !this.DesiredLrpResource.Equal(that1.DesiredLrpResource) {
 		return false
 	}
 	if !this.Routes.Equal(that1.Routes) {
 		return false
 	}
-	if !this.ModificationTag.Equal(*that1.ModificationTag) {
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
 		return false
 	}
 	if !this.VolumePlacement.Equal(*that1.VolumePlacement) {
@@ -71,13 +71,7 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *DesiredLRPSchedulingInfo) GetDesiredLrpKey() *DesiredLRPKey {
-	if m != nil {
-		return m.DesiredLrpKey
-	}
-	return nil
-}
-func (m *DesiredLRPSchedulingInfo) SetDesiredLrpKey(value *DesiredLRPKey) {
+func (m *DesiredLRPSchedulingInfo) SetDesiredLrpKey(value DesiredLRPKey) {
 	if m != nil {
 		m.DesiredLrpKey = value
 	}
@@ -104,35 +98,17 @@ func (m *DesiredLRPSchedulingInfo) SetInstances(value int32) {
 		m.Instances = value
 	}
 }
-func (m *DesiredLRPSchedulingInfo) GetDesiredLrpResource() *DesiredLRPResource {
-	if m != nil {
-		return m.DesiredLrpResource
-	}
-	return nil
-}
-func (m *DesiredLRPSchedulingInfo) SetDesiredLrpResource(value *DesiredLRPResource) {
+func (m *DesiredLRPSchedulingInfo) SetDesiredLrpResource(value DesiredLRPResource) {
 	if m != nil {
 		m.DesiredLrpResource = value
 	}
-}
-func (m *DesiredLRPSchedulingInfo) GetRoutes() Routes {
-	if m != nil {
-		return m.Routes
-	}
-	return nil
 }
 func (m *DesiredLRPSchedulingInfo) SetRoutes(value Routes) {
 	if m != nil {
 		m.Routes = value
 	}
 }
-func (m *DesiredLRPSchedulingInfo) GetModificationTag() *ModificationTag {
-	if m != nil {
-		return m.ModificationTag
-	}
-	return nil
-}
-func (m *DesiredLRPSchedulingInfo) SetModificationTag(value *ModificationTag) {
+func (m *DesiredLRPSchedulingInfo) SetModificationTag(value ModificationTag) {
 	if m != nil {
 		m.ModificationTag = value
 	}
@@ -183,12 +159,12 @@ func (x *ProtoDesiredLRPSchedulingInfo) FromProto() *DesiredLRPSchedulingInfo {
 	}
 
 	copysafe := &DesiredLRPSchedulingInfo{
-		DesiredLrpKey:      x.DesiredLrpKey.FromProto(),
+		DesiredLrpKey:      *x.DesiredLrpKey.FromProto(),
 		Annotation:         x.Annotation,
 		Instances:          x.Instances,
-		DesiredLrpResource: x.DesiredLrpResource.FromProto(),
+		DesiredLrpResource: *x.DesiredLrpResource.FromProto(),
 		Routes:             *x.Routes.FromProto(),
-		ModificationTag:    x.ModificationTag.FromProto(),
+		ModificationTag:    *x.ModificationTag.FromProto(),
 		VolumePlacement:    x.VolumePlacement.FromProto(),
 		PlacementTags:      x.PlacementTags,
 	}
@@ -219,7 +195,7 @@ func DesiredLRPSchedulingInfoFromProtoSlice(values []*ProtoDesiredLRPSchedulingI
 
 // Prevent copylock errors when using ProtoDesiredLRPRunInfo directly
 type DesiredLRPRunInfo struct {
-	DesiredLrpKey                 *DesiredLRPKey
+	DesiredLrpKey                 DesiredLRPKey
 	EnvironmentVariables          []*EnvironmentVariable
 	Setup                         *Action
 	Action                        *Action
@@ -270,7 +246,7 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.DesiredLrpKey.Equal(*that1.DesiredLrpKey) {
+	if !this.DesiredLrpKey.Equal(that1.DesiredLrpKey) {
 		return false
 	}
 	if len(this.EnvironmentVariables) != len(that1.EnvironmentVariables) {
@@ -393,13 +369,7 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *DesiredLRPRunInfo) GetDesiredLrpKey() *DesiredLRPKey {
-	if m != nil {
-		return m.DesiredLrpKey
-	}
-	return nil
-}
-func (m *DesiredLRPRunInfo) SetDesiredLrpKey(value *DesiredLRPKey) {
+func (m *DesiredLRPRunInfo) SetDesiredLrpKey(value DesiredLRPKey) {
 	if m != nil {
 		m.DesiredLrpKey = value
 	}
@@ -742,7 +712,7 @@ func (x *ProtoDesiredLRPRunInfo) FromProto() *DesiredLRPRunInfo {
 	}
 
 	copysafe := &DesiredLRPRunInfo{
-		DesiredLrpKey:                 x.DesiredLrpKey.FromProto(),
+		DesiredLrpKey:                 *x.DesiredLrpKey.FromProto(),
 		EnvironmentVariables:          EnvironmentVariableFromProtoSlice(x.EnvironmentVariables),
 		Setup:                         x.Setup.FromProto(),
 		Action:                        x.Action.FromProto(),

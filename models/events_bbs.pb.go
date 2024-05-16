@@ -390,13 +390,13 @@ func ActualLRPInstanceCreatedEventFromProtoSlice(values []*ProtoActualLRPInstanc
 
 // Prevent copylock errors when using ProtoActualLRPInfo directly
 type ActualLRPInfo struct {
-	ActualLrpNetInfo *ActualLRPNetInfo
+	ActualLrpNetInfo ActualLRPNetInfo
 	CrashCount       int32
 	CrashReason      string
 	State            string
 	PlacementError   string
 	Since            int64
-	ModificationTag  *ModificationTag
+	ModificationTag  ModificationTag
 	Presence         ActualLRP_Presence
 	Routable         *bool
 	AvailabilityZone string
@@ -424,7 +424,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpNetInfo.Equal(*that1.ActualLrpNetInfo) {
+	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -442,7 +442,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	if this.Since != that1.Since {
 		return false
 	}
-	if !this.ModificationTag.Equal(*that1.ModificationTag) {
+	if !this.ModificationTag.Equal(that1.ModificationTag) {
 		return false
 	}
 	if this.Presence != that1.Presence {
@@ -456,13 +456,7 @@ func (this *ActualLRPInfo) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPInfo) GetActualLrpNetInfo() *ActualLRPNetInfo {
-	if m != nil {
-		return m.ActualLrpNetInfo
-	}
-	return nil
-}
-func (m *ActualLRPInfo) SetActualLrpNetInfo(value *ActualLRPNetInfo) {
+func (m *ActualLRPInfo) SetActualLrpNetInfo(value ActualLRPNetInfo) {
 	if m != nil {
 		m.ActualLrpNetInfo = value
 	}
@@ -522,22 +516,10 @@ func (m *ActualLRPInfo) SetSince(value int64) {
 		m.Since = value
 	}
 }
-func (m *ActualLRPInfo) GetModificationTag() *ModificationTag {
-	if m != nil {
-		return m.ModificationTag
-	}
-	return nil
-}
-func (m *ActualLRPInfo) SetModificationTag(value *ModificationTag) {
+func (m *ActualLRPInfo) SetModificationTag(value ModificationTag) {
 	if m != nil {
 		m.ModificationTag = value
 	}
-}
-func (m *ActualLRPInfo) GetPresence() ActualLRP_Presence {
-	if m != nil {
-		return m.Presence
-	}
-	return 0
 }
 func (m *ActualLRPInfo) SetPresence(value ActualLRP_Presence) {
 	if m != nil {
@@ -595,13 +577,13 @@ func (x *ProtoActualLRPInfo) FromProto() *ActualLRPInfo {
 	}
 
 	copysafe := &ActualLRPInfo{
-		ActualLrpNetInfo: x.ActualLrpNetInfo.FromProto(),
+		ActualLrpNetInfo: *x.ActualLrpNetInfo.FromProto(),
 		CrashCount:       x.CrashCount,
 		CrashReason:      x.CrashReason,
 		State:            x.State,
 		PlacementError:   x.PlacementError,
 		Since:            x.Since,
-		ModificationTag:  x.ModificationTag.FromProto(),
+		ModificationTag:  *x.ModificationTag.FromProto(),
 		Presence:         ActualLRP_Presence(x.Presence),
 		Routable:         x.Routable,
 		AvailabilityZone: x.AvailabilityZone,
@@ -633,8 +615,8 @@ func ActualLRPInfoFromProtoSlice(values []*ProtoActualLRPInfo) []*ActualLRPInfo 
 
 // Prevent copylock errors when using ProtoActualLRPInstanceChangedEvent directly
 type ActualLRPInstanceChangedEvent struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLrpKey         ActualLRPKey
+	ActualLrpInstanceKey ActualLRPInstanceKey
 	Before               *ActualLRPInfo
 	After                *ActualLRPInfo
 	TraceId              string
@@ -662,10 +644,10 @@ func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(*that1.ActualLrpKey) {
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(*that1.ActualLrpInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
 		return false
 	}
 	if !this.Before.Equal(*that1.Before) {
@@ -679,24 +661,12 @@ func (this *ActualLRPInstanceChangedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPInstanceChangedEvent) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-func (m *ActualLRPInstanceChangedEvent) SetActualLrpKey(value *ActualLRPKey) {
+func (m *ActualLRPInstanceChangedEvent) SetActualLrpKey(value ActualLRPKey) {
 	if m != nil {
 		m.ActualLrpKey = value
 	}
 }
-func (m *ActualLRPInstanceChangedEvent) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-func (m *ActualLRPInstanceChangedEvent) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *ActualLRPInstanceChangedEvent) SetActualLrpInstanceKey(value ActualLRPInstanceKey) {
 	if m != nil {
 		m.ActualLrpInstanceKey = value
 	}
@@ -755,8 +725,8 @@ func (x *ProtoActualLRPInstanceChangedEvent) FromProto() *ActualLRPInstanceChang
 	}
 
 	copysafe := &ActualLRPInstanceChangedEvent{
-		ActualLrpKey:         x.ActualLrpKey.FromProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
+		ActualLrpKey:         *x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey: *x.ActualLrpInstanceKey.FromProto(),
 		Before:               x.Before.FromProto(),
 		After:                x.After.FromProto(),
 		TraceId:              x.TraceId,
@@ -1221,8 +1191,8 @@ func DesiredLRPRemovedEventFromProtoSlice(values []*ProtoDesiredLRPRemovedEvent)
 
 // Prevent copylock errors when using ProtoActualLRPCrashedEvent directly
 type ActualLRPCrashedEvent struct {
-	ActualLrpKey         *ActualLRPKey
-	ActualLrpInstanceKey *ActualLRPInstanceKey
+	ActualLrpKey         ActualLRPKey
+	ActualLrpInstanceKey ActualLRPInstanceKey
 	CrashCount           int32
 	CrashReason          string
 	Since                int64
@@ -1250,10 +1220,10 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 		return false
 	}
 
-	if !this.ActualLrpKey.Equal(*that1.ActualLrpKey) {
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
 		return false
 	}
-	if !this.ActualLrpInstanceKey.Equal(*that1.ActualLrpInstanceKey) {
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
 		return false
 	}
 	if this.CrashCount != that1.CrashCount {
@@ -1267,24 +1237,12 @@ func (this *ActualLRPCrashedEvent) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *ActualLRPCrashedEvent) GetActualLrpKey() *ActualLRPKey {
-	if m != nil {
-		return m.ActualLrpKey
-	}
-	return nil
-}
-func (m *ActualLRPCrashedEvent) SetActualLrpKey(value *ActualLRPKey) {
+func (m *ActualLRPCrashedEvent) SetActualLrpKey(value ActualLRPKey) {
 	if m != nil {
 		m.ActualLrpKey = value
 	}
 }
-func (m *ActualLRPCrashedEvent) GetActualLrpInstanceKey() *ActualLRPInstanceKey {
-	if m != nil {
-		return m.ActualLrpInstanceKey
-	}
-	return nil
-}
-func (m *ActualLRPCrashedEvent) SetActualLrpInstanceKey(value *ActualLRPInstanceKey) {
+func (m *ActualLRPCrashedEvent) SetActualLrpInstanceKey(value ActualLRPInstanceKey) {
 	if m != nil {
 		m.ActualLrpInstanceKey = value
 	}
@@ -1343,8 +1301,8 @@ func (x *ProtoActualLRPCrashedEvent) FromProto() *ActualLRPCrashedEvent {
 	}
 
 	copysafe := &ActualLRPCrashedEvent{
-		ActualLrpKey:         x.ActualLrpKey.FromProto(),
-		ActualLrpInstanceKey: x.ActualLrpInstanceKey.FromProto(),
+		ActualLrpKey:         *x.ActualLrpKey.FromProto(),
+		ActualLrpInstanceKey: *x.ActualLrpInstanceKey.FromProto(),
 		CrashCount:           x.CrashCount,
 		CrashReason:          x.CrashReason,
 		Since:                x.Since,
