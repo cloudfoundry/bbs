@@ -34,8 +34,8 @@ message ProtoDownloadAction {
   string cache_key = 4 [json_name = "cache_key"];
   string log_source = 5;
   string user = 6 [json_name = "user"] ;
-  string checksum_algorithm = 7;
-  string checksum_value = 8;
+  string checksum_algorithm = 7 [json_name = "checksum_algorithm"];
+  string checksum_value = 8 [json_name = "checksum_value"];
 }
 
 message ProtoUploadAction {
@@ -51,7 +51,7 @@ message ProtoRunAction {
   repeated string args = 2;
   string dir = 3;
   repeated ProtoEnvironmentVariable env = 4;
-  ProtoResourceLimits resource_limits = 5;
+  ProtoResourceLimits resource_limits = 5 [json_name = "resource_limits"];
   string user = 6 [json_name = "user"];
   string log_source = 7;
   bool suppress_log_output = 8 [json_name = "suppress_log_output"];
