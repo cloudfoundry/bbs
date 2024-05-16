@@ -1,22 +1,23 @@
 package models_test
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var _ = Describe("Actions", func() {
 	itSerializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
 		It("Action -> JSON for "+string(action.ActionType()), func() {
-			json, err := json.Marshal(action)
+			marshalJson, err := protojson.Marshal(a.GetProto())
 			Expect(err).NotTo(HaveOccurred())
-			Expect(json).To(MatchJSON(actionPayload))
+			Expect(string(marshalJson)).To(MatchJSON(actionPayload))
 		})
 	}
 
@@ -24,10 +25,10 @@ var _ = Describe("Actions", func() {
 		action := models.UnwrapAction(a)
 		It("JSON -> Action for "+string(action.ActionType()), func() {
 			wrappedJSON := fmt.Sprintf(`{"%s":%s}`, action.ActionType(), actionPayload)
-			marshalledAction := new(models.Action)
-			err := json.Unmarshal([]byte(wrappedJSON), marshalledAction)
+			marshalledAction := new(models.ProtoAction)
+			err := protojson.Unmarshal([]byte(wrappedJSON), marshalledAction)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(marshalledAction).To(BeEquivalentTo(a))
+			Expect(marshalledAction.FromProto()).To(BeEquivalentTo(a))
 		})
 	}
 
@@ -58,20 +59,32 @@ var _ = Describe("Actions", func() {
 
 	Describe("Nil Actions", func() {
 		It("Action -> JSON for a Nil action", func() {
-			var action *models.Action = nil
+			var action *models.ProtoAction = nil
 			By("marshalling to JSON", func() {
-				json, err := json.Marshal(action)
+				json, err := protojson.Marshal(action)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(json).To(MatchJSON("null"))
+				log.Printf("%+v\n", json)
+				Expect(json).To(MatchJSON("{}"))
 			})
 		})
 
 		It("JSON -> Action for Nil action", func() {
 			By("unwrapping", func() {
-				var unmarshalledAction *models.Action
-				err := json.Unmarshal([]byte("null"), &unmarshalledAction)
+				unmarshalledAction := new(models.ProtoAction)
+				err := protojson.Unmarshal([]byte("{}"), unmarshalledAction)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(unmarshalledAction).To(BeNil())
+				// TODO: protojson.Unmarshal requires a non-nil pointer in order to work
+				// see if we can find an alternative way of doing this so the following line works
+				// Expect(unmarshalledAction).To(BeNil())
+				Expect(unmarshalledAction.DownloadAction).To(BeNil())
+				Expect(unmarshalledAction.UploadAction).To(BeNil())
+				Expect(unmarshalledAction.RunAction).To(BeNil())
+				Expect(unmarshalledAction.TimeoutAction).To(BeNil())
+				Expect(unmarshalledAction.EmitProgressAction).To(BeNil())
+				Expect(unmarshalledAction.TryAction).To(BeNil())
+				Expect(unmarshalledAction.ParallelAction).To(BeNil())
+				Expect(unmarshalledAction.SerialAction).To(BeNil())
+				Expect(unmarshalledAction.CodependentAction).To(BeNil())
 			})
 		})
 
@@ -191,7 +204,7 @@ var _ = Describe("Actions", func() {
 
 				Context("with checksum", func() {
 					for _, testCase := range []ValidatorErrorCase{
-						ValidatorErrorCase{
+						{
 							"checksum value",
 							&models.DownloadAction{
 								From:              "web_location",
@@ -201,7 +214,7 @@ var _ = Describe("Actions", func() {
 								ChecksumValue:     "",
 							},
 						},
-						ValidatorErrorCase{
+						{
 							"checksum algorithm",
 							&models.DownloadAction{
 								From:              "web_location",
@@ -211,7 +224,7 @@ var _ = Describe("Actions", func() {
 								ChecksumValue:     "some checksum",
 							},
 						},
-						ValidatorErrorCase{
+						{
 							"invalid algorithm",
 							&models.DownloadAction{
 								From:              "web_location",
@@ -305,9 +318,13 @@ var _ = Describe("Actions", func() {
 						{"name":"FOO", "value":"1"},
 						{"name":"BAR", "value":"2"}
 					],
-					"resource_limits":{"nofile": 10, "nproc": 20},
-					"suppress_log_output": false
+					"resource_limits":{"nofile": "10", "nproc": "20"}
 			}`,
+			//TODO: double-check these properties
+			// protobuf v3 makes uint64 a string
+			//"resource_limits":{"nofile": 10, "nproc": 20}
+			// protojson does not emit this
+			//"suppress_log_output": false
 			models.WrapAction(&models.RunAction{
 				User: "me",
 				Path: "rm",
@@ -318,6 +335,7 @@ var _ = Describe("Actions", func() {
 					{"BAR", "2"},
 				},
 				ResourceLimits: resourceLimits,
+				// SuppressLogOutput: false,
 			}),
 		)
 
@@ -366,15 +384,20 @@ var _ = Describe("Actions", func() {
 				"action": {
 					"run": {
 						"path": "echo",
-						"user": "someone",
 						"resource_limits":{
-							"nofile": 10
+							"nofile": "10"
 						},
-						"suppress_log_output": false
+						"user": "someone"
 					}
 				},
-				"timeout_ms": 10
+				"timeout_ms": "10"
 			}`,
+			//TODO: double-check these properties
+			// protobuf v3 makes uint64 a string
+			//"resource_limits":{"nofile": 10}
+			//"timeout_ms": 10
+			// protojson does not emit this
+			//"suppress_log_output": false
 			models.WrapAction(
 				models.Timeout(
 					&models.RunAction{
@@ -451,11 +474,13 @@ var _ = Describe("Actions", func() {
 						"run": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me",
-							"suppress_log_output": false
+							"user": "me"
 						}
 					}
 			}`,
+			//TODO: double-check these properties
+			// protojson does not emit this
+			//"suppress_log_output": false
 			models.WrapAction(models.Try(&models.RunAction{
 				Path:           "echo",
 				User:           "me",
@@ -520,12 +545,14 @@ var _ = Describe("Actions", func() {
 							"run": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
 			}`,
+			//TODO: double-check these properties
+			// protojson does not emit this
+			//"suppress_log_output": false
 			models.WrapAction(models.Parallel(
 				&models.DownloadAction{
 					From:     "web_location",
@@ -548,7 +575,7 @@ var _ = Describe("Actions", func() {
 				It("is valid", func() {
 					parallelAction = &models.ParallelAction{
 						Actions: []*models.Action{
-							&models.Action{
+							{
 								UploadAction: &models.UploadAction{
 									From: "local_location",
 									To:   "web_location",
@@ -584,7 +611,7 @@ var _ = Describe("Actions", func() {
 					"from",
 					&models.ParallelAction{
 						Actions: []*models.Action{
-							&models.Action{
+							{
 								UploadAction: &models.UploadAction{
 									To: "web_location",
 								},
@@ -614,12 +641,14 @@ var _ = Describe("Actions", func() {
 							"run": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
 			}`,
+			//TODO: double-check these properties
+			// protojson does not emit this
+			//"suppress_log_output": false
 			models.WrapAction(models.Serial(
 				&models.DownloadAction{
 					From:     "web_location",
@@ -693,11 +722,13 @@ var _ = Describe("Actions", func() {
 						"run": {
 							"path": "echo",
 							"resource_limits":{},
-							"user": "me",
-							"suppress_log_output": false
+							"user": "me"
 						}
 					}
 			}`,
+			//TODO: double-check these properties
+			// protojson does not emit this
+			//"suppress_log_output": false
 			models.WrapAction(models.EmitProgressFor(
 				&models.RunAction{
 					Path:           "echo",
@@ -763,12 +794,14 @@ var _ = Describe("Actions", func() {
 							"run": {
 								"resource_limits": {},
 								"path": "echo",
-								"user": "me",
-								"suppress_log_output": false
+								"user": "me"
 							}
 						}
 					]
 			}`,
+			//TODO: double-check these properties
+			// protojson does not emit this
+			//"suppress_log_output": false
 			models.WrapAction(models.Codependent(
 				&models.DownloadAction{
 					From:     "web_location",
