@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -56,6 +57,37 @@ func (a *Action) GetValue() interface{} {
 	}
 	if a.CodependentAction != nil {
 		return a.CodependentAction
+	}
+	return nil
+}
+
+func (a *Action) GetProto() proto.Message {
+	if a.DownloadAction != nil {
+		return a.DownloadAction.ToProto()
+	}
+	if a.UploadAction != nil {
+		return a.UploadAction.ToProto()
+	}
+	if a.RunAction != nil {
+		return a.RunAction.ToProto()
+	}
+	if a.TimeoutAction != nil {
+		return a.TimeoutAction.ToProto()
+	}
+	if a.EmitProgressAction != nil {
+		return a.EmitProgressAction.ToProto()
+	}
+	if a.TryAction != nil {
+		return a.TryAction.ToProto()
+	}
+	if a.ParallelAction != nil {
+		return a.ParallelAction.ToProto()
+	}
+	if a.SerialAction != nil {
+		return a.SerialAction.ToProto()
+	}
+	if a.CodependentAction != nil {
+		return a.CodependentAction.ToProto()
 	}
 	return nil
 }
