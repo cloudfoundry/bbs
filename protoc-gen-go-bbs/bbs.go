@@ -159,7 +159,9 @@ func (bbsGenerateHelper) genAccessors(g *protogen.GeneratedFile, msg *protogen.M
 			if options.GetDeprecated() {
 				g.P("// DEPRECATED: DO NOT USE")
 			}
-			genGetter(g, copysafeName, field) //fieldName, fieldType, defaultValue)
+			if !isByValueType(field) {
+				genGetter(g, copysafeName, field) //fieldName, fieldType, defaultValue)
+			}
 			genSetter(g, copysafeName, fieldName, fieldType)
 		}
 	}
