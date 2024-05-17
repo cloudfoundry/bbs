@@ -387,35 +387,35 @@ func (m *DesiredLRPRunInfo) SetEnvironmentVariables(value []*EnvironmentVariable
 }
 func (m *DesiredLRPRunInfo) GetSetup() *Action {
 	if m != nil {
-		return m.Setup
+		return m.Setup.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *DesiredLRPRunInfo) SetSetup(value *Action) {
 	if m != nil {
-		m.Setup = value
+		m.Setup.SetValue(value)
 	}
 }
 func (m *DesiredLRPRunInfo) GetAction() *Action {
 	if m != nil {
-		return m.Action
+		return m.Action.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *DesiredLRPRunInfo) SetAction(value *Action) {
 	if m != nil {
-		m.Action = value
+		m.Action.SetValue(value)
 	}
 }
 func (m *DesiredLRPRunInfo) GetMonitor() *Action {
 	if m != nil {
-		return m.Monitor
+		return m.Monitor.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *DesiredLRPRunInfo) SetMonitor(value *Action) {
 	if m != nil {
-		m.Monitor = value
+		m.Monitor.SetValue(value)
 	}
 }
 
@@ -1498,24 +1498,24 @@ func (m *DesiredLRP) SetEnvironmentVariables(value []*EnvironmentVariable) {
 }
 func (m *DesiredLRP) GetSetup() *Action {
 	if m != nil {
-		return m.Setup
+		return m.Setup.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *DesiredLRP) SetSetup(value *Action) {
 	if m != nil {
-		m.Setup = value
+		m.Setup.SetValue(value)
 	}
 }
 func (m *DesiredLRP) GetAction() *Action {
 	if m != nil {
-		return m.Action
+		return m.Action.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *DesiredLRP) SetAction(value *Action) {
 	if m != nil {
-		m.Action = value
+		m.Action.SetValue(value)
 	}
 }
 func (m *DesiredLRP) GetStartTimeoutMs() int64 {
@@ -1544,13 +1544,13 @@ func (m *DesiredLRP) SetDeprecatedStartTimeoutS(value uint32) {
 }
 func (m *DesiredLRP) GetMonitor() *Action {
 	if m != nil {
-		return m.Monitor
+		return m.Monitor.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *DesiredLRP) SetMonitor(value *Action) {
 	if m != nil {
-		m.Monitor = value
+		m.Monitor.SetValue(value)
 	}
 }
 func (m *DesiredLRP) GetDiskMb() int32 {
