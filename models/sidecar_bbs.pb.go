@@ -48,13 +48,13 @@ func (this *Sidecar) Equal(that interface{}) bool {
 }
 func (m *Sidecar) GetAction() *Action {
 	if m != nil {
-		return m.Action
+		return m.Action.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *Sidecar) SetAction(value *Action) {
 	if m != nil {
-		m.Action = value
+		m.Action.SetValue(value)
 	}
 }
 func (m *Sidecar) GetDiskMb() int32 {

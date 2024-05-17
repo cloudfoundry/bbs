@@ -205,13 +205,13 @@ func (m *TaskDefinition) SetEnvironmentVariables(value []*EnvironmentVariable) {
 }
 func (m *TaskDefinition) GetAction() *Action {
 	if m != nil {
-		return m.Action
+		return m.Action.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *TaskDefinition) SetAction(value *Action) {
 	if m != nil {
-		m.Action = value
+		m.Action.SetValue(value)
 	}
 }
 func (m *TaskDefinition) GetDiskMb() int32 {

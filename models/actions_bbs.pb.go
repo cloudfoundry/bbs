@@ -852,13 +852,13 @@ func (this *TimeoutAction) Equal(that interface{}) bool {
 }
 func (m *TimeoutAction) GetAction() *Action {
 	if m != nil {
-		return m.Action
+		return m.Action.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *TimeoutAction) SetAction(value *Action) {
 	if m != nil {
-		m.Action = value
+		m.Action.SetValue(value)
 	}
 }
 
@@ -996,13 +996,13 @@ func (this *EmitProgressAction) Equal(that interface{}) bool {
 }
 func (m *EmitProgressAction) GetAction() *Action {
 	if m != nil {
-		return m.Action
+		return m.Action.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *EmitProgressAction) SetAction(value *Action) {
 	if m != nil {
-		m.Action = value
+		m.Action.SetValue(value)
 	}
 }
 func (m *EmitProgressAction) GetStartMessage() string {
@@ -1139,13 +1139,13 @@ func (this *TryAction) Equal(that interface{}) bool {
 }
 func (m *TryAction) GetAction() *Action {
 	if m != nil {
-		return m.Action
+		return m.Action.GetValue().(*Action)
 	}
 	return nil
 }
 func (m *TryAction) SetAction(value *Action) {
 	if m != nil {
-		m.Action = value
+		m.Action.SetValue(value)
 	}
 }
 func (m *TryAction) GetLogSource() string {
