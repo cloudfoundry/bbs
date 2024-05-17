@@ -137,9 +137,6 @@ func (this *Error) Equal(that interface{}) bool {
 	if this.Type != that1.Type {
 		return false
 	}
-	if this.Message != that1.Message {
-		return false
-	}
 	return true
 }
 func (m *Error) GetType() Error_Type {
