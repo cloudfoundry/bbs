@@ -11,7 +11,7 @@ import "modification_tag.proto";
 
 message ProtoActualLRPCreatedEvent  {
   option deprecated = true;
-  ProtoActualLRPGroup actual_lrp_group = 1;
+  ProtoActualLRPGroup actual_lrp_group = 1 [json_name = "actual_lrp_group"];
 }
 
 message ProtoActualLRPChangedEvent {
@@ -22,20 +22,20 @@ message ProtoActualLRPChangedEvent {
 
 message ProtoActualLRPRemovedEvent {
   option deprecated = true;
-  ProtoActualLRPGroup actual_lrp_group = 1;
+  ProtoActualLRPGroup actual_lrp_group = 1 [json_name = "actual_lrp_group"];
 }
 
 message ProtoActualLRPInstanceCreatedEvent  {
-  ProtoActualLRP actual_lrp = 1;
+  ProtoActualLRP actual_lrp = 1 [json_name = "actual_lrp"];
   string trace_id = 2 [json_name =  "trace_id"];
 }
 
 message ProtoActualLRPInfo {
-  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true];
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_net_info"];
   int32 crash_count = 4 [json_name =  "crash_count"];
-  string crash_reason = 5;
+  string crash_reason = 5 [json_name = "crash_reason"];
   string state = 6 [json_name =  "state"];
-  string placement_error = 7;
+  string placement_error = 7 [json_name = "placement_error"];
   int64 since = 8 [json_name =  "since"];
   ProtoModificationTag modification_tag = 9 [json_name = "modification_tag",  (bbs.bbs_by_value) = true];
   ProtoActualLRP.Presence presence = 10 [json_name = "presence", (bbs.bbs_by_value) = true];
@@ -44,20 +44,20 @@ message ProtoActualLRPInfo {
 }
 
 message ProtoActualLRPInstanceChangedEvent {
-  ProtoActualLRPKey actual_lrp_key                  = 1 [(bbs.bbs_by_value) = true];
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true];
+  ProtoActualLRPKey actual_lrp_key                  = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key"];
   ProtoActualLRPInfo before                         = 3;
   ProtoActualLRPInfo after                          = 4;
   string trace_id                                   = 5 [json_name =  "trace_id"];
 }
 
 message ProtoActualLRPInstanceRemovedEvent {
-  ProtoActualLRP actual_lrp = 1;
+  ProtoActualLRP actual_lrp = 1 [json_name = "actual_lrp"];
   string trace_id = 2 [json_name =  "trace_id"];
 }
 
 message ProtoDesiredLRPCreatedEvent {
-  ProtoDesiredLRP desired_lrp = 1;
+  ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
   string trace_id = 2 [json_name =  "trace_id"];
 }
 
@@ -68,15 +68,15 @@ message ProtoDesiredLRPChangedEvent {
 }
 
 message ProtoDesiredLRPRemovedEvent {
-  ProtoDesiredLRP desired_lrp = 1;
+  ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
   string trace_id = 2 [json_name =  "trace_id"];
 }
 
 message ProtoActualLRPCrashedEvent {
-  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true];
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true];
+  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key"];
   int32 crash_count = 3 [json_name =  "crash_count"];
-  string crash_reason = 4;
+  string crash_reason = 4 [json_name = "crash_reason"];
   int64 since = 5 [json_name =  "since"];
 }
 

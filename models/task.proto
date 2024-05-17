@@ -26,22 +26,22 @@ message ProtoTaskDefinition {
   string log_guid = 9 [json_name =  "log_guid"];
   string metrics_guid = 10 [json_name =  "metrics_guid"];
   string result_file = 11 [json_name =  "result_file"];
-  string completion_callback_url = 12;
+  string completion_callback_url = 12 [json_name = "completion_callback_url"];
   string annotation = 13;
-  repeated ProtoSecurityGroupRule egress_rules = 14;
-  repeated ProtoCachedDependency cached_dependencies = 15;
-  string legacy_download_user = 16 [deprecated=true];
-  string trusted_system_certificates_path = 17;
-  repeated ProtoVolumeMount volume_mounts = 18;
+  repeated ProtoSecurityGroupRule egress_rules = 14 [json_name = "egress_rules"];
+  repeated ProtoCachedDependency cached_dependencies = 15 [json_name = "cached_dependencies"];
+  string legacy_download_user = 16 [deprecated=true, json_name = "legacy_download_user"];
+  string trusted_system_certificates_path = 17 [json_name = "trusted_system_certificates_path"];
+  repeated ProtoVolumeMount volume_mounts = 18 [json_name = "volume_mounts"];
   ProtoNetwork network = 19;
-  repeated string placement_tags = 20;
+  repeated string placement_tags = 20 [json_name = "placement_tags"];
   int32 max_pids = 21 [json_name =  "max_pids"];
-  ProtoCertificateProperties certificate_properties = 22;
+  ProtoCertificateProperties certificate_properties = 22 [json_name = "certificate_properties"];
   string image_username = 23 [json_name =  "image_username"];
   string image_password = 24 [json_name =  "image_password"];
-  repeated ProtoImageLayer image_layers = 25;
-  ProtoLogRateLimit log_rate_limit = 26;
-  map<string, ProtoMetricTagValue> metric_tags = 27;
+  repeated ProtoImageLayer image_layers = 25 [json_name = "image_layers"];
+  ProtoLogRateLimit log_rate_limit = 26 [json_name = "log_rate_limit"];
+  map<string, ProtoMetricTagValue> metric_tags = 27 [json_name = "metric_tags"];
 }
 
 message ProtoTask {
@@ -53,7 +53,7 @@ message ProtoTask {
     Resolving = 4;
   }
 
-  ProtoTaskDefinition task_definition = 1 [json_name = ""];
+  ProtoTaskDefinition task_definition = 1 [json_name = "task_definition"];
 
   string task_guid = 2 [json_name =  "task_guid"];
   string domain = 3 [json_name =  "domain"];

@@ -9,6 +9,6 @@ message ProtoCachedDependency {
   string to = 3 [json_name = "to"];
   string cache_key = 4 [json_name = "cache_key"];
   string log_source = 5 [json_name = "log_source"];
-  string checksum_algorithm = 6;
-  string checksum_value = 7;
+  string checksum_algorithm = 6 [json_name = "checksum_algorithm"];
+  string checksum_value = 7 [json_name = "checksum_value"];
 }

@@ -19,21 +19,21 @@ import "sidecar.proto";
 import "log_rate_limit.proto";
 
 message ProtoDesiredLRPSchedulingInfo {
-  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true];
+  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "desired_lrp_key"];
 
   string annotation = 2 [json_name = "annotation"];
   int32 instances = 3 [json_name = "instances"];
 
-  ProtoDesiredLRPResource desired_lrp_resource = 4 [(bbs.bbs_by_value) = true];
+  ProtoDesiredLRPResource desired_lrp_resource = 4 [(bbs.bbs_by_value) = true, json_name = "desired_lrp_resource"];
 
   ProtoRoutes routes = 5 [(bbs.bbs_by_value) = true];
-  ProtoModificationTag modification_tag = 6 [(bbs.bbs_by_value) = true];
-  ProtoVolumePlacement volume_placement = 7;
+  ProtoModificationTag modification_tag = 6 [(bbs.bbs_by_value) = true, json_name = "modification_tag"];
+  ProtoVolumePlacement volume_placement = 7 [json_name = "volume_placement"];
   repeated string PlacementTags = 8 [json_name ="placement_tags"];
 }
 
 message ProtoDesiredLRPRunInfo {
-  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true];
+  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "desired_lrp_key"];
 
   repeated ProtoEnvironmentVariable environment_variables = 2 [json_name = "env", (bbs.bbs_by_value) = false];
   ProtoAction setup = 3;
@@ -46,31 +46,31 @@ message ProtoDesiredLRPRunInfo {
 
   uint32 cpu_weight = 8 [json_name = "cpu_weight"];
   repeated uint32 ports = 9 [packed = false];
-  repeated ProtoSecurityGroupRule egress_rules = 10 [(bbs.bbs_by_value) = false];
+  repeated ProtoSecurityGroupRule egress_rules = 10 [(bbs.bbs_by_value) = false, json_name = "egress_rules"];
   string log_source = 11 [json_name = "log_source"];
   string metrics_guid = 12 [deprecated=true, json_name = "metrics_guid"];
   int64 created_at = 13 [json_name = "created_at"];
   repeated ProtoCachedDependency cached_dependencies = 14;
-  string legacy_download_user = 15 [deprecated=true];
-  string trusted_system_certificates_path = 16;
-  repeated ProtoVolumeMount volume_mounts = 17;
+  string legacy_download_user = 15 [deprecated=true, json_name = "legacy_download_user"];
+  string trusted_system_certificates_path = 16 [json_name = "trusted_system_certificates_path"];
+  repeated ProtoVolumeMount volume_mounts = 17 [json_name = "volume_mounts"];
   ProtoNetwork network = 18;
 
   int64 start_timeout_ms = 19 [json_name = "start_timeout_ms"];
 
-  optional ProtoCertificateProperties certificate_properties = 20;
+  optional ProtoCertificateProperties certificate_properties = 20 [json_name = "certificate_properties"];
 
-  string image_username = 21;
-  string image_password = 22;
+  string image_username = 21 [json_name = "image_username"];
+  string image_password = 22 [json_name = "image_password"];
 
-  ProtoCheckDefinition check_definition = 23;
+  ProtoCheckDefinition check_definition = 23 [json_name = "check_definition"];
 
-  repeated ProtoImageLayer image_layers = 24;
+  repeated ProtoImageLayer image_layers = 24 [json_name = "image_layers"];
 
-  map<string, ProtoMetricTagValue> metric_tags = 25;
+  map<string, ProtoMetricTagValue> metric_tags = 25 [json_name = "metric_tags"];
 
   repeated ProtoSidecar sidecars = 26;
-  ProtoLogRateLimit log_rate_limit = 27;
+  ProtoLogRateLimit log_rate_limit = 27 [json_name = "log_rate_limit"];
 }
 
 // helper message for marshalling routes
@@ -82,7 +82,7 @@ message ProtoDesiredLRPUpdate {
   optional int32 instances = 1;
   optional ProtoRoutes routes = 2 [(bbs.bbs_by_value) = false];
   optional string annotation = 3;
-  map<string, ProtoMetricTagValue> metric_tags = 4;
+  map<string, ProtoMetricTagValue> metric_tags = 4 [json_name = "metric_tags"];
 }
 
 message ProtoDesiredLRPKey {
@@ -121,27 +121,27 @@ message ProtoDesiredLRP {
   string log_guid = 17 [json_name = "log_guid"];
   string metrics_guid = 18 [deprecated=true, json_name = "metrics_guid"];
   string annotation = 19 [json_name = "annotation"];
-  repeated ProtoSecurityGroupRule egress_rules = 20;
-  ProtoModificationTag modification_tag = 21;
-  repeated ProtoCachedDependency cached_dependencies = 22;
-  string legacy_download_user = 23 [deprecated=true];
-  string trusted_system_certificates_path = 24;
-  repeated ProtoVolumeMount volume_mounts = 25;
+  repeated ProtoSecurityGroupRule egress_rules = 20 [json_name = "egress_rules"];
+  ProtoModificationTag modification_tag = 21 [json_name = "modification_tag"];
+  repeated ProtoCachedDependency cached_dependencies = 22 [json_name = "cached_dependencies"];
+  string legacy_download_user = 23 [deprecated=true, json_name = "legacy_download_user"];
+  string trusted_system_certificates_path = 24 [json_name = "trusted_system_certificates_path"];
+  repeated ProtoVolumeMount volume_mounts = 25 [json_name = "volume_mounts"];
   ProtoNetwork network = 26;
   repeated string PlacementTags = 28 [json_name ="placement_tags"];
   int32 max_pids = 29 [json_name = "max_pids"];
 
-  optional ProtoCertificateProperties certificate_properties = 30;
+  optional ProtoCertificateProperties certificate_properties = 30 [json_name = "certificate_properties"];
 
-  string image_username = 31;
-  string image_password = 32;
+  string image_username = 31 [json_name = "image_username"];
+  string image_password = 32 [json_name = "image_password"];
 
-  ProtoCheckDefinition check_definition = 33;
+  ProtoCheckDefinition check_definition = 33 [json_name = "check_definition"];
 
-  repeated ProtoImageLayer image_layers = 34;
+  repeated ProtoImageLayer image_layers = 34 [json_name = "image_layers"];
 
-  map<string, ProtoMetricTagValue> metric_tags = 35;
+  map<string, ProtoMetricTagValue> metric_tags = 35 [json_name = "metric_tags"];
 
   repeated ProtoSidecar sidecars = 36;
-  ProtoLogRateLimit log_rate_limit = 37;
+  ProtoLogRateLimit log_rate_limit = 37 [json_name = "log_rate_limit"];
 }
