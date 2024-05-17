@@ -3,6 +3,8 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
+
 message ProtoError {
   enum Type {
     reserved 1, 2, 10, 20, 22, 23, 25; // previously used and removed values
@@ -44,5 +46,5 @@ message ProtoError {
   }
 
   Type type = 1 [json_name = "type"];
-  string message = 2 [json_name = "message"];
+  string message = 2 [json_name = "message", (bbs.bbs_exclude_from_equal) = true];
 }
