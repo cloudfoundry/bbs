@@ -10,116 +10,129 @@ import (
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Task", func() {
 	var taskPayload string
 	var task models.Task
+	var protoTask models.ProtoTask
 
 	BeforeEach(func() {
 		taskPayload = `{
 		"task_guid":"some-guid",
 		"domain":"some-domain",
-		"rootfs": "docker:///docker.com/docker",
-		"env":[
-			{
-				"name":"ENV_VAR_NAME",
-				"value":"an environmment value"
-			}
-		],
 		"cell_id":"cell",
-		"action": {
-			"download":{
-				"from":"old_location",
-				"to":"new_location",
-				"cache_key":"the-cache-key",
-				"user":"someone",
-				"checksum_algorithm": "md5",
-				"checksum_value": "some value"
-			}
-		},
-		"result_file":"some-file.txt",
 		"result": "turboencabulated",
 		"failed":true,
 		"failure_reason":"because i said so",
-		"memory_mb":256,
-		"disk_mb":1024,
-		"log_rate_limit": {
-			"bytes_per_second": 2048
-		},
-		"cpu_weight": 42,
-		"privileged": true,
-		"log_guid": "123",
-		"log_source": "APP",
-		"metrics_guid": "456",
-		"created_at": 1393371971000000000,
-		"updated_at": 1393371971000000010,
-		"first_completed_at": 1393371971000000030,
+		"created_at": "1393371971000000000",
+		"updated_at": "1393371971000000010",
+		"first_completed_at": "1393371971000000030",
 		"state": "Pending",
-		"annotation": "[{\"anything\": \"you want!\"}]... dude",
-		"network": {
-			"properties": {
-				"some-key": "some-value",
-				"some-other-key": "some-other-value"
-			}
-		},
-		"egress_rules": [
-			{
-				"protocol": "tcp",
-				"destinations": ["0.0.0.0/0"],
-				"port_range": {
-					"start": 1,
-					"end": 1024
-				},
-				"log": true
+		"task_definition" : {
+			"rootfs": "docker:///docker.com/docker",
+			"env":[
+				{
+					"name":"ENV_VAR_NAME",
+					"value":"an environmment value"
+				}
+			],
+			"action": {
+				"download":{
+					"from":"old_location",
+					"to":"new_location",
+					"cache_key":"the-cache-key",
+					"user":"someone",
+					"checksum_algorithm": "md5",
+					"checksum_value": "some value"
+				}
 			},
-			{
-				"protocol": "udp",
-				"destinations": ["8.8.0.0/16"],
-				"ports": [53],
-				"log": false
+			"result_file":"some-file.txt",
+			"memory_mb":256,
+			"disk_mb":1024,
+			"log_rate_limit": {
+				"bytes_per_second": "2048"
+			},
+			"cpu_weight": 42,
+			"privileged": true,
+			"log_guid": "123",
+			"log_source": "APP",
+			"metrics_guid": "456",
+			"annotation": "[{\"anything\": \"you want!\"}]... dude",
+			"network": {
+				"properties": {
+					"some-key": "some-value",
+					"some-other-key": "some-other-value"
+				}
+			},
+			"egress_rules": [
+				{
+					"protocol": "tcp",
+					"destinations": ["0.0.0.0/0"],
+					"port_range": {
+						"start": 1,
+						"end": 1024
+					},
+					"log": true
+				},
+				{
+					"protocol": "udp",
+					"destinations": ["8.8.0.0/16"],
+					"ports": [53]
+				}
+			],
+			"completion_callback_url":"http://user:password@a.b.c/d/e/f",
+			"max_pids": 256,
+			"certificate_properties": {
+				"organizational_unit": ["stuff"]
+			},
+			"image_username": "jake",
+			"image_password": "thedog",
+			"image_layers": [
+			  {
+					"url": "some-url",
+					"destination_path": "/tmp",
+					"media_type": "TGZ",
+					"layer_type": "SHARED"
+				}
+			],
+			"legacy_download_user": "some-user",
+			"metric_tags": {
+			  "source_id": {
+				  "static": "some-guid"
+			  },
+			  "foo": {
+				  "static": "some-value"
+			  },
+			  "bar": {
+				  "dynamic": "INDEX"
+			  }
 			}
-		],
-		"completion_callback_url":"http://user:password@a.b.c/d/e/f",
-		"max_pids": 256,
-		"certificate_properties": {
-			"organizational_unit": ["stuff"]
-		},
-		"image_username": "jake",
-		"image_password": "thedog",
-		"rejection_count": 0,
-		"rejection_reason": "",
-		"image_layers": [
-		  {
-				"url": "some-url",
-				"destination_path": "/tmp",
-				"media_type": "TGZ",
-				"layer_type": "SHARED"
-			}
-		],
-		"legacy_download_user": "some-user",
-		"metric_tags": {
-		  "source_id": {
-			  "static": "some-guid"
-		  },
-		  "foo": {
-			  "static": "some-value"
-		  },
-		  "bar": {
-			  "dynamic": "INDEX"
-		  }
 		}
 	  }`
+		// TODO: double-check these fields
+		// protobuf v3 makes uint64 a string
+		// "created_at": "1393371971000000000",
+		// "updated_at": "1393371971000000010",
+		// "first_completed_at": "1393371971000000030",
+		// 	"log_rate_limit": {
+		// 		"bytes_per_second": "2048"
+		// 	},
+		// protojson does not emit this
+		// egress_rules -> "log": false
+		// "rejection_count": 0,
+		// "rejection_reason": "",
 
-		task = models.Task{}
-		err := json.Unmarshal([]byte(taskPayload), &task)
+		err := protojson.Unmarshal([]byte(taskPayload), &protoTask)
 		Expect(err).NotTo(HaveOccurred())
+		task = *protoTask.FromProto()
 	})
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := json.Marshal(task)
+			jsonSerialization, err := protojson.Marshal(task.ToProto())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(taskPayload))
 
@@ -129,8 +142,7 @@ var _ = Describe("Task", func() {
 			var protoDeserialization models.ProtoTask
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
-
-			Expect(protoDeserialization.FromProto()).To(Equal(task))
+			Expect(*protoDeserialization.FromProto()).To(Equal(task))
 		})
 	})
 
