@@ -111,6 +111,9 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 		g.P(equalBuilder.String())
 		g.P()
 		for _, field := range msg.Fields {
+			if isExcludedFromEqual(field) {
+				continue
+			}
 			fieldName := getFieldName(field.GoName)
 			if field.Desc.Cardinality() == protoreflect.Repeated {
 				g.P("if len(this.", fieldName, ") != len(that1.", fieldName, ") {")
@@ -290,6 +293,11 @@ func getActualType(g *protogen.GeneratedFile, field *protogen.Field) string {
 func isByValueType(field *protogen.Field) bool {
 	isByValueType := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsByValue)
 	return isByValueType.(bool)
+}
+
+func isExcludedFromEqual(field *protogen.Field) bool {
+	isExcludedFromEqual := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsExcludeFromEqual)
+	return isExcludedFromEqual.(bool)
 }
 
 func (bbsGenerateHelper) genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message) {
