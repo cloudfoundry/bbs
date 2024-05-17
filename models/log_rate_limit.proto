@@ -4,5 +4,5 @@ package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
 message ProtoLogRateLimit {
-  int64 bytes_per_second = 1;
+  int64 bytes_per_second = 1 [json_name = "bytes_per_second"];
 }

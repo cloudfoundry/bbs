@@ -17,8 +17,8 @@ message ProtoCellPresence {
   string zone = 3 [json_name = "zone"];
   ProtoCellCapacity capacity = 4;
   repeated ProtoProvider rootfs_providers = 5 [json_name = "rootfs_provider_list"];
-  repeated string placement_tags = 6;
-  repeated string optional_placement_tags = 7;
+  repeated string placement_tags = 6 [json_name = "placement_tags"];
+  repeated string optional_placement_tags = 7 [json_name = "optional_placement_tags"];
   string rep_url = 8 [json_name = "rep_url"];
 }
 

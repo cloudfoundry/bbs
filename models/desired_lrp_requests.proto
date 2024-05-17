@@ -12,27 +12,27 @@ message ProtoDesiredLRPLifecycleResponse {
 
 message ProtoDesiredLRPsResponse {
   ProtoError error = 1;
-  repeated ProtoDesiredLRP desired_lrps = 2;
+  repeated ProtoDesiredLRP desired_lrps = 2 [json_name = "desired_lrps"];
 }
 
 message ProtoDesiredLRPsRequest {
   string domain = 1 [json_name = "domain"];
-  repeated string process_guids = 2;
+  repeated string process_guids = 2 [json_name = "process_guids"];
 }
 
 message ProtoDesiredLRPResponse {
   ProtoError error = 1;
-  ProtoDesiredLRP desired_lrp = 2;
+  ProtoDesiredLRP desired_lrp = 2 [json_name = "desired_lrp"];
 }
 
 message ProtoDesiredLRPSchedulingInfosResponse {
   ProtoError error = 1;
-  repeated ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2;
+  repeated ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2 [json_name = "desired_lrp_scheduling_infos"];
 }
 
 message ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
   ProtoError error = 1;
-  ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_info = 2;
+  ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_info = 2 [json_name = "desired_lrp_scheduling_info"];
 }
 
 message ProtoDesiredLRPByProcessGuidRequest {
@@ -40,7 +40,7 @@ message ProtoDesiredLRPByProcessGuidRequest {
 }
 
 message ProtoDesireLRPRequest {
-  ProtoDesiredLRP desired_lrp = 1;
+  ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
 }
 
 message ProtoUpdateDesiredLRPRequest {

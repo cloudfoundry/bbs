@@ -13,13 +13,13 @@ message ProtoActualLRPLifecycleResponse {
 message ProtoActualLRPGroupsResponse {
   option deprecated = true;
   ProtoError error = 1;
-  repeated ProtoActualLRPGroup actual_lrp_groups = 2;
+  repeated ProtoActualLRPGroup actual_lrp_groups = 2 [json_name = "actual_lrp_groups"];
 }
 
 message ProtoActualLRPGroupResponse {
   option deprecated = true;
   ProtoError error = 1;
-  ProtoActualLRPGroup actual_lrp_group = 2;
+  ProtoActualLRPGroup actual_lrp_group = 2 [json_name = "actual_lrp_group"];
 }
 
 message ProtoActualLRPGroupsRequest {
@@ -42,43 +42,43 @@ message ProtoActualLRPGroupByProcessGuidAndIndexRequest {
 message ProtoClaimActualLRPRequest {
   string process_guid = 1 [json_name = "process_guid"];
   int32 index = 2 [json_name = "index"];
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 3;
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 3 [json_name = "actual_lrp_instance_key"];
 }
 
 message ProtoStartActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
-  ProtoActualLRPNetInfo actual_lrp_net_info = 3;
-  repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 4;
-  map<string, string> metric_tags = 5;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [json_name = "actual_lrp_net_info"];
+  repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 4 [json_name = "actual_lrp_internal_routes"];
+  map<string, string> metric_tags = 5 [json_name = "metric_tags"];
   optional bool Routable = 6;
   string availability_zone = 7 [json_name= "availability_zone"];
 }
 
 message ProtoCrashActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
   string error_message = 3 [json_name = "error_message"];
 }
 
 message ProtoFailActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
   string error_message = 2 [json_name = "error_message"];
 }
 
 message ProtoRetireActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
 }
 
 message ProtoRemoveActualLRPRequest {
   string process_guid = 1 [json_name = "process_guid"];
   int32 index = 2 [json_name = "index"];
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 3;
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 3 [json_name = "actual_lrp_instance_key"];
 }
 
 message ProtoActualLRPsResponse {
   ProtoError error = 1;
-  repeated ProtoActualLRP actual_lrps = 2;
+  repeated ProtoActualLRP actual_lrps = 2 [json_name = "actual_lrps"];
 }
 
 message ProtoActualLRPsRequest {

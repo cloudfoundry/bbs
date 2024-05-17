@@ -30,6 +30,6 @@ message ProtoImageLayer {
   string destination_path          = 3 [json_name = "destination_path"];
   Type layer_type                  = 4 [json_name = "layer_type"];
   MediaType media_type             = 5 [json_name = "media_type"];
-  DigestAlgorithm digest_algorithm = 6;
-  string digest_value              = 7;
+  DigestAlgorithm digest_algorithm = 6 [json_name = "digest_algorithm"];
+  string digest_value              = 7 [json_name = "digest_value"];
 }

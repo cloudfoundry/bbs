@@ -33,7 +33,7 @@ message ProtoActualLRPInstanceKey {
 message ProtoActualLRPNetInfo {
   string address = 1 [json_name = "address"];
   repeated ProtoPortMapping ports = 2 [json_name = "ports"];
-  string instance_address = 3;
+  string instance_address = 3 [json_name = "instance_address"];
 
   enum PreferredAddress {
     UNKNOWN   = 0 [(bbs.bbs_enumvalue_customname) = "PreferredAddressUnknown"];
@@ -59,14 +59,14 @@ message ProtoActualLRP {
   ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true];
   ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true];
   int32 crash_count = 4 [json_name = "crash_count"];
-  string crash_reason = 5;
+  string crash_reason = 5 [json_name = "crash_reason"];
   string state = 6 [json_name = "state"];
-  string placement_error = 7;
+  string placement_error = 7 [json_name = "placement_error"];
   int64 since = 8 [json_name = "since"];
   ProtoModificationTag modification_tag = 9 [json_name = "modification_tag", (bbs.bbs_by_value) = true];
   Presence presence = 10 [json_name = "presence"];
   repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 11;
-  map<string, string> metric_tags = 12;
+  map<string, string> metric_tags = 12 [json_name = "metric_tags"];
   optional bool routable = 13 [json_name = "routable"];
   string availability_zone = 14 [json_name = "availability_zone"];
 }

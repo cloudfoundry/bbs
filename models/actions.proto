@@ -53,14 +53,14 @@ message ProtoRunAction {
   repeated ProtoEnvironmentVariable env = 4;
   ProtoResourceLimits resource_limits = 5 [json_name = "resource_limits"];
   string user = 6 [json_name = "user"];
-  string log_source = 7;
+  string log_source = 7 [json_name = "log_source"];
   bool suppress_log_output = 8 [json_name = "suppress_log_output"];
 }
 
 message ProtoTimeoutAction {
   ProtoAction action = 1;
   int64 deprecated_timeout_ns = 2 [json_name = "timeout", deprecated=true];
-  string log_source = 3;
+  string log_source = 3 [json_name = "log_source"];
   int64 timeout_ms = 4 [json_name = "timeout_ms"];
 }
 
@@ -69,27 +69,27 @@ message ProtoEmitProgressAction {
   string start_message = 2 [json_name = "start_message"];
   string success_message = 3 [json_name = "success_message"];
   string failure_message_prefix = 4 [json_name = "failure_message_prefix"];
-  string log_source = 5;
+  string log_source = 5 [json_name = "log_source"];
 }
 
 message ProtoTryAction {
   ProtoAction action = 1;
-  string log_source = 2;
+  string log_source = 2 [json_name = "log_source"];
 }
 
 message ProtoParallelAction {
   repeated ProtoAction actions = 1;
-  string log_source = 2;
+  string log_source = 2 [json_name = "log_source"];
 }
 
 message ProtoSerialAction {
   repeated ProtoAction actions = 1;
-  string log_source = 2;
+  string log_source = 2 [json_name = "log_source"];
 }
 
 message ProtoCodependentAction {
   repeated ProtoAction actions = 1;
-  string log_source = 2;
+  string log_source = 2 [json_name = "log_source"];
 }
 
 message ProtoResourceLimits {

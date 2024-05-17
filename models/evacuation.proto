@@ -12,36 +12,36 @@ message ProtoEvacuationResponse {
 }
 
 message ProtoEvacuateClaimedActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
 }
 
 message ProtoEvacuateRunningActualLRPRequest {
   reserved 4; // previously removed ttl value
 
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
-  ProtoActualLRPNetInfo actual_lrp_net_info = 3;
-  repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 5;
-  map<string, string> metric_tags = 6;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [json_name = "actual_lrp_net_info"];
+  repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 5 [json_name = "actual_lrp_internal_routes"];
+  map<string, string> metric_tags = 6 [json_name = "metric_tags"];
   optional bool Routable = 7;
   string availability_zone = 8 [json_name = "availability_zone"];
 }
 
 message ProtoEvacuateStoppedActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
 }
 
 message ProtoEvacuateCrashedActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
   string error_message = 3 [json_name = "error_message"];
 }
 
 message ProtoRemoveEvacuatingActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1;
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2;
+  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
 }
 
 message ProtoRemoveEvacuatingActualLRPResponse {
