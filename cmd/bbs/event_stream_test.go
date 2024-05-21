@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
-	"code.cloudfoundry.org/go-loggregator/v8/rpc/loggregator_v2"
+	"code.cloudfoundry.org/go-loggregator/v9/rpc/loggregator_v2"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 
 	. "github.com/onsi/ginkgo/v2"
