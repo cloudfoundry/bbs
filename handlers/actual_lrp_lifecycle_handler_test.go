@@ -6,13 +6,17 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/handlers/fake_controllers"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/clock"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
+	"code.cloudfoundry.org/locket/metrics/helpers"
 	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,7 +29,9 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		responseRecorder *httptest.ResponseRecorder
 		handler          *handlers.ActualLRPLifecycleHandler
 		fakeController   *fake_controllers.FakeActualLRPLifecycleController
+		fakeMetronClient *mfakes.FakeIngressClient
 		exitCh           chan struct{}
+		requestMetrics   *helpers.RequestMetricsNotifier
 
 		requestIdHeader   string
 		b3RequestIdHeader string
@@ -44,7 +50,17 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		requestIdHeader = "b67c32c0-1666-49dc-97c1-274332e6b706"
 		b3RequestIdHeader = fmt.Sprintf(`"trace-id":"%s"`, strings.Replace(requestIdHeader, "-", "", -1))
 		fakeController = &fake_controllers.FakeActualLRPLifecycleController{}
-		handler = handlers.NewActualLRPLifecycleHandler(fakeController, exitCh)
+
+		clock := clock.NewClock()
+		requestMetrics = helpers.NewRequestMetricsNotifier(
+			logger,
+			clock,
+			fakeMetronClient,
+			1*time.Minute,
+			[]string{"ActualLRPLifecycleEndpoints", "StartActualLRPEndpoint"},
+		)
+
+		handler = handlers.NewActualLRPLifecycleHandler(fakeController, exitCh, requestMetrics)
 	})
 
 	Describe("ClaimActualLRP", func() {

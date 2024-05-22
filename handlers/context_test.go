@@ -20,6 +20,7 @@ import (
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3/lagertest"
+	requests "code.cloudfoundry.org/locket/metrics/helpers"
 	"github.com/tedsuo/ifrit"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 
@@ -35,6 +36,7 @@ var _ = Describe("Context", func() {
 		sqlConn          *sql.DB
 		sqlProcess       ifrit.Process
 		migrationProcess ifrit.Process
+		requestMetrics   requests.RequestMetrics
 	)
 
 	BeforeEach(func() {
@@ -92,7 +94,7 @@ var _ = Describe("Context", func() {
 		Eventually(migrationsDone).Should(BeClosed())
 
 		exitCh := make(chan struct{}, 1)
-		handler = handlers.NewActualLRPHandler(sqlDB, exitCh)
+		handler = handlers.NewActualLRPHandler(sqlDB, exitCh, requestMetrics)
 	})
 
 	AfterEach(func() {
