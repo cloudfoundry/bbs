@@ -14,6 +14,6 @@ message ProtoMetricTagValue {
 
   // Note: we only expect one of the following set of fields to be
   // set.
-  string static        = 1;
-  DynamicValue dynamic = 2;
+  string static        = 1 [json_name = "static"];
+  DynamicValue dynamic = 2 [json_name = "dynamic"];
 }
