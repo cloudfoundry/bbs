@@ -59,6 +59,7 @@ func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	modTag := models.NewModificationTag("epoch", 0)
+	routes := &models.Routes{"my-router": &myRouterJSON}
 	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          guid,
 		Domain:               "some-domain",
@@ -95,7 +96,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		MemoryMb:    1024,
 		CpuWeight:   42,
 		MaxPids:     1024,
-		Routes:      &models.Routes{"my-router": &myRouterJSON},
+		Routes:      *routes.ToProto(),
 		LogSource:   "some-log-source",
 		LogGuid:     "some-log-guid",
 		MetricsGuid: "some-metrics-guid",
