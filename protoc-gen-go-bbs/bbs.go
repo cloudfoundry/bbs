@@ -75,10 +75,6 @@ type EqualField struct {
 
 func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Message) {
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
-		if copysafeName == "Routes" {
-			log.Printf("FOUNDROUTES: %+v\n", msg)
-		}
-
 		equalBuilder := new(strings.Builder)
 		equal, err := template.New("equal").Parse(
 			`
@@ -324,7 +320,6 @@ func (bbsGenerateHelper) genFriendlyEnums(g *protogen.GeneratedFile, msg *protog
 
 func genEnumTypeWithValues(g *protogen.GeneratedFile, msg *protogen.Message, eNuM *protogen.Enum) {
 	copysafeName, _ := getCopysafeName(g, eNuM.GoIdent)
-	log.Printf("%s\n", copysafeName)
 	g.P("type ", copysafeName, " int32")
 	g.P("const (")
 	for _, enumValue := range eNuM.Values {
@@ -375,7 +370,6 @@ func getEnumValueName(g *protogen.GeneratedFile, msg *protogen.Message, enumValu
 	copysafeParentName, _ := getCopysafeName(g, msg.GoIdent)
 	copysafeEnumValueName, _ := getCopysafeName(g, enumValue.GoIdent)
 	customName := proto.GetExtension(enumValue.Desc.Options().(*descriptorpb.EnumValueOptions), E_BbsEnumvalueCustomname)
-	log.Printf("%+v\n", customName)
 
 	result := copysafeEnumValueName
 	if len(customName.(string)) > 0 {
@@ -620,7 +614,7 @@ func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 		}
 
 		if slices.Contains(ignoredMessages, getUnsafeName(g, msg.GoIdent)) {
-			log.Printf("Ignoring message %s", msg.GoIdent)
+			log.Printf("Ignoring message %s", msg.Desc.Name())
 			continue
 		}
 		helper.genFriendlyEnums(g, msg)
