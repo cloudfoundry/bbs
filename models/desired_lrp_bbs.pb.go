@@ -6,13 +6,17 @@
 
 package models
 
+import (
+	bytes "bytes"
+)
+
 // Prevent copylock errors when using ProtoDesiredLRPSchedulingInfo directly
 type DesiredLRPSchedulingInfo struct {
 	DesiredLrpKey      DesiredLRPKey
 	Annotation         string
 	Instances          int32
 	DesiredLrpResource DesiredLRPResource
-	Routes             Routes
+	Routes             map[string][]byte
 	ModificationTag    ModificationTag
 	VolumePlacement    *VolumePlacement
 	PlacementTags      []string
@@ -52,8 +56,13 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if !this.DesiredLrpResource.Equal(that1.DesiredLrpResource) {
 		return false
 	}
-	if !this.Routes.Equal(that1.Routes) {
+	if len(this.Routes) != len(that1.Routes) {
 		return false
+	}
+	for i := range this.Routes {
+		if !bytes.Equal(this.Routes[i], that1.Routes[i]) {
+			return false
+		}
 	}
 	if !this.ModificationTag.Equal(that1.ModificationTag) {
 		return false
@@ -103,7 +112,7 @@ func (m *DesiredLRPSchedulingInfo) SetDesiredLrpResource(value DesiredLRPResourc
 		m.DesiredLrpResource = value
 	}
 }
-func (m *DesiredLRPSchedulingInfo) SetRoutes(value Routes) {
+func (m *DesiredLRPSchedulingInfo) SetRoutes(value map[string][]byte) {
 	if m != nil {
 		m.Routes = value
 	}
@@ -145,7 +154,7 @@ func (x *DesiredLRPSchedulingInfo) ToProto() *ProtoDesiredLRPSchedulingInfo {
 		Annotation:         x.Annotation,
 		Instances:          x.Instances,
 		DesiredLrpResource: x.DesiredLrpResource.ToProto(),
-		Routes:             x.Routes.ToProto(),
+		Routes:             x.Routes,
 		ModificationTag:    x.ModificationTag.ToProto(),
 		VolumePlacement:    x.VolumePlacement.ToProto(),
 		PlacementTags:      x.PlacementTags,
@@ -163,7 +172,7 @@ func (x *ProtoDesiredLRPSchedulingInfo) FromProto() *DesiredLRPSchedulingInfo {
 		Annotation:         x.Annotation,
 		Instances:          x.Instances,
 		DesiredLrpResource: *x.DesiredLrpResource.FromProto(),
-		Routes:             *x.Routes.FromProto(),
+		Routes:             x.Routes,
 		ModificationTag:    *x.ModificationTag.FromProto(),
 		VolumePlacement:    x.VolumePlacement.FromProto(),
 		PlacementTags:      x.PlacementTags,
@@ -790,7 +799,7 @@ func DesiredLRPRunInfoMetricTagsFromProtoMap(values map[string]*ProtoMetricTagVa
 // Prevent copylock errors when using ProtoDesiredLRPUpdate directly
 type DesiredLRPUpdate struct {
 	Instances  *int32
-	Routes     *Routes
+	Routes     map[string][]byte
 	Annotation *string
 	MetricTags map[string]*MetricTagValue
 }
@@ -820,8 +829,13 @@ func (this *DesiredLRPUpdate) Equal(that interface{}) bool {
 	if this.Instances != that1.Instances {
 		return false
 	}
-	if !this.Routes.Equal(*that1.Routes) {
+	if len(this.Routes) != len(that1.Routes) {
 		return false
+	}
+	for i := range this.Routes {
+		if !bytes.Equal(this.Routes[i], that1.Routes[i]) {
+			return false
+		}
 	}
 	if this.Annotation != that1.Annotation {
 		return false
@@ -850,16 +864,13 @@ func (m *DesiredLRPUpdate) SetInstances(value *int32) {
 		m.Instances = value
 	}
 }
-func (m *DesiredLRPUpdate) RoutesExists() bool {
-	return m != nil && m.Routes != nil
-}
-func (m *DesiredLRPUpdate) GetRoutes() *Routes {
-	if m != nil && m.Routes != nil {
+func (m *DesiredLRPUpdate) GetRoutes() map[string][]byte {
+	if m != nil {
 		return m.Routes
 	}
 	return nil
 }
-func (m *DesiredLRPUpdate) SetRoutes(value *Routes) {
+func (m *DesiredLRPUpdate) SetRoutes(value map[string][]byte) {
 	if m != nil {
 		m.Routes = value
 	}
@@ -896,7 +907,7 @@ func (x *DesiredLRPUpdate) ToProto() *ProtoDesiredLRPUpdate {
 
 	proto := &ProtoDesiredLRPUpdate{
 		Instances:  x.Instances,
-		Routes:     x.Routes.ToProto(),
+		Routes:     x.Routes,
 		Annotation: x.Annotation,
 		MetricTags: DesiredLRPUpdateMetricTagsToProtoMap(x.MetricTags),
 	}
@@ -910,7 +921,7 @@ func (x *ProtoDesiredLRPUpdate) FromProto() *DesiredLRPUpdate {
 
 	copysafe := &DesiredLRPUpdate{
 		Instances:  x.Instances,
-		Routes:     x.Routes.FromProto(),
+		Routes:     x.Routes,
 		Annotation: x.Annotation,
 		MetricTags: DesiredLRPUpdateMetricTagsFromProtoMap(x.MetricTags),
 	}
@@ -1237,7 +1248,7 @@ type DesiredLRP struct {
 	CpuWeight                     uint32
 	Privileged                    bool
 	Ports                         []uint32
-	Routes                        *Routes
+	Routes                        map[string][]byte
 	LogSource                     string
 	LogGuid                       string
 	MetricsGuid                   string
@@ -1338,8 +1349,13 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if !this.Routes.Equal(*that1.Routes) {
+	if len(this.Routes) != len(that1.Routes) {
 		return false
+	}
+	for i := range this.Routes {
+		if !bytes.Equal(this.Routes[i], that1.Routes[i]) {
+			return false
+		}
 	}
 	if this.LogSource != that1.LogSource {
 		return false
@@ -1608,16 +1624,13 @@ func (m *DesiredLRP) SetPorts(value []uint32) {
 		m.Ports = value
 	}
 }
-func (m *DesiredLRP) RoutesExists() bool {
-	return m != nil && m.Routes != nil
-}
-func (m *DesiredLRP) GetRoutes() *Routes {
-	if m != nil && m.Routes != nil {
+func (m *DesiredLRP) GetRoutes() map[string][]byte {
+	if m != nil {
 		return m.Routes
 	}
 	return nil
 }
-func (m *DesiredLRP) SetRoutes(value *Routes) {
+func (m *DesiredLRP) SetRoutes(value map[string][]byte) {
 	if m != nil {
 		m.Routes = value
 	}
@@ -1881,7 +1894,7 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 		CpuWeight:                     x.CpuWeight,
 		Privileged:                    x.Privileged,
 		Ports:                         x.Ports,
-		Routes:                        x.Routes.ToProto(),
+		Routes:                        x.Routes,
 		LogSource:                     x.LogSource,
 		LogGuid:                       x.LogGuid,
 		MetricsGuid:                   x.MetricsGuid,
@@ -1928,7 +1941,7 @@ func (x *ProtoDesiredLRP) FromProto() *DesiredLRP {
 		CpuWeight:                     x.CpuWeight,
 		Privileged:                    x.Privileged,
 		Ports:                         x.Ports,
-		Routes:                        x.Routes.FromProto(),
+		Routes:                        x.Routes,
 		LogSource:                     x.LogSource,
 		LogGuid:                       x.LogGuid,
 		MetricsGuid:                   x.MetricsGuid,

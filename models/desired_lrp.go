@@ -52,7 +52,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		RootFs:                        desiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
-		Routes:                        &schedInfo.Routes,
+		Routes:                        schedInfo.Routes,
 		ModificationTag:               &schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
@@ -210,7 +210,7 @@ func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
 func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 	var routes Routes
 	if d.Routes != nil {
-		routes = *d.Routes
+		routes = *ParseRoutes(d.Routes)
 	}
 	var modificationTag ModificationTag
 	if d.ModificationTag != nil {
@@ -238,7 +238,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
 	var routes Routes
 	if d.Routes != nil {
-		routes = *d.Routes
+		routes = *ParseRoutes(d.Routes)
 	}
 
 	var modificationTag ModificationTag
@@ -340,8 +340,8 @@ func (desired DesiredLRP) Validate() error {
 
 	totalRoutesLength := 0
 	if desired.Routes != nil {
-		for _, value := range *desired.Routes {
-			totalRoutesLength += len(*value)
+		for _, value := range desired.Routes {
+			totalRoutesLength += len(value)
 			if totalRoutesLength > maximumRouteLength {
 				validationError = validationError.Append(ErrInvalidField{"routes"})
 				break
@@ -380,8 +380,8 @@ func (desired *DesiredLRPUpdate) Validate() error {
 
 	totalRoutesLength := 0
 	if desired.Routes != nil {
-		for _, value := range *desired.Routes {
-			totalRoutesLength += len(*value)
+		for _, value := range desired.Routes {
+			totalRoutesLength += len(value)
 			if totalRoutesLength > maximumRouteLength {
 				validationError = validationError.Append(ErrInvalidField{"routes"})
 				break
@@ -407,14 +407,14 @@ func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup
 		return true
 	}
 
-	desiredRoutes, desiredRoutesPresent := (*desired.Routes)[routerGroup]
+	desiredRoutes, desiredRoutesPresent := (desired.Routes)[routerGroup]
 	requestRoutes, requestRoutesPresent := (*routes)[routerGroup]
 	if desiredRoutesPresent != requestRoutesPresent {
 		return true
 	}
 
 	if desiredRoutesPresent && requestRoutesPresent {
-		return !bytes.Equal(*desiredRoutes, *requestRoutes)
+		return !bytes.Equal(desiredRoutes, *requestRoutes)
 	}
 
 	return true
@@ -455,7 +455,7 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 	if update.Instances != nil {
 		desired.SetInstances(update.Instances)
 	}
-	desired.Routes = update.Routes
+	desired.Routes = *update.Routes.ToProto()
 	if update.Annotation != nil {
 		desired.SetAnnotation(update.Annotation)
 	}
@@ -470,7 +470,7 @@ func (desired DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
 		i := desired.GetInstances()
 		update.Instances = i
 	}
-	update.Routes = desired.Routes
+	update.Routes = ParseRoutes(desired.Routes)
 	if desired.AnnotationExists() {
 		a := desired.GetAnnotation()
 		update.Annotation = a
@@ -515,7 +515,7 @@ func NewDesiredLRPSchedulingInfo(
 		Annotation:         annotation,
 		Instances:          instances,
 		DesiredLrpResource: resource,
-		Routes:             routes,
+		Routes:             *routes.ToProto(),
 		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
 		PlacementTags:      placementTags,
@@ -534,7 +534,7 @@ func NewDesiredLRPRoutingInfo(
 		Domain:          key.Domain,
 		LogGuid:         key.LogGuid,
 		Instances:       instances,
-		Routes:          routes,
+		Routes:          *routes.ToProto(),
 		ModificationTag: modTag,
 		MetricTags:      metrTags,
 	}
@@ -545,7 +545,7 @@ func (s *DesiredLRPSchedulingInfo) ApplyUpdate(update *DesiredLRPUpdate) {
 		s.Instances = *update.GetInstances()
 	}
 	if update.Routes != nil {
-		s.Routes = *update.Routes
+		s.Routes = update.Routes
 	}
 	if update.AnnotationExists() {
 		s.Annotation = *update.GetAnnotation()
@@ -560,7 +560,7 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 func (s DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, s.Routes)
+	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, ParseRoutes(s.Routes))
 
 	if s.GetInstances() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"instances"})
