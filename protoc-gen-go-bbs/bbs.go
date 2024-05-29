@@ -44,6 +44,21 @@ func getFieldName(goName string) string {
 	return result
 }
 
+func getJsonTag(field *protogen.Field) string {
+	jsonName := field.Desc.JSONName()
+	alwaysEmit := ",omitempty"
+	if isAlwaysEmit(field) {
+		alwaysEmit = ""
+	}
+	tag := fmt.Sprintf("`json:\"%s%s\"`", jsonName, alwaysEmit)
+	return tag
+}
+
+func isAlwaysEmit(field *protogen.Field) bool {
+	isAlwaysEmit := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsJsonAlwaysEmit)
+	return isAlwaysEmit.(bool)
+}
+
 func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *protogen.Message) {
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
 		g.P("// Prevent copylock errors when using ", msg.GoIdent.GoName, " directly")
@@ -56,7 +71,8 @@ func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *proto
 			}
 			fieldName := getFieldName(field.GoName)
 			fieldType := getActualType(g, field)
-			g.P(fieldName, " ", fieldType)
+			jsonTag := getJsonTag(field)
+			g.P(fieldName, " ", fieldType, " ", jsonTag)
 		}
 		g.P("}")
 
@@ -249,7 +265,14 @@ func getActualType(g *protogen.GeneratedFile, field *protogen.Field) string {
 		fieldType = "[]"
 	}
 
-	if field.Desc.IsMap() {
+	if isCustomType(field) {
+		customType := getCustomType(field)
+		pointer := "*"
+		if isByValueType(field) {
+			pointer = ""
+		}
+		fieldType += pointer + customType
+	} else if field.Desc.IsMap() {
 		// check for maps first because legacy protobuf would generate "Entry" messages,
 		// and for some reason the Message field is still populated
 		if *debug {
@@ -304,6 +327,16 @@ func isByValueType(field *protogen.Field) bool {
 func isExcludedFromEqual(field *protogen.Field) bool {
 	isExcludedFromEqual := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsExcludeFromEqual)
 	return isExcludedFromEqual.(bool)
+}
+
+func isCustomType(field *protogen.Field) bool {
+	customType := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsCustomType)
+	return len(customType.(string)) > 0
+}
+
+func getCustomType(field *protogen.Field) string {
+	customType := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsCustomType)
+	return customType.(string)
 }
 
 func (bbsGenerateHelper) genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message) {
@@ -614,7 +647,7 @@ func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 		}
 
 		if slices.Contains(ignoredMessages, getUnsafeName(g, msg.GoIdent)) {
-			log.Printf("Ignoring message %s", msg.Desc.Name())
+			log.Printf("\tIgnoring message %s", msg.Desc.Name())
 			continue
 		}
 		helper.genFriendlyEnums(g, msg)
