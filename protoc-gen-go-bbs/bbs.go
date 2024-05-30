@@ -206,14 +206,9 @@ func genGetter(g *protogen.GeneratedFile, copysafeName string, field *protogen.F
 		optionalCheck = fmt.Sprintf("&& m.%s != nil ", fieldName) //extra space intentional
 		genExists(g, copysafeName, field)
 	}
-	// TODO: make this cleaner
-	actionGetValue := ""
-	if cut, ok := strings.CutPrefix(fieldType, "*"); ok && cut == "Action" {
-		actionGetValue = ".GetValue().(*Action)"
-	}
 	g.P("func (m *", copysafeName, ") Get", fieldName, "() ", fieldType, " {")
 	g.P("if m != nil ", optionalCheck, "{")
-	g.P("return m.", fieldName, actionGetValue)
+	g.P("return m.", fieldName)
 	g.P("}")
 	g.P("return ", defaultValue)
 	g.P("}")
@@ -223,11 +218,7 @@ func genSetter(g *protogen.GeneratedFile, copysafeName string, fieldName string,
 	if *debug {
 		log.Print("Setter...")
 	}
-	// TODO: make this cleaner
 	setValue := " = value"
-	if cut, ok := strings.CutPrefix(fieldType, "*"); ok && cut == "Action" {
-		setValue = ".SetValue(value)"
-	}
 	g.P("func (m *", copysafeName, ") Set", fieldName, "(value ", fieldType, ") {")
 	g.P("if m != nil {")
 	g.P("m.", fieldName, setValue)
