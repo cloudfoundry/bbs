@@ -46,11 +46,11 @@ func getFieldName(goName string) string {
 
 func getJsonTag(field *protogen.Field) string {
 	jsonName := field.Desc.JSONName()
-	alwaysEmit := ",omitempty"
+	jsonEmit := ",omitempty"
 	if isAlwaysEmit(field) {
-		alwaysEmit = ""
+		jsonEmit = ""
 	}
-	tag := fmt.Sprintf("`json:\"%s%s\"`", jsonName, alwaysEmit)
+	tag := fmt.Sprintf("`json:\"%s%s\"`", jsonName, jsonEmit)
 	return tag
 }
 
