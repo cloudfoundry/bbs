@@ -5,18 +5,17 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	gomegaformat "github.com/onsi/gomega/format"
 )
 
 var _ = Describe("DesiredLRP", func() {
@@ -341,28 +340,34 @@ var _ = Describe("DesiredLRP", func() {
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
+			// JSON
 			jsonSerialization, err := json.Marshal(desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(jsonDesiredLRP))
 
-			protoSerialization, err := proto.Marshal(desiredLRP.ToProto())
+			// Protobuf
+			protoDesiredLrp := desiredLRP.ToProto()
+			protoSerialization, err := proto.Marshal(protoDesiredLrp)
 			Expect(err).NotTo(HaveOccurred())
 
 			var protoDeserialization models.ProtoDesiredLRP
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
-			desiredRoutes := desiredLRP.Routes
+			desiredRoutes := *desiredLRP.Routes
 			deserializedRoutes := protoDeserialization.Routes
 
-			Expect(deserializedRoutes).To(HaveLen(len(desiredRoutes)))
+			Expect(deserializedRoutes.Routes).To(HaveLen(len(desiredRoutes)))
 			for k := range desiredRoutes {
-				Expect(string(deserializedRoutes[k])).To(MatchJSON(string(desiredRoutes[k])))
+				Expect(string(deserializedRoutes.Routes[k])).To(MatchJSON(string(*desiredRoutes[k])))
 			}
 
 			desiredLRP.Routes = nil
 			protoDeserialization.Routes = nil
-			Expect(protoDeserialization.FromProto()).To(Equal(desiredLRP))
+			fromProtoDesiredLrp := *protoDeserialization.FromProto()
+			gomegaformat.MaxLength = 0
+			Expect(fromProtoDesiredLrp.Equal(desiredLRP)).To(BeTrue())
+			Expect(fromProtoDesiredLrp).To(Equal(desiredLRP))
 		})
 	})
 
@@ -383,13 +388,13 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("allows empty routes to be set", func() {
 			update := &models.DesiredLRPUpdate{
-				Routes: make(map[string][]byte),
+				Routes: &models.Routes{},
 			}
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = make(map[string][]byte)
+			expectedSchedulingInfo.Routes = models.Routes{}
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
@@ -432,13 +437,13 @@ var _ = Describe("DesiredLRP", func() {
 				"router": &rawMessage,
 			}
 			update := &models.DesiredLRPUpdate{
-				Routes: *routes.ToProto(),
+				Routes: routes,
 			}
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = *routes.ToProto()
+			expectedSchedulingInfo.Routes = *routes
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
@@ -472,7 +477,7 @@ var _ = Describe("DesiredLRP", func() {
 
 			Context("when update contains routes", func() {
 				BeforeEach(func() {
-					update.Routes = *routes.ToProto()
+					update.Routes = routes
 				})
 
 				It("returns true when provided routes are not set", func() {
@@ -1300,22 +1305,20 @@ var _ = Describe("DesiredLRP", func() {
 })
 
 var _ = Describe("DesiredLRPUpdate", func() {
-	var desiredLRPUpdate models.ProtoDesiredLRPUpdate
-	var nonprotoDesiredLRPUpdate models.DesiredLRPUpdate
+	var desiredLRPUpdate models.DesiredLRPUpdate
 
 	BeforeEach(func() {
 		instances := int32(2)
 		desiredLRPUpdate.Instances = &instances
-		nonprotoRoutes := &models.Routes{
+		routes := &models.Routes{
 			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
 		}
 
-		desiredLRPUpdate.Routes = *nonprotoRoutes.ToProto()
-		//desiredLRPUpdate.Routes = nonprotoRoutes//.ToProto()
-		nonprotoDesiredLRPUpdate = *desiredLRPUpdate.FromProto()
+		desiredLRPUpdate.Routes = routes
 		annotation := "some-text"
-		desiredLRPUpdate.Annotation = &annotation
-		desiredLRPUpdate.MetricTags = map[string]*models.ProtoMetricTagValue{
+		desiredLRPUpdate.SetAnnotation(&annotation)
+		// desiredLRPUpdate.Annotation = &annotation
+		desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
 			"some-tag": {Static: "some-value"},
 		}
 	})
@@ -1330,48 +1333,48 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		It("requires a positive nonzero number of instances", func() {
 			invalidInstances := int32(-1)
 			desiredLRPUpdate.Instances = &invalidInstances
-			assertDesiredLRPValidationFailsWithMessage(*desiredLRPUpdate.FromProto(), "instances")
+			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "instances")
 
 			zeroInstances := int32(0)
 			desiredLRPUpdate.Instances = &zeroInstances
-			validationErr := desiredLRPUpdate.FromProto().Validate()
+			validationErr := desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 
 			oneInstance := int32(1)
 			desiredLRPUpdate.Instances = &oneInstance
-			validationErr = desiredLRPUpdate.FromProto().Validate()
+			validationErr = desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 		})
 
 		It("limits the annotation length", func() {
 			largeString := randStringBytes(50000)
 			desiredLRPUpdate.Annotation = &largeString
-			assertDesiredLRPValidationFailsWithMessage(*desiredLRPUpdate.FromProto(), "annotation")
+			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "annotation")
 		})
 
 		Context("metric tags", func() {
 			It("is invalid when both static and dynamic values are provided for the same key", func() {
-				desiredLRPUpdate.MetricTags = map[string]*models.ProtoMetricTagValue{
-					"some_metric": {Static: "some-value", Dynamic: models.ProtoMetricTagValue_DynamicValue(models.ProtoMetricTagValue_INDEX)},
+				desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
+					"some_metric": {Static: "some-value", Dynamic: models.MetricTagValue_DynamicValue(models.ProtoMetricTagValue_INDEX)},
 				}
-				assertDesiredLRPValidationFailsWithMessage(*desiredLRPUpdate.FromProto(), "metric_tags")
-				assertDesiredLRPValidationFailsWithMessage(*desiredLRPUpdate.FromProto(), "static")
-				assertDesiredLRPValidationFailsWithMessage(*desiredLRPUpdate.FromProto(), "dynamic")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "metric_tags")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "static")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "dynamic")
 			})
 
 			It("is valid when metric tags is empty", func() {
-				desiredLRPUpdate.MetricTags = map[string]*models.ProtoMetricTagValue{}
-				Expect(desiredLRPUpdate.FromProto().Validate()).To(Succeed())
+				desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{}
+				Expect(desiredLRPUpdate.Validate()).To(Succeed())
 			})
 
 			It("is valid when metric tags is nil", func() {
 				desiredLRPUpdate.MetricTags = nil
-				Expect(desiredLRPUpdate.FromProto().Validate()).To(Succeed())
+				Expect(desiredLRPUpdate.Validate()).To(Succeed())
 			})
 		})
 	})
 
-	FDescribe("serialization", func() {
+	Describe("serialization", func() {
 		var expectedJSON string
 		BeforeEach(func() {
 			expectedJSON = `{
@@ -1389,25 +1392,12 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		})
 
 		It("can marshal to JSON and back", func() {
-			log.Printf("\n")
-			log.Printf("NonProtoDesiredLRPUpdate: %+v\n", nonprotoDesiredLRPUpdate)
-			log.Printf("DesiredLRPUpdate Proto: %+v\n", &desiredLRPUpdate)
-			log.Printf("DesiredLRPUpdate.FromProto: %+v\n", desiredLRPUpdate.FromProto())
-			log.Printf("DesiredLRPUpdate.FromProto Routes: %+v\n", desiredLRPUpdate.FromProto().Routes)
-			log.Printf("DesiredLRPUpdate Routes: %+v\n", desiredLRPUpdate.Routes)
-			// log.Printf("DesiredLRPUpdate Routes.FromProto: %+v\n", desiredLRPUpdate.Routes.FromProto())
-			// log.Printf("DesiredLRPUpdate Routes.ToProto: %+v\n", desiredLRPUpdate.Routes.ToProto())
-			// log.Printf("DesiredLRPUpdate Routes.ToProto Routes: %+v\n", desiredLRPUpdate.Routes.ToProto().Routes)
-			standard, _ := json.Marshal(&desiredLRPUpdate)
-			stdRoutes, _ := json.Marshal(&desiredLRPUpdate.Routes)
-			log.Printf("standard: %+v", string(standard))
-			log.Printf("standard routes: %+v", string(stdRoutes))
-			actual, _ := protojson.Marshal(&desiredLRPUpdate)
+			actual, _ := json.Marshal(&desiredLRPUpdate)
 			Expect(actual).To(MatchJSON(expectedJSON))
 
-			var testV models.DesiredLRPUpdate
-			Expect(protojson.Unmarshal([]byte(expectedJSON), testV.ToProto())).To(Succeed())
-			Expect(testV).To(Equal(&desiredLRPUpdate))
+			testV := models.DesiredLRPUpdate{}
+			Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
+			Expect(testV).To(Equal(desiredLRPUpdate))
 		})
 	})
 

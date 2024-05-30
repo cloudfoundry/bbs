@@ -2,10 +2,8 @@ package models_test
 
 import (
 	"encoding/json"
-	"log"
 
 	"code.cloudfoundry.org/bbs/models"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -20,15 +18,17 @@ var _ = Describe("Routes", func() {
 
 	itSerializes := func(routes *models.Routes) {
 		BeforeEach(func() {
-			update = models.DesiredLRPUpdate{
-				Routes: *routes.ToProto(),
+
+			// don't really care for branching logic in tests, but don't want to change the test right now
+			if routes == nil {
+				update = models.DesiredLRPUpdate{
+					Routes: nil,
+				}
+			} else {
+				update = models.DesiredLRPUpdate{
+					Routes: routes,
+				}
 			}
-			log.Printf("INPUT routes: %+v\n", routes)
-			log.Printf("INPUT update: %+v\n", update)
-			log.Printf("INPUT update.routes: %+v\n", update.Routes)
-			// for k, v := range *update.Routes {
-			// 	log.Printf("key: %+v, value: %+v", k, string(*v))
-			// }
 			/*
 				The point of these tests is to go from non-proto struct
 				to JSON/Protobuf (binary) representation and back.
@@ -45,16 +45,12 @@ var _ = Describe("Routes", func() {
 				2024-05-15: It remains to be seen if this extra layer is going to cause performance issues
 			*/
 
-			log.Printf("update.ToProto(): %+v\n", update.ToProto())
-			b, err := protojson.Marshal(update.ToProto())
+			b, err := json.Marshal(update.ToProto())
 			Expect(err).NotTo(HaveOccurred())
-			err = protojson.Unmarshal(b, &aJson)
-			log.Printf("JSON-aJson: %+v\n", aJson.FromProto())
-			log.Printf("JSON-aJson routes: %+v\n", aJson.FromProto().Routes)
+			err = json.Unmarshal(b, &aJson)
 			Expect(err).NotTo(HaveOccurred())
 
 			protoUpdate := update.ToProto()
-			log.Printf("protoUpdate: %+v\n", protoUpdate)
 			b, err = proto.Marshal(protoUpdate)
 			Expect(err).NotTo(HaveOccurred())
 			err = proto.Unmarshal(b, &resultProto)

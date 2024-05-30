@@ -1,10 +1,11 @@
 package models_test
 
 import (
+	"encoding/json"
+
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -390,7 +391,7 @@ var _ = Describe("SecurityGroupRule", func() {
 		})
 
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := protojson.Marshal(securityGroup.ToProto())
+			jsonSerialization, err := json.Marshal(securityGroup.ToProto())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 
@@ -420,7 +421,7 @@ var _ = Describe("SecurityGroupRule", func() {
 			})
 
 			It("successfully json serializes empty arrays to nil", func() {
-				jsonSerialization, err := protojson.Marshal(securityGroup.ToProto())
+				jsonSerialization, err := json.Marshal(securityGroup.ToProto())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 			})

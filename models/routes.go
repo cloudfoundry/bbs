@@ -3,7 +3,6 @@ package models
 import (
 	bytes "bytes"
 	"encoding/json"
-	"log"
 )
 
 type Routes map[string]*json.RawMessage
@@ -22,20 +21,20 @@ func ParseRoutes(b map[string][]byte) *Routes {
 	return &routes
 }
 
-func (r *Routes) ToProto() *map[string][]byte {
+func (r *Routes) ToProto() *ProtoRoutes {
 	if r == nil {
 		return nil
 	}
-	// pr := &ProtoRoutes{
-	// 	Routes: map[string][]byte{},
-	// }
-	pr := make(map[string][]byte)
+	pr := &ProtoRoutes{
+		Routes: map[string][]byte{},
+	}
+	// pr := make(map[string][]byte)
 
 	for k, v := range *r {
-		pr[k] = *v
+		pr.Routes[k] = *v
 	}
 
-	return &pr
+	return pr
 }
 
 func (pr *ProtoRoutes) FromProto() *Routes {
@@ -94,17 +93,11 @@ func (pr *ProtoRoutes) FromProto() *Routes {
 // }
 
 func (r *Routes) Equal(other Routes) bool {
-	log.Printf("Routes.Equal")
-	log.Printf("other: %+v", other)
-	log.Printf("r: %+v", r)
 	if other == nil {
 		return r == nil
 	}
 	for k, v := range *r {
-		log.Printf("\n")
-		log.Printf("key: %+v, value: %+v", k, v)
 		if !bytes.Equal(*v, *other[k]) {
-			log.Printf("bytes.Equal failed on v=%+v and other[k]=%+v\n", *v, *other[k])
 			return false
 		}
 	}
