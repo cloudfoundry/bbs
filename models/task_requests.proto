@@ -3,6 +3,7 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "task.proto";
 import "error.proto";
 
@@ -11,68 +12,68 @@ message ProtoTaskLifecycleResponse {
 }
 
 message ProtoDesireTaskRequest {
-  ProtoTaskDefinition task_definition = 1 [json_name = "task_definition"];
-  string task_guid = 2 [json_name =  "task_guid"];
-  string domain = 3 [json_name =  "domain"];
+  ProtoTaskDefinition task_definition = 1 [json_name = "task_definition", (bbs.bbs_json_always_emit) = true];
+  string task_guid                    = 2 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string domain                       = 3 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoStartTaskRequest {
-  string task_guid = 1 [json_name =  "task_guid"];
-  string cell_id = 2 [json_name =  "cell_id"];
+  string task_guid  = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string cell_id    = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoStartTaskResponse {
-  ProtoError error = 1;
-  bool should_start = 2 [json_name =  "should_start"];
+  ProtoError error  = 1;
+  bool should_start = 2 [json_name = "should_start", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoFailTaskRequest {
   option deprecated = true;
-  string task_guid = 1 [json_name =  "task_guid"];
-  string failure_reason = 2 [json_name =  "failure_reason"];
+  string task_guid      = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string failure_reason = 2 [json_name = "failure_reason", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoRejectTaskRequest {
-  string task_guid = 1 [json_name =  "task_guid"];
-  string rejection_reason = 2 [json_name =  "rejection_reason"];
+  string task_guid        = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string rejection_reason = 2 [json_name = "rejection_reason", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTaskGuidRequest {
-  string task_guid = 1 [json_name =  "task_guid"];
+  string task_guid = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoCompleteTaskRequest {
-  string task_guid = 1 [json_name =  "task_guid"];
-  string cell_id = 2 [json_name =  "cell_id"];
-  bool failed = 3 [json_name =  "failed"];
-  string failure_reason = 4 [json_name =  "failure_reason"];
-  string result = 5 [json_name =  "result"];
+  string task_guid      = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string cell_id        = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
+  bool failed           = 3 [json_name = "failed", (bbs.bbs_json_always_emit) = true];
+  string failure_reason = 4 [json_name = "failure_reason", (bbs.bbs_json_always_emit) = true];
+  string result         = 5 [json_name = "result", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTaskCallbackResponse {
-  string task_guid = 1 [json_name =  "task_guid"];
-  bool failed = 2 [json_name =  "failed"];
-  string failure_reason = 3 [json_name =  "failure_reason"];
-  string result = 4 [json_name =  "result"];
-  string annotation = 5;
-  int64 created_at = 6 [json_name =  "created_at"];
+  string task_guid      = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  bool failed           = 2 [json_name = "failed", (bbs.bbs_json_always_emit) = true];
+  string failure_reason = 3 [json_name = "failure_reason", (bbs.bbs_json_always_emit) = true];
+  string result         = 4 [json_name = "result", (bbs.bbs_json_always_emit) = true];
+  string annotation     = 5;
+  int64 created_at      = 6 [json_name = "created_at", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTasksRequest{
-  string domain = 1 [json_name =  "domain"];
-  string cell_id = 2 [json_name =  "cell_id"];
+  string domain   = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  string cell_id  = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTasksResponse{
-  ProtoError error = 1;
-  repeated ProtoTask tasks = 2;
+  ProtoError error          = 1;
+  repeated ProtoTask tasks  = 2;
 }
 
 message ProtoTaskByGuidRequest{
-  string task_guid = 1 [json_name =  "task_guid"];
+  string task_guid = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTaskResponse{
-  ProtoError error = 1;
-  ProtoTask task = 2;
+  ProtoError error  = 1;
+  ProtoTask task    = 2;
 }

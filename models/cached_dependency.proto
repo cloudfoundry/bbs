@@ -3,12 +3,14 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
+
 message ProtoCachedDependency {
-  string name = 1 [json_name = "name"];
-  string from = 2 [json_name = "from"];
-  string to = 3 [json_name = "to"];
-  string cache_key = 4 [json_name = "cache_key"];
-  string log_source = 5 [json_name = "log_source"];
+  string name               = 1 [json_name = "name", (bbs.bbs_json_always_emit) = true];
+  string from               = 2 [json_name = "from", (bbs.bbs_json_always_emit) = true];
+  string to                 = 3 [json_name = "to", (bbs.bbs_json_always_emit) = true];
+  string cache_key          = 4 [json_name = "cache_key", (bbs.bbs_json_always_emit) = true];
+  string log_source         = 5 [json_name = "log_source", (bbs.bbs_json_always_emit) = true];
   string checksum_algorithm = 6 [json_name = "checksum_algorithm"];
-  string checksum_value = 7 [json_name = "checksum_value"];
+  string checksum_value     = 7 [json_name = "checksum_value"];
 }

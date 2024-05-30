@@ -3,6 +3,7 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "actual_lrp.proto";
 import "error.proto";
 
@@ -12,58 +13,58 @@ message ProtoActualLRPLifecycleResponse {
 
 message ProtoActualLRPGroupsResponse {
   option deprecated = true;
-  ProtoError error = 1;
-  repeated ProtoActualLRPGroup actual_lrp_groups = 2 [json_name = "actual_lrp_groups"];
+  ProtoError error                                = 1;
+  repeated ProtoActualLRPGroup actual_lrp_groups  = 2 [json_name = "actual_lrp_groups"];
 }
 
 message ProtoActualLRPGroupResponse {
   option deprecated = true;
-  ProtoError error = 1;
-  ProtoActualLRPGroup actual_lrp_group = 2 [json_name = "actual_lrp_group"];
+  ProtoError error                      = 1;
+  ProtoActualLRPGroup actual_lrp_group  = 2 [json_name = "actual_lrp_group"];
 }
 
 message ProtoActualLRPGroupsRequest {
   option deprecated = true;
-  string domain = 1 [json_name = "domain"];
-  string cell_id = 2 [json_name = "cell_id"];
+  string domain   = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  string cell_id  = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoActualLRPGroupsByProcessGuidRequest {
   option deprecated = true;
-  string process_guid = 1 [json_name = "process_guid"];
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoActualLRPGroupByProcessGuidAndIndexRequest {
   option deprecated = true;
-  string process_guid = 1 [json_name = "process_guid"];
-  int32 index = 2 [json_name = "index"];
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  int32 index         = 2 [json_name = "index", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoClaimActualLRPRequest {
-  string process_guid = 1 [json_name = "process_guid"];
-  int32 index = 2 [json_name = "index"];
+  string process_guid                               = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  int32 index                                       = 2 [json_name = "index", (bbs.bbs_json_always_emit) = true];
   ProtoActualLRPInstanceKey actual_lrp_instance_key = 3 [json_name = "actual_lrp_instance_key"];
 }
 
 message ProtoStartActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
-  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [json_name = "actual_lrp_net_info"];
+  ProtoActualLRPKey actual_lrp_key                                = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key               = 2 [json_name = "actual_lrp_instance_key"];
+  ProtoActualLRPNetInfo actual_lrp_net_info                       = 3 [json_name = "actual_lrp_net_info"];
   repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 4 [json_name = "actual_lrp_internal_routes"];
-  map<string, string> metric_tags = 5 [json_name = "metric_tags"];
-  optional bool Routable = 6;
-  string availability_zone = 7 [json_name= "availability_zone"];
+  map<string, string> metric_tags                                 = 5 [json_name = "metric_tags"];
+  optional bool Routable                                          = 6;
+  string availability_zone                                        = 7 [json_name= "availability_zone", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoCrashActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
+  ProtoActualLRPKey actual_lrp_key                  = 1 [json_name = "actual_lrp_key"];
   ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
-  string error_message = 3 [json_name = "error_message"];
+  string error_message                              = 3 [json_name = "error_message", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoFailActualLRPRequest {
-  ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
-  string error_message = 2 [json_name = "error_message"];
+  ProtoActualLRPKey actual_lrp_key  = 1 [json_name = "actual_lrp_key"];
+  string error_message              = 2 [json_name = "error_message", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoRetireActualLRPRequest {
@@ -71,20 +72,20 @@ message ProtoRetireActualLRPRequest {
 }
 
 message ProtoRemoveActualLRPRequest {
-  string process_guid = 1 [json_name = "process_guid"];
-  int32 index = 2 [json_name = "index"];
+  string process_guid                               = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  int32 index                                       = 2 [json_name = "index", (bbs.bbs_json_always_emit) = true];
   ProtoActualLRPInstanceKey actual_lrp_instance_key = 3 [json_name = "actual_lrp_instance_key"];
 }
 
 message ProtoActualLRPsResponse {
-  ProtoError error = 1;
+  ProtoError error                    = 1;
   repeated ProtoActualLRP actual_lrps = 2 [json_name = "actual_lrps"];
 }
 
 message ProtoActualLRPsRequest {
-  string domain = 1 [json_name = "domain"];
-  string cell_id = 2 [json_name = "cell_id"];
-  string process_guid = 3 [json_name = "process_guid"];
-  optional int32 index = 4 [json_name = "index"];
+  string domain         = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  string cell_id        = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
+  string process_guid   = 3 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  optional int32 index  = 4 [json_name = "index", (bbs.bbs_json_always_emit) = true];
 }
 

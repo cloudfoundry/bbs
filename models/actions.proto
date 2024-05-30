@@ -3,6 +3,7 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "environment_variables.proto";
 
 message ProtoAction {
@@ -29,46 +30,46 @@ message ProtoAction {
 
 message ProtoDownloadAction {
   string artifact = 1;
-  string from = 2 [json_name = "from"];
-  string to = 3 [json_name = "to"];
-  string cache_key = 4 [json_name = "cache_key"];
-  string log_source = 5;
-  string user = 6 [json_name = "user"] ;
+  string from = 2 [json_name = "from", (bbs.bbs_json_always_emit) = true];
+  string to = 3 [json_name = "to", (bbs.bbs_json_always_emit) = true];
+  string cache_key = 4 [json_name = "cache_key", (bbs.bbs_json_always_emit) = true];
+  string log_source = 5 [json_name = "log_source"];
+  string user = 6 [json_name = "user", (bbs.bbs_json_always_emit) = true];
   string checksum_algorithm = 7 [json_name = "checksum_algorithm"];
   string checksum_value = 8 [json_name = "checksum_value"];
 }
 
 message ProtoUploadAction {
   string artifact = 1;
-  string from = 2 [json_name = "from"];
-  string to = 3 [json_name = "to"];
-  string log_source = 4;
-  string user = 5 [json_name = "user"];
+  string from = 2 [json_name = "from", (bbs.bbs_json_always_emit) = true];
+  string to = 3 [json_name = "to", (bbs.bbs_json_always_emit) = true];
+  string log_source = 4 [json_name = "log_source"];
+  string user = 5 [json_name = "user", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoRunAction {
-  string path = 1 [json_name = "path"];
+  string path = 1 [json_name = "path", (bbs.bbs_json_always_emit) = true];
   repeated string args = 2;
   string dir = 3;
   repeated ProtoEnvironmentVariable env = 4;
   ProtoResourceLimits resource_limits = 5 [json_name = "resource_limits"];
-  string user = 6 [json_name = "user"];
+  string user = 6 [json_name = "user", (bbs.bbs_json_always_emit) = true];
   string log_source = 7 [json_name = "log_source"];
-  bool suppress_log_output = 8 [json_name = "suppress_log_output"];
+  bool suppress_log_output = 8 [json_name = "suppress_log_output", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTimeoutAction {
   ProtoAction action = 1;
   int64 deprecated_timeout_ns = 2 [json_name = "timeout", deprecated=true];
   string log_source = 3 [json_name = "log_source"];
-  int64 timeout_ms = 4 [json_name = "timeout_ms"];
+  int64 timeout_ms = 4 [json_name = "timeout_ms", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoEmitProgressAction {
   ProtoAction action = 1;
-  string start_message = 2 [json_name = "start_message"];
-  string success_message = 3 [json_name = "success_message"];
-  string failure_message_prefix = 4 [json_name = "failure_message_prefix"];
+  string start_message = 2 [json_name = "start_message", (bbs.bbs_json_always_emit) = true];
+  string success_message = 3 [json_name = "success_message", (bbs.bbs_json_always_emit) = true];
+  string failure_message_prefix = 4 [json_name = "failure_message_prefix", (bbs.bbs_json_always_emit) = true];
   string log_source = 5 [json_name = "log_source"];
 }
 

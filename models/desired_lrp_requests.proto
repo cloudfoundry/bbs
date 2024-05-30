@@ -3,6 +3,7 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "desired_lrp.proto";
 import "error.proto";
 
@@ -11,32 +12,32 @@ message ProtoDesiredLRPLifecycleResponse {
 }
 
 message ProtoDesiredLRPsResponse {
-  ProtoError error = 1;
+  ProtoError error                      = 1;
   repeated ProtoDesiredLRP desired_lrps = 2 [json_name = "desired_lrps"];
 }
 
 message ProtoDesiredLRPsRequest {
-  string domain = 1 [json_name = "domain"];
+  string domain                 = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
   repeated string process_guids = 2 [json_name = "process_guids"];
 }
 
 message ProtoDesiredLRPResponse {
-  ProtoError error = 1;
+  ProtoError error            = 1;
   ProtoDesiredLRP desired_lrp = 2 [json_name = "desired_lrp"];
 }
 
 message ProtoDesiredLRPSchedulingInfosResponse {
-  ProtoError error = 1;
+  ProtoError error                                                    = 1;
   repeated ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2 [json_name = "desired_lrp_scheduling_infos"];
 }
 
 message ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
-  ProtoError error = 1;
+  ProtoError error                                          = 1;
   ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_info = 2 [json_name = "desired_lrp_scheduling_info"];
 }
 
 message ProtoDesiredLRPByProcessGuidRequest {
-  string process_guid = 1 [json_name = "process_guid"];
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoDesireLRPRequest {
@@ -44,10 +45,10 @@ message ProtoDesireLRPRequest {
 }
 
 message ProtoUpdateDesiredLRPRequest {
-  string process_guid = 1 [json_name = "process_guid"];
-  ProtoDesiredLRPUpdate update = 2;
+  string process_guid           = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  ProtoDesiredLRPUpdate update  = 2;
 }
 
 message ProtoRemoveDesiredLRPRequest {
-  string process_guid = 1 [json_name = "process_guid"];
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
 }

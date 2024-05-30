@@ -3,11 +3,12 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "actions.proto";
 
 message ProtoSidecar {
   ProtoAction action = 1;
 
-  int32 disk_mb = 2 [json_name = "disk_mb"];
-  int32 memory_mb = 3 [json_name = "memory_mb"];
+  int32 disk_mb = 2 [json_name = "disk_mb", (bbs.bbs_json_always_emit) = true];
+  int32 memory_mb = 3 [json_name = "memory_mb", (bbs.bbs_json_always_emit) = true];
 }

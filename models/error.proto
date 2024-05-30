@@ -45,6 +45,6 @@ message ProtoError {
     Timeout = 31;
   }
 
-  Type type = 1 [json_name = "type"];
-  string message = 2 [json_name = "message", (bbs.bbs_exclude_from_equal) = true];
+  Type type = 1 [json_name = "type", (bbs.bbs_json_always_emit) = true];
+  string message = 2 [json_name = "message", (bbs.bbs_json_always_emit) = true, (bbs.bbs_exclude_from_equal) = true];
 }

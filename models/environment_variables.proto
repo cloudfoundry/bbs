@@ -3,8 +3,9 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 
 message ProtoEnvironmentVariable {
-  string name = 1 [json_name = "name"];
-  string value = 2 [json_name = "value"];
+  string name   = 1 [json_name = "name", (bbs.bbs_json_always_emit) = true];
+  string value  = 2 [json_name = "value", (bbs.bbs_json_always_emit) = true];
 }

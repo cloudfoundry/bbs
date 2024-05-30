@@ -3,7 +3,8 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 
 message ProtoPingResponse {
-  bool available = 1 [json_name =  "available"];
+  bool available = 1 [json_name =  "available", (bbs.bbs_json_always_emit) = true];
 }
