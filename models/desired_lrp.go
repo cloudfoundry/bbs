@@ -34,10 +34,10 @@ func PreloadedRootFS(stack string) string {
 
 func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
-	copy(runInfo.EnvironmentVariables, environmentVariables)
+	copy(environmentVariables, runInfo.EnvironmentVariables)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
-	copy(runInfo.EgressRules, egressRules)
+	copy(egressRules, runInfo.EgressRules)
 
 	desiredLrpKey := schedInfo.DesiredLrpKey
 	desiredLrpResource := schedInfo.DesiredLrpResource
@@ -84,10 +84,10 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 
 func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
-	copy(runInfo.EnvironmentVariables, environmentVariables)
+	copy(environmentVariables, runInfo.EnvironmentVariables)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
-	copy(runInfo.EgressRules, egressRules)
+	copy(egressRules, runInfo.EgressRules)
 
 	desiredLRP.EnvironmentVariables = environmentVariables
 	desiredLRP.CachedDependencies = runInfo.CachedDependencies
@@ -257,10 +257,10 @@ func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	environmentVariables := make([]*EnvironmentVariable, len(d.EnvironmentVariables))
-	copy(d.EnvironmentVariables, environmentVariables)
+	copy(environmentVariables, d.EnvironmentVariables)
 
 	egressRules := make([]*SecurityGroupRule, len(d.EgressRules))
-	copy(d.EgressRules, egressRules)
+	copy(egressRules, d.EgressRules)
 
 	return NewDesiredLRPRunInfo(
 		d.DesiredLRPKey(),
