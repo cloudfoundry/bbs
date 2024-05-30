@@ -3,6 +3,7 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "actions.proto";
 import "environment_variables.proto";
 import "security_group.proto";
@@ -15,17 +16,17 @@ import "log_rate_limit.proto";
 import "metric_tags.proto";
 
 message ProtoTaskDefinition {
-  string root_fs = 1 [json_name = "rootfs"];
+  string root_fs = 1 [json_name = "rootfs", (bbs.bbs_json_always_emit) = true];
   repeated ProtoEnvironmentVariable environment_variables = 2 [json_name = "env"];
   ProtoAction action = 3;
-  int32 disk_mb = 4 [json_name =  "disk_mb"];
-  int32 memory_mb = 5 [json_name =  "memory_mb"];
-  uint32 cpu_weight = 6 [json_name =  "cpu_weight"];
-  bool privileged = 7 [json_name =  "privileged"];
-  string log_source = 8 [json_name =  "log_source"];
-  string log_guid = 9 [json_name =  "log_guid"];
-  string metrics_guid = 10 [json_name =  "metrics_guid"];
-  string result_file = 11 [json_name =  "result_file"];
+  int32 disk_mb = 4 [json_name =  "disk_mb", (bbs.bbs_json_always_emit) = true];
+  int32 memory_mb = 5 [json_name =  "memory_mb", (bbs.bbs_json_always_emit) = true];
+  uint32 cpu_weight = 6 [json_name =  "cpu_weight", (bbs.bbs_json_always_emit) = true];
+  bool privileged = 7 [json_name =  "privileged", (bbs.bbs_json_always_emit) = true];
+  string log_source = 8 [json_name =  "log_source", (bbs.bbs_json_always_emit) = true];
+  string log_guid = 9 [json_name =  "log_guid", (bbs.bbs_json_always_emit) = true];
+  string metrics_guid = 10 [json_name =  "metrics_guid", (bbs.bbs_json_always_emit) = true];
+  string result_file = 11 [json_name =  "result_file", (bbs.bbs_json_always_emit) = true];
   string completion_callback_url = 12 [json_name = "completion_callback_url"];
   string annotation = 13;
   repeated ProtoSecurityGroupRule egress_rules = 14 [json_name = "egress_rules"];
@@ -35,10 +36,10 @@ message ProtoTaskDefinition {
   repeated ProtoVolumeMount volume_mounts = 18 [json_name = "volume_mounts"];
   ProtoNetwork network = 19;
   repeated string placement_tags = 20 [json_name = "placement_tags"];
-  int32 max_pids = 21 [json_name =  "max_pids"];
+  int32 max_pids = 21 [json_name =  "max_pids", (bbs.bbs_json_always_emit) = true];
   ProtoCertificateProperties certificate_properties = 22 [json_name = "certificate_properties"];
-  string image_username = 23 [json_name =  "image_username"];
-  string image_password = 24 [json_name =  "image_password"];
+  string image_username = 23 [json_name =  "image_username", (bbs.bbs_json_always_emit) = true];
+  string image_password = 24 [json_name =  "image_password", (bbs.bbs_json_always_emit) = true];
   repeated ProtoImageLayer image_layers = 25 [json_name = "image_layers"];
   ProtoLogRateLimit log_rate_limit = 26 [json_name = "log_rate_limit"];
   map<string, ProtoMetricTagValue> metric_tags = 27 [json_name = "metric_tags"];
@@ -53,22 +54,22 @@ message ProtoTask {
     Resolving = 4;
   }
 
-  ProtoTaskDefinition task_definition = 1 [json_name = "task_definition"];
+  ProtoTaskDefinition task_definition = 1 [json_name = "task_definition", (bbs.bbs_json_always_emit) = true];
 
-  string task_guid = 2 [json_name =  "task_guid"];
-  string domain = 3 [json_name =  "domain"];
-  int64 created_at = 4 [json_name =  "created_at"];
-  int64 updated_at = 5 [json_name =  "updated_at"];
-  int64 first_completed_at = 6 [json_name =  "first_completed_at"];
+  string task_guid = 2 [json_name =  "task_guid", (bbs.bbs_json_always_emit) = true];
+  string domain = 3 [json_name =  "domain", (bbs.bbs_json_always_emit) = true];
+  int64 created_at = 4 [json_name =  "created_at", (bbs.bbs_json_always_emit) = true];
+  int64 updated_at = 5 [json_name =  "updated_at", (bbs.bbs_json_always_emit) = true];
+  int64 first_completed_at = 6 [json_name =  "first_completed_at", (bbs.bbs_json_always_emit) = true];
 
-  State state = 7 [json_name =  "state"];
+  State state = 7 [json_name =  "state", (bbs.bbs_json_always_emit) = true];
 
-  string cell_id = 8 [json_name =  "cell_id"];
+  string cell_id = 8 [json_name =  "cell_id", (bbs.bbs_json_always_emit) = true];
 
-  string result = 9 [json_name =  "result"];
-  bool failed = 10 [json_name =  "failed"];
-  string failure_reason = 11 [json_name =  "failure_reason"];
-  int32 rejection_count = 12 [json_name = "rejection_count"];
-  string rejection_reason = 13 [json_name = "rejection_reason"];
+  string result = 9 [json_name =  "result", (bbs.bbs_json_always_emit) = true];
+  bool failed = 10 [json_name =  "failed", (bbs.bbs_json_always_emit) = true];
+  string failure_reason = 11 [json_name =  "failure_reason", (bbs.bbs_json_always_emit) = true];
+  int32 rejection_count = 12 [json_name = "rejection_count", (bbs.bbs_json_always_emit) = true];
+  string rejection_reason = 13 [json_name = "rejection_reason", (bbs.bbs_json_always_emit) = true];
 }
 

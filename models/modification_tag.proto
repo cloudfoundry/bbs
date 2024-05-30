@@ -3,9 +3,10 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 
 message ProtoModificationTag {
-  string epoch = 1 [json_name =  "epoch"];
-  uint32 index = 2 [json_name = "index"];
+  string epoch = 1 [json_name = "epoch", (bbs.bbs_json_always_emit) = true];
+  uint32 index = 2 [json_name = "index", (bbs.bbs_json_always_emit) = true];
 }
 

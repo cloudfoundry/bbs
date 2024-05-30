@@ -3,6 +3,7 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "error.proto";
 
 message ProtoDomainsResponse {
@@ -15,6 +16,6 @@ message ProtoUpsertDomainResponse {
 }
 
 message ProtoUpsertDomainRequest {
-  string domain = 1 [json_name = "domain"];
-  uint32 ttl = 2 [json_name = "ttl"];
+  string domain = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  uint32 ttl = 2 [json_name = "ttl", (bbs.bbs_json_always_emit) = true];
 }

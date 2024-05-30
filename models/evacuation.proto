@@ -3,12 +3,13 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
 import "actual_lrp.proto";
 import "error.proto";
 
 message ProtoEvacuationResponse {
   ProtoError error = 1;
-  bool keep_container = 2 [json_name = "keep_container"];
+  bool keep_container = 2 [json_name = "keep_container", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoEvacuateClaimedActualLRPRequest {
@@ -25,7 +26,7 @@ message ProtoEvacuateRunningActualLRPRequest {
   repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 5 [json_name = "actual_lrp_internal_routes"];
   map<string, string> metric_tags = 6 [json_name = "metric_tags"];
   optional bool Routable = 7;
-  string availability_zone = 8 [json_name = "availability_zone"];
+  string availability_zone = 8 [json_name = "availability_zone", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoEvacuateStoppedActualLRPRequest {
@@ -36,7 +37,7 @@ message ProtoEvacuateStoppedActualLRPRequest {
 message ProtoEvacuateCrashedActualLRPRequest {
   ProtoActualLRPKey actual_lrp_key = 1 [json_name = "actual_lrp_key"];
   ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [json_name = "actual_lrp_instance_key"];
-  string error_message = 3 [json_name = "error_message"];
+  string error_message = 3 [json_name = "error_message", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoRemoveEvacuatingActualLRPRequest {

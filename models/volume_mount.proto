@@ -3,23 +3,25 @@ syntax = "proto3";
 package models;
 option go_package="code.cloudfoundry.org/bbs/models";
 
+import "bbs.proto";
+
 message ProtoSharedDevice {
-  string volume_id = 1 [json_name = "volume_id"];
-  string mount_config = 2 [json_name = "mount_config"];
+  string volume_id = 1 [json_name = "volume_id", (bbs.bbs_json_always_emit) = true];
+  string mount_config = 2 [json_name = "mount_config", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoVolumeMount {
   reserved 2, 4, 5;
 
-  string driver = 1 [json_name = "driver"];
-  string container_dir = 3 [json_name = "container_dir"];
-  string mode = 6 [json_name = "mode"];
+  string driver = 1 [json_name = "driver", (bbs.bbs_json_always_emit) = true];
+  string container_dir = 3 [json_name = "container_dir", (bbs.bbs_json_always_emit) = true];
+  string mode = 6 [json_name = "mode", (bbs.bbs_json_always_emit) = true];
 
   // oneof device {
-    ProtoSharedDevice shared = 7 [json_name = "shared"];
+    ProtoSharedDevice shared = 7 [json_name = "shared", (bbs.bbs_json_always_emit) = true];
   // }
 }
 
 message ProtoVolumePlacement {
-  repeated string driver_names = 1 [json_name = "driver_names"];
+  repeated string driver_names = 1 [json_name = "driver_names", (bbs.bbs_json_always_emit) = true];
 }

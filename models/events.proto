@@ -27,61 +27,61 @@ message ProtoActualLRPRemovedEvent {
 
 message ProtoActualLRPInstanceCreatedEvent  {
   ProtoActualLRP actual_lrp = 1 [json_name = "actual_lrp"];
-  string trace_id = 2 [json_name =  "trace_id"];
+  string trace_id = 2 [json_name = "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoActualLRPInfo {
-  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_net_info"];
-  int32 crash_count = 4 [json_name =  "crash_count"];
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_net_info", (bbs.bbs_json_always_emit) = true];
+  int32 crash_count = 4 [json_name =  "crash_count", (bbs.bbs_json_always_emit) = true];
   string crash_reason = 5 [json_name = "crash_reason"];
-  string state = 6 [json_name =  "state"];
+  string state = 6 [json_name =  "state", (bbs.bbs_json_always_emit) = true];
   string placement_error = 7 [json_name = "placement_error"];
-  int64 since = 8 [json_name =  "since"];
-  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag",  (bbs.bbs_by_value) = true];
-  ProtoActualLRP.Presence presence = 10 [json_name = "presence", (bbs.bbs_by_value) = true];
+  int64 since = 8 [json_name =  "since", (bbs.bbs_json_always_emit) = true];
+  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag",  (bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRP.Presence presence = 10 [json_name = "presence", (bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
   optional bool Routable = 11;
-  string availability_zone = 12 [json_name = "availability_zone"];
+  string availability_zone = 12 [json_name = "availability_zone", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoActualLRPInstanceChangedEvent {
-  ProtoActualLRPKey actual_lrp_key                  = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key"];
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key"];
+  ProtoActualLRPKey actual_lrp_key                  = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key", (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key", (bbs.bbs_json_always_emit) = true];
   ProtoActualLRPInfo before                         = 3;
   ProtoActualLRPInfo after                          = 4;
-  string trace_id                                   = 5 [json_name =  "trace_id"];
+  string trace_id                                   = 5 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoActualLRPInstanceRemovedEvent {
   ProtoActualLRP actual_lrp = 1 [json_name = "actual_lrp"];
-  string trace_id = 2 [json_name =  "trace_id"];
+  string trace_id = 2 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoDesiredLRPCreatedEvent {
   ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
-  string trace_id = 2 [json_name =  "trace_id"];
+  string trace_id = 2 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoDesiredLRPChangedEvent {
   ProtoDesiredLRP before = 1;
   ProtoDesiredLRP after = 2;
-  string trace_id = 3 [json_name =  "trace_id"];
+  string trace_id = 3 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoDesiredLRPRemovedEvent {
   ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
-  string trace_id = 2 [json_name =  "trace_id"];
+  string trace_id = 2 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoActualLRPCrashedEvent {
-  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key"];
-  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key"];
-  int32 crash_count = 3 [json_name =  "crash_count"];
+  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key", (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key", (bbs.bbs_json_always_emit) = true];
+  int32 crash_count = 3 [json_name =  "crash_count", (bbs.bbs_json_always_emit) = true];
   string crash_reason = 4 [json_name = "crash_reason"];
-  int64 since = 5 [json_name =  "since"];
+  int64 since = 5 [json_name =  "since", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoEventsByCellId {
-   string cell_id  = 1 [json_name =  "cell_id"];
+   string cell_id  = 1 [json_name =  "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTaskCreatedEvent {

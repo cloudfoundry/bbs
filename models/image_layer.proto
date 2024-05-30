@@ -26,10 +26,10 @@ message ProtoImageLayer {
   }
 
   string name                      = 1;
-  string url                       = 2 [json_name = "url"];
-  string destination_path          = 3 [json_name = "destination_path"];
-  Type layer_type                  = 4 [json_name = "layer_type"];
-  MediaType media_type             = 5 [json_name = "media_type"];
+  string url                       = 2 [json_name = "url", (bbs.bbs_json_always_emit) = true];
+  string destination_path          = 3 [json_name = "destination_path", (bbs.bbs_json_always_emit) = true];
+  Type layer_type                  = 4 [json_name = "layer_type", (bbs.bbs_json_always_emit) = true];
+  MediaType media_type             = 5 [json_name = "media_type", (bbs.bbs_json_always_emit) = true];
   DigestAlgorithm digest_algorithm = 6 [json_name = "digest_algorithm"];
   string digest_value              = 7 [json_name = "digest_value"];
 }
