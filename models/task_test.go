@@ -10,14 +10,12 @@ import (
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Task", func() {
 	var taskPayload string
 	var task models.Task
-	var protoTask models.ProtoTask
 
 	BeforeEach(func() {
 		taskPayload = `{
@@ -27,10 +25,12 @@ var _ = Describe("Task", func() {
 		"result": "turboencabulated",
 		"failed":true,
 		"failure_reason":"because i said so",
-		"created_at": "1393371971000000000",
-		"updated_at": "1393371971000000010",
-		"first_completed_at": "1393371971000000030",
+		"created_at": 1393371971000000000,
+		"updated_at": 1393371971000000010,
+		"first_completed_at": 1393371971000000030,
 		"state": "Pending",
+		"rejection_count": 0,
+		"rejection_reason": "",
 		"task_definition" : {
 			"rootfs": "docker:///docker.com/docker",
 			"env":[
@@ -53,7 +53,7 @@ var _ = Describe("Task", func() {
 			"memory_mb":256,
 			"disk_mb":1024,
 			"log_rate_limit": {
-				"bytes_per_second": "2048"
+				"bytes_per_second": 2048
 			},
 			"cpu_weight": 42,
 			"privileged": true,
@@ -80,7 +80,8 @@ var _ = Describe("Task", func() {
 				{
 					"protocol": "udp",
 					"destinations": ["8.8.0.0/16"],
-					"ports": [53]
+					"ports": [53],
+					"log": false
 				}
 			],
 			"completion_callback_url":"http://user:password@a.b.c/d/e/f",
@@ -91,7 +92,7 @@ var _ = Describe("Task", func() {
 			"image_username": "jake",
 			"image_password": "thedog",
 			"image_layers": [
-			  {
+				{
 					"url": "some-url",
 					"destination_path": "/tmp",
 					"media_type": "TGZ",
@@ -112,27 +113,14 @@ var _ = Describe("Task", func() {
 			}
 		}
 	  }`
-		// TODO: double-check these fields
-		// protobuf v3 makes uint64 a string
-		// "created_at": "1393371971000000000",
-		// "updated_at": "1393371971000000010",
-		// "first_completed_at": "1393371971000000030",
-		// 	"log_rate_limit": {
-		// 		"bytes_per_second": "2048"
-		// 	},
-		// protojson does not emit this
-		// egress_rules -> "log": false
-		// "rejection_count": 0,
-		// "rejection_reason": "",
 
-		err := protojson.Unmarshal([]byte(taskPayload), &protoTask)
+		err := json.Unmarshal([]byte(taskPayload), &task)
 		Expect(err).NotTo(HaveOccurred())
-		task = *protoTask.FromProto()
 	})
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := protojson.Marshal(task.ToProto())
+			jsonSerialization, err := json.Marshal(task)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(taskPayload))
 
