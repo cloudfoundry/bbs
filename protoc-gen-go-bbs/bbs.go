@@ -128,7 +128,11 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 			}
 			fieldName := getFieldName(field.GoName)
 			if field.Desc.Cardinality() == protoreflect.Repeated {
-				g.P("if len(this.", fieldName, ") != len(that1.", fieldName, ") {")
+				g.P("if this.", fieldName, " == nil {")
+				g.P("if that1.", fieldName, " != nil {")
+				g.P("return false")
+				g.P("}")
+				g.P("} else if len(this.", fieldName, ") != len(that1.", fieldName, ") {")
 				g.P("return false")
 				g.P("}")
 				g.P("for i := range this.", fieldName, " {")
@@ -137,6 +141,8 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 				} else if field.Desc.IsMap() && field.Desc.MapValue().Kind() == protoreflect.BytesKind {
 					bytesEqual := protogen.GoIdent{GoName: "Equal", GoImportPath: "bytes"}
 					g.P("if !", g.QualifiedGoIdent(bytesEqual), "(this.", fieldName, "[i], that1.", fieldName, "[i]) {")
+				} else if field.Desc.IsMap() && field.Desc.MapValue().Kind() == protoreflect.MessageKind {
+					g.P("if !this.", fieldName, "[i].Equal(that1.", fieldName, "[i]) {")
 				} else {
 					g.P("if this.", fieldName, "[i] != that1.", fieldName, "[i] {")
 				}
@@ -146,11 +152,26 @@ func (bbsGenerateHelper) genEqual(g *protogen.GeneratedFile, msg *protogen.Messa
 				pointer := "*"
 				if isByValueType(field) {
 					pointer = ""
+				} else {
+					g.P("if this.", fieldName, " == nil {")
+					g.P("if that1.", fieldName, " != nil {")
+					g.P("return false")
+					g.P("}")
+					g.P("} else ")
 				}
 				g.P("if !this.", fieldName, ".Equal(", pointer, "that1.", fieldName, ") {")
 				g.P("return false")
 			} else {
-				g.P("if this.", fieldName, " != that1.", fieldName, " {")
+				pointer := ""
+				if field.Desc.HasOptionalKeyword() {
+					pointer = "*"
+					g.P("if this.", fieldName, " == nil {")
+					g.P("if that1.", fieldName, " != nil {")
+					g.P("return false")
+					g.P("}")
+					g.P("} else ")
+				}
+				g.P("if ", pointer, "this.", fieldName, " != ", pointer, "that1.", fieldName, " {")
 				g.P("return false")
 			}
 			g.P("}")
@@ -199,10 +220,11 @@ func genGetter(g *protogen.GeneratedFile, copysafeName string, field *protogen.F
 	fieldName := getFieldName(field.GoName)
 	fieldType := getActualType(g, field)
 	defaultValue := getDefaultValueString(field)
+	defaultReturn := "defaultValue"
 	isOptional := field.Desc.HasOptionalKeyword()
 	optionalCheck := ""
 	if isOptional {
-		defaultValue = "nil"
+		defaultReturn = "&" + defaultReturn
 		optionalCheck = fmt.Sprintf("&& m.%s != nil ", fieldName) //extra space intentional
 		genExists(g, copysafeName, field)
 	}
@@ -210,7 +232,14 @@ func genGetter(g *protogen.GeneratedFile, copysafeName string, field *protogen.F
 	g.P("if m != nil ", optionalCheck, "{")
 	g.P("return m.", fieldName)
 	g.P("}")
-	g.P("return ", defaultValue)
+	if defaultValue == "nil" {
+		g.P("return nil")
+	} else {
+		valueType, _ := strings.CutPrefix(fieldType, "*")
+		g.P("var defaultValue ", valueType)
+		g.P("defaultValue = ", defaultValue)
+		g.P("return ", defaultReturn)
+	}
 	g.P("}")
 }
 
@@ -241,9 +270,6 @@ func getDefaultValueString(field *protogen.Field) string {
 	case protoreflect.DoubleKind, protoreflect.Fixed32Kind, protoreflect.Fixed64Kind, protoreflect.FloatKind, protoreflect.Int32Kind, protoreflect.Sfixed32Kind, protoreflect.Sfixed64Kind, protoreflect.Sint32Kind, protoreflect.Sint64Kind, protoreflect.Uint32Kind, protoreflect.Uint64Kind, protoreflect.Int64Kind:
 		return "0"
 	case protoreflect.StringKind:
-		if field.Desc.Cardinality() == protoreflect.Repeated {
-			return "nil"
-		}
 		return `""`
 	default:
 		panic(fmt.Sprintf("Unrecognized type: %s", kind))
