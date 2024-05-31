@@ -341,16 +341,16 @@ func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager
 
 	keys := []*models.ActualLRPKey{}
 	for actualIndex := lower; actualIndex < upper; actualIndex++ {
-		key := models.NewActualLRPKey(schedulingInfo.ProcessGuid, int32(actualIndex), schedulingInfo.Domain)
+		key := models.NewActualLRPKey(schedulingInfo.DesiredLrpKey.ProcessGuid, int32(actualIndex), schedulingInfo.DesiredLrpKey.Domain)
 		keys = append(keys, &key)
 	}
 
 	createdIndices := h.createUnclaimedActualLRPs(ctx, logger, keys)
 	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
 
-	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
+	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.DesiredLrpKey.ProcessGuid, "indices": createdIndices})
 	err := h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&start})
-	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
+	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.DesiredLrpKey.ProcessGuid, "indices": createdIndices})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
 	}
@@ -415,10 +415,10 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 		lrp := actualLRPs[i]
 
 		if lrp.Presence != models.ActualLRP_Evacuating {
-			if lrp.Index >= int32(index) {
+			if lrp.ActualLrpKey.Index >= int32(index) {
 				switch lrp.State {
 				case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
-					err = h.actualLRPDB.RemoveActualLRP(ctx, logger.Session("remove-actual"), lrp.ProcessGuid, lrp.Index, nil)
+					err = h.actualLRPDB.RemoveActualLRP(ctx, logger.Session("remove-actual"), lrp.ActualLrpKey.ProcessGuid, lrp.ActualLrpKey.Index, nil)
 					if err != nil {
 						logger.Error("failed-removing-lrp-instance", err)
 					} else {
@@ -427,7 +427,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 						go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceRemovedEvent(lrp, trace.RequestIdFromContext(ctx)))
 					}
 				default:
-					cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
+					cellPresence, err := h.serviceClient.CellById(logger, lrp.ActualLrpInstanceKey.CellId)
 					if err != nil {
 						logger.Error("failed-fetching-cell-presence", err)
 						continue
@@ -439,7 +439,7 @@ func (h *DesiredLRPHandler) stopInstancesFrom(ctx context.Context, logger lager.
 					}
 					logger.Debug("stopping-lrp-instance")
 					go func() {
-						err := repClient.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
+						err := repClient.StopLRPInstance(logger, lrp.ActualLrpKey, lrp.ActualLrpInstanceKey)
 						if err != nil {
 							logger.Error("failed-stopping-lrp-instance", err)
 						}
@@ -462,7 +462,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 		lrp := actualLRPs[i]
 
 		if lrp.Presence != models.ActualLRP_Evacuating && lrp.State != models.ActualLRPStateUnclaimed && lrp.State != models.ActualLRPStateCrashed {
-			cellPresence, err := h.serviceClient.CellById(logger, lrp.CellId)
+			cellPresence, err := h.serviceClient.CellById(logger, lrp.ActualLrpInstanceKey.CellId)
 			if err != nil {
 				logger.Error("failed-fetching-cell-presence", err)
 				continue
@@ -486,8 +486,8 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 			var metricTags map[string]string
 			if metricTagsUpdated {
 				metricTags, err = models.ConvertMetricTags(update.MetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
-					models.MetricTagDynamicValueIndex:        lrp.Index,
-					models.MetricTagDynamicValueInstanceGuid: lrp.InstanceGuid,
+					models.MetricTagValue_MetricTagDynamicValueIndex:        lrp.ActualLrpKey.Index,
+					models.MetricTagValue_MetricTagDynamicValueInstanceGuid: lrp.ActualLrpInstanceKey.InstanceGuid,
 				})
 				if err != nil {
 					logger.Error("converting-metric-tags-failed", err)
@@ -495,7 +495,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				}
 			}
 
-			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes, metricTags)
+			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLrpInstanceKey.InstanceGuid, lrp.ActualLrpKey, internalRoutes, metricTags)
 			go func() {
 				err := repClient.UpdateLRPInstance(logger, lrpUpdate)
 				if err != nil {
