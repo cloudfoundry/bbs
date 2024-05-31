@@ -1,5 +1,9 @@
 package models
 
+func (request *ProtoDesireTaskRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (req *DesireTaskRequest) Validate() error {
 	var validationError ValidationError
 
@@ -24,6 +28,10 @@ func (req *DesireTaskRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoStartTaskRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (req *StartTaskRequest) Validate() error {
 	var validationError ValidationError
 
@@ -39,6 +47,10 @@ func (req *StartTaskRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoCompleteTaskRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (req *CompleteTaskRequest) Validate() error {
@@ -58,6 +70,10 @@ func (req *CompleteTaskRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoFailTaskRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (req *FailTaskRequest) Validate() error {
 	var validationError ValidationError
 
@@ -73,6 +89,10 @@ func (req *FailTaskRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoRejectTaskRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (req *RejectTaskRequest) Validate() error {
@@ -92,8 +112,16 @@ func (req *RejectTaskRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoTasksRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (req *TasksRequest) Validate() error {
 	return nil
+}
+
+func (request *ProtoTaskByGuidRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *TaskByGuidRequest) Validate() error {
@@ -108,6 +136,10 @@ func (request *TaskByGuidRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoTaskGuidRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *TaskGuidRequest) Validate() error {

@@ -2,6 +2,10 @@ package models
 
 import "encoding/json"
 
+func (request *ProtoActualLRPsRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *ActualLRPsRequest) Validate() error {
 	return nil
 }
@@ -41,9 +45,17 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(internalRequest)
 }
 
+func (request *ProtoActualLRPGroupsRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 // Deprecated: use the ActualLRPInstances API instead
 func (request *ActualLRPGroupsRequest) Validate() error {
 	return nil
+}
+
+func (request *ProtoActualLRPGroupsByProcessGuidRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 // Deprecated: use the ActualLRPInstances API instead
@@ -59,6 +71,10 @@ func (request *ActualLRPGroupsByProcessGuidRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoActualLRPGroupByProcessGuidAndIndexRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 // Deprecated: use the ActualLRPInstances API instead
@@ -80,6 +96,10 @@ func (request *ActualLRPGroupByProcessGuidAndIndexRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoRemoveActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *RemoveActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -96,6 +116,10 @@ func (request *RemoveActualLRPRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoClaimActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *ClaimActualLRPRequest) Validate() error {
@@ -116,6 +140,10 @@ func (request *ClaimActualLRPRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoStartActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *StartActualLRPRequest) Validate() error {
@@ -146,6 +174,10 @@ func (request *StartActualLRPRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoCrashActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *CrashActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -168,6 +200,10 @@ func (request *CrashActualLRPRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoFailActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *FailActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -188,6 +224,10 @@ func (request *FailActualLRPRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoRetireActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *RetireActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -202,6 +242,10 @@ func (request *RetireActualLRPRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoRemoveEvacuatingActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *RemoveEvacuatingActualLRPRequest) Validate() error {
@@ -226,6 +270,10 @@ func (request *RemoveEvacuatingActualLRPRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoEvacuateClaimedActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *EvacuateClaimedActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -246,6 +294,10 @@ func (request *EvacuateClaimedActualLRPRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoEvacuateCrashedActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *EvacuateCrashedActualLRPRequest) Validate() error {
@@ -274,6 +326,10 @@ func (request *EvacuateCrashedActualLRPRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoEvacuateStoppedActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *EvacuateStoppedActualLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -294,6 +350,10 @@ func (request *EvacuateStoppedActualLRPRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoEvacuateRunningActualLRPRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *EvacuateRunningActualLRPRequest) Validate() error {
