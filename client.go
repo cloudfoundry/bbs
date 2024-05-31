@@ -380,13 +380,14 @@ func (c *client) ActualLRPGroups(logger lager.Logger, traceID string, filter mod
 		Domain: filter.Domain,
 		CellId: filter.CellID,
 	}
-	response := models.ActualLRPGroupsResponse{}
-	err := c.doRequest(logger, traceID, ActualLRPGroupsRoute_r0, nil, nil, request.ToProto(), response.ToProto())
+	response := models.ProtoActualLRPGroupsResponse{}
+	err := c.doRequest(logger, traceID, ActualLRPGroupsRoute_r0, nil, nil, request.ToProto(), &response)
 	if err != nil {
 		return nil, err
 	}
+	nonProtoResponse := response.FromProto()
 
-	return response.ActualLrpGroups, response.Error.ToError()
+	return nonProtoResponse.ActualLrpGroups, nonProtoResponse.Error.ToError()
 }
 
 // Deprecated: use ActaulLRPs instead
