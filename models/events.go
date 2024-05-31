@@ -312,6 +312,10 @@ func (event *ActualLRPInstanceCreatedEvent) ToEventProto() proto.Message {
 	return event.ToProto()
 }
 
+func (request *ProtoEventsByCellId) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *EventsByCellId) Validate() error {
 	return nil
 }

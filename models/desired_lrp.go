@@ -296,6 +296,10 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 	return &newDesired
 }
 
+func (request *ProtoDesiredLRP) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
 
@@ -365,6 +369,10 @@ func (desired DesiredLRP) Validate() error {
 	}
 
 	return validationError.ToError()
+}
+
+func (request *ProtoDesiredLRPUpdate) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (desired *DesiredLRPUpdate) Validate() error {
@@ -487,6 +495,10 @@ func NewDesiredLRPKey(processGuid, domain, logGuid string) DesiredLRPKey {
 	}
 }
 
+func (request *ProtoDesiredLRPKey) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (key DesiredLRPKey) Validate() error {
 	var validationError ValidationError
 	if key.GetDomain() == "" {
@@ -557,6 +569,10 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 	return format.V0
 }
 
+func (request *ProtoDesiredLRPSchedulingInfo) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (s DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
@@ -580,6 +596,10 @@ func NewDesiredLRPResource(memoryMb, diskMb, maxPids int32, rootFs string) Desir
 		MaxPids:  maxPids,
 		RootFs:   rootFs,
 	}
+}
+
+func (request *ProtoDesiredLRPResource) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (resource DesiredLRPResource) Validate() error {
@@ -658,6 +678,10 @@ func NewDesiredLRPRunInfo(
 		Sidecars:                      sidecars,
 		LogRateLimit:                  logRateLimit,
 	}
+}
+
+func (request *ProtoDesiredLRPRunInfo) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (runInfo DesiredLRPRunInfo) Validate() error {
@@ -744,6 +768,10 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 func (*CertificateProperties) Version() format.Version {
 	return format.V0
+}
+
+func (request *ProtoCertificateProperties) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (CertificateProperties) Validate() error {
