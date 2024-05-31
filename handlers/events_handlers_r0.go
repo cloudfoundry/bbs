@@ -11,8 +11,10 @@ import (
 func (h *LRPGroupEventsHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
 	logger = logger.Session("subscribe-r0").WithTraceInfo(req)
 
-	request := &models.EventsByCellId{}
-	err := parseRequest(logger, req, request)
+	var request *models.EventsByCellId
+	protoRequest := &models.ProtoEventsByCellId{}
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -86,8 +88,9 @@ func (h *LRPGroupEventsHandler) Subscribe_r1(logger lager.Logger, w http.Respons
 func (h *LRPInstanceEventHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
 	logger = logger.Session("subscribe-r0").WithTraceInfo(req)
 
-	request := &models.EventsByCellId{}
-	err := parseRequest(logger, req, request)
+	var request *models.EventsByCellId
+	protoRequest := &models.ProtoEventsByCellId{}
+	err := parseRequest(logger, req, protoRequest)
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		w.WriteHeader(http.StatusInternalServerError)

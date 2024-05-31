@@ -51,12 +51,14 @@ func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.R
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.ClaimActualLRPRequest{}
+	var request *models.ClaimActualLRPRequest
+	protoRequest := &models.ProtoClaimActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -71,13 +73,15 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.StartActualLRPRequest{}
+	var request *models.StartActualLRPRequest
+	protoRequest := &models.ProtoStartActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -85,7 +89,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP(logger lager.Logger, w http.R
 	routable := true
 	if request.RoutableExists() {
 		r := request.GetRoutable()
-		routable = r
+		routable = *r
 	}
 
 	err = h.controller.StartActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, request.ActualLrpInternalRoutes, request.MetricTags, routable, request.AvailabilityZone)
@@ -97,13 +101,15 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP_r0(logger lager.Logger, w htt
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.StartActualLRPRequest{}
+	var request *models.StartActualLRPRequest
+	protoRequest := &models.ProtoStartActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -111,7 +117,7 @@ func (h *ActualLRPLifecycleHandler) StartActualLRP_r0(logger lager.Logger, w htt
 	routable := true
 	if request.RoutableExists() {
 		r := request.GetRoutable()
-		routable = r
+		routable = *r
 	}
 
 	err = h.controller.StartActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, []*models.ActualLRPInternalRoute{}, nil, routable, request.AvailabilityZone)
@@ -123,12 +129,14 @@ func (h *ActualLRPLifecycleHandler) CrashActualLRP(logger lager.Logger, w http.R
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.CrashActualLRPRequest{}
+	var request *models.CrashActualLRPRequest
+	protoRequest := &models.ProtoCrashActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -147,13 +155,15 @@ func (h *ActualLRPLifecycleHandler) FailActualLRP(logger lager.Logger, w http.Re
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.FailActualLRPRequest{}
+	var request *models.FailActualLRPRequest
+	protoRequest := &models.ProtoFailActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -169,13 +179,15 @@ func (h *ActualLRPLifecycleHandler) RemoveActualLRP(logger lager.Logger, w http.
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.RemoveActualLRPRequest{}
+	var request *models.RemoveActualLRPRequest
+	protoRequest := &models.ProtoRemoveActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -189,14 +201,17 @@ func (h *ActualLRPLifecycleHandler) RetireActualLRP(logger lager.Logger, w http.
 	logger = logger.Session("retire-actual-lrp").WithTraceInfo(req)
 	logger.Debug("starting")
 	defer logger.Debug("complete")
-	request := &models.RetireActualLRPRequest{}
+
+	var request *models.RetireActualLRPRequest
+	protoRequest := &models.ProtoRetireActualLRPRequest{}
 	response := &models.ActualLRPLifecycleResponse{}
 
 	var err error
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return

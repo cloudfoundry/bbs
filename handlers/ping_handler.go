@@ -17,5 +17,5 @@ func NewPingHandler() *PingHandler {
 func (h *PingHandler) Ping(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	response := &models.PingResponse{}
 	response.Available = true
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 }

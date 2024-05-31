@@ -61,10 +61,12 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 	var err error
 	logger = logger.Session("desired-lrps").WithTraceInfo(req)
 
-	request := &models.DesiredLRPsRequest{}
+	var request *models.DesiredLRPsRequest
+	protoRequest := &models.ProtoDesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err == nil {
 		filter := models.DesiredLRPFilter{Domain: request.Domain, ProcessGuids: request.ProcessGuids}
 
@@ -81,7 +83,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPs(logger lager.Logger, targetVersion
 	}
 
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 
 }
@@ -98,10 +100,12 @@ func (h *DesiredLRPHandler) commonDesiredLRPByProcessGuid(logger lager.Logger, t
 	var err error
 	logger = logger.Session("desired-lrp-by-process-guid").WithTraceInfo(req)
 
-	request := &models.DesiredLRPByProcessGuidRequest{}
+	var request *models.DesiredLRPByProcessGuidRequest
+	protoRequest := &models.ProtoDesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err == nil {
 		var desiredLRP *models.DesiredLRP
 		desiredLRP, err = h.desiredLRPDB.DesiredLRPByProcessGuid(req.Context(), logger, request.ProcessGuid)
@@ -112,7 +116,7 @@ func (h *DesiredLRPHandler) commonDesiredLRPByProcessGuid(logger lager.Logger, t
 	}
 
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 
 }
@@ -131,10 +135,12 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.DesiredLRPsRequest{}
+	var request *models.DesiredLRPsRequest
+	protoRequest := &models.ProtoDesiredLRPsRequest{}
 	response := &models.DesiredLRPSchedulingInfosResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err == nil {
 		filter := models.DesiredLRPFilter{
 			Domain:       request.Domain,
@@ -144,7 +150,7 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfos(logger lager.Logger, w htt
 	}
 
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
@@ -154,16 +160,18 @@ func (h *DesiredLRPHandler) DesiredLRPSchedulingInfoByProcessGuid(logger lager.L
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.DesiredLRPByProcessGuidRequest{}
+	var request *models.DesiredLRPByProcessGuidRequest
+	protoRequest := &models.ProtoDesiredLRPByProcessGuidRequest{}
 	response := &models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err == nil {
 		response.DesiredLrpSchedulingInfo, err = h.desiredLRPDB.DesiredLRPSchedulingInfoByProcessGuid(req.Context(), logger, request.ProcessGuid)
 	}
 
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
@@ -173,10 +181,12 @@ func (h *DesiredLRPHandler) DesiredLRPRoutingInfos(logger lager.Logger, w http.R
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.DesiredLRPsRequest{}
+	var request *models.DesiredLRPsRequest
+	protoRequest := &models.ProtoDesiredLRPsRequest{}
 	response := &models.DesiredLRPsResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err == nil {
 		filter := models.DesiredLRPFilter{
 			Domain:       request.Domain,
@@ -186,19 +196,21 @@ func (h *DesiredLRPHandler) DesiredLRPRoutingInfos(logger lager.Logger, w http.R
 	}
 
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
 func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("desire-lrp").WithTraceInfo(req)
 
-	request := &models.DesireLRPRequest{}
+	var request *models.DesireLRPRequest
+	protoRequest := &models.ProtoDesireLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -227,12 +239,14 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("update-desired-lrp").WithTraceInfo(req)
 
-	request := &models.UpdateDesiredLRPRequest{}
+	var request *models.UpdateDesiredLRPRequest
+	protoRequest := &models.ProtoUpdateDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -260,13 +274,13 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		logger.Debug("updating-lrp-instances")
 		previousInstanceCount := beforeDesiredLRP.Instances
 
-		requestedInstances := request.Update.GetInstances() - previousInstanceCount
+		requestedInstances := *request.Update.GetInstances() - previousInstanceCount
 
 		logger = logger.WithData(lager.Data{"instances_delta": requestedInstances})
 		if requestedInstances > 0 {
 			logger.Debug("increasing-the-instances")
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-			h.startInstanceRange(trace.ContextWithRequestId(req), logger, previousInstanceCount, request.Update.GetInstances(), &schedulingInfo)
+			h.startInstanceRange(trace.ContextWithRequestId(req), logger, previousInstanceCount, *request.Update.GetInstances(), &schedulingInfo)
 		}
 
 		if requestedInstances < 0 {
@@ -289,12 +303,14 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("remove-desired-lrp").WithTraceInfo(req)
 
-	request := &models.RemoveDesiredLRPRequest{}
+	var request *models.RemoveDesiredLRPRequest
+	protoRequest := &models.ProtoRemoveDesiredLRPRequest{}
 	response := &models.DesiredLRPLifecycleResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
