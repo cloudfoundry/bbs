@@ -61,7 +61,7 @@ func findWithPresence(lrps []*models.ActualLRP, presence models.ActualLRP_Presen
 
 func lookupLRPInSlice(lrps []*models.ActualLRP, key *models.ActualLRPInstanceKey) *models.ActualLRP {
 	for _, lrp := range lrps {
-		if lrp.ActualLRPInstanceKey == *key {
+		if lrp.ActualLrpInstanceKey == *key {
 			return lrp
 		}
 	}
@@ -148,9 +148,9 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context,
 	suspect := findWithPresence(lrps, models.ActualLRP_Suspect)
 
 	if evacuating != nil {
-		err = h.evacuationDB.RemoveEvacuatingActualLRP(ctx, logger, &evacuating.ActualLRPKey, &evacuating.ActualLRPInstanceKey)
+		err = h.evacuationDB.RemoveEvacuatingActualLRP(ctx, logger, &evacuating.ActualLrpKey, &evacuating.ActualLrpInstanceKey)
 		if err != nil {
-			logger.Error("failed-to-remove-evacuating-actual-lrp", err, lager.Data{"instance-guid": evacuating.ActualLRPInstanceKey})
+			logger.Error("failed-to-remove-evacuating-actual-lrp", err, lager.Data{"instance-guid": evacuating.ActualLrpInstanceKey})
 		}
 		newLRPs = eventCalculator.RecordChange(evacuating, nil, newLRPs)
 	}
@@ -189,7 +189,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 		}
 
 		afterLRPs := eventCalculator.RecordChange(suspectLRP, nil, lrps)
-		logger.Info("removing-suspect-lrp", lager.Data{"ig": suspectLRP.InstanceGuid})
+		logger.Info("removing-suspect-lrp", lager.Data{"ig": suspectLRP.ActualLrpInstanceKey.InstanceGuid})
 		go eventCalculator.EmitEvents(traceId, lrps, afterLRPs)
 
 		return nil
@@ -214,9 +214,9 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 	}
 
 	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedInfo, int(actualLRPKey.Index))
-	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
+	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.DesiredLrpKey.ProcessGuid, "index": int(actualLRPKey.Index)})
 	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&startRequest})
-	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
+	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.DesiredLrpKey.ProcessGuid, "index": int(actualLRPKey.Index)})
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
 	}
@@ -305,7 +305,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 	}
 
 	removeLRP := func() error {
-		err = h.db.RemoveActualLRP(ctx, logger, lrp.ProcessGuid, lrp.Index, &lrp.ActualLRPInstanceKey)
+		err = h.db.RemoveActualLRP(ctx, logger, lrp.ActualLrpKey.ProcessGuid, lrp.ActualLrpKey.Index, &lrp.ActualLrpInstanceKey)
 		if err == nil {
 			recordChange()
 		}
@@ -317,7 +317,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 		case models.ActualLRPStateUnclaimed, models.ActualLRPStateCrashed:
 			err = removeLRP()
 		case models.ActualLRPStateClaimed, models.ActualLRPStateRunning:
-			cell, err = h.serviceClient.CellById(logger, lrp.CellId)
+			cell, err = h.serviceClient.CellById(logger, lrp.ActualLrpInstanceKey.CellId)
 			if err != nil {
 				bbsErr := models.ConvertError(err)
 				if bbsErr.Type == models.Error_ResourceNotFound {
@@ -332,7 +332,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 			if err != nil {
 				return err
 			}
-			err = client.StopLRPInstance(logger, lrp.ActualLRPKey, lrp.ActualLRPInstanceKey)
+			err = client.StopLRPInstance(logger, lrp.ActualLrpKey, lrp.ActualLrpInstanceKey)
 		}
 
 		if err == nil {
