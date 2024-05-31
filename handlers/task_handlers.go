@@ -46,13 +46,15 @@ func (h *TaskHandler) commonTasks(logger lager.Logger, targetVersion format.Vers
 	var err error
 	logger = logger.Session("tasks").WithTraceInfo(req)
 
-	request := &models.TasksRequest{}
+	var request *models.TasksRequest
+	protoRequest := &models.ProtoTasksRequest{}
 	response := &models.TasksResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -81,13 +83,15 @@ func (h *TaskHandler) commonTaskByGuid(logger lager.Logger, targetVersion format
 	var err error
 	logger = logger.Session("task-by-guid").WithTraceInfo(req)
 
-	request := &models.TaskByGuidRequest{}
+	var request *models.TaskByGuidRequest
+	protoRequest := &models.ProtoTaskByGuidRequest{}
 	response := &models.TaskResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -116,13 +120,15 @@ func (h *TaskHandler) DesireTask(logger lager.Logger, w http.ResponseWriter, req
 	var err error
 	logger = logger.Session("desire-task").WithTraceInfo(req)
 
-	request := &models.DesireTaskRequest{}
+	var request *models.DesireTaskRequest
+	protoRequest := &models.ProtoDesireTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -137,13 +143,15 @@ func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req 
 	var err error
 	logger = logger.Session("start-task").WithTraceInfo(req)
 
-	request := &models.StartTaskRequest{}
+	var request *models.StartTaskRequest
+	protoRequest := &models.ProtoStartTaskRequest{}
 	response := &models.StartTaskResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -157,13 +165,15 @@ func (h *TaskHandler) StartTask(logger lager.Logger, w http.ResponseWriter, req 
 func (h *TaskHandler) CancelTask(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("cancel-task").WithTraceInfo(req)
 
-	request := &models.TaskGuidRequest{}
+	var request *models.TaskGuidRequest
+	protoRequest := &models.ProtoTaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -179,13 +189,15 @@ func (h *TaskHandler) FailTask(logger lager.Logger, w http.ResponseWriter, req *
 	var err error
 	logger = logger.Session("fail-task").WithTraceInfo(req)
 
-	request := &models.FailTaskRequest{}
+	var request *models.FailTaskRequest
+	protoRequest := &models.ProtoFailTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -200,13 +212,15 @@ func (h *TaskHandler) RejectTask(logger lager.Logger, w http.ResponseWriter, req
 	var err error
 	logger = logger.Session("reject-task").WithTraceInfo(req)
 
-	request := &models.RejectTaskRequest{}
+	var request *models.RejectTaskRequest
+	protoRequest := &models.ProtoRejectTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -221,13 +235,15 @@ func (h *TaskHandler) CompleteTask(logger lager.Logger, w http.ResponseWriter, r
 	var err error
 	logger = logger.Session("complete-task").WithTraceInfo(req)
 
-	request := &models.CompleteTaskRequest{}
+	var request *models.CompleteTaskRequest
+	protoRequest := &models.ProtoCompleteTaskRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		logger.Error("failed-parsing-request", err)
@@ -242,13 +258,15 @@ func (h *TaskHandler) ResolvingTask(logger lager.Logger, w http.ResponseWriter, 
 	var err error
 	logger = logger.Session("resolving-task").WithTraceInfo(req)
 
-	request := &models.TaskGuidRequest{}
+	var request *models.TaskGuidRequest
+	protoRequest := &models.ProtoTaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -263,13 +281,15 @@ func (h *TaskHandler) DeleteTask(logger lager.Logger, w http.ResponseWriter, req
 	var err error
 	logger = logger.Session("delete-task").WithTraceInfo(req)
 
-	request := &models.TaskGuidRequest{}
+	var request *models.TaskGuidRequest
+	protoRequest := &models.ProtoTaskGuidRequest{}
 	response := &models.TaskLifecycleResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer func() { writeResponse(w, response) }()
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)

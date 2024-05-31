@@ -26,15 +26,17 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.ActualLRPsRequest{}
+	var request *models.ActualLRPsRequest
+	protoRequest := &models.ProtoActualLRPsRequest{}
 	response := &models.ActualLRPsResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err == nil {
 		var index *int32
 		if request.IndexExists() {
 			i := request.GetIndex()
-			index = &i
+			index = i
 		}
 		filter := models.ActualLRPFilter{Domain: request.Domain, CellID: request.CellId, Index: index, ProcessGuid: request.ProcessGuid}
 		response.ActualLrps, err = h.db.ActualLRPs(req.Context(), logger, filter)
@@ -42,7 +44,7 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 
 	response.Error = models.ConvertError(err)
 
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
@@ -52,12 +54,14 @@ func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseW
 	logger = logger.Session("actual-lrp-groups").WithTraceInfo(req)
 
 	request := &models.ActualLRPGroupsRequest{}
+	protoRequest := &models.ProtoActualLRPGroupsRequest{}
 	response := &models.ActualLRPGroupsResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
 	if err != nil {
+		request = protoRequest.FromProto()
 		response.Error = models.ConvertError(err)
 		return
 	}
@@ -76,12 +80,14 @@ func (h *ActualLRPHandler) ActualLRPGroupsByProcessGuid(logger lager.Logger, w h
 	var err error
 	logger = logger.Session("actual-lrp-groups-by-process-guid").WithTraceInfo(req)
 
-	request := &models.ActualLRPGroupsByProcessGuidRequest{}
+	var request *models.ActualLRPGroupsByProcessGuidRequest
+	protoRequest := &models.ProtoActualLRPGroupsByProcessGuidRequest{}
 	response := &models.ActualLRPGroupsResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -100,12 +106,14 @@ func (h *ActualLRPHandler) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logg
 	var err error
 	logger = logger.Session("actual-lrp-group-by-process-guid-and-index").WithTraceInfo(req)
 
-	request := &models.ActualLRPGroupByProcessGuidAndIndexRequest{}
+	var request *models.ActualLRPGroupByProcessGuidAndIndexRequest
+	protoRequest := &models.ProtoActualLRPGroupByProcessGuidAndIndexRequest{}
 	response := &models.ActualLRPGroupResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer writeResponse(w, response.ToProto())
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return

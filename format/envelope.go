@@ -2,7 +2,7 @@ package format
 
 import (
 	"code.cloudfoundry.org/lager/v3"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type EnvelopeFormat byte
