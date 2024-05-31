@@ -61,9 +61,9 @@ var _ = Describe("Client", func() {
 			It("populates the request", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				request := models.StartActualLRPRequest{
-					ActualLrpKey:            actualLRP.ActualLrpKey,
-					ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
-					ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
 					MetricTags:              actualLRP.MetricTags,
 					AvailabilityZone:        actualLRP.AvailabilityZone,
@@ -80,7 +80,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -101,9 +101,9 @@ var _ = Describe("Client", func() {
 			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				request := &models.StartActualLRPRequest{
-					ActualLrpKey:            actualLRP.ActualLrpKey,
-					ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
-					ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: nil,
 					MetricTags:              nil,
 					AvailabilityZone:        "",
@@ -123,7 +123,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, *actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, *actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -163,9 +163,9 @@ var _ = Describe("Client", func() {
 			It("populates the request", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				request := &models.EvacuateRunningActualLRPRequest{
-					ActualLrpKey:            actualLRP.ActualLrpKey,
-					ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
-					ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
 					MetricTags:              actualLRP.MetricTags,
 					AvailabilityZone:        actualLRP.AvailabilityZone,
@@ -181,7 +181,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, *actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, *actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 			It("Calls the current endpoint", func() {
@@ -201,9 +201,9 @@ var _ = Describe("Client", func() {
 			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				request := &models.EvacuateRunningActualLRPRequest{
-					ActualLrpKey:            actualLRP.ActualLrpKey,
-					ActualLrpInstanceKey:    actualLRP.ActualLrpInstanceKey,
-					ActualLrpNetInfo:        actualLRP.ActualLrpNetInfo,
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: nil,
 					MetricTags:              nil,
 					Routable:                nil,
@@ -224,7 +224,7 @@ var _ = Describe("Client", func() {
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", actualLRP.ActualLrpKey, actualLRP.ActualLrpInstanceKey, actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
