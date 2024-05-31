@@ -336,8 +336,8 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 			}
 
 			metricTags, err := models.ConvertMetricTags(dereferencedLRPKey.DesiredMetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
-				models.MetricTagDynamicValueIndex:        dereferencedLRPKey.Key.Index,
-				models.MetricTagDynamicValueInstanceGuid: dereferencedLRPKey.InstanceKey.InstanceGuid,
+				models.MetricTagValue_MetricTagDynamicValueIndex:        dereferencedLRPKey.Key.Index,
+				models.MetricTagValue_MetricTagDynamicValueInstanceGuid: dereferencedLRPKey.InstanceKey.InstanceGuid,
 			})
 			if err != nil {
 				logger.Error("convert-metric-tags-failed", err)

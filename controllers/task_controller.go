@@ -107,7 +107,7 @@ func (c *TaskController) CancelTask(ctx context.Context, logger lager.Logger, ta
 	}
 	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if after.CompletionCallbackUrl != "" {
+	if after.TaskDefinition.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
 		go c.taskCompletionClient.Submit(c.db, c.taskHub, after)
 	}
@@ -151,7 +151,7 @@ func (c *TaskController) FailTask(ctx context.Context, logger lager.Logger, task
 
 	go c.taskHub.Emit(models.NewTaskChangedEvent(before, after))
 
-	if after.CompletionCallbackUrl != "" {
+	if after.TaskDefinition.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
 		go c.taskCompletionClient.Submit(c.db, c.taskHub, after)
 	}
@@ -209,7 +209,7 @@ func (c *TaskController) CompleteTask(
 		c.taskStatMetronNotifier.RecordTaskSucceeded(cellID)
 	}
 
-	if after.CompletionCallbackUrl != "" {
+	if after.TaskDefinition.CompletionCallbackUrl != "" {
 		logger.Info("task-client-completing-task")
 		go c.taskCompletionClient.Submit(c.db, c.taskHub, after)
 	}
