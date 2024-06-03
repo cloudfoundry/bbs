@@ -3,9 +3,9 @@ package format_test
 import (
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
 
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
@@ -45,17 +45,17 @@ var _ = Describe("Format", func() {
 	Describe("Marshal", func() {
 		Describe("ENCRYPTED_PROTO", func() {
 			It("marshals the data as protobuf with an base64 encoded ciphertext envelope", func() {
-				encoded, err := serializer.Marshal(logger, task)
+				encoded, err := serializer.Marshal(logger, task.ToProto())
 				Expect(err).NotTo(HaveOccurred())
 
 				unencoded, err := encoder.Decode(encoded)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(unencoded[0]).To(BeEquivalentTo(format.PROTO))
-				var actualTask models.Task
+				var actualTask models.ProtoTask
 				err = proto.Unmarshal(unencoded[2:], &actualTask)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualTask).To(Equal(*task))
+				Expect(*actualTask.FromProto()).To(Equal(*task))
 			})
 		})
 	})
@@ -63,13 +63,13 @@ var _ = Describe("Format", func() {
 	Describe("Unmarshal", func() {
 		Describe("ENCRYPTED_PROTO", func() {
 			It("unmarshals the protobuf data from a base64 encoded ciphertext envelope", func() {
-				payload, err := serializer.Marshal(logger, task)
+				payload, err := serializer.Marshal(logger, task.ToProto())
 				Expect(err).NotTo(HaveOccurred())
 
-				var decodedTask models.Task
+				var decodedTask models.ProtoTask
 				err = serializer.Unmarshal(logger, payload, &decodedTask)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(*task).To(Equal(decodedTask))
+				Expect(*task).To(Equal(*decodedTask.FromProto()))
 			})
 		})
 	})
