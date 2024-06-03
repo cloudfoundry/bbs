@@ -358,7 +358,7 @@ var _ = Describe("EventSource", func() {
 
 					taskRemovedEvent, ok := event.(*models.TaskRemovedEvent)
 					Expect(ok).To(BeTrue())
-					Expect(taskRemovedEvent).To(Equal(expectedEvent.ToProto()))
+					Expect(taskRemovedEvent).To(Equal(expectedEvent))
 				})
 			})
 		})
