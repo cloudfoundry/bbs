@@ -15,7 +15,8 @@ func (db *SQLDB) DesireTask(ctx context.Context, logger lager.Logger, taskDef *m
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	taskDefData, err := db.serializeModel(logger, taskDef)
+	protoTaskDef := taskDef.ToProto()
+	taskDefData, err := db.serializeModel(logger, protoTaskDef)
 	if err != nil {
 		logger.Error("failed-serializing-task-definition", err)
 		return nil, err
@@ -538,7 +539,9 @@ func (db *SQLDB) fetchTaskInternal(logger lager.Logger, scanner helpers.RowScann
 	}
 
 	var taskDef models.TaskDefinition
-	err = db.deserializeModel(logger, taskDefData, &taskDef)
+	var protoTaskDef models.ProtoTaskDefinition
+	err = db.deserializeModel(logger, taskDefData, &protoTaskDef)
+	taskDef = *protoTaskDef.FromProto()
 	if err != nil {
 		return nil, guid, models.ErrDeserialize
 	}

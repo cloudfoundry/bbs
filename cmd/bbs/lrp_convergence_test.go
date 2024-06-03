@@ -186,7 +186,7 @@ var _ = Describe("Convergence API", func() {
 							group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 							Expect(err).NotTo(HaveOccurred())
 							lrp = group.Instance
-							return lrp.InstanceGuid
+							return lrp.ActualLrpInstanceKey.InstanceGuid
 						}).Should(Equal("ig-2"))
 						Expect(lrp.Presence).To(Equal(models.ActualLRP_Ordinary))
 					})
@@ -196,7 +196,7 @@ var _ = Describe("Convergence API", func() {
 						var changedEvent *models.ActualLRPInstanceChangedEvent
 						Eventually(eventCh).Should(Receive(&changedEvent))
 
-						Expect(changedEvent.ActualLRPInstanceKey.InstanceGuid).To(Equal("ig-1"))
+						Expect(changedEvent.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
 						Expect(changedEvent.Before.State).To(Equal(models.ActualLRPStateRunning))
 						Expect(changedEvent.Before.Presence).To(Equal(models.ActualLRP_Ordinary))
 						Expect(changedEvent.After.State).To(Equal(models.ActualLRPStateRunning))
@@ -205,8 +205,8 @@ var _ = Describe("Convergence API", func() {
 						var createdEvent *models.ActualLRPInstanceCreatedEvent
 						Eventually(eventCh).Should(Receive(&createdEvent))
 
-						Expect(createdEvent.ActualLrp.Index).To(Equal(changedEvent.ActualLRPKey.Index))
-						Expect(createdEvent.ActualLrp.InstanceGuid).To(Equal(""))
+						Expect(createdEvent.ActualLrp.ActualLrpKey.Index).To(Equal(changedEvent.ActualLrpKey.Index))
+						Expect(createdEvent.ActualLrp.ActualLrpInstanceKey.InstanceGuid).To(Equal(""))
 						Expect(createdEvent.ActualLrp.Presence).To(Equal(models.ActualLRP_Ordinary))
 						Expect(createdEvent.ActualLrp.State).To(Equal(models.ActualLRPStateUnclaimed))
 					})
@@ -265,7 +265,7 @@ var _ = Describe("Convergence API", func() {
 						var e *models.ActualLRPInstanceChangedEvent
 
 						Eventually(eventCh).Should(Receive(&e))
-						Expect(e.ActualLRPInstanceKey.InstanceGuid).To(Equal("ig-2"))
+						Expect(e.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-2"))
 						Expect(e.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 						Expect(e.Before.Presence).To(Equal(models.ActualLRP_Ordinary))
 						Expect(e.After.State).To(Equal(models.ActualLRPStateClaimed))
@@ -327,7 +327,7 @@ var _ = Describe("Convergence API", func() {
 							eventCh := streamEvents(events)
 							var e *models.ActualLRPInstanceChangedEvent
 							Eventually(eventCh, 5*time.Second).Should(Receive(&e))
-							Expect(e.ProcessGuid).To(Equal("some-process-guid"))
+							Expect(e.ActualLrpKey.ProcessGuid).To(Equal("some-process-guid"))
 							Expect(e.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 							Expect(e.Before.Presence).To(Equal(models.ActualLRP_Ordinary))
 							Expect(e.After.State).To(Equal(models.ActualLRPStateUnclaimed))
@@ -353,7 +353,7 @@ var _ = Describe("Convergence API", func() {
 							eventCh := streamEvents(events)
 							var e *models.ActualLRPInstanceChangedEvent
 							Eventually(eventCh, 5*time.Second).Should(Receive(&e))
-							Expect(e.ActualLRPInstanceKey.InstanceGuid).To(Equal("ig-2"))
+							Expect(e.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-2"))
 							Expect(e.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 							Expect(e.After.State).To(Equal(models.ActualLRPStateClaimed))
 						})
@@ -385,7 +385,7 @@ var _ = Describe("Convergence API", func() {
 							var e *models.ActualLRPInstanceChangedEvent
 
 							Eventually(eventCh).Should(Receive(&e))
-							Expect(e.ActualLRPInstanceKey.InstanceGuid).To(Equal("ig-2"))
+							Expect(e.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-2"))
 							Expect(e.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 							Expect(e.After.State).To(Equal(models.ActualLRPStateRunning))
 						})
@@ -396,7 +396,7 @@ var _ = Describe("Convergence API", func() {
 							var e *models.ActualLRPInstanceRemovedEvent
 
 							Eventually(eventCh, 2*time.Second).Should(Receive(&e))
-							Expect(e.ActualLrp.InstanceGuid).To(Equal("ig-1"))
+							Expect(e.ActualLrp.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
 							Expect(e.ActualLrp.Presence).To(Equal(models.ActualLRP_Suspect))
 						})
 
@@ -466,7 +466,7 @@ var _ = Describe("Convergence API", func() {
 								var e *models.ActualLRPInstanceRemovedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&e))
-								Expect(e.ActualLrp.InstanceGuid).To(Equal("ig-1"))
+								Expect(e.ActualLrp.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
 								Expect(e.ActualLrp.Presence).To(Equal(models.ActualLRP_Suspect))
 							})
 
@@ -511,7 +511,7 @@ var _ = Describe("Convergence API", func() {
 								group, err := client.ActualLRPGroupByProcessGuidAndIndex(logger, "some-trace-id", processGuid, 0)
 								Expect(err).NotTo(HaveOccurred())
 								Expect(group.Evacuating.Presence).To(Equal(models.ActualLRP_Evacuating))
-								Expect(group.Evacuating.ActualLRPInstanceKey).To(Equal(*suspectLRPInstanceKey))
+								Expect(group.Evacuating.ActualLrpInstanceKey).To(Equal(*suspectLRPInstanceKey))
 							})
 
 							It("removes the suspect LRP", func() {
@@ -526,7 +526,7 @@ var _ = Describe("Convergence API", func() {
 								var ce *models.ActualLRPInstanceChangedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&ce))
-								Expect(ce.ActualLRPInstanceKey.InstanceGuid).To(Equal("ig-2"))
+								Expect(ce.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-2"))
 								Expect(ce.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 								Expect(ce.After.State).To(Equal(models.ActualLRPStateClaimed))
 								Expect(ce.Before.Presence).To(Equal(models.ActualLRP_Ordinary))
@@ -535,7 +535,7 @@ var _ = Describe("Convergence API", func() {
 								var ce2 *models.ActualLRPInstanceChangedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&ce2))
-								Expect(ce2.ActualLRPInstanceKey.InstanceGuid).To(Equal("ig-1"))
+								Expect(ce2.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
 								Expect(ce2.Before.State).To(Equal(models.ActualLRPStateRunning))
 								Expect(ce2.After.State).To(Equal(models.ActualLRPStateRunning))
 								Expect(ce2.Before.Presence).To(Equal(models.ActualLRP_Suspect))
@@ -575,7 +575,7 @@ var _ = Describe("Convergence API", func() {
 
 								var e *models.ActualLRPInstanceRemovedEvent
 								Eventually(eventCh).Should(Receive(&e))
-								Expect(e.ActualLrp.ActualLRPInstanceKey).ToNot(Equal(replacementLRPInstanceKey))
+								Expect(e.ActualLrp.ActualLrpInstanceKey).ToNot(Equal(replacementLRPInstanceKey))
 							})
 						})
 
@@ -597,7 +597,7 @@ var _ = Describe("Convergence API", func() {
 								var re *models.ActualLRPInstanceRemovedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
-								Expect(re.ActualLrp.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrp.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
 								Expect(re.ActualLrp.Presence).To(Equal(models.ActualLRP_Suspect))
 							})
 						})
@@ -620,7 +620,7 @@ var _ = Describe("Convergence API", func() {
 								var re *models.ActualLRPInstanceRemovedEvent
 
 								Eventually(eventCh, 2*time.Second).Should(Receive(&re))
-								Expect(re.ActualLrp.InstanceGuid).To(Equal("ig-1"))
+								Expect(re.ActualLrp.ActualLrpInstanceKey.InstanceGuid).To(Equal("ig-1"))
 								Expect(re.ActualLrp.Presence).To(Equal(models.ActualLRP_Suspect))
 							})
 						})

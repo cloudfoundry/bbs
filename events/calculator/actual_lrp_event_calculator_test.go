@@ -232,7 +232,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				Context("from UNCLAIMED", func() {
 					BeforeEach(func() {
 						originalLRP.State = models.ActualLRPStateUnclaimed
-						originalLRP.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+						originalLRP.ActualLrpInstanceKey = models.ActualLRPInstanceKey{}
 					})
 
 					It("emits an ActualLRPChanged event", func() {
@@ -407,7 +407,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 				suspectLRP.Presence = models.ActualLRP_Suspect
 
 				replacementLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)
-				replacementLRP.ActualLRPInstanceKey = models.NewActualLRPInstanceKey(
+				replacementLRP.ActualLrpInstanceKey = models.NewActualLRPInstanceKey(
 					"replacement",
 					"replacement-cell",
 				)
@@ -476,7 +476,7 @@ var _ = Describe("ActualLrpEventCalculator", func() {
 
 			BeforeEach(func() {
 				unclaimedLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)
-				unclaimedLRP.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+				unclaimedLRP.ActualLrpInstanceKey = models.ActualLRPInstanceKey{}
 				unclaimedLRP.State = models.ActualLRPStateUnclaimed
 
 				originalLRP = model_helpers.NewValidActualLRP("some-guid-1", 0)

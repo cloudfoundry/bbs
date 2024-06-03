@@ -31,7 +31,8 @@ func (db *SQLDB) DesireLRP(ctx context.Context, logger lager.Logger, desiredLRP 
 
 		runInfo := desiredLRP.DesiredLRPRunInfo(db.clock.Now())
 
-		runInfoData, err := db.serializeModel(logger, &runInfo)
+		protoRunInfo := runInfo.ToProto()
+		runInfoData, err := db.serializeModel(logger, protoRunInfo)
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
 			return err
@@ -43,7 +44,8 @@ func (db *SQLDB) DesireLRP(ctx context.Context, logger lager.Logger, desiredLRP 
 			volumePlacement.DriverNames = append(volumePlacement.DriverNames, mount.Driver)
 		}
 
-		volumePlacementData, err := db.serializeModel(logger, volumePlacement)
+		protoVolumePlacement := volumePlacement.ToProto()
+		volumePlacementData, err := db.serializeModel(logger, protoVolumePlacement)
 		if err != nil {
 			logger.Error("failed-to-serialize-model", err)
 			return err
@@ -393,15 +395,15 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	schedulingInfo := &models.DesiredLRPSchedulingInfo{}
 	var routeData, volumePlacementData, placementTagData []byte
 	values := []interface{}{
-		&schedulingInfo.ProcessGuid,
-		&schedulingInfo.Domain,
-		&schedulingInfo.LogGuid,
+		&schedulingInfo.DesiredLrpKey.ProcessGuid,
+		&schedulingInfo.DesiredLrpKey.Domain,
+		&schedulingInfo.DesiredLrpKey.LogGuid,
 		&schedulingInfo.Annotation,
 		&schedulingInfo.Instances,
-		&schedulingInfo.MemoryMb,
-		&schedulingInfo.DiskMb,
-		&schedulingInfo.MaxPids,
-		&schedulingInfo.RootFs,
+		&schedulingInfo.DesiredLrpResource.MemoryMb,
+		&schedulingInfo.DesiredLrpResource.DiskMb,
+		&schedulingInfo.DesiredLrpResource.MaxPids,
+		&schedulingInfo.DesiredLrpResource.RootFs,
 		&routeData,
 		&volumePlacementData,
 		&schedulingInfo.ModificationTag.Epoch,
@@ -434,11 +436,13 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 	schedulingInfo.Routes = routes
 
 	var volumePlacement models.VolumePlacement
-	err = db.deserializeModel(logger, volumePlacementData, &volumePlacement)
+	var protoVolumePlacement models.ProtoVolumePlacement
+	err = db.deserializeModel(logger, volumePlacementData, &protoVolumePlacement)
 	if err != nil {
 		logger.Error("failed-parsing-volume-placement", err)
 		return nil, err
 	}
+	volumePlacement = *protoVolumePlacement.FromProto()
 	schedulingInfo.VolumePlacement = &volumePlacement
 	if placementTagData != nil {
 		err = json.Unmarshal(placementTagData, &schedulingInfo.PlacementTags)
@@ -489,18 +493,29 @@ func (db *SQLDB) fetchDesiredLRPRoutingInfo(logger lager.Logger, scanner helpers
 	}
 	routingInfo.Routes = &routes
 
+<<<<<<< HEAD
 	var metricTags map[string]*models.MetricTagValue
 	decodedDesiredData, err := db.encoder.Decode(metricTagsData)
+=======
+	var runInfo models.DesiredLRPRunInfo
+	var protoRunInfo models.ProtoDesiredLRPRunInfo
+	err = db.deserializeModel(logger, runInfoData, &protoRunInfo)
+>>>>>>> 0576c2d9 (Struct and naming changes due to new protobuf)
 	if err != nil {
 		logger.Error("failed-decrypting-metric-tags", err)
 		return nil, err
 	}
+<<<<<<< HEAD
 	err = json.Unmarshal(decodedDesiredData, &metricTags)
 	if err != nil {
 		logger.Error("failed-parsing-metric-tags", err)
 		return nil, err
 	}
 	routingInfo.MetricTags = metricTags
+=======
+	runInfo = *protoRunInfo.FromProto()
+	routingInfo.MetricTags = runInfo.MetricTags
+>>>>>>> 0576c2d9 (Struct and naming changes due to new protobuf)
 	routingInfo.ModificationTag = &models.ModificationTag{Epoch: modificationTagEpoch, Index: modificationTagIndex}
 
 	return routingInfo, nil
@@ -567,10 +582,12 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	}
 
 	var runInfo models.DesiredLRPRunInfo
-	err = db.deserializeModel(logger, runInfoData, &runInfo)
+	var protoRunInfo models.ProtoDesiredLRPRunInfo
+	err = db.deserializeModel(logger, runInfoData, &protoRunInfo)
 	if err != nil {
-		return nil, schedulingInfo.ProcessGuid, models.ErrDeserialize
+		return nil, schedulingInfo.DesiredLrpKey.ProcessGuid, models.ErrDeserialize
 	}
+	runInfo = *protoRunInfo.FromProto()
 	// dedup the ports
 	runInfo.Ports = dedupSlice(runInfo.Ports)
 
