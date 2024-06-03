@@ -143,28 +143,34 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 	switch rawEvent.Name {
 	case models.EventTypeDesiredLRPCreated:
 		event := new(models.DesiredLRPCreatedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoDesiredLRPCreatedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeDesiredLRPChanged:
 		event := new(models.DesiredLRPChangedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoDesiredLRPChangedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeDesiredLRPRemoved:
 		event := new(models.DesiredLRPRemovedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoDesiredLRPRemovedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
@@ -172,10 +178,12 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 	case models.EventTypeActualLRPCreated:
 		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		event := new(models.ActualLRPCreatedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoActualLRPCreatedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
@@ -183,10 +191,12 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 	case models.EventTypeActualLRPChanged:
 		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		event := new(models.ActualLRPChangedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoActualLRPChangedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
@@ -194,73 +204,89 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 	case models.EventTypeActualLRPRemoved:
 		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		event := new(models.ActualLRPRemovedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoActualLRPRemovedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeActualLRPCrashed:
 		event := new(models.ActualLRPCrashedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoActualLRPCrashedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeTaskCreated:
 		event := new(models.TaskCreatedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoTaskCreatedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeTaskChanged:
 		event := new(models.TaskChangedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoTaskChangedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeTaskRemoved:
 		event := new(models.TaskRemovedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoTaskRemovedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeActualLRPInstanceCreated:
 		event := new(models.ActualLRPInstanceCreatedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoActualLRPInstanceCreatedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeActualLRPInstanceChanged:
 		event := new(models.ActualLRPInstanceChangedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoActualLRPInstanceChangedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 
 	case models.EventTypeActualLRPInstanceRemoved:
 		event := new(models.ActualLRPInstanceRemovedEvent)
-		err := proto.Unmarshal(data, event.ToEventProto())
+		protoEvent := new(models.ProtoActualLRPInstanceRemovedEvent)
+		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
 			return nil, NewInvalidPayloadError(rawEvent.Name, err)
 		}
+		event = protoEvent.FromProto()
 
 		return event, nil
 	}
