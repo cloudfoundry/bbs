@@ -202,7 +202,7 @@ var _ = Describe("DesiredLRP API", func() {
 
 		JustBeforeEach(func() {
 			expectedSchedulingInfo = desiredLRPs["domain-1"][0].DesiredLRPSchedulingInfo()
-			schedulingInfoByProcessGuid, getErr = client.DesiredLRPSchedulingInfoByProcessGuid(logger, "some-trace-id", expectedSchedulingInfo.GetProcessGuid())
+			schedulingInfoByProcessGuid, getErr = client.DesiredLRPSchedulingInfoByProcessGuid(logger, "some-trace-id", expectedSchedulingInfo.DesiredLrpKey.GetProcessGuid())
 			schedulingInfoByProcessGuid.ModificationTag.Epoch = "epoch"
 		})
 
@@ -362,7 +362,8 @@ var _ = Describe("DesiredLRP API", func() {
 			err := client.DesireLRP(logger, "some-trace-id", desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			update := &models.DesiredLRPUpdate{}
-			update.SetInstances(3)
+			instances := int32(3)
+			update.SetInstances(&instances)
 			updateErr = client.UpdateDesiredLRP(logger, "some-trace-id", "super-lrp", update)
 		})
 
