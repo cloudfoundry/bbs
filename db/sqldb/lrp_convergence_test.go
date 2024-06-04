@@ -703,7 +703,7 @@ var _ = Describe("LRPConvergence", func() {
 				expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
 				Expect(actualLRPs).To(HaveLen(1))
 				Expect(keysWithMissingCells).To(ContainElement(&models.ActualLRPKeyWithSchedulingInfo{
-					Key:            &actualLRPs[0].ActualLRPKey,
+					Key:            &actualLRPs[0].ActualLrpKey,
 					SchedulingInfo: &expectedSched,
 				}))
 				Expect(missingCellIds).To(Equal([]string{"other-cell"}))
@@ -742,7 +742,7 @@ var _ = Describe("LRPConvergence", func() {
 				expectedSched := desiredLRP.DesiredLRPSchedulingInfo()
 				Expect(actualLRPs).To(HaveLen(1))
 				Expect(keysWithMissingCells).To(ContainElement(&models.ActualLRPKeyWithSchedulingInfo{
-					Key:            &actualLRPs[0].ActualLRPKey,
+					Key:            &actualLRPs[0].ActualLrpKey,
 					SchedulingInfo: &expectedSched,
 				}))
 			})
