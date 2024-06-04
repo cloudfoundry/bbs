@@ -167,6 +167,7 @@ var _ = Describe("SecurityGroupRule", func() {
 						Expect(validationErr).To(MatchError(ContainSubstring("destination")))
 					})
 				})
+
 			})
 		}
 
@@ -255,6 +256,16 @@ var _ = Describe("SecurityGroupRule", func() {
 			Context("when its a CIDR", func() {
 				BeforeEach(func() {
 					destination = "8.8.8.8/16"
+				})
+
+				It("passes validation and does not return an error", func() {
+					Expect(validationErr).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when it's a comma-delimited list of ips", func() {
+				BeforeEach(func() {
+					destination = "1.2.3.4,5.6.7.8"
 				})
 
 				It("passes validation and does not return an error", func() {
