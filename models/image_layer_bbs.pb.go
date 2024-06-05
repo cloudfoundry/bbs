@@ -15,7 +15,8 @@ type ImageLayer_DigestAlgorithm int32
 const (
 	ImageLayer_DigestAlgorithmInvalid ImageLayer_DigestAlgorithm = 0
 	ImageLayer_DigestAlgorithmSha256  ImageLayer_DigestAlgorithm = 1
-	ImageLayer_DigestAlgorithmSha512  ImageLayer_DigestAlgorithm = 2
+	// Deprecated: marked deprecated in proto file
+	ImageLayer_DigestAlgorithmSha512 ImageLayer_DigestAlgorithm = 2
 )
 
 // Enum value maps for ImageLayer_DigestAlgorithm

@@ -444,6 +444,7 @@ func StartTaskResponseFromProtoSlice(values []*ProtoStartTaskResponse) []*StartT
 	return result
 }
 
+// Deprecated: marked deprecated in task_requests.proto
 // Prevent copylock errors when using ProtoFailTaskRequest directly
 type FailTaskRequest struct {
 	TaskGuid      string `json:"task_guid"`

@@ -6,6 +6,7 @@
 
 package models
 
+// Deprecated: marked deprecated in events.proto
 // Prevent copylock errors when using ProtoActualLRPCreatedEvent directly
 type ActualLRPCreatedEvent struct {
 	ActualLrpGroup *ActualLRPGroup `json:"actual_lrp_group,omitempty"`
@@ -97,6 +98,7 @@ func ActualLRPCreatedEventFromProtoSlice(values []*ProtoActualLRPCreatedEvent) [
 	return result
 }
 
+// Deprecated: marked deprecated in events.proto
 // Prevent copylock errors when using ProtoActualLRPChangedEvent directly
 type ActualLRPChangedEvent struct {
 	Before *ActualLRPGroup `json:"before,omitempty"`
@@ -209,6 +211,7 @@ func ActualLRPChangedEventFromProtoSlice(values []*ProtoActualLRPChangedEvent) [
 	return result
 }
 
+// Deprecated: marked deprecated in events.proto
 // Prevent copylock errors when using ProtoActualLRPRemovedEvent directly
 type ActualLRPRemovedEvent struct {
 	ActualLrpGroup *ActualLRPGroup `json:"actual_lrp_group,omitempty"`

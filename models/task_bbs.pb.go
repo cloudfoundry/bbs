@@ -12,21 +12,22 @@ import (
 
 // Prevent copylock errors when using ProtoTaskDefinition directly
 type TaskDefinition struct {
-	RootFs                        string                     `json:"rootfs"`
-	EnvironmentVariables          []*EnvironmentVariable     `json:"env,omitempty"`
-	Action                        *Action                    `json:"action,omitempty"`
-	DiskMb                        int32                      `json:"disk_mb"`
-	MemoryMb                      int32                      `json:"memory_mb"`
-	CpuWeight                     uint32                     `json:"cpu_weight"`
-	Privileged                    bool                       `json:"privileged"`
-	LogSource                     string                     `json:"log_source"`
-	LogGuid                       string                     `json:"log_guid"`
-	MetricsGuid                   string                     `json:"metrics_guid"`
-	ResultFile                    string                     `json:"result_file"`
-	CompletionCallbackUrl         string                     `json:"completion_callback_url,omitempty"`
-	Annotation                    string                     `json:"annotation,omitempty"`
-	EgressRules                   []*SecurityGroupRule       `json:"egress_rules,omitempty"`
-	CachedDependencies            []*CachedDependency        `json:"cached_dependencies,omitempty"`
+	RootFs                string                 `json:"rootfs"`
+	EnvironmentVariables  []*EnvironmentVariable `json:"env,omitempty"`
+	Action                *Action                `json:"action,omitempty"`
+	DiskMb                int32                  `json:"disk_mb"`
+	MemoryMb              int32                  `json:"memory_mb"`
+	CpuWeight             uint32                 `json:"cpu_weight"`
+	Privileged            bool                   `json:"privileged"`
+	LogSource             string                 `json:"log_source"`
+	LogGuid               string                 `json:"log_guid"`
+	MetricsGuid           string                 `json:"metrics_guid"`
+	ResultFile            string                 `json:"result_file"`
+	CompletionCallbackUrl string                 `json:"completion_callback_url,omitempty"`
+	Annotation            string                 `json:"annotation,omitempty"`
+	EgressRules           []*SecurityGroupRule   `json:"egress_rules,omitempty"`
+	CachedDependencies    []*CachedDependency    `json:"cached_dependencies,omitempty"`
+	// Deprecated: marked deprecated in task.proto
 	LegacyDownloadUser            string                     `json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                     `json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount             `json:"volume_mounts,omitempty"`
@@ -413,7 +414,7 @@ func (m *TaskDefinition) SetCachedDependencies(value []*CachedDependency) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in task.proto
 func (m *TaskDefinition) GetLegacyDownloadUser() string {
 	if m != nil {
 		return m.LegacyDownloadUser
@@ -422,6 +423,8 @@ func (m *TaskDefinition) GetLegacyDownloadUser() string {
 	defaultValue = ""
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in task.proto
 func (m *TaskDefinition) SetLegacyDownloadUser(value string) {
 	if m != nil {
 		m.LegacyDownloadUser = value

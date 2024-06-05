@@ -10,6 +10,7 @@ import (
 	strconv "strconv"
 )
 
+// Deprecated: marked deprecated in actual_lrp.proto
 // Prevent copylock errors when using ProtoActualLRPGroup directly
 type ActualLRPGroup struct {
 	Instance   *ActualLRP `json:"instance,omitempty"`
