@@ -59,13 +59,34 @@ func isAlwaysEmit(field *protogen.Field) bool {
 	return isAlwaysEmit.(bool)
 }
 
+func isMessageDeprecated(msg *protogen.Message) bool {
+	options := msg.Desc.Options().(*descriptorpb.MessageOptions)
+	return options.GetDeprecated()
+}
+
+func isFieldDeprecated(field *protogen.Field) bool {
+	options := field.Desc.Options().(*descriptorpb.FieldOptions)
+	return options.GetDeprecated()
+}
+
+func isEnumValueDeprecated(enumValue *protogen.EnumValue) bool {
+	options := enumValue.Desc.Options().(*descriptorpb.EnumValueOptions)
+	return options.GetDeprecated()
+}
+
 func (bbsGenerateHelper) genCopysafeStruct(g *protogen.GeneratedFile, msg *protogen.Message) {
 	if copysafeName, ok := getCopysafeName(g, msg.GoIdent); ok {
+		if isMessageDeprecated(msg) {
+			g.P("// Deprecated: marked deprecated in ", msg.Location.SourceFile)
+		}
 		g.P("// Prevent copylock errors when using ", msg.GoIdent.GoName, " directly")
 		g.P("type ", copysafeName, " struct {")
 		for _, field := range msg.Fields {
-			options := field.Desc.Options().(*descriptorpb.FieldOptions)
+			if isFieldDeprecated(field) {
+				g.P("// Deprecated: marked deprecated in ", msg.Location.SourceFile)
+			}
 			if *debug {
+				options := field.Desc.Options().(*descriptorpb.FieldOptions)
 				log.Printf("New Field Detected: %+v\n\n", field)
 				log.Printf("Field Options: %+v\n\n", options)
 			}
@@ -186,17 +207,21 @@ func (bbsGenerateHelper) genAccessors(g *protogen.GeneratedFile, msg *protogen.M
 		for _, field := range msg.Fields {
 			fieldName := getFieldName(field.GoName)
 			fieldType := getActualType(g, field)
-			options := field.Desc.Options().(*descriptorpb.FieldOptions)
+			deprecated := isFieldDeprecated(field)
 
 			if *debug {
 				log.Printf("Generating accessors for %s...\n", fieldName)
 			}
 
-			if options.GetDeprecated() {
-				g.P("// DEPRECATED: DO NOT USE")
-			}
 			if !isByValueType(field) {
-				genGetter(g, copysafeName, field) //fieldName, fieldType, defaultValue)
+				if deprecated {
+					g.P("// Deprecated: marked deprecated in ", msg.Location.SourceFile)
+				}
+				genGetter(g, copysafeName, field)
+			}
+
+			if deprecated {
+				g.P("// Deprecated: marked deprecated in ", msg.Location.SourceFile)
 			}
 			genSetter(g, copysafeName, fieldName, fieldType)
 		}
@@ -213,7 +238,7 @@ func genExists(g *protogen.GeneratedFile, copysafeName string, field *protogen.F
 	g.P("}")
 }
 
-func genGetter(g *protogen.GeneratedFile, copysafeName string, field *protogen.Field) { //fieldName string, fieldType string, defaultValue string) {
+func genGetter(g *protogen.GeneratedFile, copysafeName string, field *protogen.Field) {
 	if *debug {
 		log.Print("Getter...")
 	}
@@ -373,6 +398,9 @@ func genEnumTypeWithValues(g *protogen.GeneratedFile, msg *protogen.Message, eNu
 	g.P("type ", copysafeName, " int32")
 	g.P("const (")
 	for _, enumValue := range eNuM.Values {
+		if isEnumValueDeprecated(enumValue) {
+			g.P("// Deprecated: marked deprecated in proto file")
+		}
 		enumValueName := getEnumValueName(g, msg, enumValue)
 		actualValue := enumValue.Desc.Number()
 

@@ -97,6 +97,7 @@ func ActualLRPLifecycleResponseFromProtoSlice(values []*ProtoActualLRPLifecycleR
 	return result
 }
 
+// Deprecated: marked deprecated in actual_lrp_requests.proto
 // Prevent copylock errors when using ProtoActualLRPGroupsResponse directly
 type ActualLRPGroupsResponse struct {
 	Error           *Error            `json:"error,omitempty"`
@@ -214,6 +215,7 @@ func ActualLRPGroupsResponseFromProtoSlice(values []*ProtoActualLRPGroupsRespons
 	return result
 }
 
+// Deprecated: marked deprecated in actual_lrp_requests.proto
 // Prevent copylock errors when using ProtoActualLRPGroupResponse directly
 type ActualLRPGroupResponse struct {
 	Error          *Error          `json:"error,omitempty"`
@@ -326,6 +328,7 @@ func ActualLRPGroupResponseFromProtoSlice(values []*ProtoActualLRPGroupResponse)
 	return result
 }
 
+// Deprecated: marked deprecated in actual_lrp_requests.proto
 // Prevent copylock errors when using ProtoActualLRPGroupsRequest directly
 type ActualLRPGroupsRequest struct {
 	Domain string `json:"domain"`
@@ -434,6 +437,7 @@ func ActualLRPGroupsRequestFromProtoSlice(values []*ProtoActualLRPGroupsRequest)
 	return result
 }
 
+// Deprecated: marked deprecated in actual_lrp_requests.proto
 // Prevent copylock errors when using ProtoActualLRPGroupsByProcessGuidRequest directly
 type ActualLRPGroupsByProcessGuidRequest struct {
 	ProcessGuid string `json:"process_guid"`
@@ -523,6 +527,7 @@ func ActualLRPGroupsByProcessGuidRequestFromProtoSlice(values []*ProtoActualLRPG
 	return result
 }
 
+// Deprecated: marked deprecated in actual_lrp_requests.proto
 // Prevent copylock errors when using ProtoActualLRPGroupByProcessGuidAndIndexRequest directly
 type ActualLRPGroupByProcessGuidAndIndexRequest struct {
 	ProcessGuid string `json:"process_guid"`

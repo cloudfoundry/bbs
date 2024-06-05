@@ -892,10 +892,11 @@ func RunActionFromProtoSlice(values []*ProtoRunAction) []*RunAction {
 
 // Prevent copylock errors when using ProtoTimeoutAction directly
 type TimeoutAction struct {
-	Action              *Action `json:"action,omitempty"`
-	DeprecatedTimeoutNs int64   `json:"timeout,omitempty"`
-	LogSource           string  `json:"log_source,omitempty"`
-	TimeoutMs           int64   `json:"timeout_ms"`
+	Action *Action `json:"action,omitempty"`
+	// Deprecated: marked deprecated in actions.proto
+	DeprecatedTimeoutNs int64  `json:"timeout,omitempty"`
+	LogSource           string `json:"log_source,omitempty"`
+	TimeoutMs           int64  `json:"timeout_ms"`
 }
 
 func (this *TimeoutAction) Equal(that interface{}) bool {
@@ -950,7 +951,7 @@ func (m *TimeoutAction) SetAction(value *Action) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in actions.proto
 func (m *TimeoutAction) GetDeprecatedTimeoutNs() int64 {
 	if m != nil {
 		return m.DeprecatedTimeoutNs
@@ -959,6 +960,8 @@ func (m *TimeoutAction) GetDeprecatedTimeoutNs() int64 {
 	defaultValue = 0
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in actions.proto
 func (m *TimeoutAction) SetDeprecatedTimeoutNs(value int64) {
 	if m != nil {
 		m.DeprecatedTimeoutNs = value
@@ -1665,7 +1668,8 @@ func CodependentActionFromProtoSlice(values []*ProtoCodependentAction) []*Codepe
 // Prevent copylock errors when using ProtoResourceLimits directly
 type ResourceLimits struct {
 	Nofile *uint64 `json:"nofile,omitempty"`
-	Nproc  *uint64 `json:"nproc,omitempty"`
+	// Deprecated: marked deprecated in actions.proto
+	Nproc *uint64 `json:"nproc,omitempty"`
 }
 
 func (this *ResourceLimits) Equal(that interface{}) bool {
@@ -1723,7 +1727,7 @@ func (m *ResourceLimits) SetNofile(value *uint64) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in actions.proto
 func (m *ResourceLimits) NprocExists() bool {
 	return m != nil && m.Nproc != nil
 }
@@ -1735,6 +1739,8 @@ func (m *ResourceLimits) GetNproc() *uint64 {
 	defaultValue = 0
 	return &defaultValue
 }
+
+// Deprecated: marked deprecated in actions.proto
 func (m *ResourceLimits) SetNproc(value *uint64) {
 	if m != nil {
 		m.Nproc = value

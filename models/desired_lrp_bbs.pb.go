@@ -207,20 +207,23 @@ func DesiredLRPSchedulingInfoFromProtoSlice(values []*ProtoDesiredLRPSchedulingI
 
 // Prevent copylock errors when using ProtoDesiredLRPRunInfo directly
 type DesiredLRPRunInfo struct {
-	DesiredLrpKey                 DesiredLRPKey              `json:"desired_lrp_key"`
-	EnvironmentVariables          []*EnvironmentVariable     `json:"env"`
-	Setup                         *Action                    `json:"setup,omitempty"`
-	Action                        *Action                    `json:"action,omitempty"`
-	Monitor                       *Action                    `json:"monitor,omitempty"`
-	DeprecatedStartTimeoutS       uint32                     `json:"start_timeout,omitempty"`
-	Privileged                    bool                       `json:"privileged"`
-	CpuWeight                     uint32                     `json:"cpu_weight"`
-	Ports                         []uint32                   `json:"ports,omitempty"`
-	EgressRules                   []*SecurityGroupRule       `json:"egress_rules,omitempty"`
-	LogSource                     string                     `json:"log_source"`
-	MetricsGuid                   string                     `json:"metrics_guid"`
-	CreatedAt                     int64                      `json:"created_at"`
-	CachedDependencies            []*CachedDependency        `json:"cachedDependencies,omitempty"`
+	DesiredLrpKey        DesiredLRPKey          `json:"desired_lrp_key"`
+	EnvironmentVariables []*EnvironmentVariable `json:"env"`
+	Setup                *Action                `json:"setup,omitempty"`
+	Action               *Action                `json:"action,omitempty"`
+	Monitor              *Action                `json:"monitor,omitempty"`
+	// Deprecated: marked deprecated in desired_lrp.proto
+	DeprecatedStartTimeoutS uint32               `json:"start_timeout,omitempty"`
+	Privileged              bool                 `json:"privileged"`
+	CpuWeight               uint32               `json:"cpu_weight"`
+	Ports                   []uint32             `json:"ports,omitempty"`
+	EgressRules             []*SecurityGroupRule `json:"egress_rules,omitempty"`
+	LogSource               string               `json:"log_source"`
+	// Deprecated: marked deprecated in desired_lrp.proto
+	MetricsGuid        string              `json:"metrics_guid"`
+	CreatedAt          int64               `json:"created_at"`
+	CachedDependencies []*CachedDependency `json:"cachedDependencies,omitempty"`
+	// Deprecated: marked deprecated in desired_lrp.proto
 	LegacyDownloadUser            string                     `json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                     `json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount             `json:"volume_mounts,omitempty"`
@@ -491,7 +494,7 @@ func (m *DesiredLRPRunInfo) SetMonitor(value *Action) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRPRunInfo) GetDeprecatedStartTimeoutS() uint32 {
 	if m != nil {
 		return m.DeprecatedStartTimeoutS
@@ -500,6 +503,8 @@ func (m *DesiredLRPRunInfo) GetDeprecatedStartTimeoutS() uint32 {
 	defaultValue = 0
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRPRunInfo) SetDeprecatedStartTimeoutS(value uint32) {
 	if m != nil {
 		m.DeprecatedStartTimeoutS = value
@@ -567,7 +572,7 @@ func (m *DesiredLRPRunInfo) SetLogSource(value string) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRPRunInfo) GetMetricsGuid() string {
 	if m != nil {
 		return m.MetricsGuid
@@ -576,6 +581,8 @@ func (m *DesiredLRPRunInfo) GetMetricsGuid() string {
 	defaultValue = ""
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRPRunInfo) SetMetricsGuid(value string) {
 	if m != nil {
 		m.MetricsGuid = value
@@ -606,7 +613,7 @@ func (m *DesiredLRPRunInfo) SetCachedDependencies(value []*CachedDependency) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRPRunInfo) GetLegacyDownloadUser() string {
 	if m != nil {
 		return m.LegacyDownloadUser
@@ -615,6 +622,8 @@ func (m *DesiredLRPRunInfo) GetLegacyDownloadUser() string {
 	defaultValue = ""
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRPRunInfo) SetLegacyDownloadUser(value string) {
 	if m != nil {
 		m.LegacyDownloadUser = value
@@ -1350,29 +1359,32 @@ func DesiredLRPResourceFromProtoSlice(values []*ProtoDesiredLRPResource) []*Desi
 
 // Prevent copylock errors when using ProtoDesiredLRP directly
 type DesiredLRP struct {
-	ProcessGuid                   string                     `json:"process_guid"`
-	Domain                        string                     `json:"domain"`
-	RootFs                        string                     `json:"rootfs"`
-	Instances                     int32                      `json:"instances"`
-	EnvironmentVariables          []*EnvironmentVariable     `json:"env"`
-	Setup                         *Action                    `json:"setup,omitempty"`
-	Action                        *Action                    `json:"action,omitempty"`
-	StartTimeoutMs                int64                      `json:"start_timeout_ms"`
-	DeprecatedStartTimeoutS       uint32                     `json:"deprecated_timeout_ns,omitempty"`
-	Monitor                       *Action                    `json:"monitor,omitempty"`
-	DiskMb                        int32                      `json:"disk_mb"`
-	MemoryMb                      int32                      `json:"memory_mb"`
-	CpuWeight                     uint32                     `json:"cpu_weight"`
-	Privileged                    bool                       `json:"privileged"`
-	Ports                         []uint32                   `json:"ports,omitempty"`
-	Routes                        *Routes                    `json:"routes,omitempty"`
-	LogSource                     string                     `json:"log_source"`
-	LogGuid                       string                     `json:"log_guid"`
-	MetricsGuid                   string                     `json:"metrics_guid"`
-	Annotation                    string                     `json:"annotation"`
-	EgressRules                   []*SecurityGroupRule       `json:"egress_rules,omitempty"`
-	ModificationTag               *ModificationTag           `json:"modification_tag,omitempty"`
-	CachedDependencies            []*CachedDependency        `json:"cached_dependencies,omitempty"`
+	ProcessGuid          string                 `json:"process_guid"`
+	Domain               string                 `json:"domain"`
+	RootFs               string                 `json:"rootfs"`
+	Instances            int32                  `json:"instances"`
+	EnvironmentVariables []*EnvironmentVariable `json:"env"`
+	Setup                *Action                `json:"setup,omitempty"`
+	Action               *Action                `json:"action,omitempty"`
+	StartTimeoutMs       int64                  `json:"start_timeout_ms"`
+	// Deprecated: marked deprecated in desired_lrp.proto
+	DeprecatedStartTimeoutS uint32   `json:"deprecated_timeout_ns,omitempty"`
+	Monitor                 *Action  `json:"monitor,omitempty"`
+	DiskMb                  int32    `json:"disk_mb"`
+	MemoryMb                int32    `json:"memory_mb"`
+	CpuWeight               uint32   `json:"cpu_weight"`
+	Privileged              bool     `json:"privileged"`
+	Ports                   []uint32 `json:"ports,omitempty"`
+	Routes                  *Routes  `json:"routes,omitempty"`
+	LogSource               string   `json:"log_source"`
+	LogGuid                 string   `json:"log_guid"`
+	// Deprecated: marked deprecated in desired_lrp.proto
+	MetricsGuid        string               `json:"metrics_guid"`
+	Annotation         string               `json:"annotation"`
+	EgressRules        []*SecurityGroupRule `json:"egress_rules,omitempty"`
+	ModificationTag    *ModificationTag     `json:"modification_tag,omitempty"`
+	CachedDependencies []*CachedDependency  `json:"cached_dependencies,omitempty"`
+	// Deprecated: marked deprecated in desired_lrp.proto
 	LegacyDownloadUser            string                     `json:"legacy_download_user,omitempty"`
 	TrustedSystemCertificatesPath string                     `json:"trusted_system_certificates_path,omitempty"`
 	VolumeMounts                  []*VolumeMount             `json:"volume_mounts,omitempty"`
@@ -1740,7 +1752,7 @@ func (m *DesiredLRP) SetStartTimeoutMs(value int64) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRP) GetDeprecatedStartTimeoutS() uint32 {
 	if m != nil {
 		return m.DeprecatedStartTimeoutS
@@ -1749,6 +1761,8 @@ func (m *DesiredLRP) GetDeprecatedStartTimeoutS() uint32 {
 	defaultValue = 0
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRP) SetDeprecatedStartTimeoutS(value uint32) {
 	if m != nil {
 		m.DeprecatedStartTimeoutS = value
@@ -1869,7 +1883,7 @@ func (m *DesiredLRP) SetLogGuid(value string) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRP) GetMetricsGuid() string {
 	if m != nil {
 		return m.MetricsGuid
@@ -1878,6 +1892,8 @@ func (m *DesiredLRP) GetMetricsGuid() string {
 	defaultValue = ""
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRP) SetMetricsGuid(value string) {
 	if m != nil {
 		m.MetricsGuid = value
@@ -1930,7 +1946,7 @@ func (m *DesiredLRP) SetCachedDependencies(value []*CachedDependency) {
 	}
 }
 
-// DEPRECATED: DO NOT USE
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRP) GetLegacyDownloadUser() string {
 	if m != nil {
 		return m.LegacyDownloadUser
@@ -1939,6 +1955,8 @@ func (m *DesiredLRP) GetLegacyDownloadUser() string {
 	defaultValue = ""
 	return defaultValue
 }
+
+// Deprecated: marked deprecated in desired_lrp.proto
 func (m *DesiredLRP) SetLegacyDownloadUser(value string) {
 	if m != nil {
 		m.LegacyDownloadUser = value
