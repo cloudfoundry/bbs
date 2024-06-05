@@ -19,6 +19,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Task Handlers", func() {
@@ -88,8 +89,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns a list of tasks", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TasksResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TasksResponse
+				var protoResponse models.ProtoTasksResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -109,8 +112,8 @@ var _ = Describe("Task Handlers", func() {
 
 				BeforeEach(func() {
 					tasksWithImageLayers := []*models.Task{
-						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}},
-						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}},
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}}},
+						&models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}}},
 					}
 					controller.TasksReturns(tasksWithImageLayers, nil)
 
@@ -122,8 +125,10 @@ var _ = Describe("Task Handlers", func() {
 
 				It("returns a list of tasks downgraded to convert image layers to cached dependencies and download actions", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := models.TasksResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.TasksResponse
+					var protoResponse models.ProtoTasksResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -177,8 +182,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TasksResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TasksResponse
+				var protoResponse models.ProtoTasksResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -194,8 +201,8 @@ var _ = Describe("Task Handlers", func() {
 		)
 
 		BeforeEach(func() {
-			task1 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}}
-			task2 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}}
+			task1 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}}}
+			task2 = models.Task{TaskDefinition: &models.TaskDefinition{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}}}
 
 			requestBody = &models.TasksRequest{}
 		})
@@ -221,8 +228,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns a list of tasks", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TasksResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TasksResponse
+				var protoResponse models.ProtoTasksResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -283,8 +292,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TasksResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TasksResponse
+				var protoResponse models.ProtoTasksResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -326,8 +337,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns the task", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TaskResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskResponse
+				var protoResponse models.ProtoTaskResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -343,8 +356,8 @@ var _ = Describe("Task Handlers", func() {
 					TaskGuid: taskGuid,
 					TaskDefinition: &models.TaskDefinition{
 						ImageLayers: []*models.ImageLayer{
-							{LayerType: models.LayerTypeExclusive},
-							{LayerType: models.LayerTypeShared},
+							{LayerType: models.ImageLayer_LayerTypeExclusive},
+							{LayerType: models.ImageLayer_LayerTypeShared},
 						},
 					},
 				}
@@ -355,12 +368,14 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns a list of tasks downgraded to convert image layers to cached dependencies and download actions", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TaskResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskResponse
+				var protoResponse models.ProtoTaskResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
-				Expect(response.Task.ImageLayers).To(BeNil())
+				Expect(response.Task.TaskDefinition.ImageLayers).To(BeNil())
 				Expect(response.Task).To(Equal(downgradedTask))
 			})
 		})
@@ -372,8 +387,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns a resource not found error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TaskResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskResponse
+				var protoResponse models.ProtoTaskResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
@@ -399,8 +416,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TaskResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskResponse
+				var protoResponse models.ProtoTaskResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -431,8 +450,8 @@ var _ = Describe("Task Handlers", func() {
 					TaskGuid: taskGuid,
 					TaskDefinition: &models.TaskDefinition{
 						ImageLayers: []*models.ImageLayer{
-							{LayerType: models.LayerTypeExclusive},
-							{LayerType: models.LayerTypeShared},
+							{LayerType: models.ImageLayer_LayerTypeExclusive},
+							{LayerType: models.ImageLayer_LayerTypeShared},
 						},
 					},
 				}
@@ -447,8 +466,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns the task", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TaskResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskResponse
+				var protoResponse models.ProtoTaskResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -463,8 +484,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("returns a resource not found error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TaskResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskResponse
+				var protoResponse models.ProtoTaskResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
@@ -490,8 +513,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.TaskResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskResponse
+				var protoResponse models.ProtoTaskResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -530,8 +555,10 @@ var _ = Describe("Task Handlers", func() {
 				Expect(actualDomain).To(Equal(domain))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskLifecycleResponse
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -557,8 +584,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskLifecycleResponse
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -600,8 +629,10 @@ var _ = Describe("Task Handlers", func() {
 
 				It("responds with true", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.StartTaskResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.StartTaskResponse
+					var protoResponse models.ProtoStartTaskResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -616,8 +647,10 @@ var _ = Describe("Task Handlers", func() {
 
 				It("responds with false", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.StartTaskResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.StartTaskResponse
+					var protoResponse models.ProtoStartTaskResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -644,8 +677,10 @@ var _ = Describe("Task Handlers", func() {
 
 				It("bubbles up the underlying model error", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.StartTaskResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.StartTaskResponse
+					var protoResponse models.ProtoStartTaskResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrResourceExists))
@@ -689,8 +724,10 @@ var _ = Describe("Task Handlers", func() {
 					Expect(taskLogger.SessionName()).To(ContainSubstring("cancel-task"))
 					Expect(taskGuid).To(Equal("task-guid"))
 
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.TaskLifecycleResponse
+					var protoResponse models.ProtoTaskLifecycleResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -703,8 +740,10 @@ var _ = Describe("Task Handlers", func() {
 				})
 
 				It("responds with an error", func() {
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.TaskLifecycleResponse
+					var protoResponse models.ProtoTaskLifecycleResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -729,8 +768,10 @@ var _ = Describe("Task Handlers", func() {
 			})
 
 			It("returns an BadRequest error", func() {
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskLifecycleResponse
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrBadRequest))
@@ -770,8 +811,10 @@ var _ = Describe("Task Handlers", func() {
 				Expect(actualFailureReason).To(Equal(failureReason))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskLifecycleResponse
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -797,8 +840,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskLifecycleResponse
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -833,7 +878,10 @@ var _ = Describe("Task Handlers", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
 				var response models.TaskLifecycleResponse
-				Expect(response.Unmarshal(responseRecorder.Body.Bytes())).To(Succeed())
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
+				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Error).To(BeNil())
 			})
 		})
@@ -859,7 +907,10 @@ var _ = Describe("Task Handlers", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
 				var response models.TaskLifecycleResponse
-				Expect(response.Unmarshal(responseRecorder.Body.Bytes())).To(Succeed())
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
+				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
@@ -909,8 +960,10 @@ var _ = Describe("Task Handlers", func() {
 				Expect(actualResult).To(Equal(result))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskLifecycleResponse
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -936,8 +989,10 @@ var _ = Describe("Task Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.TaskLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.TaskLifecycleResponse
+				var protoResponse models.ProtoTaskLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -966,8 +1021,10 @@ var _ = Describe("Task Handlers", func() {
 					Expect(taskGuid).To(Equal("task-guid"))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.TaskLifecycleResponse
+					var protoResponse models.ProtoTaskLifecycleResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -993,8 +1050,10 @@ var _ = Describe("Task Handlers", func() {
 
 				It("responds with an error", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.TaskLifecycleResponse
+					var protoResponse models.ProtoTaskLifecycleResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -1023,8 +1082,10 @@ var _ = Describe("Task Handlers", func() {
 					Expect(taskGuid).To(Equal("task-guid"))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.TaskLifecycleResponse
+					var protoResponse models.ProtoTaskLifecycleResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -1050,8 +1111,10 @@ var _ = Describe("Task Handlers", func() {
 
 				It("responds with an error", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := &models.TaskLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.TaskLifecycleResponse
+					var protoResponse models.ProtoTaskLifecycleResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(Equal(models.ErrUnknownError))

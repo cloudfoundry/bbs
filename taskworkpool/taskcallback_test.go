@@ -83,7 +83,7 @@ var _ = Describe("TaskWorker", func() {
 		simulateTaskCompleting := func(signals <-chan os.Signal, ready chan<- struct{}) error {
 			close(ready)
 			task = model_helpers.NewValidTask("the-task-guid")
-			task.CompletionCallbackUrl = callbackURL
+			task.TaskDefinition.CompletionCallbackUrl = callbackURL
 			taskworkpool.HandleCompletedTask(logger, httpClient, taskDB, taskHub, task)
 			return nil
 		}

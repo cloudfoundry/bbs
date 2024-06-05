@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("ActualLRP Lifecycle Handlers", func() {
@@ -89,8 +90,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("response with no error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -116,8 +119,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -160,7 +165,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				MetricTags:              metricTags,
 				AvailabilityZone:        "some-availability-zone",
 			}
-			requestBody.SetRoutable(true)
+			routable := true
+			requestBody.SetRoutable(&routable)
 		})
 
 		JustBeforeEach(func() {
@@ -202,7 +208,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when routable is provided as false", func() {
 			BeforeEach(func() {
-				requestBody.SetRoutable(false)
+				routable := false
+				requestBody.SetRoutable(&routable)
 			})
 
 			It("sets it to false", func() {
@@ -214,7 +221,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when routable is provided as true", func() {
 			BeforeEach(func() {
-				requestBody.SetRoutable(true)
+				routable := true
+				requestBody.SetRoutable(&routable)
 			})
 
 			It("sets it to true", func() {
@@ -231,8 +239,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with no error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -258,8 +268,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -302,7 +314,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				MetricTags:              metricTags,
 				AvailabilityZone:        "some-zone",
 			}
-			requestBody.SetRoutable(true)
+			routable := true
+			requestBody.SetRoutable(&routable)
 		})
 
 		JustBeforeEach(func() {
@@ -343,7 +356,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 		Context("when routable is provided as false", func() {
 			BeforeEach(func() {
-				requestBody.SetRoutable(false)
+				routable := false
+				requestBody.SetRoutable(&routable)
 			})
 
 			It("sets it to false", func() {
@@ -362,8 +376,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				Eventually(logger).Should(gbytes.Say("starting"))
 				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -389,8 +405,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -447,8 +465,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("response with no error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -474,8 +494,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -512,8 +534,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RetireActualLRP(logger, responseRecorder, request)
 
-			response = &models.ActualLRPLifecycleResponse{}
-			err := response.Unmarshal(responseRecorder.Body.Bytes())
+			var protoResponse models.ProtoActualLRPLifecycleResponse
+			err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -592,8 +614,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			It("fails the actual lrp by process guid and index", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -619,8 +643,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -672,10 +698,12 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with no error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
+
 				Expect(response.Error).To(BeNil())
 			})
 		})
@@ -699,8 +727,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))

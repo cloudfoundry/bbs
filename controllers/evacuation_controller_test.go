@@ -86,16 +86,16 @@ var _ = Describe("Evacuation Controller", func() {
 			instanceKey := models.NewActualLRPInstanceKey("instance-guid", "cell-id")
 			evacuatingInstanceKey = models.NewActualLRPInstanceKey("evacuating-instance-guid", "evacuating-cell-id")
 			actual = &models.ActualLRP{
-				ActualLRPInstanceKey: instanceKey,
+				ActualLrpInstanceKey: instanceKey,
 			}
 			evacuatingLRP = &models.ActualLRP{
-				ActualLRPInstanceKey: evacuatingInstanceKey,
+				ActualLrpInstanceKey: evacuatingInstanceKey,
 				Presence:             models.ActualLRP_Evacuating,
 			}
 
 			replacementInstanceKey = models.NewActualLRPInstanceKey("replacement-instance-guid", "replacement-cell-id")
 			replacementActual = &models.ActualLRP{
-				ActualLRPInstanceKey: replacementInstanceKey,
+				ActualLrpInstanceKey: replacementInstanceKey,
 				State:                models.ActualLRPStateClaimed,
 				PlacementError:       "some-placement-error",
 			}
@@ -244,8 +244,8 @@ var _ = Describe("Evacuation Controller", func() {
 			afterActualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
 			afterActualLRP.State = models.ActualLRPStateUnclaimed
 
-			lrpKey = &actualLRP.ActualLRPKey
-			lrpInstanceKey = &actualLRP.ActualLRPInstanceKey
+			lrpKey = &actualLRP.ActualLrpKey
+			lrpInstanceKey = &actualLRP.ActualLrpInstanceKey
 
 			fakeActualLRPDB.UnclaimActualLRPReturns(actualLRP, afterActualLRP, nil)
 		})
@@ -268,7 +268,7 @@ var _ = Describe("Evacuation Controller", func() {
 			_, _, guid := fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidArgsForCall(0)
 			Expect(guid).To(Equal("process-guid"))
 
-			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.Index))
+			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.ActualLrpKey.Index))
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 			_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
@@ -498,8 +498,8 @@ var _ = Describe("Evacuation Controller", func() {
 					ordinaryActualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
 					ordinaryActualLRP.State = models.ActualLRPStateClaimed
 					ordinaryActualLRP.Presence = models.ActualLRP_Ordinary
-					ordinaryActualLRP.ActualLRPInstanceKey.InstanceGuid = "another-instance"
-					ordinaryActualLRP.ActualLRPInstanceKey.CellId = "another-cell"
+					ordinaryActualLRP.ActualLrpInstanceKey.InstanceGuid = "another-instance"
+					ordinaryActualLRP.ActualLrpInstanceKey.CellId = "another-cell"
 					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP, ordinaryActualLRP}, nil)
 				})
 
@@ -553,8 +553,8 @@ var _ = Describe("Evacuation Controller", func() {
 
 		BeforeEach(func() {
 			actualLRP = model_helpers.NewValidActualLRP("process-guid", 1)
-			key = actualLRP.ActualLRPKey
-			instanceKey = actualLRP.ActualLRPInstanceKey
+			key = actualLRP.ActualLrpKey
+			instanceKey = actualLRP.ActualLrpInstanceKey
 			fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 			errMessage = "i failed"
 		})
@@ -570,8 +570,8 @@ var _ = Describe("Evacuation Controller", func() {
 		It("crashes the actual lrp instance", func() {
 			Expect(fakeActualLRPDB.CrashActualLRPCallCount()).To(Equal(1))
 			_, _, key, instanceKey, errorMessage := fakeActualLRPDB.CrashActualLRPArgsForCall(0)
-			Expect(*key).To(Equal(actualLRP.ActualLRPKey))
-			Expect(*instanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
+			Expect(*key).To(Equal(actualLRP.ActualLrpKey))
+			Expect(*instanceKey).To(Equal(actualLRP.ActualLrpInstanceKey))
 			Expect(errorMessage).To(Equal("i failed"))
 		})
 
@@ -582,7 +582,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		Context("when the actual lrp is not in the db", func() {
 			BeforeEach(func() {
-				actualLRP.ActualLRPInstanceKey.CellId = "some-random-cell"
+				actualLRP.ActualLrpInstanceKey.CellId = "some-random-cell"
 				fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
 			})
 
@@ -638,8 +638,8 @@ var _ = Describe("Evacuation Controller", func() {
 			It("removes the evacuating actual lrp", func() {
 				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 				_, _, key, instanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*key).To(Equal(actualLRP.ActualLRPKey))
-				Expect(*instanceKey).To(Equal(actualLRP.ActualLRPInstanceKey))
+				Expect(*key).To(Equal(actualLRP.ActualLrpKey))
+				Expect(*instanceKey).To(Equal(actualLRP.ActualLrpInstanceKey))
 			})
 
 			It("emits events to the hub", func() {
@@ -687,8 +687,8 @@ var _ = Describe("Evacuation Controller", func() {
 			It("removes the suspect lrp", func() {
 				Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
 				_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
-				Expect(lrpKey.ProcessGuid).To(Equal(actualLRP.ProcessGuid))
-				Expect(lrpKey.Index).To(Equal(actualLRP.Index))
+				Expect(lrpKey.ProcessGuid).To(Equal(actualLRP.ActualLrpKey.ProcessGuid))
+				Expect(lrpKey.Index).To(Equal(actualLRP.ActualLrpKey.Index))
 			})
 
 			It("emits ActualLRPRemovedEvent", func() {
@@ -754,9 +754,9 @@ var _ = Describe("Evacuation Controller", func() {
 			afterActual = model_helpers.NewValidActualLRP("the-guid", 1)
 			afterActual.Presence = models.ActualLRP_Evacuating
 
-			targetKey = actual.ActualLRPKey
-			targetInstanceKey = actual.ActualLRPInstanceKey
-			netInfo = actual.ActualLRPNetInfo
+			targetKey = actual.ActualLrpKey
+			targetInstanceKey = actual.ActualLrpInstanceKey
+			netInfo = actual.ActualLrpNetInfo
 			internalRoutes = actual.ActualLrpInternalRoutes
 			metricTags = actual.MetricTags
 			availabilityZone = actual.AvailabilityZone
@@ -779,7 +779,7 @@ var _ = Describe("Evacuation Controller", func() {
 		Context("when the actual LRP instance is already evacuating", func() {
 			BeforeEach(func() {
 				actualLRPs = []*models.ActualLRP{evacuatingActual}
-				targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
+				targetInstanceKey = evacuatingActual.ActualLrpInstanceKey
 			})
 
 			It("removes the evacuating lrp and does not keep the container", func() {
@@ -788,8 +788,8 @@ var _ = Describe("Evacuation Controller", func() {
 
 				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 				_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
-				Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
+				Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLrpKey))
+				Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLrpInstanceKey))
 			})
 
 			It("emits events to the hub", func() {
@@ -875,7 +875,7 @@ var _ = Describe("Evacuation Controller", func() {
 		Context("when the instance is unclaimed", func() {
 			BeforeEach(func() {
 				actual.State = models.ActualLRPStateUnclaimed
-				actual.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+				actual.ActualLrpInstanceKey = models.ActualLRPInstanceKey{}
 				actualLRPs = []*models.ActualLRP{actual}
 			})
 
@@ -992,7 +992,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 					Context("when there's an existing evacuating instance on the cell the request came from", func() {
 						BeforeEach(func() {
-							evacuatingActual.CellId = "some-other-cell"
+							evacuatingActual.ActualLrpInstanceKey.CellId = "some-other-cell"
 							actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 							fakeEvacuationDB.EvacuateActualLRPReturns(nil, models.ErrResourceExists)
 						})
@@ -1027,9 +1027,9 @@ var _ = Describe("Evacuation Controller", func() {
 
 						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
 						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
-						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
+						Expect(*actualLRPKey).To(Equal(actual.ActualLrpKey))
+						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLrpInstanceKey))
+						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLrpNetInfo))
 						Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 						Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
 						Expect(actualRoutable).To(Equal(false))
@@ -1039,16 +1039,16 @@ var _ = Describe("Evacuation Controller", func() {
 					It("unclaims the lrp and requests an auction", func() {
 						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
 						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
-						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
+						Expect(*actualLRPKey).To(Equal(actual.ActualLrpKey))
+						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLrpInstanceKey))
+						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLrpNetInfo))
 						Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 						Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
 						Expect(actualRoutable).To(Equal(false))
 						Expect(actualAvailabilityZone).To(Equal(actual.AvailabilityZone))
 
 						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.ActualLrpKey.Index))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 						_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
@@ -1132,9 +1132,9 @@ var _ = Describe("Evacuation Controller", func() {
 
 					Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
 					_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
-					Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-					Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-					Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
+					Expect(*actualLRPKey).To(Equal(actual.ActualLrpKey))
+					Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLrpInstanceKey))
+					Expect(*actualLrpNetInfo).To(Equal(actual.ActualLrpNetInfo))
 					Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 					Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
 					Expect(actualRoutable).To(Equal(false))
@@ -1144,11 +1144,11 @@ var _ = Describe("Evacuation Controller", func() {
 				It("unclaims the lrp and requests an auction", func() {
 					Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
 					_, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
-					Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-					Expect(lrpKey.Index).To(Equal(actual.Index))
+					Expect(lrpKey.ProcessGuid).To(Equal(actual.ActualLrpKey.ProcessGuid))
+					Expect(lrpKey.Index).To(Equal(actual.ActualLrpKey.Index))
 
 					schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.ActualLrpKey.Index))
 
 					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 					_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
@@ -1164,7 +1164,7 @@ var _ = Describe("Evacuation Controller", func() {
 					BeforeEach(func() {
 						ordinary = model_helpers.NewValidActualLRP("the-guid", 1)
 						ordinary.State = models.ActualLRPStateUnclaimed
-						ordinary.ActualLRPInstanceKey = models.ActualLRPInstanceKey{
+						ordinary.ActualLrpInstanceKey = models.ActualLRPInstanceKey{
 							InstanceGuid: "replacement-guid",
 							CellId:       "replacement-cell",
 						}
@@ -1176,8 +1176,8 @@ var _ = Describe("Evacuation Controller", func() {
 					It("removes the suspect LRP", func() {
 						Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
 						_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
-						Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-						Expect(lrpKey.Index).To(Equal(actual.Index))
+						Expect(lrpKey.ProcessGuid).To(Equal(actual.ActualLrpKey.ProcessGuid))
+						Expect(lrpKey.Index).To(Equal(actual.ActualLrpKey.Index))
 					})
 
 					It("does not unclaim the LRP", func() {
@@ -1221,8 +1221,8 @@ var _ = Describe("Evacuation Controller", func() {
 						BeforeEach(func() {
 							replacementActual = model_helpers.NewValidActualLRP("the-guid", 1)
 							replacementActual.State = models.ActualLRPStateClaimed
-							replacementActual.CellId = "other-cell"
-							replacementActual.InstanceGuid = "other-guid"
+							replacementActual.ActualLrpInstanceKey.CellId = "other-cell"
+							replacementActual.ActualLrpInstanceKey.InstanceGuid = "other-guid"
 							actualLRPs = append(actualLRPs, replacementActual)
 						})
 
@@ -1364,8 +1364,8 @@ var _ = Describe("Evacuation Controller", func() {
 
 					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 					_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-					Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
-					Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
+					Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLrpKey))
+					Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLrpInstanceKey))
 				})
 
 				It("emits events to the hub", func() {
@@ -1425,8 +1425,8 @@ var _ = Describe("Evacuation Controller", func() {
 		Context("when the instance is crashed", func() {
 			BeforeEach(func() {
 				actual.State = models.ActualLRPStateCrashed
-				targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
-				targetKey = evacuatingActual.ActualLRPKey
+				targetInstanceKey = evacuatingActual.ActualLrpInstanceKey
+				targetKey = evacuatingActual.ActualLrpKey
 				actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 			})
 
@@ -1436,8 +1436,8 @@ var _ = Describe("Evacuation Controller", func() {
 
 				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
 				_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
-				Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
+				Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLrpKey))
+				Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLrpInstanceKey))
 			})
 
 			Context("when removing the evacuating LRP fails", func() {
@@ -1495,8 +1495,8 @@ var _ = Describe("Evacuation Controller", func() {
 				evacuating,
 			}, nil)
 
-			targetInstanceKey = actual.ActualLRPInstanceKey
-			targetKey = actual.ActualLRPKey
+			targetInstanceKey = actual.ActualLrpInstanceKey
+			targetKey = actual.ActualLrpKey
 		})
 
 		JustBeforeEach(func() {
@@ -1538,7 +1538,7 @@ var _ = Describe("Evacuation Controller", func() {
 			_, _, guid, index, actualLRPInstanceKey := fakeActualLRPDB.RemoveActualLRPArgsForCall(0)
 			Expect(guid).To(Equal("process-guid"))
 			Expect(index).To(BeEquivalentTo(1))
-			Expect(actualLRPInstanceKey).To(Equal(&actual.ActualLRPInstanceKey))
+			Expect(actualLRPInstanceKey).To(Equal(&actual.ActualLrpInstanceKey))
 		})
 
 		Context("when the LRP Instance is missing", func() {
@@ -1564,8 +1564,8 @@ var _ = Describe("Evacuation Controller", func() {
 				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(0))
 
 				_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
-				Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-				Expect(lrpKey.Index).To(Equal(actual.Index))
+				Expect(lrpKey.ProcessGuid).To(Equal(actual.ActualLrpKey.ProcessGuid))
+				Expect(lrpKey.Index).To(Equal(actual.ActualLrpKey.Index))
 			})
 
 			It("emits ActualLRPRemovedEvent", func() {
@@ -1614,7 +1614,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		Context("when the LRP presence is Evacuating", func() {
 			BeforeEach(func() {
-				targetInstanceKey = evacuating.ActualLRPInstanceKey
+				targetInstanceKey = evacuating.ActualLrpInstanceKey
 			})
 
 			It("removes the evacuating actual lrp", func() {
@@ -1622,8 +1622,8 @@ var _ = Describe("Evacuation Controller", func() {
 				Expect(fakeActualLRPDB.RemoveActualLRPCallCount()).To(Equal(0))
 
 				_, _, lrpKey, lrpInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*lrpKey).To(Equal(evacuating.ActualLRPKey))
-				Expect(*lrpInstanceKey).To(Equal(evacuating.ActualLRPInstanceKey))
+				Expect(*lrpKey).To(Equal(evacuating.ActualLrpKey))
+				Expect(*lrpInstanceKey).To(Equal(evacuating.ActualLrpInstanceKey))
 			})
 
 			It("emits a removal event for the evacuating actual LRP", func() {

@@ -178,6 +178,7 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 	case models.EventTypeActualLRPCreated:
 		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		event := new(models.ActualLRPCreatedEvent)
+		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		protoEvent := new(models.ProtoActualLRPCreatedEvent)
 		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
@@ -191,6 +192,7 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 	case models.EventTypeActualLRPChanged:
 		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		event := new(models.ActualLRPChangedEvent)
+		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		protoEvent := new(models.ProtoActualLRPChangedEvent)
 		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
@@ -204,6 +206,7 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 	case models.EventTypeActualLRPRemoved:
 		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		event := new(models.ActualLRPRemovedEvent)
+		//lint:ignore SA1019 - need to support this event until the deprecation becomes deletion
 		protoEvent := new(models.ProtoActualLRPRemovedEvent)
 		err := proto.Unmarshal(data, protoEvent)
 		if err != nil {
