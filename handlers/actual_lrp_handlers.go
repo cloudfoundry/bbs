@@ -53,15 +53,15 @@ func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseW
 	var err error
 	logger = logger.Session("actual-lrp-groups").WithTraceInfo(req)
 
-	request := &models.ActualLRPGroupsRequest{}
+	var request models.ActualLRPGroupsRequest
 	protoRequest := &models.ProtoActualLRPGroupsRequest{}
 	response := &models.ActualLRPGroupsResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer writeResponse(w, response.ToProto())
 
 	err = parseRequest(logger, req, protoRequest)
+	request = *protoRequest.FromProto()
 	if err != nil {
-		request = protoRequest.FromProto()
 		response.Error = models.ConvertError(err)
 		return
 	}

@@ -352,6 +352,7 @@ var _ = Describe("Client", func() {
 		})
 
 		JustBeforeEach(func() {
+			//lint:ignore SA1019 - testing of deprecated code
 			response := &models.ActualLRPGroupsResponse{
 				//lint:ignore SA1019 - testing of deprecated code
 				ActualLrpGroups: []*models.ActualLRPGroup{
@@ -369,7 +370,7 @@ var _ = Describe("Client", func() {
 					func(w http.ResponseWriter, req *http.Request) {
 						<-blockCh
 					},
-					//lint:ignore SA1019 - testing of deprecated code
+					// lint:ignore SA1019 - testing of deprecated code
 					ghttp.RespondWithProto(200, response.ToProto()),
 				),
 			)

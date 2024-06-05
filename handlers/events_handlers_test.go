@@ -902,7 +902,7 @@ var _ = Describe("Event Handlers", func() {
 
 					downgradedTask = task.VersionDownTo(format.V3)
 					Expect(downgradedTask).To(Equal(task))
-					Expect(downgradedTask.ImageLayers).NotTo(BeNil())
+					Expect(downgradedTask.TaskDefinition.ImageLayers).NotTo(BeNil())
 				})
 
 				JustBeforeEach(func() {
