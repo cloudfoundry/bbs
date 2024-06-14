@@ -62,9 +62,9 @@ var _ = Describe("Evacuation Handlers", func() {
 		)
 
 		BeforeEach(func() {
-			requestBody = &models.RemoveEvacuatingActualLRPRequest{
-				ActualLrpKey:         &key,
-				ActualLrpInstanceKey: &instanceKey,
+			requestBody = &models.ProtoRemoveEvacuatingActualLRPRequest{
+				ActualLrpKey:         key.ToProto(),
+				ActualLrpInstanceKey: instanceKey.ToProto(),
 			}
 		})
 
@@ -121,7 +121,7 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
-				requestBody = &models.RemoveEvacuatingActualLRPRequest{}
+				requestBody = &models.ProtoRemoveEvacuatingActualLRPRequest{}
 			})
 
 			It("responds with an error", func() {
@@ -173,7 +173,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ActualLrpKey:         &actual.ActualLrpKey,
 					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateClaimedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -302,7 +302,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
 					ErrorMessage:         "i failed",
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateCrashedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -393,7 +393,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
 					ActualLrpNetInfo:     &actual.ActualLrpNetInfo,
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP_r0(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -528,7 +528,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			JustBeforeEach(func() {
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -702,7 +702,7 @@ var _ = Describe("Evacuation Handlers", func() {
 					ActualLrpKey:         &actual.ActualLrpKey,
 					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateStoppedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))

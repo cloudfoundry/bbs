@@ -433,7 +433,7 @@ func (db *SQLDB) fetchDesiredLRPSchedulingInfoAndMore(logger lager.Logger, scann
 		logger.Error("failed-parsing-routes", err)
 		return nil, err
 	}
-	schedulingInfo.Routes = routes
+	schedulingInfo.Routes = &routes
 
 	var volumePlacement models.VolumePlacement
 	var protoVolumePlacement models.ProtoVolumePlacement

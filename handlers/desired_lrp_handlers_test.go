@@ -84,7 +84,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 	})
 
 	Describe("DesiredLRPs_r2", func() {
-		var requestBody interface{}
+		var requestBody *models.DesiredLRPsRequest
 
 		BeforeEach(func() {
 			requestBody = &models.DesiredLRPsRequest{}
@@ -93,7 +93,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPs_r2(logger, responseRecorder, request)
 		})
@@ -263,7 +264,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 	})
 
 	Describe("DesiredLRPs", func() {
-		var requestBody interface{}
+		var requestBody *models.DesiredLRPsRequest
 
 		BeforeEach(func() {
 			requestBody = &models.DesiredLRPsRequest{}
@@ -272,7 +273,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPs(logger, responseRecorder, request)
 		})
@@ -410,7 +412,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid = "process-guid"
 
-			requestBody interface{}
+			requestBody *models.DesiredLRPByProcessGuidRequest
 		)
 
 		BeforeEach(func() {
@@ -420,7 +422,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPByProcessGuid_r2(logger, responseRecorder, request)
 		})
@@ -554,7 +557,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid = "process-guid"
 
-			requestBody interface{}
+			requestBody *models.DesiredLRPByProcessGuidRequest
 		)
 
 		BeforeEach(func() {
@@ -564,7 +567,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPByProcessGuid(logger, responseRecorder, request)
 		})
@@ -671,7 +675,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 	Describe("DesiredLRPSchedulingInfos", func() {
 		var (
-			requestBody     interface{}
+			requestBody     *models.DesiredLRPsRequest
 			schedulingInfo1 models.DesiredLRPSchedulingInfo
 			schedulingInfo2 models.DesiredLRPSchedulingInfo
 		)
@@ -683,7 +687,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPSchedulingInfos(logger, responseRecorder, request)
 		})
@@ -793,7 +798,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid = "process-guid"
 
-			requestBody interface{}
+			requestBody *models.DesiredLRPByProcessGuidRequest
 		)
 
 		BeforeEach(func() {
@@ -803,7 +808,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPSchedulingInfoByProcessGuid(logger, responseRecorder, request)
 		})
@@ -838,6 +844,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				Expect(response.Error).To(BeNil())
 				responseSchedInfo := response.DesiredLrpSchedulingInfo
+				Expect(*responseSchedInfo).To(Equal(schedInfo))
 				Expect(*responseSchedInfo).To(DeepEqual(schedInfo))
 			})
 		})
@@ -891,7 +898,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 	Describe("DesiredLRPRoutingInfos", func() {
 		var (
-			requestBody  interface{}
+			requestBody  *models.DesiredLRPsRequest
 			routingInfo1 models.DesiredLRP
 			routingInfo2 models.DesiredLRP
 		)
@@ -903,7 +910,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			handler.DesiredLRPRoutingInfos(logger, responseRecorder, request)
 		})
 
@@ -1011,7 +1019,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			desiredLRP *models.DesiredLRP
 
-			requestBody interface{}
+			requestBody *models.DesireLRPRequest
 		)
 
 		BeforeEach(func() {
@@ -1023,7 +1031,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesireDesiredLRP(logger, responseRecorder, request)
 		})
@@ -1257,8 +1266,16 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			beforeDesiredLRP *models.DesiredLRP
 			afterDesiredLRP  *models.DesiredLRP
 
-			requestBody interface{}
+			requestBody *models.UpdateDesiredLRPRequest
 		)
+
+		JustBeforeEach(func() {
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.UpdateDesiredLRP(logger, responseRecorder, request)
+			time.Sleep(100 * time.Millisecond)
+		})
 
 		BeforeEach(func() {
 			processGuid = "some-guid"
@@ -1278,7 +1295,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Update:      update,
 			}
 
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.UpdateDesiredLRP(logger, responseRecorder, request)
 			time.Sleep(100 * time.Millisecond)
@@ -1920,7 +1938,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid string
 
-			requestBody interface{}
+			requestBody *models.RemoveDesiredLRPRequest
 		)
 
 		BeforeEach(func() {
@@ -1932,7 +1950,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RemoveDesiredLRP(logger, responseRecorder, request)
 			time.Sleep(100 * time.Millisecond)

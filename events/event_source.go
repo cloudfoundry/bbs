@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strconv"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -57,6 +58,8 @@ func (e closeError) Error() string {
 
 func NewEventFromModelEvent(eventID int, event models.Event) (sse.Event, error) {
 	payload, err := proto.Marshal(event.ToEventProto())
+	log.Printf("event.ToEventProto(): %+v", event.ToEventProto())
+	log.Printf("payload: %+v", payload)
 	if err != nil {
 		return sse.Event{}, err
 	}

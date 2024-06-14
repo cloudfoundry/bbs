@@ -69,7 +69,7 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			requestBody = &models.TasksRequest{
+			requestBody = &models.ProtoTasksRequest{
 				Domain: domain,
 				CellId: cellId,
 			}
@@ -208,7 +208,7 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			requestBody = &models.TasksRequest{
+			requestBody = &models.ProtoTasksRequest{
 				Domain: domain,
 				CellId: cellId,
 			}
@@ -307,7 +307,7 @@ var _ = Describe("Task Handlers", func() {
 		var taskGuid = "task-guid"
 
 		BeforeEach(func() {
-			requestBody = &models.TaskByGuidRequest{
+			requestBody = &models.ProtoTaskByGuidRequest{
 				TaskGuid: taskGuid,
 			}
 		})
@@ -431,7 +431,7 @@ var _ = Describe("Task Handlers", func() {
 		var taskGuid = "task-guid"
 
 		BeforeEach(func() {
-			requestBody = &models.TaskByGuidRequest{
+			requestBody = &models.ProtoTaskByGuidRequest{
 				TaskGuid: taskGuid,
 			}
 		})
@@ -533,10 +533,10 @@ var _ = Describe("Task Handlers", func() {
 
 		BeforeEach(func() {
 			taskDef = model_helpers.NewValidTaskDefinition()
-			requestBody = &models.DesireTaskRequest{
+			requestBody = &models.ProtoDesireTaskRequest{
 				TaskGuid:       taskGuid,
 				Domain:         domain,
-				TaskDefinition: taskDef,
+				TaskDefinition: taskDef.ToProto(),
 			}
 		})
 
@@ -600,7 +600,7 @@ var _ = Describe("Task Handlers", func() {
 			var ctx context.Context
 
 			BeforeEach(func() {
-				requestBody = &models.StartTaskRequest{
+				requestBody = &models.ProtoStartTaskRequest{
 					TaskGuid: "task-guid",
 					CellId:   "cell-id",
 				}
@@ -695,7 +695,7 @@ var _ = Describe("Task Handlers", func() {
 		)
 
 		BeforeEach(func() {
-			requestBody = &models.TaskGuidRequest{
+			requestBody = &models.ProtoTaskGuidRequest{
 				TaskGuid: "task-guid",
 			}
 
@@ -792,7 +792,7 @@ var _ = Describe("Task Handlers", func() {
 			controller.FailTaskReturns(nil)
 
 			//lint:ignore SA1019 - testing deprecated code
-			requestBody = &models.FailTaskRequest{
+			requestBody = &models.ProtoFailTaskRequest{
 				TaskGuid:      taskGuid,
 				FailureReason: failureReason,
 			}
@@ -857,7 +857,7 @@ var _ = Describe("Task Handlers", func() {
 
 		BeforeEach(func() {
 			controller.RejectTaskReturns(nil)
-			requestBody = &models.RejectTaskRequest{
+			requestBody = &models.ProtoRejectTaskRequest{
 				TaskGuid:        taskGuid,
 				RejectionReason: rejectionReason,
 			}
@@ -934,7 +934,7 @@ var _ = Describe("Task Handlers", func() {
 
 			controller.CompleteTaskReturns(nil)
 
-			requestBody = &models.CompleteTaskRequest{
+			requestBody = &models.ProtoCompleteTaskRequest{
 				TaskGuid:      taskGuid,
 				CellId:        cellId,
 				Failed:        failed,
@@ -1003,7 +1003,7 @@ var _ = Describe("Task Handlers", func() {
 	Describe("ResolvingTask", func() {
 		Context("when the resolving request is normal", func() {
 			BeforeEach(func() {
-				requestBody = &models.TaskGuidRequest{
+				requestBody = &models.ProtoTaskGuidRequest{
 					TaskGuid: "task-guid",
 				}
 			})
@@ -1065,7 +1065,7 @@ var _ = Describe("Task Handlers", func() {
 	Describe("DeleteTask", func() {
 		Context("when the delete request is normal", func() {
 			BeforeEach(func() {
-				requestBody = &models.TaskGuidRequest{
+				requestBody = &models.ProtoTaskGuidRequest{
 					TaskGuid: "task-guid",
 				}
 			})

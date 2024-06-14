@@ -12,7 +12,7 @@ type DesiredLRPSchedulingInfo struct {
 	Annotation         string             `json:"annotation"`
 	Instances          int32              `json:"instances"`
 	DesiredLrpResource DesiredLRPResource `json:"desired_lrp_resource"`
-	Routes             Routes             `json:"routes,omitempty"`
+	Routes             *Routes            `json:"routes,omitempty"`
 	ModificationTag    ModificationTag    `json:"modification_tag"`
 	VolumePlacement    *VolumePlacement   `json:"volume_placement,omitempty"`
 	PlacementTags      []string           `json:"placement_tags,omitempty"`
@@ -52,7 +52,11 @@ func (this *DesiredLRPSchedulingInfo) Equal(that interface{}) bool {
 	if !this.DesiredLrpResource.Equal(that1.DesiredLrpResource) {
 		return false
 	}
-	if !this.Routes.Equal(that1.Routes) {
+	if this.Routes == nil {
+		if that1.Routes != nil {
+			return false
+		}
+	} else if !this.Routes.Equal(*that1.Routes) {
 		return false
 	}
 	if !this.ModificationTag.Equal(that1.ModificationTag) {
@@ -115,7 +119,13 @@ func (m *DesiredLRPSchedulingInfo) SetDesiredLrpResource(value DesiredLRPResourc
 		m.DesiredLrpResource = value
 	}
 }
-func (m *DesiredLRPSchedulingInfo) SetRoutes(value Routes) {
+func (m *DesiredLRPSchedulingInfo) GetRoutes() *Routes {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
+func (m *DesiredLRPSchedulingInfo) SetRoutes(value *Routes) {
 	if m != nil {
 		m.Routes = value
 	}
@@ -175,7 +185,7 @@ func (x *ProtoDesiredLRPSchedulingInfo) FromProto() *DesiredLRPSchedulingInfo {
 		Annotation:         x.Annotation,
 		Instances:          x.Instances,
 		DesiredLrpResource: *x.DesiredLrpResource.FromProto(),
-		Routes:             *x.Routes.FromProto(),
+		Routes:             x.Routes.FromProto(),
 		ModificationTag:    *x.ModificationTag.FromProto(),
 		VolumePlacement:    x.VolumePlacement.FromProto(),
 		PlacementTags:      x.PlacementTags,

@@ -9,10 +9,10 @@ import (
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/vito/go-sse/sse"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("EventSource", func() {

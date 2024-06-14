@@ -50,7 +50,7 @@ var _ = Describe("Domain Handlers", func() {
 			domain = "domain-to-add"
 			ttl = 12345
 
-			requestBody = &models.UpsertDomainRequest{
+			requestBody = &models.ProtoUpsertDomainRequest{
 				Domain: domain,
 				Ttl:    ttl,
 			}
@@ -91,7 +91,7 @@ var _ = Describe("Domain Handlers", func() {
 
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
-				requestBody = &models.UpsertDomainRequest{}
+				requestBody = &models.ProtoUpsertDomainRequest{}
 			})
 
 			It("responds with an error", func() {
