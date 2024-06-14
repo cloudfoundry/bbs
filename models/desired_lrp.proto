@@ -26,7 +26,7 @@ message ProtoDesiredLRPSchedulingInfo {
 
   ProtoDesiredLRPResource desired_lrp_resource = 4 [(bbs.bbs_by_value) = true, json_name = "desired_lrp_resource", (bbs.bbs_json_always_emit) = true];
 
-  ProtoRoutes routes = 5 [(bbs.bbs_by_value) = true];
+  ProtoRoutes routes = 5 [(bbs.bbs_by_value) = false];
   ProtoModificationTag modification_tag = 6 [(bbs.bbs_by_value) = true, json_name = "modification_tag", (bbs.bbs_json_always_emit) = true];
   ProtoVolumePlacement volume_placement = 7 [json_name = "volume_placement"];
   repeated string PlacementTags = 8 [json_name ="placement_tags"];

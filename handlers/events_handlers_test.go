@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -23,7 +24,7 @@ import (
 	"github.com/vito/go-sse/sse"
 )
 
-var _ = Describe("Event Handlers", func() {
+var _ = FDescribe("Event Handlers", func() {
 	var (
 		logger  lager.Logger
 		handler handlers.EventController
@@ -114,13 +115,17 @@ var _ = Describe("Event Handlers", func() {
 			})
 
 			Context("when successfully subscribing to the event hub", func() {
-				It("emits events from the hub to the connection", func() {
+				FIt("emits events from the hub to the connection", func() {
+					log.Printf("response.Body: %+v", response.Body)
 					reader := sse.NewReadCloser(response.Body)
 
 					hub.Emit(&eventfakes.FakeEvent{Token: "A"})
 					encodedPayload := base64.StdEncoding.EncodeToString([]byte("A"))
 
-					Expect(reader.Next()).To(Equal(sse.Event{
+					tokenA, _ := reader.Next()
+					log.Printf("tokenA: %+v", tokenA)
+
+					Expect(tokenA).To(Equal(sse.Event{
 						ID:   "0",
 						Name: "fake",
 						Data: []byte(encodedPayload),

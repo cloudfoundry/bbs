@@ -38,7 +38,7 @@ func (r *Routes) ToProto() *ProtoRoutes {
 }
 
 func (pr *ProtoRoutes) FromProto() *Routes {
-	if pr == nil {
+	if pr == nil || pr.Routes == nil || len(pr.Routes) == 0 {
 		return nil
 	}
 

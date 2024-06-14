@@ -140,7 +140,7 @@ var _ = Describe("Context", func() {
 			<-sleepStarting
 			ctxWithCancel, cancelFn := context.WithCancel(context.Background())
 
-			requestBody := &models.ActualLRPsRequest{}
+			requestBody := &models.ProtoActualLRPsRequest{}
 			request := newTestRequest(requestBody).WithContext(ctxWithCancel)
 			responseRecorder := httptest.NewRecorder()
 			finishedRequest := make(chan struct{}, 1)

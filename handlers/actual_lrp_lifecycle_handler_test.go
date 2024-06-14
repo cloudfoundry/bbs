@@ -62,10 +62,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				"cell-id-0",
 			)
 			requestBody = &instanceKey
-			requestBody = &models.ClaimActualLRPRequest{
+			requestBody = &models.ProtoClaimActualLRPRequest{
 				ProcessGuid:          processGuid,
 				Index:                index,
-				ActualLrpInstanceKey: &instanceKey,
+				ActualLrpInstanceKey: instanceKey.ToProto(),
 			}
 		})
 
@@ -170,7 +170,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(&requestBody)
+			request := newTestRequest(requestBody.ToProto())
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.StartActualLRP(logger, responseRecorder, request)
 		})
@@ -319,7 +319,7 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(&requestBody)
+			request := newTestRequest(requestBody.ToProto())
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.StartActualLRP_r0(logger, responseRecorder, request)
 		})
@@ -437,9 +437,9 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			)
 			instanceKey = models.NewActualLRPInstanceKey(instanceGuid, cellId)
 			errorMessage = "something went wrong"
-			requestBody = &models.CrashActualLRPRequest{
-				ActualLrpKey:         &key,
-				ActualLrpInstanceKey: &instanceKey,
+			requestBody = &models.ProtoCrashActualLRPRequest{
+				ActualLrpKey:         key.ToProto(),
+				ActualLrpInstanceKey: instanceKey.ToProto(),
 				ErrorMessage:         errorMessage,
 			}
 		})
@@ -508,7 +508,6 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 	Describe("RetireActualLRP", func() {
 		var (
 			request     *http.Request
-			response    *models.ActualLRPLifecycleResponse
 			processGuid = "process-guid"
 			index       = int32(1)
 
@@ -524,8 +523,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				"domain-0",
 			)
 
-			requestBody = &models.RetireActualLRPRequest{
-				ActualLrpKey: &key,
+			requestBody = &models.ProtoRetireActualLRPRequest{
+				ActualLrpKey: key.ToProto(),
 			}
 		})
 
@@ -563,6 +562,12 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 			})
 
 			It("returns an error and does not retry", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				var response models.ActualLRPLifecycleResponse
+				var protoResponse models.ProtoActualLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
+				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Error.Message).To(Equal("could not find lrp"))
 			})
 		})
@@ -587,8 +592,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				"domain-0",
 			)
 			errorMessage = "something went wrong"
-			requestBody = &models.FailActualLRPRequest{
-				ActualLrpKey: &key,
+			requestBody = &models.ProtoFailActualLRPRequest{
+				ActualLrpKey: key.ToProto(),
 				ErrorMessage: errorMessage,
 			}
 		})
@@ -670,10 +675,10 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 				"cell-id-0",
 			)
 
-			requestBody = &models.RemoveActualLRPRequest{
+			requestBody = &models.ProtoRemoveActualLRPRequest{
 				ProcessGuid:          processGuid,
 				Index:                index,
-				ActualLrpInstanceKey: &instanceKey,
+				ActualLrpInstanceKey: instanceKey.ToProto(),
 			}
 		})
 

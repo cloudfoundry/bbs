@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/events"
@@ -95,7 +96,9 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 			return
 		}
 
+		log.Printf("streamEventsToResponse event: %+v", event)
 		sseEvent, err := events.NewEventFromModelEvent(eventID, event)
+		log.Printf("sseEvent: %+v", sseEvent)
 		if err != nil {
 			logger.Error("failed-to-marshal-event", err)
 			return

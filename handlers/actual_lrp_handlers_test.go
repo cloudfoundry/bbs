@@ -84,7 +84,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		var requestBody interface{}
 
 		BeforeEach(func() {
-			requestBody = &models.ActualLRPsRequest{}
+			requestBody = &models.ProtoActualLRPsRequest{}
 		})
 
 		JustBeforeEach(func() {
@@ -145,7 +145,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by domain", func() {
 				BeforeEach(func() {
-					requestBody = &models.ActualLRPsRequest{Domain: "domain-1"}
+					requestBody = &models.ProtoActualLRPsRequest{Domain: "domain-1"}
 				})
 
 				It("calls the DB with the domain filter to retrieve the actual lrps", func() {
@@ -157,7 +157,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by cellId", func() {
 				BeforeEach(func() {
-					requestBody = &models.ActualLRPsRequest{CellId: "cellid-1"}
+					requestBody = &models.ProtoActualLRPsRequest{CellId: "cellid-1"}
 				})
 
 				It("calls the DB with the cell id filter to retrieve the actual lrps ", func() {
@@ -169,7 +169,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by processGuid", func() {
 				BeforeEach(func() {
-					requestBody = &models.ActualLRPsRequest{ProcessGuid: "process-guid-1"}
+					requestBody = &models.ProtoActualLRPsRequest{ProcessGuid: "process-guid-1"}
 				})
 
 				It("calls the DB with the process guid filter to retrieve the actual lrps", func() {
@@ -184,7 +184,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 					req := &models.ActualLRPsRequest{}
 					index := int32(1)
 					req.SetIndex(&index)
-					requestBody = req
+					requestBody = req.ToProto()
 				})
 
 				It("calls the DB with the index filter to retrieve the actual lrps", func() {
@@ -204,7 +204,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 					}
 					index := int32(2)
 					req.SetIndex(&index)
-					requestBody = req
+					requestBody = req.ToProto()
 				})
 
 				It("call the DB with all provided filters to retrieve the actual lrps", func() {
@@ -268,7 +268,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 	})
 
 	Describe("ActualLRPGroups", func() {
-		var requestBody interface{}
+		var requestBody *models.ActualLRPGroupsRequest
 
 		BeforeEach(func() {
 			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
@@ -276,7 +276,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.ActualLRPGroups(logger, responseRecorder, request)
 		})
@@ -426,7 +427,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		BeforeEach(func() {
 			//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-			requestBody = &models.ActualLRPGroupsByProcessGuidRequest{
+			requestBody = &models.ProtoActualLRPGroupsByProcessGuidRequest{
 				ProcessGuid: processGuid,
 			}
 		})
@@ -544,7 +545,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		BeforeEach(func() {
 			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-			requestBody = &models.ActualLRPGroupByProcessGuidAndIndexRequest{
+			requestBody = &models.ProtoActualLRPGroupByProcessGuidAndIndexRequest{
 				ProcessGuid: processGuid,
 				Index:       index,
 			}

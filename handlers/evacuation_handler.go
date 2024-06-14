@@ -50,7 +50,7 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 	response := &models.RemoveEvacuatingActualLRPResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response.ToProto())
+	defer func() { writeResponse(w, response.ToProto()) }()
 
 	err = parseRequest(logger, req, protoRequest)
 	request = protoRequest.FromProto()
@@ -72,7 +72,7 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 	protoRequest := &models.ProtoEvacuateClaimedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response.ToProto())
+	defer func() { writeResponse(w, response.ToProto()) }()
 
 	err := parseRequest(logger, req, protoRequest)
 	request = protoRequest.FromProto()
@@ -97,7 +97,7 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http
 	protoRequest := &models.ProtoEvacuateCrashedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response.ToProto())
+	defer func() { writeResponse(w, response.ToProto()) }()
 
 	err := parseRequest(logger, req, protoRequest)
 	request = protoRequest.FromProto()
@@ -121,7 +121,7 @@ func (h *EvacuationHandler) commonEvacuateRunningActualLRP(logger lager.Logger, 
 	response := &models.EvacuationResponse{}
 	response.KeepContainer = true
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response.ToProto())
+	defer func() { writeResponse(w, response.ToProto()) }()
 
 	err := parseRequest(logger, req, protoRequest)
 	request = protoRequest.FromProto()
@@ -166,7 +166,7 @@ func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http
 	response := &models.EvacuationResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response.ToProto())
+	defer func() { writeResponse(w, response.ToProto()) }()
 
 	err := parseRequest(logger, req, protoRequest)
 	request = protoRequest.FromProto()
