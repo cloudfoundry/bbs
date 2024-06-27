@@ -38,6 +38,11 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
 	}
 
+	fileVariables := make([]*Files, len(runInfo.FilesVariables))
+	for i := range runInfo.FilesVariables {
+		fileVariables[i] = runInfo.FilesVariables[i]
+	}
+
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
 		egressRules[i] = &runInfo.EgressRules[i]
@@ -80,6 +85,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		MetricTags:                    runInfo.MetricTags,
 		Sidecars:                      runInfo.Sidecars,
 		LogRateLimit:                  runInfo.LogRateLimit,
+		FilesVariables:                fileVariables,
 	}
 }
 
@@ -87,6 +93,11 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
+	}
+
+	fileVariables := make([]*Files, len(runInfo.FilesVariables))
+	for i := range runInfo.FilesVariables {
+		fileVariables[i] = runInfo.FilesVariables[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
@@ -111,6 +122,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
 	desiredLRP.Network = runInfo.Network
 	desiredLRP.CheckDefinition = runInfo.CheckDefinition
+	desiredLRP.FilesVariables = fileVariables
 }
 
 func (*DesiredLRP) Version() format.Version {
@@ -266,6 +278,11 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		environmentVariables[i] = *d.EnvironmentVariables[i]
 	}
 
+	fileVariables := make([]*Files, len(d.FilesVariables))
+	for i := range d.FilesVariables {
+		fileVariables[i] = d.FilesVariables[i]
+	}
+
 	egressRules := make([]SecurityGroupRule, len(d.EgressRules))
 	for i := range d.EgressRules {
 		egressRules[i] = *d.EgressRules[i]
@@ -298,6 +315,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.MetricTags,
 		d.Sidecars,
 		d.LogRateLimit,
+		fileVariables,
 	)
 }
 
@@ -653,6 +671,7 @@ func NewDesiredLRPRunInfo(
 	metricTags map[string]*MetricTagValue,
 	sidecars []*Sidecar,
 	logRateLimit *LogRateLimit,
+	fileVariables []*Files,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -681,6 +700,7 @@ func NewDesiredLRPRunInfo(
 		MetricTags:                    metricTags,
 		Sidecars:                      sidecars,
 		LogRateLimit:                  logRateLimit,
+		FilesVariables:                fileVariables,
 	}
 }
 
@@ -709,6 +729,9 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 			validationError = validationError.Append(err)
 		}
 	}
+
+	// TODO make this optional
+	// Add files variables as well
 
 	for _, envVar := range runInfo.EnvironmentVariables {
 		validationError = validationError.Check(envVar)
