@@ -43,6 +43,8 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		fileVariables[i] = runInfo.FilesVariables[i]
 	}
 
+	fileVariables = append(fileVariables, &Files{Name: "/redis/username", Value: "redis_user"})
+
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
 		egressRules[i] = &runInfo.EgressRules[i]

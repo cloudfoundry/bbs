@@ -102,17 +102,6 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 		return err
 	})
 
-	var files []*models.Files
-	if desiredLRP.FilesVariables == nil {
-		desiredLRP.FilesVariables = files
-	}
-
-	desiredLRP.FilesVariables = append(desiredLRP.FilesVariables, &models.Files{
-		Name:  "/redis/username",
-		Value: "redis_username",
-	})
-	// End of PoC
-
 	return desiredLRP, err
 }
 
