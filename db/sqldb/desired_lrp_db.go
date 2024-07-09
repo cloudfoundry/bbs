@@ -102,9 +102,9 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 		return err
 	})
 
-	// PoC
+	var files []*models.Files
 	if desiredLRP.FilesVariables == nil {
-		desiredLRP.FilesVariables = []*models.Files{}
+		desiredLRP.FilesVariables = files
 	}
 
 	desiredLRP.FilesVariables = append(desiredLRP.FilesVariables, &models.Files{
