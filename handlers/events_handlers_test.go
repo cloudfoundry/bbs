@@ -24,7 +24,7 @@ import (
 	"github.com/vito/go-sse/sse"
 )
 
-var _ = FDescribe("Event Handlers", func() {
+var _ = Describe("Event Handlers", func() {
 	var (
 		logger  lager.Logger
 		handler handlers.EventController
@@ -115,7 +115,7 @@ var _ = FDescribe("Event Handlers", func() {
 			})
 
 			Context("when successfully subscribing to the event hub", func() {
-				FIt("emits events from the hub to the connection", func() {
+				It("emits events from the hub to the connection", func() {
 					log.Printf("response.Body: %+v", response.Body)
 					reader := sse.NewReadCloser(response.Body)
 
