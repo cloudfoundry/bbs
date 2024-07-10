@@ -394,7 +394,7 @@ var _ = Describe("DesiredLRP", func() {
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = models.Routes{}
+			expectedSchedulingInfo.Routes = &models.Routes{}
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
@@ -443,7 +443,7 @@ var _ = Describe("DesiredLRP", func() {
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = *routes
+			expectedSchedulingInfo.Routes = routes
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
@@ -1551,12 +1551,12 @@ var _ = Describe("DesiredLRPSchedulingInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid scheduling info", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), routes, tag, nil, nil), ""),
-		Entry("invalid annotation", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), largeString, instances, newValidResource(), routes, tag, nil, nil), "annotation"),
-		Entry("invalid instances", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, -2, newValidResource(), routes, tag, nil, nil), "instances"),
-		Entry("invalid key", models.NewDesiredLRPSchedulingInfo(models.DesiredLRPKey{}, annotation, instances, newValidResource(), routes, tag, nil, nil), "process_guid"),
-		Entry("invalid resource", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, models.DesiredLRPResource{}, routes, tag, nil, nil), "rootfs"),
-		Entry("invalid routes", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), largeRoutes, tag, nil, nil), "routes"),
+		Entry("valid scheduling info", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), &routes, tag, nil, nil), ""),
+		Entry("invalid annotation", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), largeString, instances, newValidResource(), &routes, tag, nil, nil), "annotation"),
+		Entry("invalid instances", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, -2, newValidResource(), &routes, tag, nil, nil), "instances"),
+		Entry("invalid key", models.NewDesiredLRPSchedulingInfo(models.DesiredLRPKey{}, annotation, instances, newValidResource(), &routes, tag, nil, nil), "process_guid"),
+		Entry("invalid resource", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, models.DesiredLRPResource{}, &routes, tag, nil, nil), "rootfs"),
+		Entry("invalid routes", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), &largeRoutes, tag, nil, nil), "routes"),
 	)
 })
 
