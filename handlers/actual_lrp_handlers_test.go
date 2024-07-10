@@ -268,6 +268,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 	})
 
 	Describe("ActualLRPGroups", func() {
+		//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 		var requestBody *models.ActualLRPGroupsRequest
 
 		BeforeEach(func() {
