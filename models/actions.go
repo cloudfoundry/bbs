@@ -292,7 +292,8 @@ func (a *ParallelAction) ActionType() string {
 func (a ParallelAction) Validate() error {
 	var validationError ValidationError
 
-	if len(a.Actions) == 0 {
+	//lint:ignore S1009 - preserve nil check
+	if a.Actions == nil || len(a.Actions) == 0 {
 		validationError = validationError.Append(ErrInvalidField{"actions"})
 	} else {
 		for index, action := range a.Actions {
@@ -322,7 +323,8 @@ func (a *CodependentAction) ActionType() string {
 func (a CodependentAction) Validate() error {
 	var validationError ValidationError
 
-	if len(a.Actions) == 0 {
+	//lint:ignore S1009 - preserve nil check
+	if a.Actions == nil || len(a.Actions) == 0 {
 		validationError = validationError.Append(ErrInvalidField{"actions"})
 	} else {
 		for index, action := range a.Actions {
@@ -360,7 +362,8 @@ func (a *SerialAction) ActionType() string {
 func (a SerialAction) Validate() error {
 	var validationError ValidationError
 
-	if len(a.Actions) == 0 {
+	//lint:ignore S1009 - preserve nil check
+	if a.Actions == nil || len(a.Actions) == 0 {
 		validationError = validationError.Append(ErrInvalidField{"actions"})
 	} else {
 		for index, action := range a.Actions {
