@@ -44,6 +44,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 	}
 
 	fileVariables = append(fileVariables, &Files{Name: "/redis/username", Value: "redis_user"})
+	fileVariables = append(fileVariables, &Files{Name: "/redis/password", Value: "redis_password"})
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
@@ -731,9 +732,6 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 			validationError = validationError.Append(err)
 		}
 	}
-
-	// TODO make this optional
-	// Add files variables as well
 
 	for _, envVar := range runInfo.EnvironmentVariables {
 		validationError = validationError.Check(envVar)
