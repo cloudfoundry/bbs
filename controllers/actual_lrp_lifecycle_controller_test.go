@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
+	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/rep/repfakes"
@@ -404,6 +405,58 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				It("don't do anything", func() {
 					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
 					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(BeZero())
+				})
+			})
+
+			Context("when convergence promotes actual LRP to ordinary", func() {
+				var testDatabase *test_helpers.TestDatabase
+
+				BeforeEach(func() {
+					testDatabase = test_helpers.SetupTestDatabase(logger)
+
+					controller = controllers.NewActualLRPLifecycleController(
+						testDatabase.DB,
+						testDatabase.DB,
+						testDatabase.DB,
+						testDatabase.DB,
+						fakeAuctioneerClient,
+						fakeServiceClient,
+						fakeRepClientFactory,
+						actualHub,
+						actualLRPInstanceHub,
+					)
+				})
+
+				AfterEach(func() {
+					testDatabase.Stop()
+				})
+
+				FIt("works", func() {
+					_, err := testDatabase.DB.CreateUnclaimedActualLRP(ctx, logger, &actualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, _, err = testDatabase.DB.ClaimActualLRP(ctx, logger, actualLRPKey.ProcessGuid, actualLRPKey.Index, &afterInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
+
+					// _, _, err = testDatabase.DB.ChangeActualLRPPresence(ctx, logger, &actualLRPKey, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+					// Expect(err).NotTo(HaveOccurred())
+
+					// _, _, _, err = testDatabase.DB.PromoteSuspectActualLRP(ctx, logger, actualLRPKey.ProcessGuid, actualLRPKey.Index)
+					// Expect(err).NotTo(HaveOccurred())
+
+					err = controller.StartActualLRP(context.WithValue(ctx, trace.RequestIdHeaderCtxKey, traceId), logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
+					Expect(err).NotTo(HaveOccurred())
+
+					lrps, err := testDatabase.DB.ActualLRPs(ctx, logger, models.ActualLRPFilter{})
+					Expect(err).NotTo(HaveOccurred())
+					Expect(lrps).To(HaveLen(2))
+					Expect(lrps[0].State).To(Equal(models.ActualLRPStateRunning))
+					Expect(lrps[0].Presence).To(Equal(models.ActualLRP_Ordinary))
+
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(lrps[0], traceId)))
 				})
 			})
 		})

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -308,6 +309,7 @@ func (db *SQLDB) StartActualLRP(
 	var actualLRP *models.ActualLRP
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
+		// remove suspect in the same transaction
 		var err error
 		actualLRP, err = db.fetchActualLRPForUpdate(ctx, logger, key.ProcessGuid, key.Index, models.ActualLRP_Ordinary, tx)
 		if err == models.ErrResourceNotFound {
@@ -394,6 +396,7 @@ func (db *SQLDB) StartActualLRP(
 
 		return nil
 	})
+	fmt.Printf("created LRP: %#v\n", actualLRP)
 
 	return &beforeActualLRP, actualLRP, err
 }

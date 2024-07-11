@@ -132,6 +132,12 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context,
 		return nil
 	}
 
+	_, _, err = h.db.ChangeActualLRPPresence(ctx, logger, actualLRPKey, models.ActualLRP_Ordinary, models.ActualLRP_Suspect)
+	if err != nil {
+		return err
+	}
+	// issues changed to SUSPECT
+
 	// creates ordinary running actual LRP if it doesn't exist, otherwise updates
 	// the existing ordinary actual LRP to running state
 	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, routable, availabilityZone)
@@ -139,6 +145,11 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context,
 		return err
 	}
 	newLRPs := eventCalculator.RecordChange(before, after, lrps)
+	// this totally fails
+	// _, err = h.db.CreateUnclaimedActualLRP(ctx, logger.Session("create-unclaimed-actual"), actualLRPKey)
+	// if err != nil {
+	// 	return err
+	// }
 
 	defer func() {
 		go eventCalculator.EmitEvents(trace.RequestIdFromContext(ctx), lrps, newLRPs)
