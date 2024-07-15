@@ -150,7 +150,7 @@ var _ = Describe("Evacuation", func() {
 					Expect(actualLRPs[0].ModificationTag.Index).To(BeEquivalentTo((0)))
 					Expect(actualLRPs[0].ActualLrpInternalRoutes).To(Equal(internalRoutes))
 					Expect(actualLRPs[0].MetricTags).To(Equal(metricTags))
-					Expect(actualLRPs[0].GetRoutable()).To(Equal(true))
+					Expect(*actualLRPs[0].Routable).To(Equal(true))
 					Expect(actualLRPs[0].AvailabilityZone).To(Equal(actualLRP.AvailabilityZone))
 
 					actualLRPs[0].ModificationTag = actualLRP.ModificationTag
