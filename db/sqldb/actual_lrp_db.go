@@ -665,7 +665,9 @@ func (db *SQLDB) scanToActualLRP(logger lager.Logger, row helpers.RowScanner) (*
 	}
 
 	if len(netInfoData) > 0 {
-		err = db.deserializeModel(logger, netInfoData, actualLRP.ActualLrpNetInfo.ToProto())
+		protoNetInfo := models.ProtoActualLRPNetInfo{}
+		err = db.deserializeModel(logger, netInfoData, &protoNetInfo)
+		actualLRP.ActualLrpNetInfo = *protoNetInfo.FromProto()
 		if err != nil {
 			logger.Error("failed-unmarshaling-net-info-data", err)
 			return &actualLRP, models.ErrDeserialize
