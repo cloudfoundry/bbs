@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -116,7 +115,6 @@ var _ = Describe("Event Handlers", func() {
 
 			Context("when successfully subscribing to the event hub", func() {
 				It("emits events from the hub to the connection", func() {
-					log.Printf("response.Body: %+v", response.Body)
 					reader := sse.NewReadCloser(response.Body)
 
 					fakeEvent := &models.FakeEvent{Token: "A"}
@@ -125,8 +123,6 @@ var _ = Describe("Event Handlers", func() {
 					encodedPayload := base64.StdEncoding.EncodeToString(marshalledFakeEvent)
 
 					tokenA, _ := reader.Next()
-					log.Printf("tokenA: %+v", tokenA)
-
 					Expect(tokenA).To(Equal(sse.Event{
 						ID:   "0",
 						Name: "fake",

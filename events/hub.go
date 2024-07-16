@@ -2,7 +2,6 @@ package events
 
 import (
 	"errors"
-	"log"
 	"sync"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -83,8 +82,6 @@ func (hub *hub) Subscribe() (EventSource, error) {
 }
 
 func (hub *hub) Emit(event models.Event) {
-	log.Printf("event: %+v", event)
-	log.Printf("event.EventType(): %+v", event.EventType())
 	hub.lock.Lock()
 	size := len(hub.subscribers)
 

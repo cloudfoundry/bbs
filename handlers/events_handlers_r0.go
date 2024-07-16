@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/format"
@@ -93,8 +92,6 @@ func (h *LRPInstanceEventHandler) commonSubscribe(logger lager.Logger, w http.Re
 	protoRequest := &models.ProtoEventsByCellId{}
 	err := parseRequest(logger, req, protoRequest)
 	request = protoRequest.FromProto()
-	log.Printf("protoRequest: %+v", protoRequest)
-	log.Printf("request: %+v", request)
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		w.WriteHeader(http.StatusInternalServerError)
