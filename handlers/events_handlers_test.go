@@ -255,7 +255,7 @@ var _ = Describe("Event Handlers", func() {
 			Context("when cell id is specified", func() {
 				var (
 					reader      *sse.ReadCloser
-					requestBody interface{}
+					requestBody *models.EventsByCellId
 					cellId      = "cell-id"
 					eventSource events.EventSource
 					eventsCh    chan models.Event
@@ -273,7 +273,8 @@ var _ = Describe("Event Handlers", func() {
 				JustBeforeEach(func() {
 					By("creating server")
 					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						request := newTestRequest(requestBody)
+						protoRequestBody := requestBody.ToProto()
+						request := newTestRequest(protoRequestBody)
 						handler.Subscribe_r0(logger, w, request)
 					}))
 
