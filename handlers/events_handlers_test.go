@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/events"
-	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/models"
@@ -22,6 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/vito/go-sse/sse"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Event Handlers", func() {
@@ -65,7 +65,7 @@ var _ = Describe("Event Handlers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				go func() {
 					for {
-						hub.Emit(eventfakes.FakeEvent{Token: "A"})
+						hub.Emit(&models.FakeEvent{Token: "A"})
 					}
 				}()
 				Eventually(eventStreamDone, 10).Should(BeClosed())
@@ -119,8 +119,10 @@ var _ = Describe("Event Handlers", func() {
 					log.Printf("response.Body: %+v", response.Body)
 					reader := sse.NewReadCloser(response.Body)
 
-					hub.Emit(&eventfakes.FakeEvent{Token: "A"})
-					encodedPayload := base64.StdEncoding.EncodeToString([]byte("A"))
+					fakeEvent := &models.FakeEvent{Token: "A"}
+					marshalledFakeEvent, _ := proto.Marshal(fakeEvent.ToProto())
+					hub.Emit(fakeEvent)
+					encodedPayload := base64.StdEncoding.EncodeToString(marshalledFakeEvent)
 
 					tokenA, _ := reader.Next()
 					log.Printf("tokenA: %+v", tokenA)
@@ -131,9 +133,11 @@ var _ = Describe("Event Handlers", func() {
 						Data: []byte(encodedPayload),
 					}))
 
-					hub.Emit(&eventfakes.FakeEvent{Token: "B"})
+					fakeEvent = &models.FakeEvent{Token: "B"}
+					marshalledFakeEvent, _ = proto.Marshal(fakeEvent.ToProto())
+					hub.Emit(fakeEvent)
 
-					encodedPayload = base64.StdEncoding.EncodeToString([]byte("B"))
+					encodedPayload = base64.StdEncoding.EncodeToString(marshalledFakeEvent)
 					Expect(reader.Next()).To(Equal(sse.Event{
 						ID:   "1",
 						Name: "fake",
@@ -149,8 +153,10 @@ var _ = Describe("Event Handlers", func() {
 				It("detects closed clients on the server", func() {
 					reader := sse.NewReadCloser(response.Body)
 
-					hub.Emit(&eventfakes.FakeEvent{Token: "A"})
-					encodedPayload := base64.StdEncoding.EncodeToString([]byte("A"))
+					fakeEvent := &models.FakeEvent{Token: "A"}
+					marshalledFakeEvent, _ := proto.Marshal(fakeEvent.ToProto())
+					hub.Emit(fakeEvent)
+					encodedPayload := base64.StdEncoding.EncodeToString(marshalledFakeEvent)
 
 					Expect(reader.Next()).To(Equal(sse.Event{
 						ID:   "0",
@@ -166,7 +172,7 @@ var _ = Describe("Event Handlers", func() {
 
 				Context("when the source provides an unmarshalable event", func() {
 					It("closes the event stream to the client", func() {
-						hub.Emit(eventfakes.UnmarshalableEvent{Fn: func() {}})
+						hub.Emit(&models.FakeEvent{Token: "\xc3\x28"}) // invalid UTF-8
 
 						reader := sse.NewReadCloser(response.Body)
 						_, err := reader.Next()
