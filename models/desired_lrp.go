@@ -208,10 +208,6 @@ func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
 }
 
 func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
-	var routes Routes
-	if d.Routes != nil {
-		routes = *d.Routes
-	}
 	var modificationTag ModificationTag
 	if d.ModificationTag != nil {
 		modificationTag = *d.ModificationTag
@@ -228,7 +224,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 		d.Annotation,
 		d.Instances,
 		d.DesiredLRPResource(),
-		&routes,
+		d.Routes,
 		modificationTag,
 		&volumePlacement,
 		d.PlacementTags,
