@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/bbs/events"
-	"code.cloudfoundry.org/bbs/events/eventfakes"
+	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -88,13 +88,13 @@ var _ = Describe("Hub", func() {
 		source2, err := hub.Subscribe()
 		Expect(err).NotTo(HaveOccurred())
 
-		hub.Emit(eventfakes.FakeEvent{Token: "1"})
-		Expect(source1.Next()).To(Equal(eventfakes.FakeEvent{Token: "1"}))
-		Expect(source2.Next()).To(Equal(eventfakes.FakeEvent{Token: "1"}))
+		hub.Emit(&models.FakeEvent{Token: "1"})
+		Expect(source1.Next()).To(Equal(&models.FakeEvent{Token: "1"}))
+		Expect(source2.Next()).To(Equal(&models.FakeEvent{Token: "1"}))
 
-		hub.Emit(eventfakes.FakeEvent{Token: "2"})
-		Expect(source1.Next()).To(Equal(eventfakes.FakeEvent{Token: "2"}))
-		Expect(source2.Next()).To(Equal(eventfakes.FakeEvent{Token: "2"}))
+		hub.Emit(&models.FakeEvent{Token: "2"})
+		Expect(source1.Next()).To(Equal(&models.FakeEvent{Token: "2"}))
+		Expect(source2.Next()).To(Equal(&models.FakeEvent{Token: "2"}))
 	})
 
 	It("closes slow consumers after MAX_PENDING_SUBSCRIBER_EVENTS missed events", func() {
@@ -103,28 +103,28 @@ var _ = Describe("Hub", func() {
 
 		By("filling the 'buffer'")
 		for eventToken := 0; eventToken < events.MAX_PENDING_SUBSCRIBER_EVENTS; eventToken++ {
-			hub.Emit(eventfakes.FakeEvent{Token: strconv.Itoa(eventToken)})
+			hub.Emit(&models.FakeEvent{Token: strconv.Itoa(eventToken)})
 		}
 
 		By("reading 2 events off")
 		ev, err := slowConsumer.Next()
 		Expect(err).NotTo(HaveOccurred())
-		Expect(ev).To(Equal(eventfakes.FakeEvent{Token: "0"}))
+		Expect(ev).To(Equal(&models.FakeEvent{Token: "0"}))
 
 		ev, err = slowConsumer.Next()
 		Expect(err).NotTo(HaveOccurred())
-		Expect(ev).To(Equal(eventfakes.FakeEvent{Token: "1"}))
+		Expect(ev).To(Equal(&models.FakeEvent{Token: "1"}))
 
 		By("putting 3 more events on, 'overflowing the buffer' and making the consumer 'slow'")
 		for eventToken := events.MAX_PENDING_SUBSCRIBER_EVENTS; eventToken < events.MAX_PENDING_SUBSCRIBER_EVENTS+3; eventToken++ {
-			hub.Emit(eventfakes.FakeEvent{Token: strconv.Itoa(eventToken)})
+			hub.Emit(&models.FakeEvent{Token: strconv.Itoa(eventToken)})
 		}
 
 		By("reading off all the 'buffered' events")
 		for eventToken := 2; eventToken < events.MAX_PENDING_SUBSCRIBER_EVENTS+2; eventToken++ {
 			ev, err = slowConsumer.Next()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(ev).To(Equal(eventfakes.FakeEvent{Token: strconv.Itoa(eventToken)}))
+			Expect(ev).To(Equal(&models.FakeEvent{Token: strconv.Itoa(eventToken)}))
 		}
 
 		By("trying to read more out of the source")
@@ -137,8 +137,8 @@ var _ = Describe("Hub", func() {
 			source, err := hub.Subscribe()
 			Expect(err).NotTo(HaveOccurred())
 
-			hub.Emit(eventfakes.FakeEvent{Token: "1"})
-			Expect(source.Next()).To(Equal(eventfakes.FakeEvent{Token: "1"}))
+			hub.Emit(&models.FakeEvent{Token: "1"})
+			Expect(source.Next()).To(Equal(&models.FakeEvent{Token: "1"}))
 
 			err = source.Close()
 			Expect(err).NotTo(HaveOccurred())
@@ -154,7 +154,7 @@ var _ = Describe("Hub", func() {
 			err = source.Close()
 			Expect(err).NotTo(HaveOccurred())
 
-			hub.Emit(eventfakes.FakeEvent{Token: "1"})
+			hub.Emit(&models.FakeEvent{Token: "1"})
 
 			_, err = source.Next()
 			Expect(err).To(Equal(events.ErrReadFromClosedSource))

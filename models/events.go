@@ -33,6 +33,8 @@ const (
 	EventTypeTaskCreated = "task_created"
 	EventTypeTaskChanged = "task_changed"
 	EventTypeTaskRemoved = "task_removed"
+
+	EventTypeFake = "fake"
 )
 
 // Downgrade the DesiredLRPEvent payload (i.e. DesiredLRP(s)) to the given
@@ -372,5 +374,17 @@ func (event TaskRemovedEvent) Key() string {
 }
 
 func (event *TaskRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
+func (event *FakeEvent) EventType() string {
+	return EventTypeFake
+}
+
+func (event FakeEvent) Key() string {
+	return event.Token
+}
+
+func (event *FakeEvent) ToEventProto() proto.Message {
 	return event.ToProto()
 }

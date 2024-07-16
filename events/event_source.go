@@ -295,6 +295,17 @@ func parseRawEvent(rawEvent sse.Event) (models.Event, error) {
 		event = protoEvent.FromProto()
 
 		return event, nil
+
+	case models.EventTypeFake:
+		event := new(models.FakeEvent)
+		protoEvent := new(models.ProtoFakeEvent)
+		err := proto.Unmarshal(data, protoEvent)
+		if err != nil {
+			return nil, NewInvalidPayloadError(rawEvent.Name, err)
+		}
+		event = protoEvent.FromProto()
+
+		return event, nil
 	}
 
 	return nil, ErrUnrecognizedEventType
