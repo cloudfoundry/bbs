@@ -96,3 +96,7 @@ message ProtoTaskChangedEvent {
 message ProtoTaskRemovedEvent {
   ProtoTask task = 1;
 }
+
+message ProtoFakeEvent {
+  string token = 1;
+}
