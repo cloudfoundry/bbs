@@ -72,7 +72,7 @@ message DesiredLRPRunInfo {
   repeated Sidecar sidecars = 26;
   LogRateLimit log_rate_limit = 27;
 
-  repeated Files files_variables = 28 [(gogoproto.jsontag) = "files", (gogoproto.nullable) = true];
+  repeated Files files = 28 [(gogoproto.jsontag) = "files", (gogoproto.nullable) = true];
 }
 
 // helper message for marshalling routes
@@ -150,5 +150,5 @@ message DesiredLRP {
 
   repeated Sidecar sidecars = 36;
   LogRateLimit log_rate_limit = 37;
-  repeated Files files_variables = 38 [(gogoproto.jsontag) = "files", (gogoproto.nullable) = true];
+  repeated Files files = 38 [(gogoproto.jsontag) = "files", (gogoproto.nullable) = true];
 }

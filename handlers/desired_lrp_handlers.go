@@ -207,8 +207,8 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	if len(request.DesiredLrp.FilesVariables) > 0 {
-		err = h.validateFilesVariablesSize(request.DesiredLrp.FilesVariables)
+	if len(request.DesiredLrp.Files) > 0 {
+		err = h.validateFileBasedServiceBinding(request.DesiredLrp.Files)
 		if err != nil {
 			response.Error = models.ConvertError(err)
 			return
@@ -501,9 +501,9 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 	}
 }
 
-func (h *DesiredLRPHandler) validateFilesVariablesSize(filesVariables []*models.Files) error {
+func (h *DesiredLRPHandler) validateFileBasedServiceBinding(files []*models.Files) error {
 	var totalSize int
-	for _, file := range filesVariables {
+	for _, file := range files {
 		totalSize += len(file.Value)
 		if totalSize > maxAllowedSize {
 			return errors.New("total size of all file values exceeds 1MB")
