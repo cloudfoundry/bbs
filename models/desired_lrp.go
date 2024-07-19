@@ -38,9 +38,9 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
 	}
 
-	fileBasedServiceBinding := make([]*Files, len(runInfo.Files))
-	for i := range runInfo.Files {
-		fileBasedServiceBinding[i] = runInfo.Files[i]
+	serviceBindingFiles := make([]*Files, len(runInfo.ServiceBindingFiles))
+	for i := range runInfo.ServiceBindingFiles {
+		serviceBindingFiles[i] = runInfo.ServiceBindingFiles[i]
 	}
 
 	//fileBasedServiceBinding = append(fileBasedServiceBinding, &Files{Name: "/redis/username", Value: "redis_user"})
@@ -88,7 +88,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		MetricTags:                    runInfo.MetricTags,
 		Sidecars:                      runInfo.Sidecars,
 		LogRateLimit:                  runInfo.LogRateLimit,
-		Files:                         fileBasedServiceBinding,
+		ServiceBindingFiles:           serviceBindingFiles,
 	}
 }
 
@@ -98,9 +98,9 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
 	}
 
-	fileBasedServiceBinding := make([]*Files, len(runInfo.Files))
-	for i := range runInfo.Files {
-		fileBasedServiceBinding[i] = runInfo.Files[i]
+	serviceBindingFiles := make([]*Files, len(runInfo.ServiceBindingFiles))
+	for i := range runInfo.ServiceBindingFiles {
+		serviceBindingFiles[i] = runInfo.ServiceBindingFiles[i]
 	}
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
@@ -125,7 +125,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
 	desiredLRP.Network = runInfo.Network
 	desiredLRP.CheckDefinition = runInfo.CheckDefinition
-	desiredLRP.Files = fileBasedServiceBinding
+	desiredLRP.ServiceBindingFiles = serviceBindingFiles
 }
 
 func (*DesiredLRP) Version() format.Version {
@@ -281,9 +281,9 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		environmentVariables[i] = *d.EnvironmentVariables[i]
 	}
 
-	fileBasedServiceBinding := make([]*Files, len(d.Files))
-	for i := range d.Files {
-		fileBasedServiceBinding[i] = d.Files[i]
+	serviceBindingFiles := make([]*Files, len(d.ServiceBindingFiles))
+	for i := range d.ServiceBindingFiles {
+		serviceBindingFiles[i] = d.ServiceBindingFiles[i]
 	}
 
 	egressRules := make([]SecurityGroupRule, len(d.EgressRules))
@@ -318,7 +318,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.MetricTags,
 		d.Sidecars,
 		d.LogRateLimit,
-		fileBasedServiceBinding,
+		serviceBindingFiles,
 	)
 }
 
@@ -674,7 +674,7 @@ func NewDesiredLRPRunInfo(
 	metricTags map[string]*MetricTagValue,
 	sidecars []*Sidecar,
 	logRateLimit *LogRateLimit,
-	fileBasedServiceBinding []*Files,
+	serviceBindingFiles []*Files,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -703,7 +703,7 @@ func NewDesiredLRPRunInfo(
 		MetricTags:                    metricTags,
 		Sidecars:                      sidecars,
 		LogRateLimit:                  logRateLimit,
-		Files:                         fileBasedServiceBinding,
+		ServiceBindingFiles:           serviceBindingFiles,
 	}
 }
 

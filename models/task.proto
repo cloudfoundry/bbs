@@ -45,7 +45,7 @@ message TaskDefinition {
   repeated ImageLayer image_layers = 25;
   LogRateLimit log_rate_limit = 26;
   map<string, MetricTagValue> metric_tags = 27;
-  repeated Files files = 28 [(gogoproto.jsontag) = "files", (gogoproto.nullable) = true];
+  repeated Files service_binding_files = 28 [(gogoproto.jsontag) = "service_binding_files", (gogoproto.nullable) = true];
 }
 
 message Task {

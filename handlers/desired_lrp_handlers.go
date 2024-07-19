@@ -207,8 +207,8 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 		return
 	}
 
-	if len(request.DesiredLrp.Files) > 0 {
-		err = h.validateFileBasedServiceBinding(request.DesiredLrp.Files)
+	if len(request.DesiredLrp.ServiceBindingFiles) > 0 {
+		err = h.validateFileBasedServiceBinding(request.DesiredLrp.ServiceBindingFiles)
 		if err != nil {
 			response.Error = models.ConvertError(err)
 			return
