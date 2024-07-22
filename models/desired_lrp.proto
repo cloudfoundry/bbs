@@ -150,5 +150,5 @@ message DesiredLRP {
 
   repeated Sidecar sidecars = 36;
   LogRateLimit log_rate_limit = 37;
-  repeated Files service_binding_files = 38 [(gogoproto.jsontag) = "service_binding_files", (gogoproto.nullable) = true];
+  repeated Files service_binding_files = 38 [(gogoproto.jsontag) = "service_binding_files"];
 }

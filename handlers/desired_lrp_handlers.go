@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -18,8 +17,6 @@ import (
 	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
-
-const maxAllowedSize = 1 * 1024 * 1024 // 1MB in bytes
 
 type DesiredLRPHandler struct {
 	desiredLRPDB         db.DesiredLRPDB
@@ -205,14 +202,6 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
-	}
-
-	if len(request.DesiredLrp.ServiceBindingFiles) > 0 {
-		err = h.validateFileBasedServiceBinding(request.DesiredLrp.ServiceBindingFiles)
-		if err != nil {
-			response.Error = models.ConvertError(err)
-			return
-		}
 	}
 
 	err = h.desiredLRPDB.DesireLRP(req.Context(), logger, request.DesiredLrp)
@@ -499,15 +488,4 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 			}()
 		}
 	}
-}
-
-func (h *DesiredLRPHandler) validateFileBasedServiceBinding(files []*models.Files) error {
-	var totalSize int
-	for _, file := range files {
-		totalSize += len(file.Value)
-		if totalSize > maxAllowedSize {
-			return errors.New("total size of all file values exceeds 1MB")
-		}
-	}
-	return nil
 }

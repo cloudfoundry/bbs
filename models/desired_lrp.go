@@ -3,6 +3,7 @@ package models
 import (
 	bytes "bytes"
 	"encoding/json"
+	"errors"
 	"net/url"
 	"regexp"
 	"time"
@@ -12,6 +13,8 @@ import (
 
 const PreloadedRootFSScheme = "preloaded"
 const PreloadedOCIRootFSScheme = "preloaded+layer"
+
+const maxAllowedSize = 1 * 1024 * 1024 // 1MB in bytes
 
 var processGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
@@ -43,8 +46,10 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		serviceBindingFiles[i] = runInfo.ServiceBindingFiles[i]
 	}
 
-	//fileBasedServiceBinding = append(fileBasedServiceBinding, &Files{Name: "/redis/username", Value: "redis_user"})
-	//fileBasedServiceBinding = append(fileBasedServiceBinding, &Files{Name: "/redis/password", Value: "redis_password"})
+	// Remove me
+	serviceBindingFiles = append(serviceBindingFiles, &Files{Name: "/redis/username", Value: "redis_user"})
+	serviceBindingFiles = append(serviceBindingFiles, &Files{Name: "/redis/password", Value: "redis_password"})
+	// End of Remove Me
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
@@ -329,6 +334,13 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
+
+	if len(desired.ServiceBindingFiles) > 0 {
+		err := validateServiceBindingFiles(desired.ServiceBindingFiles)
+		if err != nil {
+			validationError = validationError.Append(ErrInvalidField{"serviceBindingFiles"})
+		}
+	}
 
 	if desired.GetDomain() == "" {
 		validationError = validationError.Append(ErrInvalidField{"domain"})
@@ -712,6 +724,13 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 	validationError = validationError.Check(runInfo.DesiredLRPKey)
 
+	if len(runInfo.ServiceBindingFiles) > 0 {
+		err := validateServiceBindingFiles(runInfo.ServiceBindingFiles)
+		if err != nil {
+			validationError = validationError.Append(ErrInvalidField{"serviceBindingFiles"})
+		}
+	}
+
 	if runInfo.Setup != nil {
 		if err := runInfo.Setup.Validate(); err != nil {
 			validationError = validationError.Append(ErrInvalidField{"setup"})
@@ -804,5 +823,16 @@ func (*CertificateProperties) Version() format.Version {
 }
 
 func (CertificateProperties) Validate() error {
+	return nil
+}
+
+func validateServiceBindingFiles(files []*Files) error {
+	var totalSize int
+	for _, file := range files {
+		totalSize += len(file.Value)
+		if totalSize > maxAllowedSize {
+			return errors.New("total size of all file values exceeds 1MB")
+		}
+	}
 	return nil
 }

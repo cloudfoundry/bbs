@@ -109,7 +109,10 @@ var _ = Describe("Task", func() {
 		  "bar": {
 			  "dynamic": "INDEX"
 		  }
-		}
+		},
+		"service_binding_files": [
+			{"name": "/redis/username", "value": "username"}
+		]
 	  }`
 
 		task = models.Task{}
