@@ -72,7 +72,7 @@ message DesiredLRPRunInfo {
   repeated Sidecar sidecars = 26;
   LogRateLimit log_rate_limit = 27;
 
-  repeated Files service_binding_files = 28 [(gogoproto.jsontag) = "service_binding_files", (gogoproto.nullable) = true];
+  repeated Files service_binding_files = 28 [(gogoproto.jsontag) = "service_binding_files"];
 }
 
 // helper message for marshalling routes
