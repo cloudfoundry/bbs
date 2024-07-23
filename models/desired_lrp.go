@@ -46,11 +46,6 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		serviceBindingFiles[i] = runInfo.ServiceBindingFiles[i]
 	}
 
-	// Remove me
-	serviceBindingFiles = append(serviceBindingFiles, &Files{Name: "/redis/username", Value: "redis_user"})
-	serviceBindingFiles = append(serviceBindingFiles, &Files{Name: "/redis/password", Value: "redis_password"})
-	// End of Remove Me
-
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
 		egressRules[i] = &runInfo.EgressRules[i]
