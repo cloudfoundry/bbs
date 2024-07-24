@@ -42,9 +42,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 	}
 
 	serviceBindingFiles := make([]*Files, len(runInfo.ServiceBindingFiles))
-	for i := range runInfo.ServiceBindingFiles {
-		serviceBindingFiles[i] = runInfo.ServiceBindingFiles[i]
-	}
+	copy(serviceBindingFiles, runInfo.ServiceBindingFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
@@ -99,9 +97,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	}
 
 	serviceBindingFiles := make([]*Files, len(runInfo.ServiceBindingFiles))
-	for i := range runInfo.ServiceBindingFiles {
-		serviceBindingFiles[i] = runInfo.ServiceBindingFiles[i]
-	}
+	copy(serviceBindingFiles, runInfo.ServiceBindingFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
@@ -282,9 +278,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	}
 
 	serviceBindingFiles := make([]*Files, len(d.ServiceBindingFiles))
-	for i := range d.ServiceBindingFiles {
-		serviceBindingFiles[i] = d.ServiceBindingFiles[i]
-	}
+	copy(serviceBindingFiles, d.ServiceBindingFiles)
 
 	egressRules := make([]SecurityGroupRule, len(d.EgressRules))
 	for i := range d.EgressRules {

@@ -1009,8 +1009,8 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("fails when service binding files exceed 1MB", func() {
 			var exceedSize string
-			for _ = range (1024 * 1024) + 100 {
-				exceedSize += fmt.Sprintf("%s", "a")
+			for range (1024 * 1024) + 100 {
+				exceedSize += "a"
 			}
 
 			var InvalidServiceBindingFiles = []*models.Files{{Name: "/redis/username", Value: exceedSize}}
@@ -1611,8 +1611,8 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 	var serviceBindingFiles = []*models.Files{{Name: "/redis/username", Value: "username"}}
 
 	var exceedSize string
-	for _ = range (1024 * 1024) + 100 {
-		exceedSize += fmt.Sprintf("%s", "a")
+	for range (1024 * 1024) + 100 {
+		exceedSize += "a"
 	}
 
 	var InvalidServiceBindingFiles = []*models.Files{{Name: "/redis/username", Value: exceedSize}}
