@@ -134,6 +134,12 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			"source_id": {Static: "some-metrics-guid"},
 		},
 	}
+
+	desiredLRP.ServiceBindingFiles = append(desiredLRP.ServiceBindingFiles, &models.Files{
+		Name:  "/redis/username",
+		Value: "redis_user",
+	})
+
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
 
