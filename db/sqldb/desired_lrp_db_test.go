@@ -518,11 +518,11 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when updating the metric tags", func() {
 			BeforeEach(func() {
-				expectedDesiredLRP.MetricTags["tag-to-be-overwritten"] = &models.MetricTagValue{Static: "overwritten-value"}
+				(*expectedDesiredLRP.MetricTags)["tag-to-be-overwritten"] = &models.MetricTagValue{Static: "overwritten-value"}
 			})
 
 			It("overwrites the existing metric tags in the database", func() {
-				expectedMetricTags := map[string]*models.MetricTagValue{
+				expectedMetricTags := &models.MetricTags{
 					"some-tag": &models.MetricTagValue{Static: "some-value"},
 				}
 				update = &models.DesiredLRPUpdate{MetricTags: expectedMetricTags}
@@ -532,7 +532,6 @@ var _ = Describe("DesiredLRPDB", func() {
 
 				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(desiredLRP.MetricTags).ToNot(HaveKey("tag-to-be-overwritten"))
 				Expect(desiredLRP.MetricTags).To(Equal(expectedMetricTags))
 			})
 		})

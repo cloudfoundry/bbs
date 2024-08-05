@@ -130,7 +130,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
 			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
 		},
-		MetricTags: map[string]*models.MetricTagValue{
+		MetricTags: &models.MetricTags{
 			"source_id": {Static: "some-metrics-guid"},
 		},
 	}

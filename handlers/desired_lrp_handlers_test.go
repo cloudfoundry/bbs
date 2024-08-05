@@ -148,7 +148,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithMetricTags := []*models.DesiredLRP{
-						{MetricTags: map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}}},
+						{MetricTags: &models.MetricTags{"source_id": {Static: "some-guid"}}},
 						{MetricsGuid: "some-metrics-guid"},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
@@ -284,7 +284,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithMetricTags := []*models.DesiredLRP{
-						{MetricTags: map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}}},
+						{MetricTags: &models.MetricTags{"source_id": {Static: "some-guid"}}},
 						{MetricsGuid: "some-metrics-guid"},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithMetricTags, nil)
@@ -457,7 +457,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRPWithMetricTags := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					MetricTags:  map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}},
+					MetricTags:  &models.MetricTags{"source_id": {Static: "some-guid"}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
 				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
@@ -568,7 +568,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRPWithMetricTags := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					MetricTags:  map[string]*models.MetricTagValue{"source_id": {Static: "some-guid"}},
+					MetricTags:  &models.MetricTags{"source_id": {Static: "some-guid"}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRPWithMetricTags, nil)
 				updatedDesiredLRP = desiredLRPWithMetricTags.Copy().PopulateMetricsGuid()
@@ -1486,7 +1486,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 							"cf-router":       (*json.RawMessage)(&cfRouterContent),
 							"internal-router": (*json.RawMessage)(&newInternalRouterContent),
 						}
-						beforeDesiredLRP.MetricTags = map[string]*models.MetricTagValue{
+						beforeDesiredLRP.MetricTags = &models.MetricTags{
 							"some-tag": {Static: "some-value"},
 						}
 					})
@@ -1515,7 +1515,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 						Context("when metric tags are unchanged", func() {
 							BeforeEach(func() {
-								update.MetricTags = map[string]*models.MetricTagValue{
+								update.MetricTags = &models.MetricTags{
 									"some-tag": {Static: "some-value"},
 								}
 							})
@@ -1590,10 +1590,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 
 			Context("when metric tags are provided", func() {
-				var expectedTags map[string]*models.MetricTagValue
+				var expectedTags *models.MetricTags
 
 				BeforeEach(func() {
-					expectedTags = map[string]*models.MetricTagValue{
+					expectedTags = &models.MetricTags{
 						"some-tag": {Static: "some-value"},
 					}
 
@@ -1623,7 +1623,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					var actualLRPs []*models.ActualLRP
 
 					BeforeEach(func() {
-						beforeDesiredLRP.MetricTags = map[string]*models.MetricTagValue{
+						beforeDesiredLRP.MetricTags = &models.MetricTags{
 							"some-tag": {Static: "some-earlier-value"},
 						}
 						fakeServiceClient.CellByIdReturns(&models.CellPresence{
@@ -1741,7 +1741,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						actualLRPs = []*models.ActualLRP{lrp1, lrp2}
 						fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 
-						beforeDesiredLRP.MetricTags = map[string]*models.MetricTagValue{
+						beforeDesiredLRP.MetricTags = &models.MetricTags{
 							"some-tag": {Static: "some-value"},
 						}
 						fakeServiceClient.CellByIdReturns(&models.CellPresence{

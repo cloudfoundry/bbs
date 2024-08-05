@@ -6,6 +6,65 @@ import (
 	"strconv"
 )
 
+type MetricTags map[string]*MetricTagValue
+
+func (m *MetricTags) protoMetricTags() *ProtoMetricTags {
+	pr := &ProtoMetricTags{
+		MetricTags: map[string]*MetricTagValue{},
+	}
+
+	for k, v := range *m {
+		pr.MetricTags[k] = v
+	}
+
+	return pr
+}
+
+func (m *MetricTags) Marshal() ([]byte, error) {
+	return m.protoMetricTags().Marshal()
+}
+
+func (m *MetricTags) MarshalTo(data []byte) (n int, err error) {
+	return m.protoMetricTags().MarshalTo(data)
+}
+
+func (m *MetricTags) Unmarshal(data []byte) error {
+	pr := &ProtoMetricTags{}
+	err := pr.Unmarshal(data)
+	if err != nil {
+		return err
+	}
+
+	if pr.MetricTags == nil {
+		return nil
+	}
+
+	metricTags := map[string]*MetricTagValue{}
+	for k, v := range pr.MetricTags {
+		metricTags[k] = v
+	}
+	*m = metricTags
+
+	return nil
+}
+
+func (m *MetricTags) Size() int {
+	if m == nil {
+		return 0
+	}
+
+	return m.protoMetricTags().Size()
+}
+
+func (m *MetricTags) Equal(other MetricTags) bool {
+	for k, v := range *m {
+		if !v.Equal(other[k]) {
+			return false
+		}
+	}
+	return true
+}
+
 func (m *MetricTagValue) Validate() error {
 	var validationError ValidationError
 
@@ -37,7 +96,7 @@ func (v MetricTagValue_DynamicValue) Valid() bool {
 	}
 }
 
-func ConvertMetricTags(metricTags map[string]*MetricTagValue, info map[MetricTagValue_DynamicValue]interface{}) (map[string]string, error) {
+func ConvertMetricTags(metricTags MetricTags, info map[MetricTagValue_DynamicValue]interface{}) (map[string]string, error) {
 	tags := make(map[string]string)
 	for k, v := range metricTags {
 		if v.Dynamic > 0 {
@@ -62,7 +121,7 @@ func ConvertMetricTags(metricTags map[string]*MetricTagValue, info map[MetricTag
 	return tags, nil
 }
 
-func validateMetricTags(m map[string]*MetricTagValue, metricsGuid string) ValidationError {
+func validateMetricTags(m MetricTags, metricsGuid string) ValidationError {
 	var validationError ValidationError
 
 	for _, v := range m {

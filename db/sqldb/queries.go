@@ -28,7 +28,7 @@ var (
 		desiredLRPsTable + ".routes",
 		desiredLRPsTable + ".modification_tag_epoch",
 		desiredLRPsTable + ".modification_tag_index",
-		desiredLRPsTable + ".run_info",
+		desiredLRPsTable + ".metric_tags",
 	}
 
 	schedulingInfoColumns = helpers.ColumnList{
@@ -46,6 +46,7 @@ var (
 		desiredLRPsTable + ".modification_tag_epoch",
 		desiredLRPsTable + ".modification_tag_index",
 		desiredLRPsTable + ".placement_tags",
+		desiredLRPsTable + ".metric_tags",
 	}
 
 	desiredLRPColumns = append(schedulingInfoColumns,
@@ -305,7 +306,7 @@ func (db *SQLDB) selectLRPsWithMetricTags(ctx context.Context, logger lager.Logg
 			WHERE actual_lrps.state = ? AND actual_lrps.presence = ?
 		`,
 		strings.Join(
-			append(actualLRPIDColumns, actualLRPsTable+".metric_tags", desiredLRPsTable+".run_info"),
+			append(actualLRPIDColumns, actualLRPsTable+".metric_tags", desiredLRPsTable+".metric_tags"),
 			", ",
 		),
 	)

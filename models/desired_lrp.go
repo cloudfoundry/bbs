@@ -77,7 +77,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		ImagePassword:                 runInfo.ImagePassword,
 		CheckDefinition:               runInfo.CheckDefinition,
 		ImageLayers:                   runInfo.ImageLayers,
-		MetricTags:                    runInfo.MetricTags,
+		MetricTags:                    schedInfo.MetricTags,
 		Sidecars:                      runInfo.Sidecars,
 		LogRateLimit:                  runInfo.LogRateLimit,
 	}
@@ -189,18 +189,18 @@ func (d *DesiredLRP) VersionDownTo(v format.Version) *DesiredLRP {
 }
 
 func (d *DesiredLRP) PopulateMetricsGuid() *DesiredLRP {
-	sourceId, sourceIDIsSet := d.MetricTags["source_id"]
-	switch {
-	case sourceIDIsSet && d.MetricsGuid == "":
-		d.MetricsGuid = sourceId.Static
-	case !sourceIDIsSet && d.MetricsGuid != "":
-		if d.MetricTags == nil {
-			d.MetricTags = make(map[string]*MetricTagValue)
+	if d.MetricTags == nil {
+		if d.MetricsGuid != "" {
+			d.MetricTags = &MetricTags{"source_id": &MetricTagValue{Static: d.MetricsGuid}}
 		}
-		d.MetricTags["source_id"] = &MetricTagValue{
-			Static: d.MetricsGuid,
+	} else {
+		if sourceId, ok := (*d.MetricTags)["source_id"]; ok {
+			if d.MetricsGuid == "" {
+				d.MetricsGuid = sourceId.Static
+			}
 		}
 	}
+
 	return d
 }
 
@@ -237,6 +237,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 		modificationTag,
 		&volumePlacement,
 		d.PlacementTags,
+		d.MetricTags,
 	)
 }
 
@@ -295,7 +296,6 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.ImagePassword,
 		d.CheckDefinition,
 		d.ImageLayers,
-		d.MetricTags,
 		d.Sidecars,
 		d.LogRateLimit,
 	)
@@ -359,6 +359,16 @@ func (desired DesiredLRP) Validate() error {
 		}
 	}
 
+	if desired.MetricTags == nil {
+		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
+	} else {
+		err := validateMetricTags(*desired.MetricTags, desired.GetMetricsGuid())
+		if err != nil {
+			validationError = validationError.Append(ErrInvalidField{"metric_tags"})
+			validationError = validationError.Append(err)
+		}
+	}
+
 	runInfoErrors := desired.DesiredLRPRunInfo(time.Now()).Validate()
 	if runInfoErrors != nil {
 		validationError = validationError.Append(runInfoErrors)
@@ -389,10 +399,12 @@ func (desired *DesiredLRPUpdate) Validate() error {
 		}
 	}
 
-	err := validateMetricTags(desired.MetricTags, "")
-	if err != nil {
-		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
-		validationError = validationError.Append(err)
+	if desired.MetricTags != nil {
+		err := validateMetricTags(*desired.MetricTags, "")
+		if err != nil {
+			validationError = validationError.Append(ErrInvalidField{"metric_tags"})
+			validationError = validationError.Append(err)
+		}
 	}
 
 	return validationError.ToError()
@@ -442,15 +454,15 @@ func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup
 	return true
 }
 
-func (desired DesiredLRPUpdate) IsMetricTagsUpdated(existingTags map[string]*MetricTagValue) bool {
+func (desired DesiredLRPUpdate) IsMetricTagsUpdated(existingTags *MetricTags) bool {
 	if desired.MetricTags == nil {
 		return false
 	}
-	if len(desired.MetricTags) != len(existingTags) {
+	if len(*desired.MetricTags) != len(*existingTags) {
 		return true
 	}
-	for k, v := range existingTags {
-		updateTag, ok := desired.MetricTags[k]
+	for k, v := range *existingTags {
+		updateTag, ok := (*desired.MetricTags)[k]
 		if !ok {
 			return true
 		}
@@ -462,10 +474,10 @@ func (desired DesiredLRPUpdate) IsMetricTagsUpdated(existingTags map[string]*Met
 }
 
 type internalDesiredLRPUpdate struct {
-	Instances  *int32                     `json:"instances,omitempty"`
-	Routes     *Routes                    `json:"routes,omitempty"`
-	Annotation *string                    `json:"annotation,omitempty"`
-	MetricTags map[string]*MetricTagValue `json:"metric_tags,omitempty"`
+	Instances  *int32      `json:"instances,omitempty"`
+	Routes     *Routes     `json:"routes,omitempty"`
+	Annotation *string     `json:"annotation,omitempty"`
+	MetricTags *MetricTags `json:"metric_tags,omitempty"`
 }
 
 func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
@@ -531,6 +543,7 @@ func NewDesiredLRPSchedulingInfo(
 	modTag ModificationTag,
 	volumePlacement *VolumePlacement,
 	placementTags []string,
+	metricTags *MetricTags,
 ) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
 		DesiredLRPKey:      key,
@@ -541,6 +554,7 @@ func NewDesiredLRPSchedulingInfo(
 		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
 		PlacementTags:      placementTags,
+		MetricTags:         metricTags,
 	}
 }
 
@@ -549,7 +563,7 @@ func NewDesiredLRPRoutingInfo(
 	instances int32,
 	routes *Routes,
 	modTag *ModificationTag,
-	metrTags map[string]*MetricTagValue,
+	metrTags *MetricTags,
 ) DesiredLRP {
 	return DesiredLRP{
 		ProcessGuid:     key.ProcessGuid,
@@ -568,6 +582,9 @@ func (s *DesiredLRPSchedulingInfo) ApplyUpdate(update *DesiredLRPUpdate) {
 	}
 	if update.Routes != nil {
 		s.Routes = *update.Routes
+	}
+	if update.MetricTags != nil {
+		s.MetricTags = update.MetricTags
 	}
 	if update.AnnotationExists() {
 		s.Annotation = update.GetAnnotation()
@@ -650,7 +667,6 @@ func NewDesiredLRPRunInfo(
 	imageUsername, imagePassword string,
 	checkDefinition *CheckDefinition,
 	imageLayers []*ImageLayer,
-	metricTags map[string]*MetricTagValue,
 	sidecars []*Sidecar,
 	logRateLimit *LogRateLimit,
 ) DesiredLRPRunInfo {
@@ -678,7 +694,6 @@ func NewDesiredLRPRunInfo(
 		ImagePassword:                 imagePassword,
 		CheckDefinition:               checkDefinition,
 		ImageLayers:                   imageLayers,
-		MetricTags:                    metricTags,
 		Sidecars:                      sidecars,
 		LogRateLimit:                  logRateLimit,
 	}
@@ -729,16 +744,6 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 	err = validateImageLayers(runInfo.ImageLayers, runInfo.LegacyDownloadUser)
 	if err != nil {
-		validationError = validationError.Append(err)
-	}
-
-	if runInfo.MetricTags == nil {
-		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
-	}
-
-	err = validateMetricTags(runInfo.MetricTags, runInfo.GetMetricsGuid())
-	if err != nil {
-		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
 		validationError = validationError.Append(err)
 	}
 

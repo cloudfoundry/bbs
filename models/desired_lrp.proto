@@ -29,6 +29,7 @@ message DesiredLRPSchedulingInfo {
   ModificationTag modification_tag = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
   VolumePlacement volume_placement = 7;
   repeated string PlacementTags = 8 [(gogoproto.jsontag) ="placement_tags,omitempty"];
+  ProtoMetricTags metric_tags = 9 [(gogoproto.customtype) = "MetricTags"];
 }
 
 message DesiredLRPRunInfo {
@@ -66,7 +67,7 @@ message DesiredLRPRunInfo {
 
   repeated ImageLayer image_layers = 24;
 
-  map<string, MetricTagValue> metric_tags = 25;
+  map<string, MetricTagValue> metric_tags = 25 [deprecated=true];
 
   repeated Sidecar sidecars = 26;
   LogRateLimit log_rate_limit = 27;
@@ -77,6 +78,11 @@ message ProtoRoutes {
   map<string, bytes> routes = 1;
 }
 
+// helper message for marshalling metric_tags
+message ProtoMetricTags {
+  map<string, MetricTagValue> metric_tags = 1;
+}
+
 message DesiredLRPUpdate {
   oneof optional_instances {
     int32 instances = 1;
@@ -85,7 +91,7 @@ message DesiredLRPUpdate {
   oneof optional_annotation {
     string annotation = 3;
   }
-  map<string, MetricTagValue> metric_tags = 4;
+  ProtoMetricTags metric_tags = 4 [(gogoproto.customtype) = "MetricTags"];
 }
 
 message DesiredLRPKey {
@@ -143,7 +149,7 @@ message DesiredLRP {
 
   repeated ImageLayer image_layers = 34;
 
-  map<string, MetricTagValue> metric_tags = 35;
+  ProtoMetricTags metric_tags = 35 [(gogoproto.customtype) = "MetricTags"];
 
   repeated Sidecar sidecars = 36;
   LogRateLimit log_rate_limit = 37;

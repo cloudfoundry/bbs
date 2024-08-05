@@ -335,16 +335,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 
-			metricTags, err := models.ConvertMetricTags(dereferencedLRPKey.DesiredMetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
-				models.MetricTagDynamicValueIndex:        dereferencedLRPKey.Key.Index,
-				models.MetricTagDynamicValueInstanceGuid: dereferencedLRPKey.InstanceKey.InstanceGuid,
-			})
-			if err != nil {
-				logger.Error("convert-metric-tags-failed", err)
-				return
-			}
-
-			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, nil, metricTags)
+			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, nil, dereferencedLRPKey.DesiredMetricTags)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)

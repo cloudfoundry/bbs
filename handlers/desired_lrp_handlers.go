@@ -469,7 +469,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 
 			var metricTags map[string]string
 			if metricTagsUpdated {
-				metricTags, err = models.ConvertMetricTags(update.MetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
+				metricTags, err = models.ConvertMetricTags(*update.MetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
 					models.MetricTagDynamicValueIndex:        lrp.Index,
 					models.MetricTagDynamicValueInstanceGuid: lrp.InstanceGuid,
 				})

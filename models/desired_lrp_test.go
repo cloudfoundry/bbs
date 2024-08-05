@@ -930,12 +930,12 @@ var _ = Describe("DesiredLRP", func() {
 				// in practice they would always be equal if both of them are set
 				// different values for test purposes only
 				desiredLRP.MetricsGuid = "some-guid-1"
-				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+				desiredLRP.MetricTags = &models.MetricTags{
 					"source_id": {Static: "some-guid-2"},
 				}
 				updatedLRP := desiredLRP.PopulateMetricsGuid()
 				Expect(updatedLRP.MetricsGuid).To(Equal("some-guid-1"))
-				Expect(updatedLRP.MetricTags["source_id"].Static).To(Equal("some-guid-2"))
+				Expect((*updatedLRP.MetricTags)["source_id"].Static).To(Equal("some-guid-2"))
 			})
 		})
 
@@ -952,12 +952,12 @@ var _ = Describe("DesiredLRP", func() {
 		Context(`when metric_tags["source_id"] is provided and metrics_guid is missing`, func() {
 			It(`populates metrics_guid from metric_tags["source_id"]`, func() {
 				desiredLRP.MetricsGuid = ""
-				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+				desiredLRP.MetricTags = &models.MetricTags{
 					"source_id": {Static: "some-guid"},
 				}
 				updatedLRP := desiredLRP.PopulateMetricsGuid()
 				Expect(updatedLRP.MetricsGuid).To(Equal("some-guid"))
-				Expect(updatedLRP.MetricTags["source_id"].Static).To(Equal("some-guid"))
+				Expect((*updatedLRP.MetricTags)["source_id"].Static).To(Equal("some-guid"))
 			})
 		})
 
@@ -967,7 +967,7 @@ var _ = Describe("DesiredLRP", func() {
 				desiredLRP.MetricTags = nil
 				updatedLRP := desiredLRP.PopulateMetricsGuid()
 				Expect(updatedLRP.MetricsGuid).To(Equal("some-guid"))
-				Expect(updatedLRP.MetricTags["source_id"].Static).To(Equal("some-guid"))
+				Expect((*updatedLRP.MetricTags)["source_id"].Static).To(Equal("some-guid"))
 			})
 		})
 	})
@@ -1235,7 +1235,7 @@ var _ = Describe("DesiredLRP", func() {
 
 		Context("metric tags", func() {
 			It("is invalid when both static and dynamic values are provided", func() {
-				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+				desiredLRP.MetricTags = &models.MetricTags{
 					"some_metric": {Static: "some-value", Dynamic: models.MetricTagDynamicValueIndex},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "metric_tags")
@@ -1245,7 +1245,7 @@ var _ = Describe("DesiredLRP", func() {
 
 			It("is valid when metric tags source_id matches metrics_guid", func() {
 				desiredLRP.MetricsGuid = "some-guid"
-				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+				desiredLRP.MetricTags = &models.MetricTags{
 					"source_id": {Static: "some-guid"},
 				}
 				Expect(desiredLRP.Validate()).To(Succeed())
@@ -1253,7 +1253,7 @@ var _ = Describe("DesiredLRP", func() {
 
 			It("is invalid when metric tags source_id does not match metrics_guid", func() {
 				desiredLRP.MetricsGuid = "some-guid"
-				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+				desiredLRP.MetricTags = &models.MetricTags{
 					"source_id": {Static: "some-another-guid"},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "metric_tags")
@@ -1262,7 +1262,7 @@ var _ = Describe("DesiredLRP", func() {
 
 			It("is valid when metric tags source_id is provided and metrics_guid is not provided", func() {
 				desiredLRP.MetricsGuid = ""
-				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
+				desiredLRP.MetricTags = &models.MetricTags{
 					"source_id": {Static: "some-other-guid"},
 				}
 				Expect(desiredLRP.Validate()).To(Succeed())
@@ -1306,7 +1306,7 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
 		}
 		desiredLRPUpdate.SetAnnotation("some-text")
-		desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
+		desiredLRPUpdate.MetricTags = &models.MetricTags{
 			"some-tag": {Static: "some-value"},
 		}
 	})
@@ -1339,7 +1339,7 @@ var _ = Describe("DesiredLRPUpdate", func() {
 
 		Context("metric tags", func() {
 			It("is invalid when both static and dynamic values are provided for the same key", func() {
-				desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
+				desiredLRPUpdate.MetricTags = &models.MetricTags{
 					"some_metric": {Static: "some-value", Dynamic: models.MetricTagDynamicValueIndex},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "metric_tags")
@@ -1348,7 +1348,7 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			})
 
 			It("is valid when metric tags is empty", func() {
-				desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{}
+				desiredLRPUpdate.MetricTags = &models.MetricTags{}
 				Expect(desiredLRPUpdate.Validate()).To(Succeed())
 			})
 
@@ -1388,43 +1388,43 @@ var _ = Describe("DesiredLRPUpdate", func() {
 	Describe("IsMetricTagsUpdated", func() {
 		Context("when the update does not contain metric tags", func() {
 			It("returns false", func() {
-				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
+				existingTags := &models.MetricTags{"some-tag": {Static: "some-tag-value"}}
 				update := &models.DesiredLRPUpdate{}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeFalse())
 			})
 		})
 		Context("when the metric tags differ in a single static value", func() {
 			It("returns true", func() {
-				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
-				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-other-tag-value"}}}
+				existingTags := &models.MetricTags{"some-tag": {Static: "some-tag-value"}}
+				update := &models.DesiredLRPUpdate{MetricTags: &models.MetricTags{"some-tag": {Static: "some-other-tag-value"}}}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
 			})
 		})
 		Context("when the metric tags differ in a single dynamic value", func() {
 			It("returns true", func() {
-				existingTags := map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagDynamicValueIndex}}
-				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagDynamicValueInstanceGuid}}}
+				existingTags := &models.MetricTags{"some-tag": {Dynamic: models.MetricTagDynamicValueIndex}}
+				update := &models.DesiredLRPUpdate{MetricTags: &models.MetricTags{"some-tag": {Dynamic: models.MetricTagDynamicValueInstanceGuid}}}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
 			})
 		})
 		Context("when the metric tags have different keys", func() {
 			It("returns true", func() {
-				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
-				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-other-tag": {Static: "some-tag-value"}}}
+				existingTags := &models.MetricTags{"some-tag": {Static: "some-tag-value"}}
+				update := &models.DesiredLRPUpdate{MetricTags: &models.MetricTags{"some-other-tag": {Static: "some-tag-value"}}}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
 			})
 		})
 		Context("when the metric tags are different lengths", func() {
 			It("returns true", func() {
-				existingTags := map[string]*models.MetricTagValue{}
-				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}}
+				existingTags := &models.MetricTags{}
+				update := &models.DesiredLRPUpdate{MetricTags: &models.MetricTags{"some-tag": {Static: "some-tag-value"}}}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
 			})
 		})
 		Context("when the metric tags are equal", func() {
 			It("returns false", func() {
-				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
-				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}}
+				existingTags := &models.MetricTags{"some-tag": {Static: "some-tag-value"}}
+				update := &models.DesiredLRPUpdate{MetricTags: &models.MetricTags{"some-tag": {Static: "some-tag-value"}}}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeFalse())
 			})
 		})
@@ -1535,12 +1535,12 @@ var _ = Describe("DesiredLRPSchedulingInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid scheduling info", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), routes, tag, nil, nil), ""),
-		Entry("invalid annotation", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), largeString, instances, newValidResource(), routes, tag, nil, nil), "annotation"),
-		Entry("invalid instances", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, -2, newValidResource(), routes, tag, nil, nil), "instances"),
-		Entry("invalid key", models.NewDesiredLRPSchedulingInfo(models.DesiredLRPKey{}, annotation, instances, newValidResource(), routes, tag, nil, nil), "process_guid"),
-		Entry("invalid resource", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, models.DesiredLRPResource{}, routes, tag, nil, nil), "rootfs"),
-		Entry("invalid routes", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), largeRoutes, tag, nil, nil), "routes"),
+		Entry("valid scheduling info", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), routes, tag, nil, nil, nil), ""),
+		Entry("invalid annotation", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), largeString, instances, newValidResource(), routes, tag, nil, nil, nil), "annotation"),
+		Entry("invalid instances", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, -2, newValidResource(), routes, tag, nil, nil, nil), "instances"),
+		Entry("invalid key", models.NewDesiredLRPSchedulingInfo(models.DesiredLRPKey{}, annotation, instances, newValidResource(), routes, tag, nil, nil, nil), "process_guid"),
+		Entry("invalid resource", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, models.DesiredLRPResource{}, routes, tag, nil, nil, nil), "rootfs"),
+		Entry("invalid routes", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), largeRoutes, tag, nil, nil, nil), "routes"),
 	)
 })
 
@@ -1569,10 +1569,10 @@ var _ = Describe("DesiredLRPRoutingInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("invalid instances", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), -2, &routes, &tag, map[string]*models.MetricTagValue{}), "instances"),
-		Entry("invalid key", models.NewDesiredLRPRoutingInfo(models.DesiredLRPKey{}, instances, &routes, &tag, map[string]*models.MetricTagValue{}), "process_guid"),
-		Entry("invalid routes", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &largeRoutes, &tag, map[string]*models.MetricTagValue{}), "routes"),
-		Entry("invalid metricTags", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &routes, &tag, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}), "metric_tags"),
+		Entry("invalid instances", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), -2, &routes, &tag, &models.MetricTags{}), "instances"),
+		Entry("invalid key", models.NewDesiredLRPRoutingInfo(models.DesiredLRPKey{}, instances, &routes, &tag, &models.MetricTags{}), "process_guid"),
+		Entry("invalid routes", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &largeRoutes, &tag, &models.MetricTags{}), "routes"),
+		Entry("invalid metricTags", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &routes, &tag, &models.MetricTags{"foo": {Dynamic: models.DynamicValueInvalid}}), "metric_tags"),
 	)
 })
 
@@ -1601,24 +1601,23 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{{Action: action}}, logRateLimit), ""),
-		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "process_guid"),
-		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "name"),
-		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "inner-action"),
-		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "inner-action"),
-		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "inner-action"),
-		Entry("invalid http check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 65536}}}, "healthcheck_log_source", []*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 77777}}}}, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "port"),
-		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source", []*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}}, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "port"),
-		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source", []*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}}, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "check"),
-		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}}, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "legacy_download_user"),
-		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "cached_dependency"),
-		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "volume_mount"),
-		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "image_username"),
-		Entry("invalid image password", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "username", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "image_password"),
-		Entry("invalid layers", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "some-url"}}, map[string]*models.MetricTagValue{}, []*models.Sidecar{}, logRateLimit), "image_layer"),
-		Entry("invalid metric tags", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}, []*models.Sidecar{}, logRateLimit), "metric_tags"),
-		Entry("invalid sidecars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{{DiskMb: -1}}, logRateLimit), "sidecars"),
-		Entry("invalid log rate limit", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, map[string]*models.MetricTagValue{}, []*models.Sidecar{{DiskMb: -1}}, &models.LogRateLimit{BytesPerSecond: -2}), "log_rate_limit"),
+		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{{Action: action}}, logRateLimit), ""),
+		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "process_guid"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "name"),
+		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "inner-action"),
+		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "inner-action"),
+		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "inner-action"),
+		Entry("invalid http check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 65536}}}, "healthcheck_log_source", []*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 77777}}}}, nil, []*models.Sidecar{}, logRateLimit), "port"),
+		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source", []*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}}, nil, []*models.Sidecar{}, logRateLimit), "port"),
+		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source", []*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}}, nil, []*models.Sidecar{}, logRateLimit), "check"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}}, []*models.Sidecar{}, logRateLimit), "legacy_download_user"),
+		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "cached_dependency"),
+		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "volume_mount"),
+		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "image_username"),
+		Entry("invalid image password", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "username", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit), "image_password"),
+		Entry("invalid layers", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "some-url"}}, []*models.Sidecar{}, logRateLimit), "image_layer"),
+		Entry("invalid sidecars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{{DiskMb: -1}}, logRateLimit), "sidecars"),
+		Entry("invalid log rate limit", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{{DiskMb: -1}}, &models.LogRateLimit{BytesPerSecond: -2}), "log_rate_limit"),
 	)
 })
 
