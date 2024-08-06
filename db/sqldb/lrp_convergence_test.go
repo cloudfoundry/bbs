@@ -1526,8 +1526,8 @@ var _ = Describe("LRPConvergence", func() {
 
 		It("returns the LRP keys with changed metric tags", func() {
 			result := sqlDB.ConvergeLRPs(ctx, logger, cellSet)
-			desiredMetricTags := map[string]*models.MetricTagValue{
-				"app_name": {Static: "some-app-renamed"},
+			desiredMetricTags := map[string]string{
+				"app_name": "some-app-renamed",
 			}
 			lrpKeyWithMetricTags1 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey1, InstanceKey: &lrpInstanceKey1, DesiredMetricTags: desiredMetricTags}
 			lrpKeyWithMetricTags2 := bbsdb.ActualLRPKeyWithMetricTags{Key: &lrpKey2, InstanceKey: &lrpInstanceKey2, DesiredMetricTags: desiredMetricTags}
