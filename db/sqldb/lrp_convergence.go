@@ -254,7 +254,7 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 		actualLRPKey := &models.ActualLRPKey{}
 		actualLRPInstanceKey := &models.ActualLRPInstanceKey{}
 		var actualMetricTagData []byte
-		var runInfoData []byte
+		var desiredMetricTagData []byte
 
 		values := []interface{}{
 			&actualLRPKey.ProcessGuid,
@@ -263,7 +263,7 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 			&actualLRPInstanceKey.InstanceGuid,
 			&actualLRPInstanceKey.CellId,
 			&actualMetricTagData,
-			&runInfoData,
+			&desiredMetricTagData,
 		}
 
 		err := rows.Scan(values...)
@@ -276,15 +276,18 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 			continue
 		}
 
-		var runInfo models.DesiredLRPRunInfo
-		var protoRunInfo models.ProtoDesiredLRPRunInfo
-		err = c.SQLDB.deserializeModel(logger, runInfoData, &protoRunInfo)
-		runInfo = *protoRunInfo.FromProto()
+		var metricTags map[string]*models.MetricTagValue
+		decodedDesiredData, err := c.encoder.Decode(desiredMetricTagData)
 		if err != nil {
-			logger.Error("failed-deserializing-desired-metric-tags", err)
+			logger.Error("failed-decrypting-desired-metric-tags", err)
 			continue
 		}
-		desiredMetricTags, err := models.ConvertMetricTags(runInfo.MetricTags, map[models.MetricTagValue_DynamicValue]interface{}{
+		err = json.Unmarshal(decodedDesiredData, &metricTags)
+		if err != nil {
+			logger.Error("failed-parsing-desired-metric-tags", err)
+			continue
+		}
+		desiredMetricTags, err := models.ConvertMetricTags(metricTags, map[models.MetricTagValue_DynamicValue]interface{}{
 			models.MetricTagValue_MetricTagDynamicValueIndex:        actualLRPKey.Index,
 			models.MetricTagValue_MetricTagDynamicValueInstanceGuid: actualLRPInstanceKey.InstanceGuid,
 		})
@@ -311,7 +314,7 @@ func (c *convergence) lrpsWithMetricTagChanges(ctx context.Context, logger lager
 			c.keysWithMetricTagChanges = append(c.keysWithMetricTagChanges, &db.ActualLRPKeyWithMetricTags{
 				Key:               actualLRPKey,
 				InstanceKey:       actualLRPInstanceKey,
-				DesiredMetricTags: runInfo.GetMetricTags(),
+				DesiredMetricTags: desiredMetricTags,
 			})
 		}
 	}

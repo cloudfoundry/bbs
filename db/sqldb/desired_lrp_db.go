@@ -23,6 +23,12 @@ func (db *SQLDB) DesireLRP(ctx context.Context, logger lager.Logger, desiredLRP 
 			return err
 		}
 
+		metricTagsData, err := db.encodeDesiredMetricTagsData(logger, desiredLRP.MetricTags)
+		if err != nil {
+			logger.Error("failed-encoding-metric-tags-data", err)
+			return err
+		}
+
 		runInfo := desiredLRP.DesiredLRPRunInfo(db.clock.Now())
 
 		protoRunInfo := runInfo.ToProto()
@@ -76,6 +82,7 @@ func (db *SQLDB) DesireLRP(ctx context.Context, logger lager.Logger, desiredLRP 
 				"routes":                 routesData,
 				"run_info":               runInfoData,
 				"placement_tags":         placementTagData,
+				"metric_tags":            metricTagsData,
 			},
 		)
 		if err != nil {
@@ -314,15 +321,11 @@ func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, proc
 		}
 
 		if update.MetricTags != nil {
-			runInfo := beforeDesiredLRP.DesiredLRPRunInfo(db.clock.Now())
-			runInfo.MetricTags = update.MetricTags
-			protoRunInfo := runInfo.ToProto()
-			runInfoData, err := db.serializeModel(logger, protoRunInfo)
+			encodedData, err := db.encodeDesiredMetricTagsData(logger, update.MetricTags)
 			if err != nil {
-				logger.Error("failed-to-serialize-model", err)
 				return err
 			}
-			updateAttributes["run_info"] = runInfoData
+			updateAttributes["metric_tags"] = encodedData
 		}
 
 		_, err = db.update(ctx, logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
@@ -344,6 +347,20 @@ func (db *SQLDB) encodeRouteData(logger lager.Logger, routes *models.Routes) ([]
 		return nil, models.ErrBadRequest
 	}
 	encodedData, err := db.encoder.Encode(routeData)
+	if err != nil {
+		logger.Error("failed-encrypting-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	return encodedData, nil
+}
+
+func (db *SQLDB) encodeDesiredMetricTagsData(logger lager.Logger, metricTags map[string]*models.MetricTagValue) ([]byte, error) {
+	metricTagsData, err := json.Marshal(metricTags)
+	if err != nil {
+		logger.Error("failed-marshalling-routes", err)
+		return nil, models.ErrBadRequest
+	}
+	encodedData, err := db.encoder.Encode(metricTagsData)
 	if err != nil {
 		logger.Error("failed-encrypting-routes", err)
 		return nil, models.ErrBadRequest
@@ -442,7 +459,7 @@ func (db *SQLDB) fetchDesiredLRPRoutingInfo(logger lager.Logger, scanner helpers
 	routingInfo := &models.DesiredLRP{}
 	var modificationTagEpoch string
 	var modificationTagIndex uint32
-	var routeData, runInfoData []byte
+	var routeData, metricTagsData []byte
 	values := []interface{}{
 		&routingInfo.ProcessGuid,
 		&routingInfo.Domain,
@@ -451,7 +468,7 @@ func (db *SQLDB) fetchDesiredLRPRoutingInfo(logger lager.Logger, scanner helpers
 		&routeData,
 		&modificationTagEpoch,
 		&modificationTagIndex,
-		&runInfoData,
+		&metricTagsData,
 	}
 
 	err := scanner.Scan(values...)
@@ -476,15 +493,18 @@ func (db *SQLDB) fetchDesiredLRPRoutingInfo(logger lager.Logger, scanner helpers
 	}
 	routingInfo.Routes = &routes
 
-	var runInfo models.DesiredLRPRunInfo
-	var protoRunInfo models.ProtoDesiredLRPRunInfo
-	err = db.deserializeModel(logger, runInfoData, &protoRunInfo)
+	var metricTags map[string]*models.MetricTagValue
+	decodedDesiredData, err := db.encoder.Decode(metricTagsData)
 	if err != nil {
-		logger.Error("failed-decrypting-run-info", err)
+		logger.Error("failed-decrypting-metric-tags", err)
 		return nil, err
 	}
-	runInfo = *protoRunInfo.FromProto()
-	routingInfo.MetricTags = runInfo.MetricTags
+	err = json.Unmarshal(decodedDesiredData, &metricTags)
+	if err != nil {
+		logger.Error("failed-parsing-metric-tags", err)
+		return nil, err
+	}
+	routingInfo.MetricTags = metricTags
 	routingInfo.ModificationTag = &models.ModificationTag{Epoch: modificationTagEpoch, Index: modificationTagIndex}
 
 	return routingInfo, nil
@@ -538,8 +558,8 @@ func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scann
 }
 
 func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.RowScanner) (*models.DesiredLRP, string, error) {
-	var runInfoData []byte
-	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData)
+	var runInfoData, metricTagsData []byte
+	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData, &metricTagsData)
 	if err != nil {
 		return nil, "", err
 	}
@@ -553,7 +573,19 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	runInfo = *protoRunInfo.FromProto()
 	// dedup the ports
 	runInfo.Ports = dedupSlice(runInfo.Ports)
-	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo)
+
+	var metricTags map[string]*models.MetricTagValue
+	encodedData, err := db.encoder.Decode(metricTagsData)
+	if err != nil {
+		logger.Error("failed-decrypting-metric-tags", err)
+		return nil, "", err
+	}
+	err = json.Unmarshal(encodedData, &metricTags)
+	if err != nil {
+		logger.Error("failed-parsing-metric-tags", err)
+		return nil, "", err
+	}
+	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo, metricTags)
 	return &desiredLRP, "", nil
 }
 

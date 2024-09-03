@@ -17,7 +17,7 @@ type ActualLRPKeyWithInternalRoutes struct {
 type ActualLRPKeyWithMetricTags struct {
 	Key               *models.ActualLRPKey
 	InstanceKey       *models.ActualLRPInstanceKey
-	DesiredMetricTags map[string]*models.MetricTagValue
+	DesiredMetricTags map[string]string
 }
 
 //counterfeiter:generate . LRPDB

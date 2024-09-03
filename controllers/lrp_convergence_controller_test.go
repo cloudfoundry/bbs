@@ -931,7 +931,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			actualLRPKey3 := models.NewActualLRPKey("guid3", 1, "some-domain")
 			actualLRPInstanceKey3 := models.ActualLRPInstanceKey{InstanceGuid: "ig-3", CellId: "cell-id-3"}
 
-			desiredMetricTags := map[string]*models.MetricTagValue{"app_name": {Static: "some-app-name"}}
+			desiredMetricTags := map[string]string{"app_name": "some-app-name"}
 			actualLRPKeyWithMetricTags1 = db.ActualLRPKeyWithMetricTags{Key: &actualLRPKey1, InstanceKey: &actualLRPInstanceKey1, DesiredMetricTags: desiredMetricTags}
 			actualLRPKeyWithMetricTags2 = db.ActualLRPKeyWithMetricTags{Key: &actualLRPKey2, InstanceKey: &actualLRPInstanceKey2, DesiredMetricTags: desiredMetricTags}
 			actualLRPKeyWithMetricTags3 = db.ActualLRPKeyWithMetricTags{Key: &actualLRPKey3, InstanceKey: &actualLRPInstanceKey3, DesiredMetricTags: desiredMetricTags}
