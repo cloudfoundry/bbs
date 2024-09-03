@@ -54,7 +54,7 @@ var _ = Describe("SplitMetricTags", func() {
 
 		Context("when there is desired lrp", func() {
 			JustBeforeEach(func() {
-				runInfoData, err := serializer.Marshal(logger, runInfo)
+				runInfoData, err := serializer.Marshal(logger, runInfo.ToProto())
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = rawSQLDB.Exec(
@@ -72,7 +72,8 @@ var _ = Describe("SplitMetricTags", func() {
 
 			Context("when run info has metric tags", func() {
 				BeforeEach(func() {
-					runInfo.MetricTags = map[string]*models.MetricTagValue{"foo": &models.MetricTagValue{Static: "some-value"}}
+					//lint:ignore SA1019 - testing deprecated functionality
+					runInfo.MetricTags = map[string]*models.MetricTagValue{"foo": {Static: "some-value"}}
 				})
 
 				It("updates metric_tags to run_info metric_tags", func() {
@@ -91,7 +92,7 @@ var _ = Describe("SplitMetricTags", func() {
 					err = json.Unmarshal(decodedMetricTags, &metricTags)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(metricTags).To(Equal(map[string]*models.MetricTagValue{"foo": &models.MetricTagValue{Static: "some-value"}}))
+					Expect(metricTags).To(Equal(map[string]*models.MetricTagValue{"foo": {Static: "some-value"}}))
 				})
 			})
 
