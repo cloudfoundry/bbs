@@ -278,6 +278,7 @@ func main() {
 		taskStatMetronNotifier,
 		migrationsDone,
 		exitChan,
+		metronClient,
 	)
 
 	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger, metronClient)

@@ -20,6 +20,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/rep"
@@ -34,6 +35,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
+		fakeMetronClient     *mfakes.FakeIngressClient
 		desiredHub           *eventfakes.FakeHub
 		actualHub            *eventfakes.FakeHub
 		actualLRPInstanceHub *eventfakes.FakeHub
@@ -54,6 +56,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeMetronClient = &mfakes.FakeIngressClient{}
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
@@ -75,6 +78,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			fakeRepClientFactory,
 			fakeServiceClient,
 			exitCh,
+			fakeMetronClient,
 		)
 	})
 
