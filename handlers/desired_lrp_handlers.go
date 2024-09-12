@@ -517,7 +517,7 @@ func (h *DesiredLRPHandler) logDesiredLrpParsingErrors(err *models.Error, proces
 	}
 
 	h.metronClient.SendAppErrorLog(
-		fmt.Sprintf("Error parsing request for app with guid %s, %s, %s, Process guid: %s", appGuid, err.GetType(), err.GetMessage(), processGuid),
+		fmt.Sprintf("Error parsing request for app with guid %s, %s, %s", appGuid, err.GetType(), err.GetMessage()),
 		"DIEGO-API",
 		tags)
 }

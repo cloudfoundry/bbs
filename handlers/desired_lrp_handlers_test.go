@@ -973,6 +973,29 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			handler.DesireDesiredLRP(logger, responseRecorder, request)
 		})
 
+		Context("when the DesiredLRP request fails validation", func() {
+			appGuid := "05e27b0a-003c-4aa4-bd0c-8d0ad82b426c"
+
+			Context("with routes field exceeding the maximum size", func() {
+				BeforeEach(func() {
+					desiredLRP.ProcessGuid = fmt.Sprintf("%s-%s", appGuid, "6e0c1e62-dcad-4cca-99fe-db6b46b920be")
+					longRoutesJson := json.RawMessage(strings.Repeat("a", (128*1024)+1))
+					desiredLRP.Routes = &models.Routes{
+						"test_route": &longRoutesJson,
+					}
+				})
+
+				It("sends application log with the correct message", func() {
+					Expect(fakeMetronClient.SendAppErrorLogCallCount()).To(Equal(1))
+					msg, source, tags := fakeMetronClient.SendAppErrorLogArgsForCall(0)
+					Expect(source).To(Equal("DIEGO-API"))
+					Expect(msg).To(Equal(fmt.Sprintf("Error parsing request for app with guid %s, InvalidRequest, Invalid field: routes", appGuid)))
+					Expect(tags).To(HaveKeyWithValue("source_id", appGuid))
+					Expect(tags).To(HaveKeyWithValue("instance_id", "0"))
+				})
+			})
+		})
+
 		Context("when creating desired lrp in DB succeeds", func() {
 			var createdActualLRPs []*models.ActualLRP
 
