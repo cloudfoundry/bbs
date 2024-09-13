@@ -181,7 +181,7 @@ func main() {
 	var accessLogger lager.Logger
 	if bbsConfig.AccessLogPath != "" {
 		accessLogger = lager.NewLogger("bbs-access")
-		file, err := os.OpenFile(bbsConfig.AccessLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		file, err := os.OpenFile(bbsConfig.AccessLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
 			logger.Error("invalid-access-log-path", err, lager.Data{"access-log-path": bbsConfig.AccessLogPath})
 			os.Exit(1)
