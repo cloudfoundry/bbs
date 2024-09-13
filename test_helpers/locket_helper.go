@@ -27,7 +27,7 @@ func (h *LocketHelper) RegisterCell(cell *models.CellPresence) {
 		Key:      "bbs",
 		Owner:    "test_helpers",
 		Value:    "Something",
-		TypeCode: locketmodels.LOCK,
+		TypeCode: locketmodels.TypeCode_LOCK,
 	}
 	// Use NewLockRunner instead of NewPresence in order to block on the cell being registered
 	runner := lock.NewLockRunner(h.logger, h.LocketClient, locketIdentifier, locket.DefaultSessionTTLInSeconds, clock.NewClock(), locket.RetryInterval)
