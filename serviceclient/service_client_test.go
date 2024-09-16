@@ -80,7 +80,7 @@ var _ = Describe("ServiceClient", func() {
 
 			Expect(locketClient.FetchAllCallCount()).To(Equal(1))
 			_, request, _ := locketClient.FetchAllArgsForCall(0)
-			Expect(request).To(Equal(&locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.PRESENCE}))
+			Expect(request).To(Equal(&locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.TypeCode_PRESENCE}))
 		})
 
 		Context("when fetching the cells from the locket client fails", func() {

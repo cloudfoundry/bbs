@@ -25,7 +25,7 @@ var _ = Describe("MasterLock", func() {
 				Key:      "bbs",
 				Owner:    "Your worst enemy.",
 				Value:    "Something",
-				TypeCode: locketmodels.LOCK,
+				TypeCode: locketmodels.TypeCode_LOCK,
 			}
 
 			clock := clock.NewClock()
