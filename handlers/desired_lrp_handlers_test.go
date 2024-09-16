@@ -988,10 +988,9 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				It("sends application log with the correct message", func() {
 					Expect(fakeMetronClient.SendAppErrorLogCallCount()).To(Equal(1))
 					msg, source, tags := fakeMetronClient.SendAppErrorLogArgsForCall(0)
-					Expect(source).To(Equal("DIEGO-API"))
+					Expect(source).To(Equal(handlers.BbsLogSource))
 					Expect(msg).To(Equal(fmt.Sprintf("Error parsing request for app with guid %s, InvalidRequest, Invalid field: routes", appGuid)))
 					Expect(tags).To(HaveKeyWithValue("source_id", appGuid))
-					Expect(tags).To(HaveKeyWithValue("instance_id", "0"))
 				})
 			})
 		})

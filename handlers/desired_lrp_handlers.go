@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"code.cloudfoundry.org/auctioneer"
@@ -21,6 +21,8 @@ import (
 	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
+
+const BbsLogSource = "DIEGO-API"
 
 type DesiredLRPHandler struct {
 	desiredLRPDB         db.DesiredLRPDB
@@ -207,9 +209,11 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 
 	err := parseRequest(logger, req, request)
 	if err != nil {
-		convertedError := models.ConvertError(err)
-		response.Error = convertedError
-		h.logDesiredLrpParsingErrors(convertedError, request.GetDesiredLrp().GetProcessGuid())
+		logger.Error("failed-parsing-request", err)
+		response.Error = models.ConvertError(err)
+		if err = h.logDesiredLrpParsingErrors(response.Error, request.GetDesiredLrp().GetProcessGuid()); err != nil {
+			logger.Error("failed-logging-parsing-errors", err)
+		}
 		return
 	}
 
@@ -243,10 +247,11 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 
 	err := parseRequest(logger, req, request)
 	if err != nil {
-		convertedError := models.ConvertError(err)
 		logger.Error("failed-parsing-request", err)
-		response.Error = convertedError
-		h.logDesiredLrpParsingErrors(convertedError, request.GetProcessGuid())
+		response.Error = models.ConvertError(err)
+		if err = h.logDesiredLrpParsingErrors(response.Error, request.GetProcessGuid()); err != nil {
+			logger.Error("failed-logging-parsing-errors", err)
+		}
 		return
 	}
 
@@ -501,28 +506,27 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 	}
 }
 
-func (h *DesiredLRPHandler) logDesiredLrpParsingErrors(err *models.Error, processGuid string) {
+func (h *DesiredLRPHandler) logDesiredLrpParsingErrors(err *models.Error, processGuid string) error {
 	if err == nil {
-		return
+		return errors.New("parsing error is nil")
 	}
 
-	appGuid := getAppGuidFromProcessGuid(processGuid)
+	appGuid := parseAppGuidFromProcessGuid(processGuid)
 	if appGuid == "" {
-		return
+		return errors.New("app guid is empty")
 	}
 
 	tags := map[string]string{
-		"source_id":   appGuid,
-		"instance_id": strconv.Itoa(0),
+		"source_id": appGuid,
 	}
 
-	h.metronClient.SendAppErrorLog(
+	return h.metronClient.SendAppErrorLog(
 		fmt.Sprintf("Error parsing request for app with guid %s, %s, %s", appGuid, err.GetType(), err.GetMessage()),
-		"DIEGO-API",
+		BbsLogSource,
 		tags)
 }
 
-func getAppGuidFromProcessGuid(processGuid string) string {
+func parseAppGuidFromProcessGuid(processGuid string) string {
 	parts := strings.SplitN(processGuid, "-", 6)
 	if len(parts) < 5 {
 		return ""
