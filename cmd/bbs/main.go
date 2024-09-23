@@ -383,7 +383,10 @@ func main() {
 
 	err = <-monitor.Wait()
 	if sqlConn != nil {
-		sqlConn.Close()
+		closeErr := sqlConn.Close()
+		if closeErr != nil {
+			logger.Error("failed-to-close-sql-conn", closeErr)
+		}
 	}
 	if err != nil {
 		logger.Error("exited-with-failure", err)

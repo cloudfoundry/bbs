@@ -131,7 +131,7 @@ func (c *TaskController) CancelTask(ctx context.Context, logger lager.Logger, ta
 		return err
 	}
 	logger.Info("start-rep-cancel-task", lager.Data{"task_guid": taskGUID})
-	repClient.CancelTask(logger, taskGUID)
+	err = repClient.CancelTask(logger, taskGUID)
 	if err != nil {
 		logger.Error("failed-rep-cancel-task", err)
 		// don't return an error, the rep will converge later

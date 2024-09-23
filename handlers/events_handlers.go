@@ -80,6 +80,7 @@ func streamEventsToResponse(logger lager.Logger, w http.ResponseWriter, eventCha
 	eventID := 0
 	done := make(chan bool, 1)
 	go func() {
+		// #nosec G104 - ignore errors when reading hijacked HTTP requests so we don't spam our logs during a DoS
 		rw.ReadFrom(conn)
 		done <- true
 	}()

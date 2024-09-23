@@ -67,12 +67,18 @@ func (notifier *RequestStatMetronNotifier) Run(signals <-chan os.Signal, ready c
 		case <-notifier.ticker.C():
 			add := atomic.SwapUint64(&notifier.requestCount, 0)
 			logger.Info("adding-counter", lager.Data{"add": add})
-			notifier.metronClient.IncrementCounterWithDelta(requestCounter, add)
+			metricErr := notifier.metronClient.IncrementCounterWithDelta(requestCounter, add)
+			if metricErr != nil {
+				logger.Debug("failed-to-emit-request-counter", lager.Data{"error": metricErr})
+			}
 
 			latency := notifier.ReadAndResetLatency()
 			if latency != 0 {
 				logger.Info("sending-latency", lager.Data{"latency": latency})
-				notifier.metronClient.SendDuration(requestLatencyDuration, latency)
+				metricErr := notifier.metronClient.SendDuration(requestLatencyDuration, latency)
+				if metricErr != nil {
+					logger.Debug("failed-to-emit-request-latency-metric", lager.Data{"error": metricErr})
+				}
 			}
 		case <-signals:
 			return nil

@@ -32,7 +32,10 @@ func (notifier BBSElectionMetronNotifier) Run(signals <-chan os.Signal, ready ch
 	logger.Info("started")
 	defer logger.Info("finished")
 
-	notifier.metronClient.SendMetric(bbsMasterElectedMetric, 1)
+	err := notifier.metronClient.SendMetric(bbsMasterElectedMetric, 1)
+	if err != nil {
+		logger.Debug("failed-to-emit-bbs-master-elected-metric", lager.Data{"error": err})
+	}
 
 	<-signals
 	return nil
