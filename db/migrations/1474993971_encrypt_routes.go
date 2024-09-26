@@ -72,7 +72,10 @@ func (e *EncryptRoutes) Up(tx *sql.Tx, logger lager.Logger) error {
 		}
 		routeDataMap[processGuid] = routeData
 	}
-	rows.Close()
+	err = rows.Close()
+	if err != nil {
+		logger.Error("failed-to-close-row", err)
+	}
 
 	for pGuid, rData := range routeDataMap {
 		encodedData, err := e.encoder.Encode(rData)

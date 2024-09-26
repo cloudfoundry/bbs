@@ -77,7 +77,10 @@ func (m Encryptor) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		if err != nil {
 			logger.Error("encryption-failed", err)
 		} else {
-			m.db.SetEncryptionKeyLabel(context.Background(), logger, m.keyManager.EncryptionKey().Label())
+			err = m.db.SetEncryptionKeyLabel(context.Background(), logger, m.keyManager.EncryptionKey().Label())
+			if err != nil {
+				return err
+			}
 		}
 
 		totalTime := m.clock.Since(encryptionStart)

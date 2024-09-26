@@ -204,6 +204,6 @@ func writeResponse(w http.ResponseWriter, message proto.Message) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(responseBytes)))
 	w.Header().Set("Content-Type", "application/x-protobuf")
 	w.WriteHeader(http.StatusOK)
-
+	// #nosec G104 - ignore errors when writing HTTP responses so we don't spam our logs during a DoS
 	w.Write(responseBytes)
 }
