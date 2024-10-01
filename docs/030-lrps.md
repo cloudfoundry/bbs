@@ -1,5 +1,5 @@
 ---
-title: Overview of LRPs: Long Running Processes
+title: "Overview of LRPs: Long Running Processes"
 expires_at : never
 tags: [diego-release, bbs]
 ---
