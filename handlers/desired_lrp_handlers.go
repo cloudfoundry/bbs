@@ -250,7 +250,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
 		if err = h.logDesiredLrpParsingErrors(response.Error, request.GetProcessGuid()); err != nil {
-			logger.Error("failed-logging-parsing-errors", err)
+			logger.Error("failed-sending-app-logs", err)
 		}
 		return
 	}
