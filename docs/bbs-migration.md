@@ -1,3 +1,8 @@
+---
+title: BBS Migrations
+expires_at : never
+tags: [diego-release, bbs]
+---
 ## BBS Migrations
 
 ### Schema versions

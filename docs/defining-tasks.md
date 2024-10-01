@@ -1,3 +1,9 @@
+---
+title: Defining Tasks
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 ## Defining Tasks
 
 This document explains the fields available when defining a new Task. For a higher-level overview of the Diego Task API, see the [Tasks Overview](tasks.md).

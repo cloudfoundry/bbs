@@ -1,3 +1,9 @@
+---
+title: Defining LRPs
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 ### Defining LRPs
 
 This document explains the fields available when defining a new LRP. For a higher-level overview of the Diego LRP API, see the [LRPs Overview](lrps.md).

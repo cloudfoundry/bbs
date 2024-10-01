@@ -1,3 +1,9 @@
+---
+title: Actions
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Available Actions
 
 [Tasks](tasks.md) and [LRPs](lrps.md) express their work in terms of composable Actions. The following types of Action are available:

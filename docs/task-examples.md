@@ -1,3 +1,8 @@
+---
+title: Task Examples
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Task Examples
 
 ## Desiring a Task

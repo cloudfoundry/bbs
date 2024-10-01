@@ -1,3 +1,8 @@
+---
+title: LRP API Reference
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Long Running Processes API Reference
 
 This reference does not cover the protobuf payload supplied to each endpoint.

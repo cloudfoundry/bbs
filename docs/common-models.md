@@ -1,3 +1,9 @@
+---
+title: BBS Models
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 ##### `EnvironmentVariables` [optional]
 
 Clients may define environment variables at the container level, which all processes running in the container will receive. For example:

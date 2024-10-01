@@ -1,3 +1,8 @@
+---
+title: Actual LRPs Internal API
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Long Running Processes Internal API Reference
 
 This reference does not cover the protobuf payload supplied to each endpoint.

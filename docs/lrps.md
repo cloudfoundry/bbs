@@ -1,3 +1,9 @@
+---
+title: Overview of LRPs: Long Running Processes
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Overview of LRPs: Long Running Processes
 
 Diego can distribute and monitor multiple instances of a Long Running Process (LRP).  These instances are distributed across Diego Cells and restarted automatically if they crash or disappear.  The instances are identical (though each instance is given a unique index (in the range `0, 1, ...N-1`) and a unique instance guid).

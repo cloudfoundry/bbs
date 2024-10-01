@@ -1,3 +1,9 @@
+---
+title: BBS API Overview
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Diego's BBS API Overview
 
 Diego is Cloud Foundry's next generation container runtime, and the BBS server is its central orchestrator.
@@ -12,5 +18,3 @@ Tasks and LRP instances run in [Garden](http://github.com/cloudfoundry-incubator
 In addition to launching and monitoring Tasks and LRPs, Diego streams logs from containers and cells to end users via the [Loggregator system](http://github.com/cloudfoundry/loggregator). Diego also allows clients to store routing data on LRPs. In Cloud Foundry, routing tiers such as the [HTTP Gorouter](http://github.com/cloudfoundry/gorouter) and the [TCP router](https://github.com/cloudfoundry-incubator/cf-tcp-router) use this data to route external traffic to container processes.
 
 Diego provides only a basic notion of client multitenancy via the concept of a [domain](domains.md). Enforcement of richer multitenancy, such as quotas for organizations or visibility restrictions for different users, falls on the [Cloud Controller](http://github.com/cloudfoundry/cloud_controller_ng) in the case of Cloud Foundry.
-
-[back](README.md)

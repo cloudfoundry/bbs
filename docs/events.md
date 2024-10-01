@@ -1,3 +1,9 @@
+---
+title: BBS Events
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Events
 
 The BBS emits events when a DesiredLRP, ActualLRP or Task is created,

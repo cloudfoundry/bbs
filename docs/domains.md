@@ -1,3 +1,8 @@
+---
+title: Domains
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Overview of Domains
 
 The consumer of Diego may organize LRPs into groupings called 'domains'.  These

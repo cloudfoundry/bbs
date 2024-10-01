@@ -1,3 +1,9 @@
+---
+title: Cells API
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Cells API Reference
 
 This reference does not cover the protobuf payload supplied to each endpoint.

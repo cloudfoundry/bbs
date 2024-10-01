@@ -1,3 +1,8 @@
+---
+title: BBS API Versioning Conventions
+expires_at : never
+tags: [diego-release, bbs]
+---
 # BBS Conventions for Revising API Endpoints
 
 The goal of this doc is to socialize conventions regarding the update of API endpoints in the BBS.

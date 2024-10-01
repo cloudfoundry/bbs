@@ -1,3 +1,8 @@
+---
+title: Overview of Tasks
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Overview of Tasks
 
 Diego can run one-off work in the form of Tasks. When a Task is submitted, Diego allocates resources for the Task on a Cell, runs the Task on that Cell, and then reports the result of the Task. Tasks are guaranteed to run at most once.

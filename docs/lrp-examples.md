@@ -1,3 +1,8 @@
+---
+title: LRP Examples
+expires_at : never
+tags: [diego-release, bbs]
+---
 # LRP Examples
 
 ## Desiring an LRP

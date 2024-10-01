@@ -1,3 +1,9 @@
+---
+title: The components of a Diego Cell overview
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Overview of Cells
 
 A Diego Cell starts and stops applications and tasks locally,

@@ -1,3 +1,8 @@
+---
+title: Container Runtime Environment Variables
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Container Runtime Environment
 
 Diego provides several collections of environment variables to processes running in containers.  These include the following layers, in order:

@@ -1,3 +1,9 @@
+---
+title: Tasks Internal API
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Internal Tasks API Reference
 
 Instead, it illustrates calls to the API via the Golang `bbs.Client` interface.
