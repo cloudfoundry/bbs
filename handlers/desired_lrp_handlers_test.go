@@ -985,6 +985,16 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					}
 				})
 
+				Context("when ProcessGuid is not in the valid format", func() {
+					BeforeEach(func() {
+						desiredLRP.ProcessGuid = "invalid_process_guid"
+					})
+
+					It("logs the error", func() {
+						Expect(logger).To(gbytes.Say("failed-sending-app-logs"))
+					})
+				})
+
 				It("sends application log with the correct message", func() {
 					Expect(fakeMetronClient.SendAppErrorLogCallCount()).To(Equal(1))
 					msg, source, tags := fakeMetronClient.SendAppErrorLogArgsForCall(0)

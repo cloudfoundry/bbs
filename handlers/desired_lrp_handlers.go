@@ -212,7 +212,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
 		if err = h.logDesiredLrpParsingErrors(response.Error, request.GetDesiredLrp().GetProcessGuid()); err != nil {
-			logger.Error("failed-logging-parsing-errors", err)
+			logger.Error("failed-sending-app-logs", err)
 		}
 		return
 	}
@@ -507,10 +507,6 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 }
 
 func (h *DesiredLRPHandler) logDesiredLrpParsingErrors(err *models.Error, processGuid string) error {
-	if err == nil {
-		return errors.New("parsing error is nil")
-	}
-
 	appGuid := parseAppGuidFromProcessGuid(processGuid)
 	if appGuid == "" {
 		return errors.New("app guid is empty")
@@ -526,11 +522,14 @@ func (h *DesiredLRPHandler) logDesiredLrpParsingErrors(err *models.Error, proces
 		tags)
 }
 
+// Parses a ProcessGuid which is in the format: 'UUID-UUID' and returns the first part which is the AppGuid
 func parseAppGuidFromProcessGuid(processGuid string) string {
-	parts := strings.SplitN(processGuid, "-", 6)
-	if len(parts) < 5 {
+	const uuidParts = 5 // a valid UUID contains 5 parts separated by '-'
+
+	parts := strings.Split(processGuid, "-")
+	if len(parts) < uuidParts {
 		return ""
 	}
 
-	return strings.Join(parts[:5], "-")
+	return strings.Join(parts[:uuidParts], "-")
 }
