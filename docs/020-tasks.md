@@ -101,6 +101,3 @@ If `ResultFile` was specified and the Task has completed succesfully, `Result` w
 #### `Annotation`
 
 This is the arbitrary string that was specified in the TaskDefinition.
-
-
-[back](README.md)

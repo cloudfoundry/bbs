@@ -250,5 +250,3 @@ When a Task is deleted, a
 [TaskRemovedEvent](https://godoc.org/code.cloudfoundry.org/bbs/models#TaskRemovedEvent)
 is emitted. The field value of `Task` will have information about the
 Task that was just removed.
-
-[back](README.md)

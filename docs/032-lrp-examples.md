@@ -159,5 +159,3 @@ if err != nil {
     log.Printf("failed to remove desired lrp: " + err.Error())
 }
 ```
-
-[back](README.md)

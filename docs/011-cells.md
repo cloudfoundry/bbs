@@ -33,5 +33,3 @@ manages containers, and reports app status and other data to the BBS and Loggreg
 ## Metron Agent
 
 * Forwards application logs, errors, and application and Diego metrics to the Loggregator Doppler component
-
-[back](README.md)

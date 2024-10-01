@@ -8,9 +8,9 @@ tags: [diego-release, bbs]
 Diego provides several collections of environment variables to processes running in containers.  These include the following layers, in order:
 
 - Environment variables baked into the Docker image (for Docker-image-based containers only)
-- Container-level environment variables (defined on the [`Task`](tasks.md) and [`DesiredLRP`](lrps.md) objects)
+- Container-level environment variables (defined on the [`Task`](020-tasks.md) and [`DesiredLRP`](030-lrps.md) objects)
 - Configuration environment variables (LRPs only, described below)
-- Process-level environment variables (defined on the [`RunAction`](actions.md#runaction) object)
+- Process-level environment variables (defined on the [`RunAction`](053-actions.md#runaction) object)
 
 ## Configuration-level Environment Variables
 
@@ -27,8 +27,6 @@ LRPs have additional runtime properties that are exposed to processes in the con
 These environment variables are provided *only* if the operator deploying Diego has enabled `-exportNetworkEnvVars` on the Cell rep.
 
 - `CF_INSTANCE_IP` provides the IP of the host running the container.  This is the IP used to address the container from the outside.
-- `CF_INSTANCE_PORT` contains the host-side port corresponding to the *first* port in the `DesiredLRP` [`ports`](lrps.md#ports) array.
+- `CF_INSTANCE_PORT` contains the host-side port corresponding to the *first* port in the `DesiredLRP` [`ports`](030-lrps.md#ports) array.
 - `CF_INSTANCE_ADDR` is identical to `$CF_INSTANCE_IP:$CF_INSTANCE_PORT`.
-- `CF_INSTANCE_PORTS` contains a list of JSON objects of the form `[{"external":60413,"internal":8080},{"external":60414,"internal":2222}]`. The internal ports are the container-side ports specified in the `DesiredLRP` [`ports`](lrps.md#ports) array, and the external ports are the corresponding host-side ports.
-
-[back](README.md)
+- `CF_INSTANCE_PORTS` contains a list of JSON objects of the form `[{"external":60413,"internal":8080},{"external":60414,"internal":2222}]`. The internal ports are the container-side ports specified in the `DesiredLRP` [`ports`](030-lrps.md#ports) array, and the external ports are the corresponding host-side ports.

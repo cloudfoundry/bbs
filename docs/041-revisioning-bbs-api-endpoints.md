@@ -53,5 +53,4 @@ based on when each was introduced:
 |                                  | `/v1/desired_lrps/list.r3` (new) |                            |                            |
 
 # See Also
-- To find more documentation about specific endpoints, look in the [table of contents](README.md) for links to API references.
-- To find information about endpoints that are deprecated (that is, still supported but planned to be removed in the next major release), look at [this document in diego-release](https://github.com/cloudfoundry/diego-release/blob/develop/docs/deprecations.md#bbs-1).
+- To find information about endpoints that are deprecated (that is, still supported but planned to be removed in the next major release), look at [this document in diego-release](https://github.com/cloudfoundry/diego-release/blob/develop/docs/081-deprecations.md#bbs-1).

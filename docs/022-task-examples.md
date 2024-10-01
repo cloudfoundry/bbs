@@ -83,5 +83,3 @@ if err != nil {
   log.Printf("failed to cancel task: " + err.Error())
 }
 ```
-
-[back](README.md)

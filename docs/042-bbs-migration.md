@@ -34,4 +34,3 @@ This will create test and implementation files for your migration in
 `db/migrations`. Look for `TODO` comments in the test file to get started.
 
 Note that the test file includes a test for migration idempotency.
-

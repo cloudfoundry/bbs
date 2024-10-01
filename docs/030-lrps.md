@@ -114,7 +114,7 @@ The fact that a DesiredLRP is present in Diego does not mean that the correspond
 
 ## Fetching ActualLRPs
 
-As outlined above, DesiredLRPs represent the consumer's intent for Diego to run instances.  To fetch instances, consumers must [fetch ActualLRPs](api-lrps.md#actuallrp-apis).
+As outlined above, DesiredLRPs represent the consumer's intent for Diego to run instances.  To fetch instances, consumers must [fetch ActualLRPs](033-api-lrps.md#actuallrp-apis).
 
 When fetching ActualLRPs, one can fetch *all* ActualLRPs in Diego, all ActualLRPs of a given `domain`, all ActualLRPs for a given DesiredLRP by `process_guid`, and all ActualLRPs at a given *index* for a given `process_guid`.
 
@@ -216,7 +216,7 @@ Indicates if the ActualLRP can respond to traffic succesfully or not.
 
 When an ActualLRP is first created, `routable` is set by default to `False`.
 
-Once the ActualLRP is assigned to a cell, the container performs start up and parallel healthchecking processes, including optional [readiness checks as defined in the DesiredLRP](./defining-lrps.md).
+Once the ActualLRP is assigned to a cell, the container performs start up and parallel healthchecking processes, including optional [readiness checks as defined in the DesiredLRP](./031-defining-lrps.md).
 
 After the readiness checks pass, or if there are no readiness checks defined at all, the ActualLRP `routable` field is tranistioned from `False` to `True`.
 
@@ -240,7 +240,7 @@ The availability zone of the Diego cell where ActualLRP is running.
 
 ## Killing ActualLRPs
 
-Diego supports killing the `ActualLRP`s for a given `process_guid` at a given `index`.  This is documented [here](api-lrps.md#retireactuallrp).  Note that this does not change the *desired* state -- Diego will simply shut down the `ActualLRP` at the given `index` and will eventually converge on desired state by restarting the (now-missing) instance.  To permanently scale down a DesiredLRP you must update the `instances` field on the DesiredLRP.
+Diego supports killing the `ActualLRP`s for a given `process_guid` at a given `index`.  This is documented [here](033-api-lrps.md#retireactuallrp).  Note that this does not change the *desired* state -- Diego will simply shut down the `ActualLRP` at the given `index` and will eventually converge on desired state by restarting the (now-missing) instance.  To permanently scale down a DesiredLRP you must update the `instances` field on the DesiredLRP.
 
 
 ## Domain Freshness
@@ -251,10 +251,8 @@ In order to perform this responsibility safely, however, Diego must have some wa
 
 To circumvent this, it is up to the consumer of Diego to inform Diego that its knowledge of the desired state is up-to-date.  We refer to this as the "freshness" of the desired state.  Consumers explicitly mark desired state as *fresh* on a domain-by-domain basis.  Failing to do so will prevent Diego from taking actions to ensure eventual consistency (in particular, Diego will refuse to stop extra instances with no corresponding desired state).
 
-To maintain freshness you perform a simple [POST](domains.md#upserting-a-domain).  The consumer typically supplies a TTL and attempts to bump the freshness of the domain before the TTL expires (verifying along the way, of course, that the contents of Diego's DesiredLRP are up-to-date).
+To maintain freshness you perform a simple [POST](050-domains.md#upserting-a-domain).  The consumer typically supplies a TTL and attempts to bump the freshness of the domain before the TTL expires (verifying along the way, of course, that the contents of Diego's DesiredLRP are up-to-date).
 
 It is possible to opt out of this by updating the freshness with *no* TTL.  In this case the freshness will never expire and Diego will always perform all its eventual consistency operations.
 
 > Note: only destructive operations performed during an eventual consistency convergence cycle are gated on freshness.  Diego will continue to start/stop instances when explicitly instructed to.
-
-[back](README.md)

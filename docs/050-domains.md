@@ -116,4 +116,3 @@ None.
 client := bbs.NewClient(url)
 domains, err := client.Domains(logger)
 ```
-[back](README.md)

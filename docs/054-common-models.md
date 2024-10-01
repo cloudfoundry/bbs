@@ -21,7 +21,7 @@ EnvironmentVariables: []*models.EnvironmentVariable{
 }
 ```
 
-For more details on the environment variables provided to processes in the container, see the section on the [Container Runtime Environment](environment.md)
+For more details on the environment variables provided to processes in the container, see the section on the [Container Runtime Environment](051-environment.md)
 
 ##### `CachedDependencies` [optional]
 
@@ -64,7 +64,9 @@ ImageLayers: []*models.ImageLayer{
 
 Image layers of type `LayerTypeShared` could be converted to `CachedDependency` for diego cells that do not support ImageLayers or api clients that are using old api endpoints.
 
-`LayerTypeExclusive` layers are converted to DownloadActions and are ran before LRP `Setup` action or the task's`Action`. For more information see the [Actions Documentation](actions.md).
+`LayerTypeExclusive` layers are converted to DownloadActions and are ran before
+LRP `Setup` action or the task's`Action`. For more information see the [Actions
+Documentation](053-actions.md).
 
 ##### `VolumeMounts` [optional]
 
@@ -217,5 +219,3 @@ icmp := &SecurityGroupRule{
     },
 }
 ```
-
-[back](README.md)

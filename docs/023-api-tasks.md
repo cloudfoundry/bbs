@@ -279,4 +279,3 @@ if err != nil {
     log.Printf("failed to delete task: " + err.Error())
 }
 ```
-[back](README.md)

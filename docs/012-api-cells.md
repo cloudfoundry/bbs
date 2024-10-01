@@ -50,4 +50,3 @@ None.
 client := bbs.NewClient(url)
 cells, err := client.Cells(logger)
 ```
-[back](README.md)
