@@ -34,14 +34,14 @@ func (c *client) DesireTask(logger lager.Logger, taskGuid, domain string, taskDe
 * `domain string`
   * The Domain
 * `taskDef *models.TaskDefinition`
-  * See the [Defining Tasks page](defining-tasks.md) for how to create a Task
+  * See the [Defining Tasks page](021-defining-tasks.md) for how to create a Task
 
 #### Output
 * `error`
   * Non-nil if error occurred
 
 #### Example
-See the [Defining Tasks page](defining-tasks.md) for how to create a Task
+See the [Defining Tasks page](021-defining-tasks.md) for how to create a Task
 
 ## Tasks
 Lists all Tasks

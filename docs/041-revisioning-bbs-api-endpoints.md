@@ -23,7 +23,7 @@ If you're planning to introduce or update a BBS API endpoint, please adhere to t
 - The first version of the API endpoint should not explicitly include a revision number, and should start with the following format: `/v1/path/function` which maps to the handler key `PathFunction_r0`
 - The next update to the API endpoint should add a revision number: `/v1/path/function.r1`, which maps to the handler key `PathFunction_r1`.
 - The older endpoint (`/v1/path/function`) should continue to be supported, but the code should mark the endpoint as deprecated,
-  both using a comment in the code, as well as an update to the [`deprecations.md` document](https://github.com/cloudfoundry/diego-release/blob/develop/docs/deprecations.md#bbs-1).
+  both using a comment in the code, as well as an update to the [`081-deprecations.md` document](https://github.com/cloudfoundry/diego-release/blob/develop/docs/081-deprecations.md#bbs-1).
 - Repeat as necessary
 
 ### Major Release Process

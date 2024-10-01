@@ -45,7 +45,7 @@ State | Meaning
 
 ## Defining LRPs
 
-See [Defining LRPs](defining-lrps.md) for more details on the fields that should be provided
+See [Defining LRPs](031-defining-lrps.md) for more details on the fields that should be provided
 when submitting a DesiredLRP to a Client's `DesireLRP` method.
 
 ## Updating DesiredLRPs

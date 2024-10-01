@@ -460,7 +460,7 @@ DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error
 
 #### Example
 
-See the [LRP Examples page](lrp-examples.md).
+See the [LRP Examples page](032-lrp-examples.md).
 
 
 ## UpdateDesiredLRP
