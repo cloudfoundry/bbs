@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/taskworkpool"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 	"github.com/gogo/protobuf/proto"
@@ -37,6 +38,7 @@ func New(
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 	migrationsDone <-chan struct{},
 	exitChan chan struct{},
+	metronClient loggingclient.IngressClient,
 ) http.Handler {
 	pingHandler := NewPingHandler()
 	domainHandler := NewDomainHandler(db, exitChan)
@@ -57,7 +59,7 @@ func New(
 	)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(evacuationController, exitChan)
-	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, actualLRPInstanceHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
+	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, actualLRPInstanceHub, auctioneerClient, repClientFactory, serviceClient, exitChan, metronClient)
 	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub, taskStatMetronNotifier, maxTaskPlacementRetries)
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	lrpGroupEventsHandler := NewLRPGroupEventsHandler(desiredHub, actualHub)
