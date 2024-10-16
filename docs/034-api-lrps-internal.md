@@ -1,3 +1,8 @@
+---
+title: Actual LRPs Internal API
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Long Running Processes Internal API Reference
 
 This reference does not cover the protobuf payload supplied to each endpoint.
@@ -484,4 +489,3 @@ if err != nil {
     log.Printf("failed to remove evacuating actual lrp: " + err.Error())
 }
 ```
-[back](README.md)

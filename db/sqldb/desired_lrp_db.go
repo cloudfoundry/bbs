@@ -539,7 +539,10 @@ func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows
 	}
 
 	if len(guids) > 0 {
-		db.deleteInvalidLRPs(ctx, logger, queryable, guids...)
+		deleteErr := db.deleteInvalidLRPs(ctx, logger, queryable, guids...)
+		if deleteErr != nil {
+			logger.Error("failed-to-delete-invalid-lrps", deleteErr, lager.Data{"guid": guids})
+		}
 	}
 
 	if err := rows.Err(); err != nil {
@@ -552,7 +555,10 @@ func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows
 func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.DesiredLRP, error) {
 	lrp, guid, err := db.fetchDesiredLRPInternal(logger, scanner)
 	if err == models.ErrDeserialize {
-		db.deleteInvalidLRPs(ctx, logger, queryable, guid)
+		deleteErr := db.deleteInvalidLRPs(ctx, logger, queryable, guid)
+		if deleteErr != nil {
+			logger.Error("failed-to-delete-invalid-lrp", deleteErr, lager.Data{"guid": guid})
+		}
 	}
 	return lrp, err
 }

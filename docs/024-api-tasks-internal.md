@@ -1,3 +1,9 @@
+---
+title: Tasks Internal API
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Internal Tasks API Reference
 
 Instead, it illustrates calls to the API via the Golang `bbs.Client` interface.
@@ -49,7 +55,7 @@ if shouldStart {
 
 ## FailTask
 
-**Deprecated** in favor of [CompleteTask](api-tasks-internal.md#completetask) and [CancelTask](api-tasks.md#canceltask).
+**Deprecated** in favor of [CompleteTask](024-api-tasks-internal.md#completetask) and [CancelTask](023-api-tasks.md#canceltask).
 
 ### BBS API Endpoint
 
@@ -149,5 +155,3 @@ if err != nil {
     log.Printf("could not complete task: " + err.Error())
 }
 ```
-
-[back](README.md)

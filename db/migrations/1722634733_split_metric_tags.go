@@ -103,7 +103,10 @@ func (e *SplitMetricTags) Up(tx *sql.Tx, logger lager.Logger) error {
 		}
 		metricTagsMap[processGuid] = metricTags
 	}
-	rows.Close()
+	err = rows.Close()
+	if err != nil {
+		logger.Error("failed-to-close-row", err)
+	}
 
 	for pGuid, metricTags := range metricTagsMap {
 		updateQuery := "UPDATE desired_lrps SET metric_tags = ? WHERE process_guid = ?"

@@ -20,6 +20,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	. "code.cloudfoundry.org/bbs/test_helpers"
+	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/rep"
@@ -35,6 +36,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
 		fakeAuctioneerClient *auctioneerfakes.FakeClient
+		fakeMetronClient     *mfakes.FakeIngressClient
 		desiredHub           *eventfakes.FakeHub
 		actualHub            *eventfakes.FakeHub
 		actualLRPInstanceHub *eventfakes.FakeHub
@@ -55,6 +57,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
 		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeMetronClient = &mfakes.FakeIngressClient{}
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		responseRecorder = httptest.NewRecorder()
@@ -76,6 +79,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			fakeRepClientFactory,
 			fakeServiceClient,
 			exitCh,
+			fakeMetronClient,
 		)
 	})
 
@@ -1033,6 +1037,38 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			handler.DesireDesiredLRP(logger, responseRecorder, request)
 		})
 
+		Context("when the DesiredLRP request fails validation", func() {
+			appGuid := "05e27b0a-003c-4aa4-bd0c-8d0ad82b426c"
+
+			Context("with routes field exceeding the maximum size", func() {
+				BeforeEach(func() {
+					desiredLRP.ProcessGuid = fmt.Sprintf("%s-%s", appGuid, "6e0c1e62-dcad-4cca-99fe-db6b46b920be")
+					longRoutesJson := json.RawMessage(strings.Repeat("a", (128*1024)+1))
+					desiredLRP.Routes = &models.Routes{
+						"test_route": &longRoutesJson,
+					}
+				})
+
+				Context("when ProcessGuid is not in the valid format", func() {
+					BeforeEach(func() {
+						desiredLRP.ProcessGuid = "invalid_process_guid"
+					})
+
+					It("logs the error", func() {
+						Expect(logger).To(gbytes.Say("failed-sending-app-logs"))
+					})
+				})
+
+				It("sends application log with the correct message", func() {
+					Expect(fakeMetronClient.SendAppErrorLogCallCount()).To(Equal(1))
+					msg, source, tags := fakeMetronClient.SendAppErrorLogArgsForCall(0)
+					Expect(source).To(Equal(handlers.BbsLogSource))
+					Expect(msg).To(Equal(fmt.Sprintf("Error parsing request for app with guid %s, InvalidRequest, Invalid field: routes", appGuid)))
+					Expect(tags).To(HaveKeyWithValue("source_id", appGuid))
+				})
+			})
+		})
+
 		Context("when creating desired lrp in DB succeeds", func() {
 			var createdActualLRPs []*models.ActualLRP
 
@@ -1251,11 +1287,40 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			update = &models.DesiredLRPUpdate{}
 			update.SetAnnotation(&someText)
+		})
 
+		JustBeforeEach(func() {
 			requestBody = &models.UpdateDesiredLRPRequest{
 				ProcessGuid: processGuid,
 				Update:      update,
 			}
+
+			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.UpdateDesiredLRP(logger, responseRecorder, request)
+			time.Sleep(100 * time.Millisecond)
+		})
+
+		Context("when the DesiredLRP request fails validation", func() {
+			appGuid := "05e27b0a-003c-4aa4-bd0c-8d0ad82b426c"
+
+			Context("with routes field exceeding the maximum size", func() {
+				BeforeEach(func() {
+					processGuid = fmt.Sprintf("%s-%s", appGuid, "6e0c1e62-dcad-4cca-99fe-db6b46b920be")
+					longRoutesJson := json.RawMessage(strings.Repeat("a", (128*1024)+1))
+					update.Routes = &models.Routes{
+						"test_route": &longRoutesJson,
+					}
+				})
+
+				It("sends application log with the correct message", func() {
+					Expect(fakeMetronClient.SendAppErrorLogCallCount()).To(Equal(1))
+					msg, source, tags := fakeMetronClient.SendAppErrorLogArgsForCall(0)
+					Expect(source).To(Equal(handlers.BbsLogSource))
+					Expect(msg).To(Equal(fmt.Sprintf("Error parsing request for app with guid %s, InvalidRequest, Invalid field: routes", appGuid)))
+					Expect(tags).To(HaveKeyWithValue("source_id", appGuid))
+				})
+			})
 		})
 
 		Context("when updating desired lrp in DB succeeds", func() {

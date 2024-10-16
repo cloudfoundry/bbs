@@ -30,7 +30,7 @@ func New(binPath string, bbsConfig config.BBSConfig) *ginkgomon.Runner {
 		StartCheck:        "bbs.started",
 		StartCheckTimeout: 1 * time.Minute,
 		Cleanup: func() {
-			// do not use Expect otherwise a race condition will happen
+			// #nosec G104 - do not use Expect otherwise a race condition will happen
 			os.RemoveAll(f.Name())
 		},
 	})

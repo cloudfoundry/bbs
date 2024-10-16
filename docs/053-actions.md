@@ -1,6 +1,12 @@
+---
+title: Actions
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 # Available Actions
 
-[Tasks](tasks.md) and [LRPs](lrps.md) express their work in terms of composable Actions. The following types of Action are available:
+[Tasks](020-tasks.md) and [LRPs](030-lrps.md) express their work in terms of composable Actions. The following types of Action are available:
 
 - Basic Actions:
     - [`RunAction`](#runaction): Runs a process in the container.
@@ -350,6 +356,3 @@ The action to run.
 
 If provided, logs emitted by this action and its subaction will be tagged with
 the provided `LogSource`.  Otherwise the container-level `LogSource` is used.
-
-
-[back](README.md)

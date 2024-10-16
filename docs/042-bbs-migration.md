@@ -1,3 +1,8 @@
+---
+title: BBS Migrations
+expires_at : never
+tags: [diego-release, bbs]
+---
 ## BBS Migrations
 
 ### Schema versions
@@ -29,4 +34,3 @@ This will create test and implementation files for your migration in
 `db/migrations`. Look for `TODO` comments in the test file to get started.
 
 Note that the test file includes a test for migration idempotency.
-

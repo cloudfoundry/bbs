@@ -479,10 +479,16 @@ func (db *SQLDB) fetchTasks(ctx context.Context, logger lager.Logger, rows *sql.
 		err = rows.Err()
 	}
 
-	rows.Close()
+	closeErr := rows.Close()
+	if closeErr != nil {
+		logger.Debug("failed-to-close-row", lager.Data{"error": closeErr})
+	}
 
 	if len(invalidGuids) > 0 {
-		db.deleteInvalidTasks(ctx, logger, queryable, invalidGuids...)
+		deleteErr := db.deleteInvalidTasks(ctx, logger, queryable, invalidGuids...)
+		if deleteErr != nil {
+			logger.Error("failed-to-delete-invalid-task", err, lager.Data{"guids": invalidGuids})
+		}
 	}
 
 	return tasks, validGuids, len(invalidGuids), err
@@ -491,7 +497,10 @@ func (db *SQLDB) fetchTasks(ctx context.Context, logger lager.Logger, rows *sql.
 func (db *SQLDB) fetchTask(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.Task, error) {
 	task, guid, err := db.fetchTaskInternal(logger, scanner)
 	if err == models.ErrDeserialize {
-		db.deleteInvalidTasks(ctx, logger, queryable, guid)
+		deleteErr := db.deleteInvalidTasks(ctx, logger, queryable, guid)
+		if deleteErr != nil {
+			logger.Error("failed-to-delete-invalid-task", err, lager.Data{"guid": guid})
+		}
 	}
 	return task, err
 }
