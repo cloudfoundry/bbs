@@ -1295,7 +1295,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Update:      update,
 			}
 
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.UpdateDesiredLRP(logger, responseRecorder, request)
 			time.Sleep(100 * time.Millisecond)
