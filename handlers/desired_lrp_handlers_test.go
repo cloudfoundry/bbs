@@ -1269,14 +1269,6 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			requestBody *models.UpdateDesiredLRPRequest
 		)
 
-		JustBeforeEach(func() {
-			protoRequestBody := requestBody.ToProto()
-			request := newTestRequest(protoRequestBody)
-			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
-			handler.UpdateDesiredLRP(logger, responseRecorder, request)
-			time.Sleep(100 * time.Millisecond)
-		})
-
 		BeforeEach(func() {
 			processGuid = "some-guid"
 			someText := "some-text"
