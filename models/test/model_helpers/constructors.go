@@ -135,9 +135,9 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		},
 	}
 
-	desiredLRP.ServiceBindingFiles = append(desiredLRP.ServiceBindingFiles, &models.Files{
-		Name:  "/redis/username",
-		Value: "redis_user",
+	desiredLRP.VolumeMountedFiles = append(desiredLRP.VolumeMountedFiles, &models.File{
+		Path:    "/redis/username",
+		Content: "redis_user",
 	})
 
 	err := desiredLRP.Validate()

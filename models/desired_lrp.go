@@ -41,8 +41,8 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
 	}
 
-	serviceBindingFiles := make([]*Files, len(runInfo.ServiceBindingFiles))
-	copy(serviceBindingFiles, runInfo.ServiceBindingFiles)
+	volumeMountedFiles := make([]*File, len(runInfo.VolumeMountedFiles))
+	copy(volumeMountedFiles, runInfo.VolumeMountedFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
@@ -86,7 +86,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		MetricTags:                    runInfo.MetricTags,
 		Sidecars:                      runInfo.Sidecars,
 		LogRateLimit:                  runInfo.LogRateLimit,
-		ServiceBindingFiles:           serviceBindingFiles,
+		VolumeMountedFiles:            volumeMountedFiles,
 	}
 }
 
@@ -96,8 +96,8 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
 	}
 
-	serviceBindingFiles := make([]*Files, len(runInfo.ServiceBindingFiles))
-	copy(serviceBindingFiles, runInfo.ServiceBindingFiles)
+	volumeMountedFiles := make([]*File, len(runInfo.VolumeMountedFiles))
+	copy(volumeMountedFiles, runInfo.VolumeMountedFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	for i := range runInfo.EgressRules {
@@ -121,7 +121,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
 	desiredLRP.Network = runInfo.Network
 	desiredLRP.CheckDefinition = runInfo.CheckDefinition
-	desiredLRP.ServiceBindingFiles = serviceBindingFiles
+	desiredLRP.VolumeMountedFiles = volumeMountedFiles
 }
 
 func (*DesiredLRP) Version() format.Version {
@@ -277,8 +277,8 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		environmentVariables[i] = *d.EnvironmentVariables[i]
 	}
 
-	serviceBindingFiles := make([]*Files, len(d.ServiceBindingFiles))
-	copy(serviceBindingFiles, d.ServiceBindingFiles)
+	volumeMountedFiles := make([]*File, len(d.VolumeMountedFiles))
+	copy(volumeMountedFiles, d.VolumeMountedFiles)
 
 	egressRules := make([]SecurityGroupRule, len(d.EgressRules))
 	for i := range d.EgressRules {
@@ -312,7 +312,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.MetricTags,
 		d.Sidecars,
 		d.LogRateLimit,
-		serviceBindingFiles,
+		volumeMountedFiles,
 	)
 }
 
@@ -324,10 +324,10 @@ func (d *DesiredLRP) Copy() *DesiredLRP {
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
 
-	if len(desired.ServiceBindingFiles) > 0 {
-		err := validateServiceBindingFiles(desired.ServiceBindingFiles)
+	if len(desired.VolumeMountedFiles) > 0 {
+		err := validateVolumeMountedFiles(desired.VolumeMountedFiles)
 		if err != nil {
-			validationError = validationError.Append(ErrInvalidField{"serviceBindingFiles"})
+			validationError = validationError.Append(ErrInvalidField{"volumeMountedFiles"})
 		}
 	}
 
@@ -675,7 +675,7 @@ func NewDesiredLRPRunInfo(
 	metricTags map[string]*MetricTagValue,
 	sidecars []*Sidecar,
 	logRateLimit *LogRateLimit,
-	serviceBindingFiles []*Files,
+	volumeMountedFiles []*File,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLRPKey:                 key,
@@ -704,7 +704,7 @@ func NewDesiredLRPRunInfo(
 		MetricTags:                    metricTags,
 		Sidecars:                      sidecars,
 		LogRateLimit:                  logRateLimit,
-		ServiceBindingFiles:           serviceBindingFiles,
+		VolumeMountedFiles:            volumeMountedFiles,
 	}
 }
 
@@ -713,10 +713,10 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 	validationError = validationError.Check(runInfo.DesiredLRPKey)
 
-	if len(runInfo.ServiceBindingFiles) > 0 {
-		err := validateServiceBindingFiles(runInfo.ServiceBindingFiles)
+	if len(runInfo.VolumeMountedFiles) > 0 {
+		err := validateVolumeMountedFiles(runInfo.VolumeMountedFiles)
 		if err != nil {
-			validationError = validationError.Append(ErrInvalidField{"serviceBindingFiles"})
+			validationError = validationError.Append(ErrInvalidField{"volumeMountedFiles"})
 		}
 	}
 
@@ -815,10 +815,10 @@ func (CertificateProperties) Validate() error {
 	return nil
 }
 
-func validateServiceBindingFiles(files []*Files) error {
+func validateVolumeMountedFiles(files []*File) error {
 	var totalSize int
 	for _, file := range files {
-		totalSize += len(file.Value)
+		totalSize += len(file.Content)
 		if totalSize > maxAllowedSize {
 			return errors.New("total size of all file values exceeds 1MB")
 		}

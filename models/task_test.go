@@ -110,8 +110,8 @@ var _ = Describe("Task", func() {
 			  "dynamic": "INDEX"
 		  }
 		},
-		"service_binding_files": [
-			{"name": "/redis/username", "value": "username"}
+		"volume_mounted_files": [
+			{"path": "/redis/username", "content": "username"}
 		]
 	  }`
 

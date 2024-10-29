@@ -307,8 +307,8 @@ var _ = Describe("Actions", func() {
 					],
 					"resource_limits":{"nofile": 10, "nproc": 20},
 					"suppress_log_output": false,
-					"service_binding_files": [
-						{"name": "/redis/username", "value": "username"}
+					"volume_mounted_files": [
+						{"path": "/redis/username", "content": "username"}
 					]
 			}`,
 			models.WrapAction(&models.RunAction{
@@ -321,8 +321,8 @@ var _ = Describe("Actions", func() {
 					{"BAR", "2"},
 				},
 				ResourceLimits: resourceLimits,
-				ServiceBindingFiles: []*models.Files{
-					{Name: "/redis/username", Value: "username"},
+				VolumeMountedFiles: []*models.File{
+					{Path: "/redis/username", Content: "username"},
 				},
 			}),
 		)
@@ -377,7 +377,7 @@ var _ = Describe("Actions", func() {
 							"nofile": 10
 						},
 						"suppress_log_output": false,
-						"service_binding_files": null
+						"volume_mounted_files": null
 					}
 				},
 				"timeout_ms": 10
@@ -460,7 +460,7 @@ var _ = Describe("Actions", func() {
 							"resource_limits":{},
 							"user": "me",
 							"suppress_log_output": false,
-							"service_binding_files": null
+							"volume_mounted_files": null
 						}
 					}
 			}`,
@@ -530,7 +530,7 @@ var _ = Describe("Actions", func() {
 								"path": "echo",
 								"user": "me",
 								"suppress_log_output": false,
-								"service_binding_files": null
+								"volume_mounted_files": null
 							}
 						}
 					]
@@ -625,7 +625,7 @@ var _ = Describe("Actions", func() {
 								"path": "echo",
 								"user": "me",
 								"suppress_log_output": false,
-								"service_binding_files": null
+								"volume_mounted_files": null
 							}
 						}
 					]
@@ -705,7 +705,7 @@ var _ = Describe("Actions", func() {
 							"resource_limits":{},
 							"user": "me",
 							"suppress_log_output": false,
-							"service_binding_files": null
+							"volume_mounted_files": null
 						}
 					}
 			}`,
@@ -776,7 +776,7 @@ var _ = Describe("Actions", func() {
 								"path": "echo",
 								"user": "me",
 								"suppress_log_output": false,
-								"service_binding_files": null
+								"volume_mounted_files": null
 							}
 						}
 					]
