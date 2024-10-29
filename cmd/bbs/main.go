@@ -181,7 +181,7 @@ func main() {
 	var accessLogger lager.Logger
 	if bbsConfig.AccessLogPath != "" {
 		accessLogger = lager.NewLogger("bbs-access")
-		file, err := os.OpenFile(bbsConfig.AccessLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		file, err := os.OpenFile(bbsConfig.AccessLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
 			logger.Error("invalid-access-log-path", err, lager.Data{"access-log-path": bbsConfig.AccessLogPath})
 			os.Exit(1)
@@ -278,6 +278,7 @@ func main() {
 		taskStatMetronNotifier,
 		migrationsDone,
 		exitChan,
+		metronClient,
 	)
 
 	bbsElectionMetronNotifier := metrics.NewBBSElectionMetronNotifier(logger, metronClient)
@@ -383,7 +384,10 @@ func main() {
 
 	err = <-monitor.Wait()
 	if sqlConn != nil {
-		sqlConn.Close()
+		closeErr := sqlConn.Close()
+		if closeErr != nil {
+			logger.Error("failed-to-close-sql-conn", closeErr)
+		}
 	}
 	if err != nil {
 		logger.Error("exited-with-failure", err)

@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
@@ -12,11 +15,14 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/trace"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
+
+const BbsLogSource = "DIEGO-API"
 
 type DesiredLRPHandler struct {
 	desiredLRPDB         db.DesiredLRPDB
@@ -29,6 +35,7 @@ type DesiredLRPHandler struct {
 	serviceClient        serviceclient.ServiceClient
 	updateWorkersCount   int
 	exitChan             chan<- struct{}
+	metronClient         loggingclient.IngressClient
 }
 
 func NewDesiredLRPHandler(
@@ -42,6 +49,7 @@ func NewDesiredLRPHandler(
 	repClientFactory rep.ClientFactory,
 	serviceClient serviceclient.ServiceClient,
 	exitChan chan<- struct{},
+	metronClient loggingclient.IngressClient,
 ) *DesiredLRPHandler {
 	return &DesiredLRPHandler{
 		desiredLRPDB:         desiredLRPDB,
@@ -54,6 +62,7 @@ func NewDesiredLRPHandler(
 		serviceClient:        serviceClient,
 		updateWorkersCount:   updateWorkersCount,
 		exitChan:             exitChan,
+		metronClient:         metronClient,
 	}
 }
 
@@ -200,7 +209,11 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 
 	err := parseRequest(logger, req, request)
 	if err != nil {
+		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
+		if err = h.logDesiredLrpParsingErrors(response.Error, request.GetDesiredLrp().GetProcessGuid()); err != nil {
+			logger.Error("failed-sending-app-logs", err)
+		}
 		return
 	}
 
@@ -236,6 +249,9 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
+		if err = h.logDesiredLrpParsingErrors(response.Error, request.GetProcessGuid()); err != nil {
+			logger.Error("failed-sending-app-logs", err)
+		}
 		return
 	}
 
@@ -488,4 +504,32 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 			}()
 		}
 	}
+}
+
+func (h *DesiredLRPHandler) logDesiredLrpParsingErrors(err *models.Error, processGuid string) error {
+	appGuid := parseAppGuidFromProcessGuid(processGuid)
+	if appGuid == "" {
+		return errors.New("app guid is empty")
+	}
+
+	tags := map[string]string{
+		"source_id": appGuid,
+	}
+
+	return h.metronClient.SendAppErrorLog(
+		fmt.Sprintf("Error parsing request for app with guid %s, %s, %s", appGuid, err.GetType(), err.GetMessage()),
+		BbsLogSource,
+		tags)
+}
+
+// Parses a ProcessGuid which is in the format: 'UUID-UUID' and returns the first part which is the AppGuid
+func parseAppGuidFromProcessGuid(processGuid string) string {
+	const uuidParts = 5 // a valid UUID contains 5 parts separated by '-'
+
+	parts := strings.Split(processGuid, "-")
+	if len(parts) < uuidParts {
+		return ""
+	}
+
+	return strings.Join(parts[:uuidParts], "-")
 }

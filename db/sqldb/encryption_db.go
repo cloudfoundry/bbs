@@ -56,7 +56,7 @@ func (db *SQLDB) PerformEncryption(ctx context.Context, logger lager.Logger) err
 			errCh <- db.reEncrypt(ctx, logger, encryptable{
 				TableName:       desiredLRPsTable,
 				PrimaryKeyNames: []string{"process_guid"},
-				Columns:         []string{"run_info", "volume_placement", "routes"},
+				Columns:         []string{"run_info", "volume_placement", "routes", "metric_tags"},
 				EncryptIfEmpty:  true,
 				PrimaryKeyFunc:  func() primaryKey { return &desiredLRPPrimaryKey{} },
 			})

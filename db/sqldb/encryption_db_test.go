@@ -136,6 +136,7 @@ var _ = Describe("Encryption", func() {
 			unencodedRunInfo := []byte("another value")
 			unencodedRoutes := []byte("some random routes")
 			unencodedVolumePlacement := []byte("more value")
+			unencodedMetricTags := []byte("some metric tags")
 			taskGuid := "uniquetaskguid"
 			processGuid := "uniqueprocessguid"
 
@@ -154,6 +155,9 @@ var _ = Describe("Encryption", func() {
 			encodedVolumePlacement, err := encoder.Encode(unencodedVolumePlacement)
 			Expect(err).NotTo(HaveOccurred())
 
+			encodedMetricTags, err := encoder.Encode(unencodedMetricTags)
+			Expect(err).NotTo(HaveOccurred())
+
 			queryStr := "INSERT INTO tasks (guid, domain, task_definition) VALUES (?, ?, ?)"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
@@ -164,13 +168,13 @@ var _ = Describe("Encryption", func() {
 			queryStr = `
 				INSERT INTO desired_lrps
 					(process_guid, domain, log_guid, instances, run_info, memory_mb,
-					disk_mb, rootfs, routes, volume_placement, modification_tag_epoch)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+					disk_mb, rootfs, routes, volume_placement, metric_tags, modification_tag_epoch)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			_, err = db.ExecContext(ctx, queryStr, processGuid, "fake-domain", "some-log-guid", 1, encodedRunInfo, 10, 10,
-				"some-root-fs", encodedRoutes, encodedVolumePlacement, "10")
+				"some-root-fs", encodedRoutes, encodedVolumePlacement, encodedMetricTags, "10")
 			Expect(err).NotTo(HaveOccurred())
 			cryptor = makeCryptor("new", "old")
 
@@ -193,13 +197,13 @@ var _ = Describe("Encryption", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(decryptedTaskDef).To(Equal(unencodedTaskDef))
 
-			var runInfo, routes, volumePlacement []byte
-			queryStr = "SELECT run_info, routes, volume_placement FROM desired_lrps WHERE process_guid = ?"
+			var runInfo, routes, volumePlacement, metricTags []byte
+			queryStr = "SELECT run_info, routes, volume_placement, metric_tags FROM desired_lrps WHERE process_guid = ?"
 			if test_helpers.UsePostgres() {
 				queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 			}
 			row = db.QueryRowContext(ctx, queryStr, processGuid)
-			err = row.Scan(&runInfo, &routes, &volumePlacement)
+			err = row.Scan(&runInfo, &routes, &volumePlacement, &metricTags)
 			Expect(err).NotTo(HaveOccurred())
 
 			decryptedRunInfo, err := encoder.Decode(runInfo)
@@ -213,6 +217,10 @@ var _ = Describe("Encryption", func() {
 			decryptedVolumePlacement, err := encoder.Decode(volumePlacement)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(decryptedVolumePlacement).To(Equal(unencodedVolumePlacement))
+
+			decryptedMetricTags, err := encoder.Decode(metricTags)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(decryptedMetricTags).To(Equal(unencodedMetricTags))
 		})
 
 		Context("actual_lrps encryption", func() {

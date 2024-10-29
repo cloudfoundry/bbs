@@ -1,3 +1,8 @@
+---
+title: LRP API Reference
+expires_at : never
+tags: [diego-release, bbs]
+---
 # Long Running Processes API Reference
 
 This reference does not cover the protobuf payload supplied to each endpoint.
@@ -455,7 +460,7 @@ DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) error
 
 #### Example
 
-See the [LRP Examples page](lrp-examples.md).
+See the [LRP Examples page](032-lrp-examples.md).
 
 
 ## UpdateDesiredLRP
@@ -538,4 +543,3 @@ if err != nil {
     log.Printf("failed to remove desired lrp: " + err.Error())
 }
 ```
-[back](README.md)

@@ -1,6 +1,12 @@
+---
+title: Defining Tasks
+expires_at : never
+tags: [diego-release, bbs]
+---
+
 ## Defining Tasks
 
-This document explains the fields available when defining a new Task. For a higher-level overview of the Diego Task API, see the [Tasks Overview](tasks.md).
+This document explains the fields available when defining a new Task. For a higher-level overview of the Diego Task API, see the [Tasks Overview](020-tasks.md).
 
 ```go
 client := bbs.NewClient(url)
@@ -149,15 +155,15 @@ Setting `ImagePassword` requires the `ImageUsername` to also be set.
 
 ##### `EnvironmentVariables` [optional]
 
-See description of [Environment Variables](common-models.md#environmentvariables-optional)
+See description of [Environment Variables](054-common-models.md#environmentvariables-optional)
 
 ##### `CachedDependencies` [optional]
 
-See description of [Cached Dependencies](common-models.md#cacheddependencies-optional)
+See description of [Cached Dependencies](054-common-models.md#cacheddependencies-optional)
 
 ##### `ImageLayers` [optional]
 
-See description of [Image Layers](common-models.md#imagelayers-optional)
+See description of [Image Layers](054-common-models.md#imagelayers-optional)
 
 ##### `TrustedSystemCertificatesPath` [optional]
 
@@ -165,7 +171,7 @@ An absolute path inside the container's filesystem where trusted system certific
 
 ##### `VolumeMounts` [optional]
 
-See description of [Volume Mounts](common-models.md#volumemounts-optional)
+See description of [Volume Mounts](054-common-models.md#volumemounts-optional)
 
 ##### `PlacementTags` [optional]
 
@@ -219,7 +225,7 @@ A memory limit in mebibytes applied to the container.  If the total memory consu
 
 ##### `Action` [required]
 
-Encodes the action to execute when running the Task.  For more details, see the section on [Actions](actions.md).
+Encodes the action to execute when running the Task.  For more details, see the section on [Actions](053-actions.md).
 
 
 #### Task Completion and Output
@@ -252,7 +258,7 @@ By default network access for any container is limited but some tasks may need s
 
 ##### `EgressRules` [optional]
 
-See description of [EgressRules](common-models.md#egressrules-optional)
+See description of [EgressRules](054-common-models.md#egressrules-optional)
 
 ---
 
@@ -280,7 +286,3 @@ The `MetricsGuid` field sets the `ApplicationId` on container metris coming from
 ##### `Annotation` [optional]
 
 Diego allows arbitrary annotations to be attached to a Task.  The annotation may not exceed 10 kilobytes in size.
-
-
-
-[back](README.md)

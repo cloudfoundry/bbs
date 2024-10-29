@@ -35,7 +35,7 @@ func PreloadedRootFS(stack string) string {
 	}).String()
 }
 
-func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo) DesiredLRP {
+func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo, metricTags map[string]*MetricTagValue) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
@@ -83,7 +83,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		ImagePassword:                 runInfo.ImagePassword,
 		CheckDefinition:               runInfo.CheckDefinition,
 		ImageLayers:                   runInfo.ImageLayers,
-		MetricTags:                    runInfo.MetricTags,
+		MetricTags:                    metricTags,
 		Sidecars:                      runInfo.Sidecars,
 		LogRateLimit:                  runInfo.LogRateLimit,
 		VolumeMountedFiles:            volumeMountedFiles,
@@ -309,7 +309,6 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.ImagePassword,
 		d.CheckDefinition,
 		d.ImageLayers,
-		d.MetricTags,
 		d.Sidecars,
 		d.LogRateLimit,
 		volumeMountedFiles,
@@ -378,6 +377,16 @@ func (desired DesiredLRP) Validate() error {
 				validationError = validationError.Append(ErrInvalidField{"routes"})
 				break
 			}
+		}
+	}
+
+	if desired.MetricTags == nil {
+		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
+	} else {
+		err := validateMetricTags(desired.MetricTags, desired.GetMetricsGuid())
+		if err != nil {
+			validationError = validationError.Append(ErrInvalidField{"metric_tags"})
+			validationError = validationError.Append(err)
 		}
 	}
 
@@ -672,7 +681,6 @@ func NewDesiredLRPRunInfo(
 	imageUsername, imagePassword string,
 	checkDefinition *CheckDefinition,
 	imageLayers []*ImageLayer,
-	metricTags map[string]*MetricTagValue,
 	sidecars []*Sidecar,
 	logRateLimit *LogRateLimit,
 	volumeMountedFiles []*File,
@@ -701,7 +709,6 @@ func NewDesiredLRPRunInfo(
 		ImagePassword:                 imagePassword,
 		CheckDefinition:               checkDefinition,
 		ImageLayers:                   imageLayers,
-		MetricTags:                    metricTags,
 		Sidecars:                      sidecars,
 		LogRateLimit:                  logRateLimit,
 		VolumeMountedFiles:            volumeMountedFiles,
@@ -760,16 +767,6 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 	err = validateImageLayers(runInfo.ImageLayers, runInfo.LegacyDownloadUser)
 	if err != nil {
-		validationError = validationError.Append(err)
-	}
-
-	if runInfo.MetricTags == nil {
-		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
-	}
-
-	err = validateMetricTags(runInfo.MetricTags, runInfo.GetMetricsGuid())
-	if err != nil {
-		validationError = validationError.Append(ErrInvalidField{"metric_tags"})
 		validationError = validationError.Append(err)
 	}
 
