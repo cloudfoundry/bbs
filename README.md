@@ -1,5 +1,10 @@
 # BBS
 
+[![Go Report
+Card](https://goreportcard.com/badge/code.cloudfoundry.org/bbs)](https://goreportcard.com/report/code.cloudfoundry.org/bbs)
+[![Go
+Reference](https://pkg.go.dev/badge/code.cloudfoundry.org/bbs.svg)](https://pkg.go.dev/code.cloudfoundry.org/bbs)
+
 Bulletin Board System (BBS) is the API to access the database for Diego.
 It communicates via protocol-buffer-encoded RPC-style calls over HTTP.
 
