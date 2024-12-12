@@ -425,6 +425,7 @@ func (c *client) ActualLRPGroupByProcessGuidAndIndex(logger lager.Logger, traceI
 }
 
 func (c *client) ClaimActualLRP(logger lager.Logger, traceID string, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey) error {
+	fmt.Println("BBS CLIENT: ClaimActualLRP")
 	request := models.ClaimActualLRPRequest{
 		ProcessGuid:          key.ProcessGuid,
 		Index:                key.Index,
@@ -450,6 +451,7 @@ func (c *client) StartActualLRP(logger lager.Logger,
 	routable bool,
 	availabilityZone string,
 ) error {
+	fmt.Println("BBS CLIENT: StartActualLRP")
 	protoResponse := models.ProtoActualLRPLifecycleResponse{}
 	request := &models.StartActualLRPRequest{
 		ActualLrpKey:            key,
@@ -681,20 +683,27 @@ func (c *client) DesiredLRPRoutingInfos(logger lager.Logger, traceID string, fil
 }
 
 func (c *client) doDesiredLRPLifecycleRequest(logger lager.Logger, traceID string, route string, request proto.Message) error {
+	fmt.Println("doDesiredLRPLifecycleRequest")
+	fmt.Printf("request: %+v\n", request)
 	protoResponse := models.ProtoDesiredLRPLifecycleResponse{}
+	fmt.Printf("protoResponse.FromProto() (empty): %+v\n", protoResponse.FromProto())
 	err := c.doRequest(logger, traceID, route, nil, nil, request, &protoResponse)
 	if err != nil {
 		return err
 	}
 
 	response := protoResponse.FromProto()
+	fmt.Printf("response: %+v\n", response)
 	return response.Error.ToError()
 }
 
 func (c *client) DesireLRP(logger lager.Logger, traceID string, desiredLRP *models.DesiredLRP) error {
+	fmt.Println("BBS CLIENT: DesireLRP")
 	request := models.DesireLRPRequest{
 		DesiredLrp: desiredLRP,
 	}
+	fmt.Printf("request: %+v\n", request)
+	fmt.Printf("request.ToProto(): %+v\n", request.ToProto())
 	return c.doDesiredLRPLifecycleRequest(logger, traceID, DesireDesiredLRPRoute_r2, request.ToProto())
 }
 
@@ -940,16 +949,19 @@ func (c *client) Cells(logger lager.Logger, traceID string) ([]*models.CellPrese
 }
 
 func (c *client) createRequest(traceID string, requestName string, params rata.Params, queryParams url.Values, message proto.Message) (*http.Request, error) {
+	fmt.Println("createRequest")
 	var messageBody []byte
 	var err error
 	if message != nil {
 		messageBody, err = proto.Marshal(message)
+		fmt.Printf("messageBody: %+v\n", messageBody)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	request, err := c.reqGen.CreateRequest(requestName, params, bytes.NewReader(messageBody))
+	fmt.Printf("request: %+v\n", request)
 	if err != nil {
 		return nil, err
 	}
@@ -973,13 +985,16 @@ func (c *client) doEvacRequest(logger lager.Logger, traceID string, route string
 }
 
 func (c *client) doRequest(logger lager.Logger, traceID string, requestName string, params rata.Params, queryParams url.Values, requestBody, responseBody proto.Message) error {
+	fmt.Println("doRequest")
 	logger = logger.Session("do-request")
 	var err error
 	var request *http.Request
 
 	for attempts := 0; attempts < c.requestRetryCount; attempts++ {
 		logger.Debug("creating-request", lager.Data{"attempt": attempts + 1, "request_name": requestName})
+		fmt.Printf("requestBody: %+v\n", requestBody)
 		request, err = c.createRequest(traceID, requestName, params, queryParams, requestBody)
+		fmt.Printf("request: %+v\n", request)
 		if err != nil {
 			logger.Error("failed-creating-request", err)
 			return err
@@ -988,7 +1003,9 @@ func (c *client) doRequest(logger lager.Logger, traceID string, requestName stri
 		logger.Debug("doing-request", lager.Data{"attempt": attempts + 1, "request_path": request.URL.Path})
 
 		start := time.Now().UnixNano()
+		fmt.Printf("responseBody (empty): %+v\n", responseBody)
 		err = c.do(request, responseBody)
+		fmt.Printf("responseBody (filled): %+v\n", responseBody)
 		finish := time.Now().UnixNano()
 
 		if err != nil {
@@ -1008,6 +1025,7 @@ func (c *client) doRequest(logger lager.Logger, traceID string, requestName stri
 }
 
 func (c *client) do(request *http.Request, responseObject proto.Message) error {
+	fmt.Println("do")
 	response, err := c.httpClient.Do(request)
 	if err != nil {
 		return err
@@ -1034,16 +1052,20 @@ func (c *client) do(request *http.Request, responseObject proto.Message) error {
 }
 
 func handleProtoResponse(response *http.Response, responseObject proto.Message) error {
+	fmt.Println("handleProtoResponse")
 	if responseObject == nil {
 		return models.NewError(models.Error_InvalidRequest, "responseObject cannot be nil")
 	}
 
+	fmt.Printf("response.Body: %+v\n", response.Body)
 	buf, err := io.ReadAll(response.Body)
 	if err != nil {
 		return models.NewError(models.Error_InvalidResponse, fmt.Sprint("failed to read body: ", err.Error()))
 	}
 
+	fmt.Printf("responseObject (empty): %+v\n", responseObject)
 	err = proto.Unmarshal(buf, responseObject)
+	fmt.Printf("responseObject (filled): %+v\n", responseObject)
 	if err != nil {
 		return models.NewError(models.Error_InvalidProtobufMessage, fmt.Sprint("failed to unmarshal proto: ", err.Error()))
 	}

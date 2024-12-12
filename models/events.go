@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+
 	"code.cloudfoundry.org/bbs/format"
 	"google.golang.org/protobuf/proto"
 )
@@ -71,6 +73,7 @@ func VersionTaskDefinitionsTo(event Event, target format.Version) Event {
 }
 
 func NewDesiredLRPCreatedEvent(desiredLRP *DesiredLRP, traceId string) *DesiredLRPCreatedEvent {
+	fmt.Println("NewDesiredLRPCreatedEvent")
 	return &DesiredLRPCreatedEvent{
 		DesiredLrp: desiredLRP,
 		TraceId:    traceId,

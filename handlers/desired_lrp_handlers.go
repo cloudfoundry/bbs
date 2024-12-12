@@ -225,6 +225,7 @@ func (h *DesiredLRPHandler) DesiredLRPRoutingInfos(logger lager.Logger, w http.R
 }
 
 func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	fmt.Println("DesireDesiredLRP")
 	logger = logger.Session("desire-lrp").WithTraceInfo(req)
 
 	var request *models.DesireLRPRequest
@@ -233,8 +234,11 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
 	defer func() { writeResponse(w, response.ToProto()) }()
 
+	fmt.Printf("req: %+v\n", req)
+	fmt.Printf("protoRequest: %+v\n", protoRequest)
 	err := parseRequest(logger, req, protoRequest)
 	request = protoRequest.FromProto()
+	fmt.Printf("request: %+v\n", request)
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -251,6 +255,7 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 	}
 
 	desiredLRP, err := h.desiredLRPDB.DesiredLRPByProcessGuid(req.Context(), logger, request.DesiredLrp.ProcessGuid)
+	fmt.Printf("desiredLRP: %+v\n", desiredLRP)
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -259,12 +264,14 @@ func (h *DesiredLRPHandler) DesireDesiredLRP(logger lager.Logger, w http.Respons
 	go h.desiredHub.Emit(models.NewDesiredLRPCreatedEvent(desiredLRP, trace.RequestIdFromRequest(req)))
 
 	schedulingInfo := request.DesiredLrp.DesiredLRPSchedulingInfo()
+	fmt.Printf("schedulingInfo: %+v\n", schedulingInfo)
 	if schedulingInfo.Instances > 0 {
 		h.startInstanceRange(trace.ContextWithRequestId(req), logger, 0, schedulingInfo.Instances, &schedulingInfo)
 	}
 }
 
 func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	fmt.Println("UpdateDesiredLRP")
 	logger = logger.Session("update-desired-lrp").WithTraceInfo(req)
 
 	var request *models.UpdateDesiredLRPRequest
@@ -366,6 +373,7 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 }
 
 func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
+	fmt.Println("startInstanceRange")
 	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -388,6 +396,7 @@ func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager
 }
 
 func (h *DesiredLRPHandler) createUnclaimedActualLRPs(ctx context.Context, logger lager.Logger, keys []*models.ActualLRPKey) []int {
+	fmt.Println("createUnclaimedActualLRPs")
 	count := len(keys)
 	createdIndicesChan := make(chan int, count)
 

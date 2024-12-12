@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"code.cloudfoundry.org/bbs/models"
@@ -46,6 +47,7 @@ func NewActualLRPLifecycleHandler(
 }
 
 func (h *ActualLRPLifecycleHandler) ClaimActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	fmt.Println("ClaimActualLRP")
 	var err error
 	logger = logger.Session("claim-actual-lrp").WithTraceInfo(req)
 	logger.Debug("starting")

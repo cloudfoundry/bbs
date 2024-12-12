@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -230,6 +232,8 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 }
 
 func (db *SQLDB) ClaimActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (*models.ActualLRP, *models.ActualLRP, error) {
+	fmt.Println("DB ClaimActualLRP")
+	fmt.Fprintln(os.Stdout, "DB ClaimActualLRP")
 	logger = logger.Session("db-claim-actual-lrp", lager.Data{"process_guid": processGuid, "index": index, "instance_key": instanceKey})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -301,6 +305,7 @@ func (db *SQLDB) StartActualLRP(
 	routable bool,
 	availabilityZone string,
 ) (*models.ActualLRP, *models.ActualLRP, error) {
+	fmt.Println("DB StartActualLRP")
 	logger = logger.Session("db-start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo, "routable": routable})
 	logger.Info("starting")
 	defer logger.Info("complete")
