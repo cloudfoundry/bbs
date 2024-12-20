@@ -146,6 +146,16 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	return desiredLRP
 }
 
+func NewValidDesiredLRPWithNoVolumeMountedFiles(guid string) *models.DesiredLRP {
+	desiredLRP := NewValidDesiredLRP(guid)
+	desiredLRP.VolumeMountedFiles = []*models.File{}
+
+	err := desiredLRP.Validate()
+	Expect(err).NotTo(HaveOccurred())
+
+	return desiredLRP
+}
+
 func NewValidTaskDefinition() *models.TaskDefinition {
 	return &models.TaskDefinition{
 		RootFs: "docker:///docker.com/docker",

@@ -14,7 +14,7 @@ import (
 const PreloadedRootFSScheme = "preloaded"
 const PreloadedOCIRootFSScheme = "preloaded+layer"
 
-const maxAllowedSize = 1 * 1024 * 1024 // 1MB in bytes
+const volumeMountedFilesMaxAllowedSize = 1 * 1024 * 1024 // 1MB in bytes
 
 var processGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
@@ -816,7 +816,7 @@ func validateVolumeMountedFiles(files []*File) error {
 	var totalSize int
 	for _, file := range files {
 		totalSize += len(file.Content)
-		if totalSize > maxAllowedSize {
+		if totalSize > volumeMountedFilesMaxAllowedSize {
 			return errors.New("total size of all file values exceeds 1MB")
 		}
 	}

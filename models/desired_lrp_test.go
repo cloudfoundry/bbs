@@ -83,7 +83,7 @@ var _ = Describe("DesiredLRP", func() {
               },
               "user": "vcap",
               "log_source": "APP",
-			  "suppress_log_output": false,
+              "suppress_log_output": false,
               "volume_mounted_files": null
             }
           },
@@ -123,7 +123,7 @@ var _ = Describe("DesiredLRP", func() {
                 "nofile": 16384
               },
               "user": "vcap",
-			  "suppress_log_output": false,
+              "suppress_log_output": false,
               "volume_mounted_files": null
             }
           }
@@ -143,8 +143,8 @@ var _ = Describe("DesiredLRP", func() {
             },
             "user": "vcap",
             "log_source": "HEALTH",
-			"suppress_log_output": true,
-		    "volume_mounted_files": null
+            "suppress_log_output": true,
+            "volume_mounted_files": null
           }
         },
         "timeout_ms": 30000000
@@ -1013,8 +1013,33 @@ var _ = Describe("DesiredLRP", func() {
 				exceedSize += "a"
 			}
 
-			var InvalidServiceBindingFiles = []*models.File{{Path: "/redis/username", Content: exceedSize}}
-			desiredLRP.VolumeMountedFiles = InvalidServiceBindingFiles
+			var InvalidVolumeMountedFiles = []*models.File{
+				{Path: "/redis/username", Content: exceedSize},
+			}
+
+			desiredLRP.VolumeMountedFiles = InvalidVolumeMountedFiles
+
+			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "volumeMountedFiles")
+		})
+
+		It("fails when total size of service binding files exceeds 1MB", func() {
+			var smallFileContent, mediumFileContent, largeFileContent string
+			for i := 0; i < 1024*100; i++ {
+				smallFileContent += "a"
+			}
+			for i := 0; i < 1024*500; i++ {
+				mediumFileContent += "b"
+			}
+			for i := 0; i < 1024*500+100; i++ {
+				largeFileContent += "c"
+			}
+
+			var InvalidVolumeMountedFiles = []*models.File{
+				{Path: "/redis/small", Content: smallFileContent},
+				{Path: "/httpd/medium", Content: mediumFileContent},
+				{Path: "/pgsql/large", Content: largeFileContent},
+			}
+			desiredLRP.VolumeMountedFiles = InvalidVolumeMountedFiles
 
 			assertDesiredLRPValidationFailsWithMessage(desiredLRP, "volumeMountedFiles")
 		})
@@ -1610,12 +1635,24 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 
 	var volumeMountedFiles = []*models.File{{Path: "/redis/username", Content: "username"}}
 
-	var exceedSize string
-	for range (1024 * 1024) + 100 {
-		exceedSize += "a"
+	var smallFileContent, mediumFileContent, largeFileContent string
+
+	// Create files of different sizes
+	for i := 0; i < 1024*100; i++ { // 100 KB
+		smallFileContent += "a"
+	}
+	for i := 0; i < 1024*500; i++ { // 500 KB
+		mediumFileContent += "b"
+	}
+	for i := 0; i < 1024*500+100; i++ { // 500 KB + 100 bytes
+		largeFileContent += "c"
 	}
 
-	var InvalidVolumeMountedFiles = []*models.File{{Path: "/redis/username", Content: exceedSize}}
+	var InvalidVolumeMountedFiles = []*models.File{
+		{Path: "/redis/small", Content: smallFileContent},
+		{Path: "/httpd/medium", Content: mediumFileContent},
+		{Path: "/pgsql/large", Content: largeFileContent},
+	}
 
 	DescribeTable("Validation",
 		func(key models.DesiredLRPRunInfo, expectedErr string) {
