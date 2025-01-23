@@ -507,7 +507,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 
 			var internalRoutes internalroutes.InternalRoutes
 			if internalRoutesUpdated {
-				internalRoutes, err = internalroutes.InternalRoutesFromRoutingInfo(*update.Routes)
+				internalRoutes, err = internalroutes.InternalRoutesFromRoutingInfo(update.Routes)
 				if err != nil {
 					logger.Error("getting-internal-routes-failed", err)
 					continue

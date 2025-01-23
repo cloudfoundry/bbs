@@ -221,7 +221,7 @@ func (c *convergence) lrpsWithInternalRouteChanges(ctx context.Context, logger l
 			}
 		}
 
-		desiredInternalRoutes, err := internalroutes.InternalRoutesFromRoutingInfo(desiredRoutes)
+		desiredInternalRoutes, err := internalroutes.InternalRoutesFromRoutingInfo(&desiredRoutes)
 		if err != nil {
 			logger.Error("failed-getting-internal-routes-from-desired", err)
 			continue
