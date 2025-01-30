@@ -306,10 +306,7 @@ var _ = Describe("Actions", func() {
 						{"name":"BAR", "value":"2"}
 					],
 					"resource_limits":{"nofile": 10, "nproc": 20},
-					"suppress_log_output": false,
-					"volume_mounted_files": [
-						{"path": "/redis/username", "content": "username"}
-					]
+					"suppress_log_output": false
 			}`,
 			models.WrapAction(&models.RunAction{
 				User: "me",
@@ -321,9 +318,6 @@ var _ = Describe("Actions", func() {
 					{"BAR", "2"},
 				},
 				ResourceLimits: resourceLimits,
-				VolumeMountedFiles: []*models.File{
-					{Path: "/redis/username", Content: "username"},
-				},
 			}),
 		)
 
@@ -376,8 +370,7 @@ var _ = Describe("Actions", func() {
 						"resource_limits":{
 							"nofile": 10
 						},
-						"suppress_log_output": false,
-						"volume_mounted_files": null
+						"suppress_log_output": false
 					}
 				},
 				"timeout_ms": 10
@@ -459,8 +452,7 @@ var _ = Describe("Actions", func() {
 							"path": "echo",
 							"resource_limits":{},
 							"user": "me",
-							"suppress_log_output": false,
-							"volume_mounted_files": null
+							"suppress_log_output": false
 						}
 					}
 			}`,
@@ -529,8 +521,7 @@ var _ = Describe("Actions", func() {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false,
-								"volume_mounted_files": null
+								"suppress_log_output": false
 							}
 						}
 					]
@@ -624,8 +615,7 @@ var _ = Describe("Actions", func() {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false,
-								"volume_mounted_files": null
+								"suppress_log_output": false
 							}
 						}
 					]
@@ -704,8 +694,7 @@ var _ = Describe("Actions", func() {
 							"path": "echo",
 							"resource_limits":{},
 							"user": "me",
-							"suppress_log_output": false,
-							"volume_mounted_files": null
+							"suppress_log_output": false
 						}
 					}
 			}`,
@@ -775,8 +764,7 @@ var _ = Describe("Actions", func() {
 								"resource_limits": {},
 								"path": "echo",
 								"user": "me",
-								"suppress_log_output": false,
-								"volume_mounted_files": null
+								"suppress_log_output": false
 							}
 						}
 					]

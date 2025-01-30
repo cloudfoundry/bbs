@@ -134,22 +134,6 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 			"source_id": {Static: "some-metrics-guid"},
 		},
 	}
-
-	desiredLRP.VolumeMountedFiles = append(desiredLRP.VolumeMountedFiles, &models.File{
-		Path:    "/redis/username",
-		Content: "redis_user",
-	})
-
-	err := desiredLRP.Validate()
-	Expect(err).NotTo(HaveOccurred())
-
-	return desiredLRP
-}
-
-func NewValidDesiredLRPWithNoVolumeMountedFiles(guid string) *models.DesiredLRP {
-	desiredLRP := NewValidDesiredLRP(guid)
-	desiredLRP.VolumeMountedFiles = []*models.File{}
-
 	err := desiredLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
 

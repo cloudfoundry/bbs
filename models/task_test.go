@@ -109,10 +109,7 @@ var _ = Describe("Task", func() {
 		  "bar": {
 			  "dynamic": "INDEX"
 		  }
-		},
-		"volume_mounted_files": [
-			{"path": "/redis/username", "content": "username"}
-		]
+		}
 	  }`
 
 		task = models.Task{}
