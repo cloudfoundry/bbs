@@ -248,7 +248,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				ports = []uint32{1}
 			})
 
-			Context("is ipv4", func() {
+			Context("and it's ipv4 address", func() {
 				Context("when its an IP Address", func() {
 					BeforeEach(func() {
 						destination = "8.8.8.8"
@@ -300,7 +300,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				})
 			})
 
-			Context("is ipv6", func() {
+			Context("and it's ipv6 address", func() {
 				Context("when its an IP Address", func() {
 					BeforeEach(func() {
 						destination = "2100::1"
