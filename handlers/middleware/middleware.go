@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"net/http"
+	"slices"
 	"time"
 
 	"code.cloudfoundry.org/lager/v3"
@@ -13,8 +15,9 @@ type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *htt
 
 //counterfeiter:generate -o fakes/fake_emitter.go . Emitter
 type Emitter interface {
-	IncrementRequestCounter(delta int)
-	UpdateLatency(latency time.Duration)
+	IncrementRequestCounter(delta int, route string)
+	UpdateLatency(latency time.Duration, route string)
+	GetAdvancedMetricsConfig() config.AdvancedMetrics
 }
 
 func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
@@ -60,13 +63,77 @@ func RecordLatency(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		f(w, r)
-		emitter.UpdateLatency(time.Since(startTime))
+		emitter.UpdateLatency(time.Since(startTime), "")
 	}
 }
 
-func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc {
+
+//TODO: remove this function
+//func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		emitter.IncrementRequestCounter(1)
+//		handler.ServeHTTP(w, r)
+//	}
+//}
+
+func RecordRequestCount(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		emitter.IncrementRequestCounter(1)
-		handler.ServeHTTP(w, r)
+		emitter.IncrementRequestCounter(1, "")
+		f(w, r)
 	}
 }
+
+func RecordDefaultMetrics(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
+	return RecordLatency(RecordRequestCount(f, emitter), emitter)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		emitter.IncrementRequestCounter(1, "")
+		f(w, r)
+	}
+
+	RecordAdvancedMetrics(RecordRequestCount(RecordLatency(f, emitter), emitter), emitter, route)
+	RecordAdvancedMetrics(RecordRequestCount(RecordLatency(f, emitter), emitter), emitter, route)
+}
+
+func RecordMetrics(f http.HandlerFunc, emitter Emitter, calledRoute string) http.HandlerFunc {
+	//TODO: Adpat this to return a function
+	// Record Default Metrics
+	RecordLatency(f, emitter)
+	RecordRequestCount(f, emitter)
+
+	advancedMetricsConfig := emitter.GetAdvancedMetricsConfig()
+	if advancedMetricsConfig.Enabled {
+		RecordAdvancedMetrics(f, emitter, calledRoute)
+	}
+}
+
+func RecordAdvancedMetrics(f http.HandlerFunc, emitter Emitter,  calledRoute string) http.HandlerFunc {
+	isRouteFound := slices.Contains(emitter.GetAdvancedMetricsConfig().RouteConfig.RequestCountRoutes, calledRoute)
+	if isRouteFound {
+		emitter.IncrementRequestCounter(1)
+	}
+
+	isRouteFound = slices.Contains(emitter.GetAdvancedMetricsConfig().RouteConfig.RequestLatencyRoutes, calledRoute)
+
+
+	//
+	//if indexFound == -1 {
+	//	return
+
+
+
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		emitter.IncrementRequestCounter(1)
+		f(w, r)
+	}
+
+
+	// 1. Execute default metrics
+	// 2. read config
+	// 3. If enabled record metrics for endpoints
+	//3. Retrieve metadata (What's the current endpoint?)
+	//3. Create a structure that keeps a mapping between each endpoint and it's notifier
+}
+
+

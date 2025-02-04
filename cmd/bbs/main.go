@@ -254,7 +254,7 @@ func main() {
 
 	fileDescriptorPath := fmt.Sprintf("/proc/%d/fd", os.Getpid())
 	fileDescriptorMetronNotifier := metrics.NewFileDescriptorMetronNotifier(logger, fileDescriptorTicker, metronClient, fileDescriptorPath)
-	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, requestStatsTicker, metronClient)
+	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, requestStatsTicker, metronClient, bbsConfig.AdvancedMetricsConfig)
 	lockHeldMetronNotifier := lockheldmetrics.NewLockHeldMetronNotifier(logger, locksHeldTicker, metronClient)
 	taskStatMetronNotifier := metrics.NewTaskStatMetronNotifier(logger, clock, metronClient)
 	dbStatMetronNotifier := metrics.NewDBStatMetronNotifier(logger, clock, monitoredDB, metronClient, queryMonitor)

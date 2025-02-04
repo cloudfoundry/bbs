@@ -67,86 +67,91 @@ func New(
 	lrpInstanceEventsHandler := NewLRPInstanceEventHandler(desiredHub, actualLRPInstanceHub)
 	cellsHandler := NewCellHandler(serviceClient, exitChan)
 
+	metricsAndLoggingWrap := func(loggableHandlerFunc middleware.LoggableHandlerFunc, routeName string) http.HandlerFunc {
+		return middleware.RecordMetrics(middleware.LogWrap(logger, accessLogger, loggableHandlerFunc), emitter, routeName)
+	}
+
 	actions := rata.Handlers{
 		// Ping
-		bbs.PingRoute_r0: middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, pingHandler.Ping), emitter),
+		bbs.PingRoute_r0: metricsAndLoggingWrap(pingHandler.Ping, bbs.PingRoute_r0),
 
 		// Domains
-		bbs.DomainsRoute_r0:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, domainHandler.Domains), emitter)),
-		bbs.UpsertDomainRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, domainHandler.Upsert), emitter)),
+		bbs.DomainsRoute_r0:      metricsAndLoggingWrap(domainHandler.Domains, bbs.DomainsRoute_r0),
+		bbs.UpsertDomainRoute_r0: metricsAndLoggingWrap(domainHandler.Upsert, bbs.UpsertDomainRoute_r0),
 
 		// Actual LRPs
-		bbs.ActualLRPsRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPs), emitter)),
+		bbs.ActualLRPsRoute_r0: metricsAndLoggingWrap(actualLRPHandler.ActualLRPs, bbs.ActualLRPsRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.ActualLRPGroupsRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroups), emitter)),
+		bbs.ActualLRPGroupsRoute_r0: metricsAndLoggingWrap(actualLRPHandler.ActualLRPGroups, bbs.ActualLRPGroupsRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.ActualLRPGroupsByProcessGuidRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupsByProcessGuid), emitter)),
+		bbs.ActualLRPGroupsByProcessGuidRoute_r0: metricsAndLoggingWrap(actualLRPHandler.ActualLRPGroupsByProcessGuid, bbs.ActualLRPGroupsByProcessGuidRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.ActualLRPGroupByProcessGuidAndIndexRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex), emitter)),
+		bbs.ActualLRPGroupByProcessGuidAndIndexRoute_r0: metricsAndLoggingWrap(actualLRPHandler.ActualLRPGroupByProcessGuidAndIndex, bbs.ActualLRPGroupByProcessGuidAndIndexRoute_r0),
 
 		// Actual LRP Lifecycle
-		bbs.ClaimActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.ClaimActualLRP), emitter)),
+		bbs.ClaimActualLRPRoute_r0: metricsAndLoggingWrap(actualLRPLifecycleHandler.ClaimActualLRP, bbs.ClaimActualLRPRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.StartActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP_r0), emitter)), // DEPRECATED
-		bbs.StartActualLRPRoute_r1:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.StartActualLRP), emitter)),
-		bbs.CrashActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.CrashActualLRP), emitter)),
-		bbs.RetireActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.RetireActualLRP), emitter)),
-		bbs.FailActualLRPRoute_r0:   route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.FailActualLRP), emitter)),
-		bbs.RemoveActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, actualLRPLifecycleHandler.RemoveActualLRP), emitter)),
+		bbs.StartActualLRPRoute_r0:  metricsAndLoggingWrap(actualLRPLifecycleHandler.StartActualLRP_r0, bbs.StartActualLRPRoute_r0), // DEPRECATED
+		bbs.StartActualLRPRoute_r1:  metricsAndLoggingWrap(actualLRPLifecycleHandler.StartActualLRP, bbs.StartActualLRPRoute_r1),
+		bbs.CrashActualLRPRoute_r0:  metricsAndLoggingWrap(actualLRPLifecycleHandler.CrashActualLRP, bbs.CrashActualLRPRoute_r0),
+		bbs.RetireActualLRPRoute_r0: metricsAndLoggingWrap(actualLRPLifecycleHandler.RetireActualLRP, bbs.RetireActualLRPRoute_r0),
+		bbs.FailActualLRPRoute_r0:   metricsAndLoggingWrap(actualLRPLifecycleHandler.FailActualLRP, bbs.FailActualLRPRoute_r0),
+		bbs.RemoveActualLRPRoute_r0: metricsAndLoggingWrap(actualLRPLifecycleHandler.RemoveActualLRP, bbs.RemoveActualLRPRoute_r0),
 
 		// Evacuation
-		bbs.RemoveEvacuatingActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.RemoveEvacuatingActualLRP), emitter)),
-		bbs.EvacuateClaimedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateClaimedActualLRP), emitter)),
-		bbs.EvacuateCrashedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateCrashedActualLRP), emitter)),
-		bbs.EvacuateStoppedActualLRPRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateStoppedActualLRP), emitter)),
+		bbs.RemoveEvacuatingActualLRPRoute_r0: metricsAndLoggingWrap(evacuationHandler.RemoveEvacuatingActualLRP, bbs.RemoveEvacuatingActualLRPRoute_r0),
+		bbs.EvacuateClaimedActualLRPRoute_r0:  metricsAndLoggingWrap(evacuationHandler.EvacuateClaimedActualLRP, bbs.EvacuateClaimedActualLRPRoute_r0),
+		bbs.EvacuateCrashedActualLRPRoute_r0:  metricsAndLoggingWrap(evacuationHandler.EvacuateCrashedActualLRP, bbs.EvacuateCrashedActualLRPRoute_r0),
+		bbs.EvacuateStoppedActualLRPRoute_r0:  metricsAndLoggingWrap(evacuationHandler.EvacuateStoppedActualLRP, bbs.EvacuateStoppedActualLRPRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.EvacuateRunningActualLRPRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP_r0), emitter)), // DEPRECATED
-		bbs.EvacuateRunningActualLRPRoute_r1: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, evacuationHandler.EvacuateRunningActualLRP), emitter)),
+		bbs.EvacuateRunningActualLRPRoute_r0: metricsAndLoggingWrap(evacuationHandler.EvacuateRunningActualLRP_r0, bbs.EvacuateRunningActualLRPRoute_r0), // DEPRECATED
+		bbs.EvacuateRunningActualLRPRoute_r1: metricsAndLoggingWrap(evacuationHandler.EvacuateRunningActualLRP, bbs.EvacuateRunningActualLRPRoute_r1),
 
 		// Desired LRPs
-		bbs.DesiredLRPsRoute_r3:             route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs), emitter)),
-		bbs.DesiredLRPByProcessGuidRoute_r3: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid), emitter)),
+		bbs.DesiredLRPsRoute_r3:             metricsAndLoggingWrap(desiredLRPHandler.DesiredLRPs, bbs.DesiredLRPsRoute_r3),
+		bbs.DesiredLRPByProcessGuidRoute_r3: metricsAndLoggingWrap(desiredLRPHandler.DesiredLRPByProcessGuid, bbs.DesiredLRPByProcessGuidRoute_r3),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.DesiredLRPsRoute_r2: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPs_r2), emitter)), // DEPRECATED
+		bbs.DesiredLRPsRoute_r2: metricsAndLoggingWrap(desiredLRPHandler.DesiredLRPs_r2, bbs.DesiredLRPsRoute_r2), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.DesiredLRPByProcessGuidRoute_r2:          route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPByProcessGuid_r2), emitter)), // DEPRECATED
-		bbs.DesiredLRPSchedulingInfosRoute_r0:        route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPSchedulingInfos), emitter)),
-		bbs.DesiredLRPSchedulingInfoByProcessGuid_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPSchedulingInfoByProcessGuid), emitter)),
-		bbs.DesiredLRPRoutingInfosRoute_r0:           route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesiredLRPRoutingInfos), emitter)),
-		bbs.DesireDesiredLRPRoute_r2:                 route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.DesireDesiredLRP), emitter)),
-		bbs.UpdateDesiredLRPRoute_r0:                 route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.UpdateDesiredLRP), emitter)),
-		bbs.RemoveDesiredLRPRoute_r0:                 route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, desiredLRPHandler.RemoveDesiredLRP), emitter)),
+		bbs.DesiredLRPByProcessGuidRoute_r2:          metricsAndLoggingWrap(desiredLRPHandler.DesiredLRPByProcessGuid_r2, bbs.DesiredLRPByProcessGuidRoute_r2), // DEPRECATED
+		bbs.DesiredLRPSchedulingInfosRoute_r0:        metricsAndLoggingWrap(desiredLRPHandler.DesiredLRPSchedulingInfos, bbs.DesiredLRPSchedulingInfosRoute_r0),
+		bbs.DesiredLRPSchedulingInfoByProcessGuid_r0: metricsAndLoggingWrap(desiredLRPHandler.DesiredLRPSchedulingInfoByProcessGuid, bbs.DesiredLRPSchedulingInfoByProcessGuid_r0),
+		bbs.DesiredLRPRoutingInfosRoute_r0:           metricsAndLoggingWrap(desiredLRPHandler.DesiredLRPRoutingInfos, bbs.DesiredLRPRoutingInfosRoute_r0),
+		bbs.DesireDesiredLRPRoute_r2:                 metricsAndLoggingWrap(desiredLRPHandler.DesireDesiredLRP, bbs.DesireDesiredLRPRoute_r2),
+		bbs.UpdateDesiredLRPRoute_r0:                 metricsAndLoggingWrap(desiredLRPHandler.UpdateDesiredLRP, bbs.UpdateDesiredLRPRoute_r0),
+		bbs.RemoveDesiredLRPRoute_r0:                 metricsAndLoggingWrap(desiredLRPHandler.RemoveDesiredLRP, bbs.RemoveDesiredLRPRoute_r0),
 
 		// Tasks
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.TasksRoute_r2: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks_r2), emitter)), // DEPRECATED
+		bbs.TasksRoute_r2: metricsAndLoggingWrap(taskHandler.Tasks_r2, bbs.TasksRoute_r2), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.TaskByGuidRoute_r2: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.TaskByGuid_r2), emitter)), // DEPRECATED
-		bbs.TasksRoute_r3:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.Tasks), emitter)),
-		bbs.TaskByGuidRoute_r3: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.TaskByGuid), emitter)),
-		bbs.DesireTaskRoute_r2: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DesireTask), emitter)),
-		bbs.StartTaskRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.StartTask), emitter)),
-		bbs.CancelTaskRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CancelTask), emitter)),
+		bbs.TaskByGuidRoute_r2: metricsAndLoggingWrap(taskHandler.TaskByGuid_r2, bbs.TaskByGuidRoute_r2), // DEPRECATED
+		bbs.TasksRoute_r3:      metricsAndLoggingWrap(taskHandler.Tasks, bbs.TasksRoute_r3),
+		bbs.TaskByGuidRoute_r3: metricsAndLoggingWrap(taskHandler.TaskByGuid, bbs.TaskByGuidRoute_r3),
+		bbs.DesireTaskRoute_r2: metricsAndLoggingWrap(taskHandler.DesireTask, bbs.DesireTaskRoute_r2),
+		bbs.StartTaskRoute_r0:  metricsAndLoggingWrap(taskHandler.StartTask, bbs.StartTaskRoute_r0),
+		bbs.CancelTaskRoute_r0: metricsAndLoggingWrap(taskHandler.CancelTask, bbs.CancelTaskRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.FailTaskRoute_r0:      route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.FailTask), emitter)),
-		bbs.RejectTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.RejectTask), emitter)),
-		bbs.CompleteTaskRoute_r0:  route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.CompleteTask), emitter)),
-		bbs.ResolvingTaskRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.ResolvingTask), emitter)),
-		bbs.DeleteTaskRoute_r0:    route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, taskHandler.DeleteTask), emitter)),
+		bbs.FailTaskRoute_r0:      metricsAndLoggingWrap(taskHandler.FailTask, bbs.FailTaskRoute_r0), // DEPRECATED
+		bbs.RejectTaskRoute_r0:    metricsAndLoggingWrap(taskHandler.RejectTask, bbs.RejectTaskRoute_r0),
+		bbs.CompleteTaskRoute_r0:  metricsAndLoggingWrap(taskHandler.CompleteTask, bbs.CompleteTaskRoute_r0),
+		bbs.ResolvingTaskRoute_r0: metricsAndLoggingWrap(taskHandler.ResolvingTask, bbs.ResolvingTaskRoute_r0),
+		bbs.DeleteTaskRoute_r0:    metricsAndLoggingWrap(taskHandler.DeleteTask, bbs.DeleteTaskRoute_r0),
 
+		//TODO: Check with community if should emit default/advanced metrics for these events
 		// Events
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.EventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0)), // DEPRECATED
+		bbs.EventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0), emitter), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.TaskEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0)), // DEPRECATED
+		bbs.TaskEventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0), emitter), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.LrpInstanceEventStreamRoute_r0: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0)), // DEPRECATED
-		bbs.LRPGroupEventStreamRoute_r1:    route(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1)),
-		bbs.TaskEventStreamRoute_r1:        route(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1)),
-		bbs.LRPInstanceEventStreamRoute_r1: route(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1)),
+		bbs.LrpInstanceEventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0), emitter), // DEPRECATED
+		bbs.LRPGroupEventStreamRoute_r1:    middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1), emitter),
+		bbs.TaskEventStreamRoute_r1:        middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1), emitter),
+		bbs.LRPInstanceEventStreamRoute_r1: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1), emitter),
 
 		// Cells
-		bbs.CellsRoute_r0: route(middleware.RecordLatency(middleware.LogWrap(logger, accessLogger, cellsHandler.Cells), emitter)),
+		bbs.CellsRoute_r0: metricsAndLoggingWrap(cellsHandler.Cells, bbs.CellsRoute_r0),
 	}
 
 	handler, err := rata.NewRouter(bbs.Routes, actions)
@@ -154,16 +159,16 @@ func New(
 		panic("unable to create router: " + err.Error())
 	}
 
-	return middleware.RecordRequestCount(
-		UnavailableWrap(handler,
-			migrationsDone,
-		),
-		emitter,
-	)
-}
+	//return middleware.RecordRequestCount(
+	//	UnavailableWrap(handler,
+	//		migrationsDone,
+	//	),
+	//	emitter,
+	//)
 
-func route(f http.HandlerFunc) http.Handler {
-	return f
+	return UnavailableWrap(handler,
+		migrationsDone,
+	)
 }
 
 func parseRequest(logger lager.Logger, req *http.Request, request MessageValidator) error {
