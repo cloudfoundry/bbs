@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"net/http"
 	"slices"
 	"time"
+
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 
 	"code.cloudfoundry.org/lager/v3"
 )
@@ -59,14 +60,48 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 	}
 }
 
-func RecordLatency(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		startTime := time.Now()
+type metadata struct {
+	latency time.Duration
+}
+
+type handlerWithMetadata func(w http.ResponseWriter, r *http.Request) metadata
+
+func inithandlerWithMetadata(f http.HandlerFunc) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
 		f(w, r)
-		emitter.UpdateLatency(time.Since(startTime), "")
+		return metadata{}
 	}
 }
 
+func stripMetadata(f handlerWithMetadata) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		f(w, r)
+	}
+}
+
+func recordLatency(f handlerWithMetadata) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
+		startTime := time.Now()
+		metadata := f(w, r)
+		metadata.latency = time.Since(startTime)
+		return metadata
+	}
+}
+
+func updateLatency(f handlerWithMetadata, emitter Emitter, route string) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
+		metadata := f(w, r)
+		emitter.UpdateLatency(metadata.latency, route)
+		return metadata
+	}
+}
+
+func updateRequestCount(f handlerWithMetadata, emitter Emitter, route string) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
+		emitter.IncrementRequestCounter(1, route)
+		return f(w, r)
+	}
+}
 
 //TODO: remove this function
 //func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc {
@@ -75,14 +110,14 @@ func RecordLatency(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
 //		handler.ServeHTTP(w, r)
 //	}
 //}
-
+/*
 func RecordRequestCount(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		emitter.IncrementRequestCounter(1, "")
 		f(w, r)
 	}
-}
-
+}*/
+/*
 func RecordDefaultMetrics(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
 	return RecordLatency(RecordRequestCount(f, emitter), emitter)
 
@@ -93,41 +128,37 @@ func RecordDefaultMetrics(f http.HandlerFunc, emitter Emitter) http.HandlerFunc 
 
 	RecordAdvancedMetrics(RecordRequestCount(RecordLatency(f, emitter), emitter), emitter, route)
 	RecordAdvancedMetrics(RecordRequestCount(RecordLatency(f, emitter), emitter), emitter, route)
-}
+}*/
 
 func RecordMetrics(f http.HandlerFunc, emitter Emitter, calledRoute string) http.HandlerFunc {
-	//TODO: Adpat this to return a function
 	// Record Default Metrics
-	RecordLatency(f, emitter)
-	RecordRequestCount(f, emitter)
+	handlerMeta := inithandlerWithMetadata(f)
+	handlerMeta = recordLatency(handlerMeta)
 
+	handlerMeta = updateLatency(handlerMeta, emitter, "")
+	handlerMeta = updateRequestCount(handlerMeta, emitter, "")
+
+	// Record Advanced Metrics
 	advancedMetricsConfig := emitter.GetAdvancedMetricsConfig()
 	if advancedMetricsConfig.Enabled {
-		RecordAdvancedMetrics(f, emitter, calledRoute)
+		handlerMeta = recordAdvancedMetrics(handlerMeta, emitter, calledRoute)
 	}
+
+	return stripMetadata(handlerMeta)
 }
 
-func RecordAdvancedMetrics(f http.HandlerFunc, emitter Emitter,  calledRoute string) http.HandlerFunc {
+func recordAdvancedMetrics(handlerMeta handlerWithMetadata, emitter Emitter, calledRoute string) handlerWithMetadata {
 	isRouteFound := slices.Contains(emitter.GetAdvancedMetricsConfig().RouteConfig.RequestCountRoutes, calledRoute)
 	if isRouteFound {
-		emitter.IncrementRequestCounter(1)
+		handlerMeta = updateRequestCount(handlerMeta, emitter, calledRoute)
 	}
 
 	isRouteFound = slices.Contains(emitter.GetAdvancedMetricsConfig().RouteConfig.RequestLatencyRoutes, calledRoute)
-
-
-	//
-	//if indexFound == -1 {
-	//	return
-
-
-
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		emitter.IncrementRequestCounter(1)
-		f(w, r)
+	if isRouteFound {
+		handlerMeta = updateLatency(handlerMeta, emitter, calledRoute)
 	}
 
+	return handlerMeta
 
 	// 1. Execute default metrics
 	// 2. read config
@@ -135,5 +166,3 @@ func RecordAdvancedMetrics(f http.HandlerFunc, emitter Emitter,  calledRoute str
 	//3. Retrieve metadata (What's the current endpoint?)
 	//3. Create a structure that keeps a mapping between each endpoint and it's notifier
 }
-
-
