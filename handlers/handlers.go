@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
@@ -28,6 +29,7 @@ func New(
 	updateWorkers int,
 	convergenceWorkersSize int,
 	maxTaskPlacementRetries int,
+	advancedMetricsConfig config.AdvancedMetrics,
 	emitter middleware.Emitter,
 	db db.DB,
 	desiredHub, actualHub, actualLRPInstanceHub, taskHub events.Hub,
@@ -68,7 +70,7 @@ func New(
 	cellsHandler := NewCellHandler(serviceClient, exitChan)
 
 	metricsAndLoggingWrap := func(loggableHandlerFunc middleware.LoggableHandlerFunc, routeName string) http.HandlerFunc {
-		return middleware.RecordMetrics(middleware.LogWrap(logger, accessLogger, loggableHandlerFunc), emitter, routeName)
+		return middleware.RecordMetrics(middleware.LogWrap(logger, accessLogger, loggableHandlerFunc), emitter, advancedMetricsConfig, routeName)
 	}
 
 	actions := rata.Handlers{

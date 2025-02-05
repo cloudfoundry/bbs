@@ -265,6 +265,7 @@ func main() {
 		bbsConfig.UpdateWorkers,
 		bbsConfig.ConvergenceWorkers,
 		bbsConfig.MaxTaskRetries,
+		bbsConfig.AdvancedMetricsConfig,
 		requestStatMetronNotifier,
 		sqlDB,
 		desiredHub,
