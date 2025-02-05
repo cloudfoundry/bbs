@@ -1,11 +1,12 @@
 package metrics
 
 import (
-	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"os"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 
 	"code.cloudfoundry.org/clock"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
@@ -124,12 +125,12 @@ func (notifier *RequestStatMetronNotifier) Run(signals <-chan os.Signal, ready c
 
 			for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestCountRoutes {
 				requestCountMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].requestCount, &notifier.lock)
-				notifier.emitRequestCount(requestCounter + "." + route, requestCountMetricValue, logger)
+				notifier.emitRequestCount(requestCounter+"."+route, requestCountMetricValue, logger)
 			}
 
 			for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestLatencyRoutes {
 				requestLatencyMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].maxRequestLatency, &notifier.lock)
-				notifier.emitRequestLatency(requestLatencyDuration + "." + route, requestLatencyMetricValue, logger)
+				notifier.emitRequestLatency(requestLatencyDuration+"."+route, requestLatencyMetricValue, logger)
 			}
 		case <-signals:
 			return nil
