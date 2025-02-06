@@ -101,14 +101,14 @@ func incrementRequestCount(f handlerWithMetadata, emitter Emitter, route string)
 	}
 }
 
-func RecordLatency(f http.Handler, emitter Emitter) http.Handler {
+func RecordLatency(f http.Handler, emitter Emitter) http.HandlerFunc {
 	handlerMeta := initHandlerWithMetadata(f)
 	handlerMeta = recordLatency(handlerMeta)
 	handlerMeta = updateLatency(handlerMeta, emitter, "")
 	return stripMetadata(handlerMeta)
 }
 
-func RecordRequestCount(f http.Handler, emitter Emitter) http.Handler {
+func RecordRequestCount(f http.Handler, emitter Emitter) http.HandlerFunc {
 	handlerMeta := initHandlerWithMetadata(f)
 	handlerMeta = incrementRequestCount(handlerMeta, emitter, "")
 	return stripMetadata(handlerMeta)

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/metrics"
 	"code.cloudfoundry.org/clock/fakeclock"
 	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
@@ -55,7 +56,7 @@ var _ = Describe("PeriodicMetronCountNotifier", func() {
 
 	JustBeforeEach(func() {
 		ticker := fakeClock.NewTicker(reportInterval)
-		mn = metrics.NewRequestStatMetronNotifier(lagertest.NewTestLogger("test"), ticker, fakeMetronClient)
+		mn = metrics.NewRequestStatMetronNotifier(lagertest.NewTestLogger("test"), ticker, fakeMetronClient, config.AdvancedMetrics{})
 		mnp = ifrit.Invoke(mn)
 	})
 
@@ -65,8 +66,8 @@ var _ = Describe("PeriodicMetronCountNotifier", func() {
 	})
 
 	It("should emit a request count event periodically", func() {
-		mn.IncrementRequestCounter(1)
-		mn.UpdateLatency(time.Second)
+		mn.IncrementRequestCounter(1, "")
+		mn.UpdateLatency(time.Second, "")
 		fakeClock.WaitForWatcherAndIncrement(reportInterval)
 
 		Eventually(func() uint64 {
@@ -81,11 +82,11 @@ var _ = Describe("PeriodicMetronCountNotifier", func() {
 			return durationMap["RequestLatency"]
 		}).Should(Equal(1 * time.Second))
 
-		mn.IncrementRequestCounter(1)
-		mn.UpdateLatency(3 * time.Second)
+		mn.IncrementRequestCounter(1, "")
+		mn.UpdateLatency(3*time.Second, "")
 
-		mn.IncrementRequestCounter(1)
-		mn.UpdateLatency(2 * time.Second)
+		mn.IncrementRequestCounter(1, "")
+		mn.UpdateLatency(2*time.Second, "")
 		fakeClock.WaitForWatcherAndIncrement(reportInterval)
 
 		Eventually(func() uint64 {
