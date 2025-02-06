@@ -280,7 +280,21 @@ func genSetter(g *protogen.GeneratedFile, copysafeName string, fieldName string,
 	g.P("}")
 }
 
+func hasDefaultValue(field *protogen.Field) bool {
+	defaultValue := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsDefaultValue)
+	return len(defaultValue.(string)) > 0
+}
+
+func getDefaultValue(field *protogen.Field) string {
+	defaultValue := proto.GetExtension(field.Desc.Options().(*descriptorpb.FieldOptions), E_BbsDefaultValue)
+	return defaultValue.(string)
+}
+
 func getDefaultValueString(field *protogen.Field) string {
+	if hasDefaultValue(field) {
+		return getDefaultValue(field)
+	}
+
 	if field.Desc.Cardinality() == protoreflect.Repeated {
 		return "nil"
 	}

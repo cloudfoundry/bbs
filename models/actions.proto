@@ -94,6 +94,6 @@ message ProtoCodependentAction {
 }
 
 message ProtoResourceLimits {
-  optional uint64 nofile = 1;
-  optional uint64 nproc = 2 [deprecated=true];
+  optional uint64 nofile = 1 [(bbs.bbs_default_value) = "nil"];
+  optional uint64 nproc = 2 [deprecated = true, (bbs.bbs_default_value) = "nil"];
 }

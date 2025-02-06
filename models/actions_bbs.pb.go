@@ -1717,9 +1717,7 @@ func (m *ResourceLimits) GetNofile() *uint64 {
 	if m != nil && m.Nofile != nil {
 		return m.Nofile
 	}
-	var defaultValue uint64
-	defaultValue = 0
-	return &defaultValue
+	return nil
 }
 func (m *ResourceLimits) SetNofile(value *uint64) {
 	if m != nil {
@@ -1735,9 +1733,7 @@ func (m *ResourceLimits) GetNproc() *uint64 {
 	if m != nil && m.Nproc != nil {
 		return m.Nproc
 	}
-	var defaultValue uint64
-	defaultValue = 0
-	return &defaultValue
+	return nil
 }
 
 // Deprecated: marked deprecated in actions.proto
