@@ -67,7 +67,7 @@ message ProtoDesiredLRPRunInfo {
 
   repeated ProtoImageLayer image_layers = 24 [json_name = "image_layers"];
 
-  map<string, ProtoMetricTagValue> metric_tags = 25 [json_name = "metric_tags", deprecated=true]];
+  map<string, ProtoMetricTagValue> metric_tags = 25 [json_name = "metric_tags", deprecated=true];
 
   repeated ProtoSidecar sidecars = 26;
   ProtoLogRateLimit log_rate_limit = 27 [json_name = "log_rate_limit"];
