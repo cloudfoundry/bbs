@@ -493,29 +493,18 @@ func (db *SQLDB) fetchDesiredLRPRoutingInfo(logger lager.Logger, scanner helpers
 	}
 	routingInfo.Routes = &routes
 
-<<<<<<< HEAD
 	var metricTags map[string]*models.MetricTagValue
 	decodedDesiredData, err := db.encoder.Decode(metricTagsData)
-=======
-	var runInfo models.DesiredLRPRunInfo
-	var protoRunInfo models.ProtoDesiredLRPRunInfo
-	err = db.deserializeModel(logger, runInfoData, &protoRunInfo)
->>>>>>> 0576c2d9 (Struct and naming changes due to new protobuf)
 	if err != nil {
 		logger.Error("failed-decrypting-metric-tags", err)
 		return nil, err
 	}
-<<<<<<< HEAD
 	err = json.Unmarshal(decodedDesiredData, &metricTags)
 	if err != nil {
 		logger.Error("failed-parsing-metric-tags", err)
 		return nil, err
 	}
 	routingInfo.MetricTags = metricTags
-=======
-	runInfo = *protoRunInfo.FromProto()
-	routingInfo.MetricTags = runInfo.MetricTags
->>>>>>> 0576c2d9 (Struct and naming changes due to new protobuf)
 	routingInfo.ModificationTag = &models.ModificationTag{Epoch: modificationTagEpoch, Index: modificationTagIndex}
 
 	return routingInfo, nil
