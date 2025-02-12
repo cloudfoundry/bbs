@@ -40,7 +40,7 @@ type TaskDefinition struct {
 	ImageLayers                   []*ImageLayer              `json:"image_layers,omitempty"`
 	LogRateLimit                  *LogRateLimit              `json:"log_rate_limit,omitempty"`
 	MetricTags                    map[string]*MetricTagValue `json:"metric_tags,omitempty"`
-	VolumeMountedFiles            []*File                    `json:"volume_mounted_files,omitempty"`
+	VolumeMountedFiles            []*File                    `json:"volume_mounted_files"`
 }
 
 func (this *TaskDefinition) Equal(that interface{}) bool {

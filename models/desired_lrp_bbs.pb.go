@@ -248,7 +248,7 @@ type DesiredLRPRunInfo struct {
 	MetricTags         map[string]*MetricTagValue `json:"metric_tags,omitempty"`
 	Sidecars           []*Sidecar                 `json:"sidecars,omitempty"`
 	LogRateLimit       *LogRateLimit              `json:"log_rate_limit,omitempty"`
-	VolumeMountedFiles []*File                    `json:"volume_mounted_files,omitempty"`
+	VolumeMountedFiles []*File                    `json:"volume_mounted_files"`
 }
 
 func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
@@ -1440,7 +1440,7 @@ type DesiredLRP struct {
 	MetricTags                    map[string]*MetricTagValue `json:"metric_tags,omitempty"`
 	Sidecars                      []*Sidecar                 `json:"sidecars,omitempty"`
 	LogRateLimit                  *LogRateLimit              `json:"log_rate_limit,omitempty"`
-	VolumeMountedFiles            []*File                    `json:"volume_mounted_files,omitempty"`
+	VolumeMountedFiles            []*File                    `json:"volume_mounted_files"`
 }
 
 func (this *DesiredLRP) Equal(that interface{}) bool {

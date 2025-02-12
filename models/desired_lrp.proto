@@ -72,7 +72,7 @@ message ProtoDesiredLRPRunInfo {
 
   repeated ProtoSidecar sidecars = 26;
   ProtoLogRateLimit log_rate_limit = 27 [json_name = "log_rate_limit"];
-  repeated ProtoFile volume_mounted_files = 28 [json_name = "volume_mounted_files"];
+  repeated ProtoFile volume_mounted_files = 28 [json_name = "volume_mounted_files", (bbs.bbs_json_always_emit) = true];
 }
 
 // helper message for marshalling routes
@@ -146,5 +146,5 @@ message ProtoDesiredLRP {
 
   repeated ProtoSidecar sidecars = 36;
   ProtoLogRateLimit log_rate_limit = 37 [json_name = "log_rate_limit"];
-  repeated ProtoFile volume_mounted_files = 38 [json_name = "volume_mounted_files"];
+  repeated ProtoFile volume_mounted_files = 38 [json_name = "volume_mounted_files", (bbs.bbs_json_always_emit) = true];
 }

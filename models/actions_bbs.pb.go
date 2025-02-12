@@ -662,7 +662,7 @@ type RunAction struct {
 	User               string                 `json:"user"`
 	LogSource          string                 `json:"log_source,omitempty"`
 	SuppressLogOutput  bool                   `json:"suppress_log_output"`
-	VolumeMountedFiles []*File                `json:"volume_mounted_files,omitempty"`
+	VolumeMountedFiles []*File                `json:"volume_mounted_files"`
 }
 
 func (this *RunAction) Equal(that interface{}) bool {

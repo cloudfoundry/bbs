@@ -377,7 +377,7 @@ var _ = Describe("Actions", func() {
 							"nofile": 10
 						},
 						"user": "someone",
-						"suppress_log_output": false
+						"suppress_log_output": false,
 						"volume_mounted_files": null
 					}
 				},

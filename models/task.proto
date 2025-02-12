@@ -44,7 +44,7 @@ message ProtoTaskDefinition {
   repeated ProtoImageLayer image_layers = 25 [json_name = "image_layers"];
   ProtoLogRateLimit log_rate_limit = 26 [json_name = "log_rate_limit"];
   map<string, ProtoMetricTagValue> metric_tags = 27 [json_name = "metric_tags"];
-  repeated ProtoFile volume_mounted_files = 28 [json_name = "volume_mounted_files"];
+  repeated ProtoFile volume_mounted_files = 28 [json_name = "volume_mounted_files", (bbs.bbs_json_always_emit) = true];
 }
 
 message ProtoTask {

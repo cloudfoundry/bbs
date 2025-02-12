@@ -114,7 +114,8 @@ var _ = Describe("Task", func() {
 			"volume_mounted_files": [
 				{"path": "/redis/username", "content": "username"}
 			]
-		  }`
+		  }
+		}`
 
 		err := json.Unmarshal([]byte(taskPayload), &task)
 		Expect(err).NotTo(HaveOccurred())
