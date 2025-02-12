@@ -5,6 +5,7 @@ option go_package="code.cloudfoundry.org/bbs/models";
 
 import "bbs.proto";
 import "environment_variables.proto";
+import "file.proto";
 
 message ProtoAction {
   // Note: we only expect one of the following set of fields to be
@@ -56,6 +57,7 @@ message ProtoRunAction {
   string user = 6 [json_name = "user", (bbs.bbs_json_always_emit) = true];
   string log_source = 7 [json_name = "log_source"];
   bool suppress_log_output = 8 [json_name = "suppress_log_output", (bbs.bbs_json_always_emit) = true];
+  repeated ProtoFile volume_mounted_files = 9 [json_name = "volume_mounted_files"];
 }
 
 message ProtoTimeoutAction {

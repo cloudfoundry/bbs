@@ -40,6 +40,7 @@ type TaskDefinition struct {
 	ImageLayers                   []*ImageLayer              `json:"image_layers,omitempty"`
 	LogRateLimit                  *LogRateLimit              `json:"log_rate_limit,omitempty"`
 	MetricTags                    map[string]*MetricTagValue `json:"metric_tags,omitempty"`
+	VolumeMountedFiles            []*File                    `json:"volume_mounted_files,omitempty"`
 }
 
 func (this *TaskDefinition) Equal(that interface{}) bool {
@@ -221,6 +222,18 @@ func (this *TaskDefinition) Equal(that interface{}) bool {
 	}
 	for i := range this.MetricTags {
 		if !this.MetricTags[i].Equal(that1.MetricTags[i]) {
+			return false
+		}
+	}
+	if this.VolumeMountedFiles == nil {
+		if that1.VolumeMountedFiles != nil {
+			return false
+		}
+	} else if len(this.VolumeMountedFiles) != len(that1.VolumeMountedFiles) {
+		return false
+	}
+	for i := range this.VolumeMountedFiles {
+		if !this.VolumeMountedFiles[i].Equal(that1.VolumeMountedFiles[i]) {
 			return false
 		}
 	}
@@ -559,6 +572,17 @@ func (m *TaskDefinition) SetMetricTags(value map[string]*MetricTagValue) {
 		m.MetricTags = value
 	}
 }
+func (m *TaskDefinition) GetVolumeMountedFiles() []*File {
+	if m != nil {
+		return m.VolumeMountedFiles
+	}
+	return nil
+}
+func (m *TaskDefinition) SetVolumeMountedFiles(value []*File) {
+	if m != nil {
+		m.VolumeMountedFiles = value
+	}
+}
 func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
 	if x == nil {
 		return nil
@@ -592,6 +616,7 @@ func (x *TaskDefinition) ToProto() *ProtoTaskDefinition {
 		ImageLayers:                   ImageLayerToProtoSlice(x.ImageLayers),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
 		MetricTags:                    TaskDefinitionMetricTagsToProtoMap(x.MetricTags),
+		VolumeMountedFiles:            FileToProtoSlice(x.VolumeMountedFiles),
 	}
 	return proto
 }
@@ -629,6 +654,7 @@ func (x *ProtoTaskDefinition) FromProto() *TaskDefinition {
 		ImageLayers:                   ImageLayerFromProtoSlice(x.ImageLayers),
 		LogRateLimit:                  x.LogRateLimit.FromProto(),
 		MetricTags:                    TaskDefinitionMetricTagsFromProtoMap(x.MetricTags),
+		VolumeMountedFiles:            FileFromProtoSlice(x.VolumeMountedFiles),
 	}
 	return copysafe
 }

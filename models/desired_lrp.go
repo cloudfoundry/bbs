@@ -3,6 +3,7 @@ package models
 import (
 	bytes "bytes"
 	"encoding/json"
+	"errors"
 	"net/url"
 	"regexp"
 	"time"
@@ -12,6 +13,8 @@ import (
 
 const PreloadedRootFSScheme = "preloaded"
 const PreloadedOCIRootFSScheme = "preloaded+layer"
+
+const volumeMountedFilesMaxAllowedSize = 1 * 1024 * 1024 // 1MB in bytes
 
 var processGuidPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
@@ -35,6 +38,9 @@ func PreloadedRootFS(stack string) string {
 func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo, metricTags map[string]*MetricTagValue) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	copy(environmentVariables, runInfo.EnvironmentVariables)
+
+	volumeMountedFiles := make([]*File, len(runInfo.VolumeMountedFiles))
+	copy(volumeMountedFiles, runInfo.VolumeMountedFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	copy(egressRules, runInfo.EgressRules)
@@ -79,12 +85,16 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		MetricTags:                    metricTags,
 		Sidecars:                      runInfo.Sidecars,
 		LogRateLimit:                  runInfo.LogRateLimit,
+		VolumeMountedFiles:            volumeMountedFiles,
 	}
 }
 
 func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	copy(environmentVariables, runInfo.EnvironmentVariables)
+
+	volumeMountedFiles := make([]*File, len(runInfo.VolumeMountedFiles))
+	copy(volumeMountedFiles, runInfo.VolumeMountedFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
 	copy(egressRules, runInfo.EgressRules)
@@ -106,6 +116,7 @@ func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	desiredLRP.VolumeMounts = runInfo.VolumeMounts
 	desiredLRP.Network = runInfo.Network
 	desiredLRP.CheckDefinition = runInfo.CheckDefinition
+	desiredLRP.VolumeMountedFiles = volumeMountedFiles
 }
 
 func (*DesiredLRP) Version() format.Version {
@@ -258,6 +269,9 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 	egressRules := make([]*SecurityGroupRule, len(d.EgressRules))
 	copy(egressRules, d.EgressRules)
 
+	volumeMountedFiles := make([]*File, len(d.VolumeMountedFiles))
+	copy(volumeMountedFiles, d.VolumeMountedFiles)
+
 	return NewDesiredLRPRunInfo(
 		d.DesiredLRPKey(),
 		createdAt,
@@ -284,6 +298,7 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 		d.ImageLayers,
 		d.Sidecars,
 		d.LogRateLimit,
+		volumeMountedFiles,
 	)
 }
 
@@ -298,6 +313,13 @@ func (request *ProtoDesiredLRP) Validate() error {
 
 func (desired DesiredLRP) Validate() error {
 	var validationError ValidationError
+
+	if len(desired.VolumeMountedFiles) > 0 {
+		err := validateVolumeMountedFiles(desired.VolumeMountedFiles)
+		if err != nil {
+			validationError = validationError.Append(ErrInvalidField{"volumeMountedFiles"})
+		}
+	}
 
 	if desired.GetDomain() == "" {
 		validationError = validationError.Append(ErrInvalidField{"domain"})
@@ -646,6 +668,7 @@ func NewDesiredLRPRunInfo(
 	imageLayers []*ImageLayer,
 	sidecars []*Sidecar,
 	logRateLimit *LogRateLimit,
+	volumeMountedFiles []*File,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
 		DesiredLrpKey:                 key,
@@ -673,6 +696,7 @@ func NewDesiredLRPRunInfo(
 		ImageLayers:                   imageLayers,
 		Sidecars:                      sidecars,
 		LogRateLimit:                  logRateLimit,
+		VolumeMountedFiles:            volumeMountedFiles,
 	}
 }
 
@@ -684,6 +708,13 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 	var validationError ValidationError
 
 	validationError = validationError.Check(runInfo.DesiredLrpKey)
+
+	if len(runInfo.VolumeMountedFiles) > 0 {
+		err := validateVolumeMountedFiles(runInfo.VolumeMountedFiles)
+		if err != nil {
+			validationError = validationError.Append(ErrInvalidField{"volumeMountedFiles"})
+		}
+	}
 
 	if runInfo.Setup != nil {
 		if err := runInfo.Setup.Validate(); err != nil {
@@ -771,5 +802,16 @@ func (request *ProtoCertificateProperties) Validate() error {
 }
 
 func (CertificateProperties) Validate() error {
+	return nil
+}
+
+func validateVolumeMountedFiles(files []*File) error {
+	var totalSize int
+	for _, file := range files {
+		totalSize += len(file.Content)
+		if totalSize > volumeMountedFilesMaxAllowedSize {
+			return errors.New("total size of all file values exceeds 1MB")
+		}
+	}
 	return nil
 }

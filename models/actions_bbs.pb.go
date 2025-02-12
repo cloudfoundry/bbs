@@ -654,14 +654,15 @@ func UploadActionFromProtoSlice(values []*ProtoUploadAction) []*UploadAction {
 
 // Prevent copylock errors when using ProtoRunAction directly
 type RunAction struct {
-	Path              string                 `json:"path"`
-	Args              []string               `json:"args,omitempty"`
-	Dir               string                 `json:"dir,omitempty"`
-	Env               []*EnvironmentVariable `json:"env,omitempty"`
-	ResourceLimits    *ResourceLimits        `json:"resource_limits,omitempty"`
-	User              string                 `json:"user"`
-	LogSource         string                 `json:"log_source,omitempty"`
-	SuppressLogOutput bool                   `json:"suppress_log_output"`
+	Path               string                 `json:"path"`
+	Args               []string               `json:"args,omitempty"`
+	Dir                string                 `json:"dir,omitempty"`
+	Env                []*EnvironmentVariable `json:"env,omitempty"`
+	ResourceLimits     *ResourceLimits        `json:"resource_limits,omitempty"`
+	User               string                 `json:"user"`
+	LogSource          string                 `json:"log_source,omitempty"`
+	SuppressLogOutput  bool                   `json:"suppress_log_output"`
+	VolumeMountedFiles []*File                `json:"volume_mounted_files,omitempty"`
 }
 
 func (this *RunAction) Equal(that interface{}) bool {
@@ -731,6 +732,18 @@ func (this *RunAction) Equal(that interface{}) bool {
 	}
 	if this.SuppressLogOutput != that1.SuppressLogOutput {
 		return false
+	}
+	if this.VolumeMountedFiles == nil {
+		if that1.VolumeMountedFiles != nil {
+			return false
+		}
+	} else if len(this.VolumeMountedFiles) != len(that1.VolumeMountedFiles) {
+		return false
+	}
+	for i := range this.VolumeMountedFiles {
+		if !this.VolumeMountedFiles[i].Equal(that1.VolumeMountedFiles[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -832,20 +845,32 @@ func (m *RunAction) SetSuppressLogOutput(value bool) {
 		m.SuppressLogOutput = value
 	}
 }
+func (m *RunAction) GetVolumeMountedFiles() []*File {
+	if m != nil {
+		return m.VolumeMountedFiles
+	}
+	return nil
+}
+func (m *RunAction) SetVolumeMountedFiles(value []*File) {
+	if m != nil {
+		m.VolumeMountedFiles = value
+	}
+}
 func (x *RunAction) ToProto() *ProtoRunAction {
 	if x == nil {
 		return nil
 	}
 
 	proto := &ProtoRunAction{
-		Path:              x.Path,
-		Args:              x.Args,
-		Dir:               x.Dir,
-		Env:               EnvironmentVariableToProtoSlice(x.Env),
-		ResourceLimits:    x.ResourceLimits.ToProto(),
-		User:              x.User,
-		LogSource:         x.LogSource,
-		SuppressLogOutput: x.SuppressLogOutput,
+		Path:               x.Path,
+		Args:               x.Args,
+		Dir:                x.Dir,
+		Env:                EnvironmentVariableToProtoSlice(x.Env),
+		ResourceLimits:     x.ResourceLimits.ToProto(),
+		User:               x.User,
+		LogSource:          x.LogSource,
+		SuppressLogOutput:  x.SuppressLogOutput,
+		VolumeMountedFiles: FileToProtoSlice(x.VolumeMountedFiles),
 	}
 	return proto
 }
@@ -856,14 +881,15 @@ func (x *ProtoRunAction) FromProto() *RunAction {
 	}
 
 	copysafe := &RunAction{
-		Path:              x.Path,
-		Args:              x.Args,
-		Dir:               x.Dir,
-		Env:               EnvironmentVariableFromProtoSlice(x.Env),
-		ResourceLimits:    x.ResourceLimits.FromProto(),
-		User:              x.User,
-		LogSource:         x.LogSource,
-		SuppressLogOutput: x.SuppressLogOutput,
+		Path:               x.Path,
+		Args:               x.Args,
+		Dir:                x.Dir,
+		Env:                EnvironmentVariableFromProtoSlice(x.Env),
+		ResourceLimits:     x.ResourceLimits.FromProto(),
+		User:               x.User,
+		LogSource:          x.LogSource,
+		SuppressLogOutput:  x.SuppressLogOutput,
+		VolumeMountedFiles: FileFromProtoSlice(x.VolumeMountedFiles),
 	}
 	return copysafe
 }

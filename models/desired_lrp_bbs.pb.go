@@ -245,9 +245,10 @@ type DesiredLRPRunInfo struct {
 	CheckDefinition               *CheckDefinition       `json:"check_definition,omitempty"`
 	ImageLayers                   []*ImageLayer          `json:"image_layers,omitempty"`
 	// Deprecated: marked deprecated in desired_lrp.proto
-	MetricTags   map[string]*MetricTagValue `json:"metric_tags,omitempty"`
-	Sidecars     []*Sidecar                 `json:"sidecars,omitempty"`
-	LogRateLimit *LogRateLimit              `json:"log_rate_limit,omitempty"`
+	MetricTags         map[string]*MetricTagValue `json:"metric_tags,omitempty"`
+	Sidecars           []*Sidecar                 `json:"sidecars,omitempty"`
+	LogRateLimit       *LogRateLimit              `json:"log_rate_limit,omitempty"`
+	VolumeMountedFiles []*File                    `json:"volume_mounted_files,omitempty"`
 }
 
 func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
@@ -452,6 +453,18 @@ func (this *DesiredLRPRunInfo) Equal(that interface{}) bool {
 		}
 	} else if !this.LogRateLimit.Equal(*that1.LogRateLimit) {
 		return false
+	}
+	if this.VolumeMountedFiles == nil {
+		if that1.VolumeMountedFiles != nil {
+			return false
+		}
+	} else if len(this.VolumeMountedFiles) != len(that1.VolumeMountedFiles) {
+		return false
+	}
+	for i := range this.VolumeMountedFiles {
+		if !this.VolumeMountedFiles[i].Equal(that1.VolumeMountedFiles[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -787,6 +800,17 @@ func (m *DesiredLRPRunInfo) SetLogRateLimit(value *LogRateLimit) {
 		m.LogRateLimit = value
 	}
 }
+func (m *DesiredLRPRunInfo) GetVolumeMountedFiles() []*File {
+	if m != nil {
+		return m.VolumeMountedFiles
+	}
+	return nil
+}
+func (m *DesiredLRPRunInfo) SetVolumeMountedFiles(value []*File) {
+	if m != nil {
+		m.VolumeMountedFiles = value
+	}
+}
 func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 	if x == nil {
 		return nil
@@ -820,6 +844,7 @@ func (x *DesiredLRPRunInfo) ToProto() *ProtoDesiredLRPRunInfo {
 		MetricTags:                    DesiredLRPRunInfoMetricTagsToProtoMap(x.MetricTags),
 		Sidecars:                      SidecarToProtoSlice(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
+		VolumeMountedFiles:            FileToProtoSlice(x.VolumeMountedFiles),
 	}
 	return proto
 }
@@ -857,6 +882,7 @@ func (x *ProtoDesiredLRPRunInfo) FromProto() *DesiredLRPRunInfo {
 		MetricTags:                    DesiredLRPRunInfoMetricTagsFromProtoMap(x.MetricTags),
 		Sidecars:                      SidecarFromProtoSlice(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.FromProto(),
+		VolumeMountedFiles:            FileFromProtoSlice(x.VolumeMountedFiles),
 	}
 	return copysafe
 }
@@ -1414,6 +1440,7 @@ type DesiredLRP struct {
 	MetricTags                    map[string]*MetricTagValue `json:"metric_tags,omitempty"`
 	Sidecars                      []*Sidecar                 `json:"sidecars,omitempty"`
 	LogRateLimit                  *LogRateLimit              `json:"log_rate_limit,omitempty"`
+	VolumeMountedFiles            []*File                    `json:"volume_mounted_files,omitempty"`
 }
 
 func (this *DesiredLRP) Equal(that interface{}) bool {
@@ -1665,6 +1692,18 @@ func (this *DesiredLRP) Equal(that interface{}) bool {
 		}
 	} else if !this.LogRateLimit.Equal(*that1.LogRateLimit) {
 		return false
+	}
+	if this.VolumeMountedFiles == nil {
+		if that1.VolumeMountedFiles != nil {
+			return false
+		}
+	} else if len(this.VolumeMountedFiles) != len(that1.VolumeMountedFiles) {
+		return false
+	}
+	for i := range this.VolumeMountedFiles {
+		if !this.VolumeMountedFiles[i].Equal(that1.VolumeMountedFiles[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -2131,6 +2170,17 @@ func (m *DesiredLRP) SetLogRateLimit(value *LogRateLimit) {
 		m.LogRateLimit = value
 	}
 }
+func (m *DesiredLRP) GetVolumeMountedFiles() []*File {
+	if m != nil {
+		return m.VolumeMountedFiles
+	}
+	return nil
+}
+func (m *DesiredLRP) SetVolumeMountedFiles(value []*File) {
+	if m != nil {
+		m.VolumeMountedFiles = value
+	}
+}
 func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 	if x == nil {
 		return nil
@@ -2174,6 +2224,7 @@ func (x *DesiredLRP) ToProto() *ProtoDesiredLRP {
 		MetricTags:                    DesiredLRPMetricTagsToProtoMap(x.MetricTags),
 		Sidecars:                      SidecarToProtoSlice(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.ToProto(),
+		VolumeMountedFiles:            FileToProtoSlice(x.VolumeMountedFiles),
 	}
 	return proto
 }
@@ -2221,6 +2272,7 @@ func (x *ProtoDesiredLRP) FromProto() *DesiredLRP {
 		MetricTags:                    DesiredLRPMetricTagsFromProtoMap(x.MetricTags),
 		Sidecars:                      SidecarFromProtoSlice(x.Sidecars),
 		LogRateLimit:                  x.LogRateLimit.FromProto(),
+		VolumeMountedFiles:            FileFromProtoSlice(x.VolumeMountedFiles),
 	}
 	return copysafe
 }
