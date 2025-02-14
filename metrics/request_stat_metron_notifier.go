@@ -3,7 +3,6 @@ package metrics
 import (
 	"os"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
@@ -63,20 +62,23 @@ func (notifier *RequestStatMetronNotifier) GetAdvancedMetricsConfig() config.Adv
 }
 
 func (notifier *RequestStatMetronNotifier) IncrementRequestCounter(delta int, route string) {
+	notifier.lock.Lock()
+	defer notifier.lock.Unlock()
+
 	if route != "" {
-		atomic.AddUint64(&notifier.requestMetricsPerRoute[route].requestCount, uint64(delta))
+		notifier.requestMetricsPerRoute[route].requestCount += uint64(delta)
 
 		return
 	}
 
-	atomic.AddUint64(&notifier.requestMetricsAll.requestCount, uint64(delta))
+	notifier.requestMetricsAll.requestCount += uint64(delta)
 }
 
 func (notifier *RequestStatMetronNotifier) UpdateLatency(latency time.Duration, route string) {
-	updateLatency := func(metrics *requestMetrics) {
-		notifier.lock.Lock()
-		defer notifier.lock.Unlock()
+	notifier.lock.Lock()
+	defer notifier.lock.Unlock()
 
+	updateLatency := func(metrics *requestMetrics) {
 		if latency > metrics.maxRequestLatency {
 			metrics.maxRequestLatency = latency
 		}
@@ -91,10 +93,7 @@ func (notifier *RequestStatMetronNotifier) UpdateLatency(latency time.Duration, 
 	updateLatency(&notifier.requestMetricsAll)
 }
 
-func readAndResetMetric[MetricType uint64 | time.Duration](metric *MetricType, lock *sync.Mutex) MetricType {
-	lock.Lock()
-	defer lock.Unlock()
-
+func readAndResetMetric[MetricType uint64 | time.Duration](metric *MetricType) MetricType {
 	currentMetricValue := *metric
 	*metric = 0
 
@@ -111,30 +110,37 @@ func (notifier *RequestStatMetronNotifier) Run(signals <-chan os.Signal, ready c
 	for {
 		select {
 		case <-notifier.ticker.C():
-			// Emit Default Metrics
-			requestCountMetricValue := readAndResetMetric(&notifier.requestMetricsAll.requestCount, &notifier.lock)
-			notifier.emitRequestCount(requestCounter, requestCountMetricValue, logger)
-
-			requestLatencyMetricValue := readAndResetMetric(&notifier.requestMetricsAll.maxRequestLatency, &notifier.lock)
-			notifier.emitRequestLatency(requestLatencyDuration, requestLatencyMetricValue, logger)
-
-			// Emit Route Specific/Advanced Metrics
-			if !notifier.advancedMetricsConfig.Enabled {
-				break
-			}
-
-			for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestCountRoutes {
-				requestCountMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].requestCount, &notifier.lock)
-				notifier.emitRequestCount(requestCounter+"."+route, requestCountMetricValue, logger)
-			}
-
-			for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestLatencyRoutes {
-				requestLatencyMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].maxRequestLatency, &notifier.lock)
-				notifier.emitRequestLatency(requestLatencyDuration+"."+route, requestLatencyMetricValue, logger)
-			}
+			notifier.emitMetrics(logger)
 		case <-signals:
 			return nil
 		}
+	}
+}
+
+func (notifier *RequestStatMetronNotifier) emitMetrics(logger lager.Logger) {
+	notifier.lock.Lock()
+	defer notifier.lock.Unlock()
+
+	// Emit Default Metrics
+	requestCountMetricValue := readAndResetMetric(&notifier.requestMetricsAll.requestCount)
+	notifier.emitRequestCount(requestCounter, requestCountMetricValue, logger)
+
+	requestLatencyMetricValue := readAndResetMetric(&notifier.requestMetricsAll.maxRequestLatency)
+	notifier.emitRequestLatency(requestLatencyDuration, requestLatencyMetricValue, logger)
+
+	// Emit Route Specific/Advanced Metrics
+	if !notifier.advancedMetricsConfig.Enabled {
+		return
+	}
+
+	for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestCountRoutes {
+		requestCountMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].requestCount)
+		notifier.emitRequestCount(requestCounter+"."+route, requestCountMetricValue, logger)
+	}
+
+	for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestLatencyRoutes {
+		requestLatencyMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].maxRequestLatency)
+		notifier.emitRequestLatency(requestLatencyDuration+"."+route, requestLatencyMetricValue, logger)
 	}
 }
 
