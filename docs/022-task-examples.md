@@ -47,7 +47,7 @@ for {
 }
 ```
 
-## Recieving a TaskCallbackResponse
+## Receiving a TaskCallbackResponse
 
 To receive the TaskCallbackResponse, we first start an HTTP server.
 

@@ -153,9 +153,7 @@ In all cases, the consumer is given an array of `ActualLRPResponse`:
             "space_id": "some-space-guid",
             "space_name": "some-space-name"
         },
-        "OptionalRoutable": {
-          "routable": true
-        },
+        "routable": true, 
         "availability_zone": "some-zone"
     },
     ...

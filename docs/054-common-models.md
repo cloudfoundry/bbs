@@ -4,6 +4,11 @@ expires_at : never
 tags: [diego-release, bbs]
 ---
 
+## Protobuf Models
+
+BBS utilizes [Google's Protobuf Implementation](https://google.golang.org/protobuf) for code generation purposes.  
+See [Protobuf Models](055-protobuf-models.md) for details.
+
 ##### `EnvironmentVariables` [optional]
 
 Clients may define environment variables at the container level, which all processes running in the container will receive. For example:
@@ -53,18 +58,18 @@ ImageLayers: []*models.ImageLayer{
       Url:             "https://blobstore.com/bits/app-bits",
       DestinationPath: "/usr/local/app",
       DigestValue:     "some digest",
-      DigestAlgorithm: models.DigestAlgorithmSha256,
-      MediaType:       models.MediaTypeTgz,
-      LayerType:       models.LayerTypeExclusive,
+      DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
+      MediaType:       models.ImageLayer_MediaTypeTgz,
+      LayerType:       models.ImageLayer_LayerTypeExclusive,
     }
 },
 ```
 
-`DigestAlgorithm` and `DigestValue` are optional for image layers of type `LayerTypeShared`. All other fields are required.
+`DigestAlgorithm` and `DigestValue` are optional for image layers of type `ImageLayer_LayerTypeShared`. All other fields are required.
 
-Image layers of type `LayerTypeShared` could be converted to `CachedDependency` for diego cells that do not support ImageLayers or api clients that are using old api endpoints.
+Image layers of type `ImageLayer_LayerTypeShared` could be converted to `CachedDependency` for diego cells that do not support ImageLayers or api clients that are using old api endpoints.
 
-`LayerTypeExclusive` layers are converted to DownloadActions and are ran before
+`ImageLayer_LayerTypeExclusive` layers are converted to DownloadActions and are ran before
 LRP `Setup` action or the task's`Action`. For more information see the [Actions
 Documentation](053-actions.md).
 
