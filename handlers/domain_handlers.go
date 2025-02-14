@@ -32,7 +32,7 @@ func (h *DomainHandler) Domains(logger lager.Logger, w http.ResponseWriter, req 
 	response := &models.DomainsResponse{}
 	response.Domains, err = h.db.FreshDomains(req.Context(), logger)
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
@@ -40,15 +40,17 @@ func (h *DomainHandler) Upsert(logger lager.Logger, w http.ResponseWriter, req *
 	var err error
 	logger = logger.Session("upsert").WithTraceInfo(req)
 
-	request := &models.UpsertDomainRequest{}
+	var request *models.UpsertDomainRequest
+	protoRequest := &models.ProtoUpsertDomainRequest{}
 	response := &models.UpsertDomainResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err == nil {
 		err = h.db.UpsertDomain(req.Context(), logger, request.Domain, request.Ttl)
 	}
 
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }

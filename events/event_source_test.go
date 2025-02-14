@@ -9,10 +9,10 @@ import (
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/vito/go-sse/sse"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("EventSource", func() {
@@ -45,7 +45,7 @@ var _ = Describe("EventSource", func() {
 
 				BeforeEach(func() {
 					expectedEvent = models.NewDesiredLRPCreatedEvent(desiredLRP, "some-trace-id")
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -74,7 +74,7 @@ var _ = Describe("EventSource", func() {
 
 				BeforeEach(func() {
 					expectedEvent = models.NewDesiredLRPChangedEvent(desiredLRP, desiredLRP, "some-trace-id")
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -103,7 +103,7 @@ var _ = Describe("EventSource", func() {
 
 				BeforeEach(func() {
 					expectedEvent = models.NewDesiredLRPRemovedEvent(desiredLRP, "some-trace-id")
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -146,7 +146,7 @@ var _ = Describe("EventSource", func() {
 				BeforeEach(func() {
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					expectedEvent = models.NewActualLRPCreatedEvent(actualLRPGroup)
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -179,7 +179,7 @@ var _ = Describe("EventSource", func() {
 				BeforeEach(func() {
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					expectedEvent = models.NewActualLRPChangedEvent(actualLRPGroup, actualLRPGroup)
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -212,7 +212,7 @@ var _ = Describe("EventSource", func() {
 				BeforeEach(func() {
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					expectedEvent = models.NewActualLRPRemovedEvent(actualLRPGroup)
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -243,7 +243,7 @@ var _ = Describe("EventSource", func() {
 
 				BeforeEach(func() {
 					expectedEvent = models.NewActualLRPCrashedEvent(actualLRP, actualLRP)
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -280,7 +280,7 @@ var _ = Describe("EventSource", func() {
 
 				BeforeEach(func() {
 					expectedEvent = models.NewTaskCreatedEvent(task)
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -309,7 +309,7 @@ var _ = Describe("EventSource", func() {
 
 				BeforeEach(func() {
 					expectedEvent = models.NewTaskChangedEvent(task, task)
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 
@@ -338,7 +338,7 @@ var _ = Describe("EventSource", func() {
 
 				BeforeEach(func() {
 					expectedEvent = models.NewTaskRemovedEvent(task)
-					payload, err := proto.Marshal(expectedEvent)
+					payload, err := proto.Marshal(expectedEvent.ToProto())
 					Expect(err).NotTo(HaveOccurred())
 					payload = []byte(base64.StdEncoding.EncodeToString(payload))
 

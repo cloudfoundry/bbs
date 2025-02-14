@@ -89,13 +89,15 @@ func (e *SplitMetricTags) Up(tx *sql.Tx, logger lager.Logger) error {
 			logger.Error("failed-reading-row", err)
 			continue
 		}
-		var runInfo models.DesiredLRPRunInfo
-		err = e.serializer.Unmarshal(logger, runInfoData, &runInfo)
+		var protoRunInfo models.ProtoDesiredLRPRunInfo
+		err = e.serializer.Unmarshal(logger, runInfoData, &protoRunInfo)
 		if err != nil {
 			logger.Error("failed-parsing-run-info", err)
 			continue
 		}
+		runInfo := protoRunInfo.FromProto()
 		metricTags := map[string]*models.MetricTagValue{}
+		//lint:ignore SA1019 - migration from deprecated functionality
 		for k, v := range runInfo.MetricTags {
 			metricTags[k] = v
 		}

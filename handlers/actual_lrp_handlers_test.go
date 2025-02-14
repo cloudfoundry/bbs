@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("ActualLRP Handlers", func() {
@@ -34,12 +35,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 	BeforeEach(func() {
 		actualLRP1 = models.ActualLRP{
-			ActualLRPKey: models.NewActualLRPKey(
+			ActualLrpKey: models.NewActualLRPKey(
 				"process-guid-0",
 				1,
 				"domain-0",
 			),
-			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
+			ActualLrpInstanceKey: models.NewActualLRPInstanceKey(
 				"instance-guid-0",
 				"cell-id-0",
 			),
@@ -48,12 +49,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 		}
 
 		actualLRP2 = models.ActualLRP{
-			ActualLRPKey: models.NewActualLRPKey(
+			ActualLrpKey: models.NewActualLRPKey(
 				"process-guid-1",
 				2,
 				"domain-1",
 			),
-			ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
+			ActualLrpInstanceKey: models.NewActualLRPInstanceKey(
 				"instance-guid-1",
 				"cell-id-1",
 			),
@@ -65,7 +66,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		evacuatingLRP2.Presence = models.ActualLRP_Evacuating
 		evacuatingLRP2.State = models.ActualLRPStateRunning
 		evacuatingLRP2.Since = 3417
-		evacuatingLRP2.ActualLRPInstanceKey = models.NewActualLRPInstanceKey(
+		evacuatingLRP2.ActualLrpInstanceKey = models.NewActualLRPInstanceKey(
 			"instance-guid-1",
 			"cell-id-0",
 		)
@@ -83,7 +84,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		var requestBody interface{}
 
 		BeforeEach(func() {
-			requestBody = &models.ActualLRPsRequest{}
+			requestBody = &models.ProtoActualLRPsRequest{}
 		})
 
 		JustBeforeEach(func() {
@@ -102,12 +103,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 				actualLRP1.State = models.ActualLRPStateUnclaimed
 
 				suspectLRP1 = models.ActualLRP{
-					ActualLRPKey: models.NewActualLRPKey(
+					ActualLrpKey: models.NewActualLRPKey(
 						"process-guid-0",
 						1,
 						"domain-0",
 					),
-					ActualLRPInstanceKey: models.NewActualLRPInstanceKey(
+					ActualLrpInstanceKey: models.NewActualLRPInstanceKey(
 						"instance-guid-0",
 						"cell-id-2",
 					),
@@ -124,8 +125,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("returns a list of actual lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.ActualLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsResponse
+				var protoResponse models.ProtoActualLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -142,7 +145,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by domain", func() {
 				BeforeEach(func() {
-					requestBody = &models.ActualLRPsRequest{Domain: "domain-1"}
+					requestBody = &models.ProtoActualLRPsRequest{Domain: "domain-1"}
 				})
 
 				It("calls the DB with the domain filter to retrieve the actual lrps", func() {
@@ -154,7 +157,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by cellId", func() {
 				BeforeEach(func() {
-					requestBody = &models.ActualLRPsRequest{CellId: "cellid-1"}
+					requestBody = &models.ProtoActualLRPsRequest{CellId: "cellid-1"}
 				})
 
 				It("calls the DB with the cell id filter to retrieve the actual lrps ", func() {
@@ -166,7 +169,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			Context("and filtering by processGuid", func() {
 				BeforeEach(func() {
-					requestBody = &models.ActualLRPsRequest{ProcessGuid: "process-guid-1"}
+					requestBody = &models.ProtoActualLRPsRequest{ProcessGuid: "process-guid-1"}
 				})
 
 				It("calls the DB with the process guid filter to retrieve the actual lrps", func() {
@@ -179,8 +182,9 @@ var _ = Describe("ActualLRP Handlers", func() {
 			Context("and filtering by instance index", func() {
 				BeforeEach(func() {
 					req := &models.ActualLRPsRequest{}
-					req.SetIndex(1)
-					requestBody = req
+					index := int32(1)
+					req.SetIndex(&index)
+					requestBody = req.ToProto()
 				})
 
 				It("calls the DB with the index filter to retrieve the actual lrps", func() {
@@ -198,8 +202,9 @@ var _ = Describe("ActualLRP Handlers", func() {
 						CellId:      "cellid-1",
 						ProcessGuid: "process-guid-0",
 					}
-					req.SetIndex(2)
-					requestBody = req
+					index := int32(2)
+					req.SetIndex(&index)
+					requestBody = req.ToProto()
 				})
 
 				It("call the DB with all provided filters to retrieve the actual lrps", func() {
@@ -221,8 +226,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsResponse
+				var protoResponse models.ProtoActualLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -249,8 +256,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsResponse
+				var protoResponse models.ProtoActualLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -259,7 +268,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 	})
 
 	Describe("ActualLRPGroups", func() {
-		var requestBody interface{}
+		//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+		var requestBody *models.ActualLRPGroupsRequest
 
 		BeforeEach(func() {
 			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
@@ -267,7 +277,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.ActualLRPGroups(logger, responseRecorder, request)
 		})
@@ -297,8 +308,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("returns a list of actual lrp groups", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				response := models.ActualLRPGroupsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPGroupsResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -362,8 +376,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				response := &models.ActualLRPGroupsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPGroupsResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -391,8 +408,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				response := &models.ActualLRPGroupsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPGroupsResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -408,7 +428,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		BeforeEach(func() {
 			//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-			requestBody = &models.ActualLRPGroupsByProcessGuidRequest{
+			requestBody = &models.ProtoActualLRPGroupsByProcessGuidRequest{
 				ProcessGuid: processGuid,
 			}
 		})
@@ -452,8 +472,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				response := &models.ActualLRPGroupsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPGroupsResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.ActualLrpGroups).To(Equal(actualLRPGroups))
@@ -469,8 +492,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				response := &models.ActualLRPGroupsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPGroupsResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.ActualLrpGroups).To(BeNil())
@@ -498,8 +524,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				response := &models.ActualLRPGroupsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPGroupsResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -517,7 +546,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		BeforeEach(func() {
 			//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-			requestBody = &models.ActualLRPGroupByProcessGuidAndIndexRequest{
+			requestBody = &models.ProtoActualLRPGroupByProcessGuidAndIndexRequest{
 				ProcessGuid: processGuid,
 				Index:       index,
 			}
@@ -551,9 +580,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 			It("returns an actual lrp group", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-				response := &models.ActualLRPGroupResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var response models.ActualLRPGroupResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -569,9 +601,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 				})
 
 				It("returns both LRPs in the group", func() {
-					//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-					response := &models.ActualLRPGroupResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+					var response models.ActualLRPGroupResponse
+					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+					var protoResponse models.ProtoActualLRPGroupResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -587,9 +622,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-				response := &models.ActualLRPGroupResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var response models.ActualLRPGroupResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
@@ -615,9 +653,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-				response := &models.ActualLRPGroupResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var response models.ActualLRPGroupResponse
+				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+				var protoResponse models.ProtoActualLRPGroupResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))

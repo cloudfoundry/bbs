@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package bbs;
+option go_package="code.cloudfoundry.org/bbs/models";
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+  optional bool bbs_json_always_emit = 1000;
+  optional bool bbs_by_value = 1010;
+  optional bool bbs_exclude_from_equal = 1020;
+  optional string bbs_custom_type = 1030;
+  optional string bbs_default_value = 1040;
+}
+
+extend google.protobuf.EnumValueOptions {
+  optional string bbs_enumvalue_customname = 2000;
+}

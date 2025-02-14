@@ -217,7 +217,7 @@ func (e ActualLRPEventCalculator) RecordChange(before, after *models.ActualLRP, 
 			continue
 		}
 
-		if before != nil && l.ActualLRPInstanceKey.Equal(before.ActualLRPInstanceKey) {
+		if before != nil && l.ActualLrpInstanceKey.Equal(before.ActualLrpInstanceKey) {
 			newLRPs = append(newLRPs, after)
 			found = true
 		} else {
@@ -307,8 +307,8 @@ func generateUnclaimedGroupEvents(before, after *models.ActualLRP) []models.Even
 }
 
 func generateUpdateGroupEvents(before, after *models.ActualLRP) []models.Event {
-	if !before.ActualLRPInstanceKey.Empty() &&
-		!after.ActualLRPInstanceKey.Equal(before.ActualLRPInstanceKey) {
+	if !before.ActualLrpInstanceKey.Empty() &&
+		!after.ActualLrpInstanceKey.Equal(before.ActualLrpInstanceKey) {
 		// an Ordinary LRP replaced Suspect LRP
 		return wrapEvent(
 			//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
@@ -374,7 +374,7 @@ func getEventLRP(e models.Event) (*models.ActualLRP, bool) {
 	case *models.ActualLRPInstanceCreatedEvent:
 		return x.ActualLrp, false
 	case *models.ActualLRPInstanceChangedEvent:
-		return x.After.ToActualLRP(x.ActualLRPKey, x.ActualLRPInstanceKey), false
+		return x.After.ToActualLRP(x.ActualLrpKey, x.ActualLrpInstanceKey), false
 	case *models.ActualLRPCrashedEvent:
 		return nil, true
 	}

@@ -31,6 +31,6 @@ func (h *CellHandler) Cells(logger lager.Logger, w http.ResponseWriter, req *htt
 	}
 	response.Cells = cells
 	response.Error = models.ConvertError(err)
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }

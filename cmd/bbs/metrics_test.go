@@ -71,7 +71,7 @@ var _ = Describe("Metrics", func() {
 				Key:      "bbs",
 				Owner:    "Your worst enemy.",
 				Value:    "Something",
-				TypeCode: locketmodels.LOCK,
+				TypeCode: locketmodels.TypeCode_LOCK,
 			}
 
 			clock := clock.NewClock()

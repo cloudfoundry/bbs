@@ -438,7 +438,7 @@ var _ = Describe("Task Controller", func() {
 				Context("and the task has a complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						task.CompletionCallbackUrl = "bogus"
+						task.TaskDefinition.CompletionCallbackUrl = "bogus"
 						fakeTaskDB.CancelTaskReturns(nil, task, cellID, nil)
 					})
 
@@ -579,7 +579,7 @@ var _ = Describe("Task Controller", func() {
 			Context("and the task has a complete URL", func() {
 				BeforeEach(func() {
 					task := model_helpers.NewValidTask("hi-bob")
-					task.CompletionCallbackUrl = "bogus"
+					task.TaskDefinition.CompletionCallbackUrl = "bogus"
 					fakeTaskDB.FailTaskReturns(nil, task, nil)
 				})
 
@@ -805,7 +805,7 @@ var _ = Describe("Task Controller", func() {
 				Context("and the task has a complete URL", func() {
 					BeforeEach(func() {
 						task := model_helpers.NewValidTask("hi-bob")
-						task.CompletionCallbackUrl = "bogus"
+						task.TaskDefinition.CompletionCallbackUrl = "bogus"
 						fakeTaskDB.CompleteTaskReturns(nil, task, nil)
 					})
 

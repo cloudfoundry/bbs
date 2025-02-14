@@ -37,29 +37,28 @@ func PreloadedRootFS(stack string) string {
 
 func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo, metricTags map[string]*MetricTagValue) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
-	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
-	}
+	copy(environmentVariables, runInfo.EnvironmentVariables)
 
 	volumeMountedFiles := make([]*File, len(runInfo.VolumeMountedFiles))
 	copy(volumeMountedFiles, runInfo.VolumeMountedFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
-	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
-	}
+	copy(egressRules, runInfo.EgressRules)
+
+	desiredLrpKey := schedInfo.DesiredLrpKey
+	desiredLrpResource := schedInfo.DesiredLrpResource
 
 	return DesiredLRP{
-		ProcessGuid:                   schedInfo.ProcessGuid,
-		Domain:                        schedInfo.Domain,
-		LogGuid:                       schedInfo.LogGuid,
-		MemoryMb:                      schedInfo.MemoryMb,
-		DiskMb:                        schedInfo.DiskMb,
-		MaxPids:                       schedInfo.MaxPids,
-		RootFs:                        schedInfo.RootFs,
+		ProcessGuid:                   desiredLrpKey.ProcessGuid,
+		Domain:                        desiredLrpKey.Domain,
+		LogGuid:                       desiredLrpKey.LogGuid,
+		MemoryMb:                      desiredLrpResource.MemoryMb,
+		DiskMb:                        desiredLrpResource.DiskMb,
+		MaxPids:                       desiredLrpResource.MaxPids,
+		RootFs:                        desiredLrpResource.RootFs,
 		Instances:                     schedInfo.Instances,
 		Annotation:                    schedInfo.Annotation,
-		Routes:                        &schedInfo.Routes,
+		Routes:                        schedInfo.Routes,
 		ModificationTag:               &schedInfo.ModificationTag,
 		EnvironmentVariables:          environmentVariables,
 		CachedDependencies:            runInfo.CachedDependencies,
@@ -92,17 +91,13 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 
 func (desiredLRP *DesiredLRP) AddRunInfo(runInfo DesiredLRPRunInfo) {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
-	for i := range runInfo.EnvironmentVariables {
-		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
-	}
+	copy(environmentVariables, runInfo.EnvironmentVariables)
 
 	volumeMountedFiles := make([]*File, len(runInfo.VolumeMountedFiles))
 	copy(volumeMountedFiles, runInfo.VolumeMountedFiles)
 
 	egressRules := make([]*SecurityGroupRule, len(runInfo.EgressRules))
-	for i := range runInfo.EgressRules {
-		egressRules[i] = &runInfo.EgressRules[i]
-	}
+	copy(egressRules, runInfo.EgressRules)
 
 	desiredLRP.EnvironmentVariables = environmentVariables
 	desiredLRP.CachedDependencies = runInfo.CachedDependencies
@@ -224,10 +219,6 @@ func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
 }
 
 func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
-	var routes Routes
-	if d.Routes != nil {
-		routes = *d.Routes
-	}
 	var modificationTag ModificationTag
 	if d.ModificationTag != nil {
 		modificationTag = *d.ModificationTag
@@ -244,7 +235,7 @@ func (d *DesiredLRP) DesiredLRPSchedulingInfo() DesiredLRPSchedulingInfo {
 		d.Annotation,
 		d.Instances,
 		d.DesiredLRPResource(),
-		routes,
+		d.Routes,
 		modificationTag,
 		&volumePlacement,
 		d.PlacementTags,
@@ -272,18 +263,14 @@ func (d *DesiredLRP) DesiredLRPRoutingInfo() DesiredLRP {
 }
 
 func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
-	environmentVariables := make([]EnvironmentVariable, len(d.EnvironmentVariables))
-	for i := range d.EnvironmentVariables {
-		environmentVariables[i] = *d.EnvironmentVariables[i]
-	}
+	environmentVariables := make([]*EnvironmentVariable, len(d.EnvironmentVariables))
+	copy(environmentVariables, d.EnvironmentVariables)
+
+	egressRules := make([]*SecurityGroupRule, len(d.EgressRules))
+	copy(egressRules, d.EgressRules)
 
 	volumeMountedFiles := make([]*File, len(d.VolumeMountedFiles))
 	copy(volumeMountedFiles, d.VolumeMountedFiles)
-
-	egressRules := make([]SecurityGroupRule, len(d.EgressRules))
-	for i := range d.EgressRules {
-		egressRules[i] = *d.EgressRules[i]
-	}
 
 	return NewDesiredLRPRunInfo(
 		d.DesiredLRPKey(),
@@ -318,6 +305,10 @@ func (d *DesiredLRP) DesiredLRPRunInfo(createdAt time.Time) DesiredLRPRunInfo {
 func (d *DesiredLRP) Copy() *DesiredLRP {
 	newDesired := *d
 	return &newDesired
+}
+
+func (request *ProtoDesiredLRP) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (desired DesiredLRP) Validate() error {
@@ -398,14 +389,18 @@ func (desired DesiredLRP) Validate() error {
 	return validationError.ToError()
 }
 
+func (request *ProtoDesiredLRPUpdate) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (desired *DesiredLRPUpdate) Validate() error {
 	var validationError ValidationError
 
-	if desired.GetInstances() < 0 {
+	if *desired.GetInstances() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"instances"})
 	}
 
-	if len(desired.GetAnnotation()) > maximumAnnotationLength {
+	if len(*desired.GetAnnotation()) > maximumAnnotationLength {
 		validationError = validationError.Append(ErrInvalidField{"annotation"})
 	}
 
@@ -427,28 +422,6 @@ func (desired *DesiredLRPUpdate) Validate() error {
 	}
 
 	return validationError.ToError()
-}
-
-func (desired *DesiredLRPUpdate) SetInstances(instances int32) {
-	desired.OptionalInstances = &DesiredLRPUpdate_Instances{
-		Instances: instances,
-	}
-}
-
-func (desired DesiredLRPUpdate) InstancesExists() bool {
-	_, ok := desired.GetOptionalInstances().(*DesiredLRPUpdate_Instances)
-	return ok
-}
-
-func (desired *DesiredLRPUpdate) SetAnnotation(annotation string) {
-	desired.OptionalAnnotation = &DesiredLRPUpdate_Annotation{
-		Annotation: annotation,
-	}
-}
-
-func (desired DesiredLRPUpdate) AnnotationExists() bool {
-	_, ok := desired.GetOptionalAnnotation().(*DesiredLRPUpdate_Annotation)
-	return ok
 }
 
 func (desired DesiredLRPUpdate) IsRoutesGroupUpdated(routes *Routes, routerGroup string) bool {
@@ -506,11 +479,11 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 	}
 
 	if update.Instances != nil {
-		desired.SetInstances(*update.Instances)
+		desired.SetInstances(update.Instances)
 	}
 	desired.Routes = update.Routes
 	if update.Annotation != nil {
-		desired.SetAnnotation(*update.Annotation)
+		desired.SetAnnotation(update.Annotation)
 	}
 	desired.MetricTags = update.MetricTags
 
@@ -521,12 +494,12 @@ func (desired DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
 	var update internalDesiredLRPUpdate
 	if desired.InstancesExists() {
 		i := desired.GetInstances()
-		update.Instances = &i
+		update.Instances = i
 	}
 	update.Routes = desired.Routes
 	if desired.AnnotationExists() {
 		a := desired.GetAnnotation()
-		update.Annotation = &a
+		update.Annotation = a
 	}
 	update.MetricTags = desired.MetricTags
 	return json.Marshal(update)
@@ -538,6 +511,10 @@ func NewDesiredLRPKey(processGuid, domain, logGuid string) DesiredLRPKey {
 		Domain:      domain,
 		LogGuid:     logGuid,
 	}
+}
+
+func (request *ProtoDesiredLRPKey) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (key DesiredLRPKey) Validate() error {
@@ -558,16 +535,16 @@ func NewDesiredLRPSchedulingInfo(
 	annotation string,
 	instances int32,
 	resource DesiredLRPResource,
-	routes Routes,
+	routes *Routes,
 	modTag ModificationTag,
 	volumePlacement *VolumePlacement,
 	placementTags []string,
 ) DesiredLRPSchedulingInfo {
 	return DesiredLRPSchedulingInfo{
-		DesiredLRPKey:      key,
+		DesiredLrpKey:      key,
 		Annotation:         annotation,
 		Instances:          instances,
-		DesiredLRPResource: resource,
+		DesiredLrpResource: resource,
 		Routes:             routes,
 		ModificationTag:    modTag,
 		VolumePlacement:    volumePlacement,
@@ -595,13 +572,13 @@ func NewDesiredLRPRoutingInfo(
 
 func (s *DesiredLRPSchedulingInfo) ApplyUpdate(update *DesiredLRPUpdate) {
 	if update.InstancesExists() {
-		s.Instances = update.GetInstances()
+		s.Instances = *update.GetInstances()
 	}
 	if update.Routes != nil {
-		s.Routes = *update.Routes
+		s.Routes = update.Routes
 	}
 	if update.AnnotationExists() {
-		s.Annotation = update.GetAnnotation()
+		s.Annotation = *update.GetAnnotation()
 	}
 	s.ModificationTag.Increment()
 }
@@ -610,10 +587,14 @@ func (*DesiredLRPSchedulingInfo) Version() format.Version {
 	return format.V0
 }
 
+func (request *ProtoDesiredLRPSchedulingInfo) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (s DesiredLRPSchedulingInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(s.DesiredLRPKey, s.DesiredLRPResource, s.Routes)
+	validationError = validationError.Check(s.DesiredLrpKey, s.DesiredLrpResource, s.Routes)
 
 	if s.GetInstances() < 0 {
 		validationError = validationError.Append(ErrInvalidField{"instances"})
@@ -633,6 +614,10 @@ func NewDesiredLRPResource(memoryMb, diskMb, maxPids int32, rootFs string) Desir
 		MaxPids:  maxPids,
 		RootFs:   rootFs,
 	}
+}
+
+func (request *ProtoDesiredLRPResource) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (resource DesiredLRPResource) Validate() error {
@@ -661,7 +646,7 @@ func (resource DesiredLRPResource) Validate() error {
 func NewDesiredLRPRunInfo(
 	key DesiredLRPKey,
 	createdAt time.Time,
-	envVars []EnvironmentVariable,
+	envVars []*EnvironmentVariable,
 	cacheDeps []*CachedDependency,
 	setup,
 	action,
@@ -670,7 +655,7 @@ func NewDesiredLRPRunInfo(
 	privileged bool,
 	cpuWeight uint32,
 	ports []uint32,
-	egressRules []SecurityGroupRule,
+	egressRules []*SecurityGroupRule,
 	logSource,
 	metricsGuid string,
 	legacyDownloadUser string,
@@ -686,7 +671,7 @@ func NewDesiredLRPRunInfo(
 	volumeMountedFiles []*File,
 ) DesiredLRPRunInfo {
 	return DesiredLRPRunInfo{
-		DesiredLRPKey:                 key,
+		DesiredLrpKey:                 key,
 		CreatedAt:                     createdAt.UnixNano(),
 		EnvironmentVariables:          envVars,
 		CachedDependencies:            cacheDeps,
@@ -715,10 +700,14 @@ func NewDesiredLRPRunInfo(
 	}
 }
 
+func (request *ProtoDesiredLRPRunInfo) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (runInfo DesiredLRPRunInfo) Validate() error {
 	var validationError ValidationError
 
-	validationError = validationError.Check(runInfo.DesiredLRPKey)
+	validationError = validationError.Check(runInfo.DesiredLrpKey)
 
 	if len(runInfo.VolumeMountedFiles) > 0 {
 		err := validateVolumeMountedFiles(runInfo.VolumeMountedFiles)
@@ -806,6 +795,10 @@ func (runInfo DesiredLRPRunInfo) Validate() error {
 
 func (*CertificateProperties) Version() format.Version {
 	return format.V0
+}
+
+func (request *ProtoCertificateProperties) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (CertificateProperties) Validate() error {

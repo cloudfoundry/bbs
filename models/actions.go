@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
-	proto "github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -28,7 +28,6 @@ var ErrInvalidActionType = errors.New("invalid action type")
 type ActionInterface interface {
 	ActionType() string
 	Validate() error
-	proto.Message
 }
 
 func (a *Action) GetValue() interface{} {
@@ -58,6 +57,37 @@ func (a *Action) GetValue() interface{} {
 	}
 	if a.CodependentAction != nil {
 		return a.CodependentAction
+	}
+	return nil
+}
+
+func (a *Action) GetProto() proto.Message {
+	if a.DownloadAction != nil {
+		return a.DownloadAction.ToProto()
+	}
+	if a.UploadAction != nil {
+		return a.UploadAction.ToProto()
+	}
+	if a.RunAction != nil {
+		return a.RunAction.ToProto()
+	}
+	if a.TimeoutAction != nil {
+		return a.TimeoutAction.ToProto()
+	}
+	if a.EmitProgressAction != nil {
+		return a.EmitProgressAction.ToProto()
+	}
+	if a.TryAction != nil {
+		return a.TryAction.ToProto()
+	}
+	if a.ParallelAction != nil {
+		return a.ParallelAction.ToProto()
+	}
+	if a.SerialAction != nil {
+		return a.SerialAction.ToProto()
+	}
+	if a.CodependentAction != nil {
+		return a.CodependentAction.ToProto()
 	}
 	return nil
 }
@@ -262,7 +292,8 @@ func (a *ParallelAction) ActionType() string {
 func (a ParallelAction) Validate() error {
 	var validationError ValidationError
 
-	if len(a.Actions) == 0 {
+	//lint:ignore S1009 - preserve nil check
+	if a.Actions == nil || len(a.Actions) == 0 {
 		validationError = validationError.Append(ErrInvalidField{"actions"})
 	} else {
 		for index, action := range a.Actions {
@@ -292,7 +323,8 @@ func (a *CodependentAction) ActionType() string {
 func (a CodependentAction) Validate() error {
 	var validationError ValidationError
 
-	if len(a.Actions) == 0 {
+	//lint:ignore S1009 - preserve nil check
+	if a.Actions == nil || len(a.Actions) == 0 {
 		validationError = validationError.Append(ErrInvalidField{"actions"})
 	} else {
 		for index, action := range a.Actions {
@@ -330,7 +362,8 @@ func (a *SerialAction) ActionType() string {
 func (a SerialAction) Validate() error {
 	var validationError ValidationError
 
-	if len(a.Actions) == 0 {
+	//lint:ignore S1009 - preserve nil check
+	if a.Actions == nil || len(a.Actions) == 0 {
 		validationError = validationError.Append(ErrInvalidField{"actions"})
 	} else {
 		for index, action := range a.Actions {
@@ -540,10 +573,10 @@ func (l *ResourceLimits) UnmarshalJSON(data []byte) error {
 	}
 
 	if limit.Nofile != nil {
-		l.SetNofile(*limit.Nofile)
+		l.SetNofile(limit.Nofile)
 	}
 	if limit.Nproc != nil {
-		l.SetNproc(*limit.Nproc)
+		l.SetNproc(limit.Nproc)
 	}
 
 	return nil
@@ -553,40 +586,12 @@ func (l ResourceLimits) MarshalJSON() ([]byte, error) {
 	var limit internalResourceLimits
 	if l.NofileExists() {
 		n := l.GetNofile()
-		limit.Nofile = &n
+		limit.Nofile = n
 	}
 	if l.NprocExists() {
+
 		n := l.GetNproc()
-		limit.Nproc = &n
+		limit.Nproc = n
 	}
 	return json.Marshal(limit)
-}
-
-func (l *ResourceLimits) SetNofile(nofile uint64) {
-	l.OptionalNofile = &ResourceLimits_Nofile{
-		Nofile: nofile,
-	}
-}
-
-func (m *ResourceLimits) GetNofilePtr() *uint64 {
-	if x, ok := m.GetOptionalNofile().(*ResourceLimits_Nofile); ok {
-		return &x.Nofile
-	}
-	return nil
-}
-
-func (l *ResourceLimits) NofileExists() bool {
-	_, ok := l.GetOptionalNofile().(*ResourceLimits_Nofile)
-	return ok
-}
-
-func (l *ResourceLimits) SetNproc(nproc uint64) {
-	l.OptionalNproc = &ResourceLimits_Nproc{
-		Nproc: nproc,
-	}
-}
-
-func (l *ResourceLimits) NprocExists() bool {
-	_, ok := l.GetOptionalNproc().(*ResourceLimits_Nproc)
-	return ok
 }

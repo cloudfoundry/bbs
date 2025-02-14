@@ -87,7 +87,7 @@ err = client.DesireLRP(logger, &models.DesiredLRP{
 	Static: "some-source-id",
       },
       "instance_index": &models.MetricTagValue{
-	Dynamic: models.MetricTagDynamicValueIndex,
+	Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex,
       },
     },
 })
@@ -109,7 +109,7 @@ for {
 }
 ```
 
-## Recieving a LRPCallbackResponse
+## Receiving a LRPCallbackResponse
 
 To receive the LRPCallbackResponse, we first start an HTTP server.
 

@@ -1,6 +1,6 @@
 package format
 
-import "github.com/gogo/protobuf/proto"
+import "google.golang.org/protobuf/proto"
 
 type Version byte
 
