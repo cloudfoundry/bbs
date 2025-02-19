@@ -28,6 +28,7 @@ var ErrInvalidActionType = errors.New("invalid action type")
 type ActionInterface interface {
 	ActionType() string
 	Validate() error
+	GetProto() proto.Message
 }
 
 func (a *Action) GetValue() interface{} {
@@ -174,6 +175,10 @@ func (a DownloadAction) Validate() error {
 	return nil
 }
 
+func (a *DownloadAction) GetProto() proto.Message {
+	return a.ToProto()
+}
+
 func contains(array []string, element string) bool {
 	for _, item := range array {
 		if item == element {
@@ -209,6 +214,10 @@ func (a UploadAction) Validate() error {
 	return nil
 }
 
+func (a *UploadAction) GetProto() proto.Message {
+	return a.ToProto()
+}
+
 func (a *RunAction) ActionType() string {
 	return ActionTypeRun
 }
@@ -229,6 +238,10 @@ func (a RunAction) Validate() error {
 	}
 
 	return nil
+}
+
+func (a *RunAction) GetProto() proto.Message {
+	return a.ToProto()
 }
 
 func (a *TimeoutAction) ActionType() string {
@@ -258,6 +271,10 @@ func (a TimeoutAction) Validate() error {
 	return nil
 }
 
+func (a *TimeoutAction) GetProto() proto.Message {
+	return a.ToProto()
+}
+
 func (a *TryAction) ActionType() string {
 	return ActionTypeTry
 }
@@ -279,6 +296,10 @@ func (a TryAction) Validate() error {
 	}
 
 	return nil
+}
+
+func (a *TryAction) GetProto() proto.Message {
+	return a.ToProto()
 }
 
 func (*ParallelAction) Version() format.Version {
@@ -316,6 +337,10 @@ func (a ParallelAction) Validate() error {
 	return nil
 }
 
+func (a *ParallelAction) GetProto() proto.Message {
+	return a.ToProto()
+}
+
 func (a *CodependentAction) ActionType() string {
 	return ActionTypeCodependent
 }
@@ -347,13 +372,9 @@ func (a CodependentAction) Validate() error {
 	return nil
 }
 
-// func (*SerialAction) Version() format.Version {
-// 	return format.V0
-// }
-
-// func (*SerialAction) MigrateFromVersion(v format.Version) error {
-// 	return nil
-// }
+func (a *CodependentAction) GetProto() proto.Message {
+	return a.ToProto()
+}
 
 func (a *SerialAction) ActionType() string {
 	return ActionTypeSerial
@@ -386,6 +407,10 @@ func (a SerialAction) Validate() error {
 	return nil
 }
 
+func (a *SerialAction) GetProto() proto.Message {
+	return a.ToProto()
+}
+
 func (a *EmitProgressAction) ActionType() string {
 	return ActionTypeEmitProgress
 }
@@ -407,6 +432,10 @@ func (a EmitProgressAction) Validate() error {
 	}
 
 	return nil
+}
+
+func (a *EmitProgressAction) GetProto() proto.Message {
+	return a.ToProto()
 }
 
 func EmitProgressFor(action ActionInterface, startMessage string, successMessage string, failureMessagePrefix string) *EmitProgressAction {
