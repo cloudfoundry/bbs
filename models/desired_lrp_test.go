@@ -1359,7 +1359,6 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		desiredLRPUpdate.Routes = routes
 		annotation := "some-text"
 		desiredLRPUpdate.SetAnnotation(&annotation)
-		// desiredLRPUpdate.Annotation = &annotation
 		desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
 			"some-tag": {Static: "some-value"},
 		}

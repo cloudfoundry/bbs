@@ -19,15 +19,8 @@ var _ = Describe("Routes", func() {
 	itSerializes := func(routes *models.Routes) {
 		BeforeEach(func() {
 
-			// don't really care for branching logic in tests, but don't want to change the test right now
-			if routes == nil {
-				update = models.DesiredLRPUpdate{
-					Routes: nil,
-				}
-			} else {
-				update = models.DesiredLRPUpdate{
-					Routes: routes,
-				}
+			update = models.DesiredLRPUpdate{
+				Routes: routes,
 			}
 			/*
 				The point of these tests is to go from non-proto struct

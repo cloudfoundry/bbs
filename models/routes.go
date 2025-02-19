@@ -51,47 +51,6 @@ func (pr *ProtoRoutes) FromProto() *Routes {
 	return &r
 }
 
-// func (r *Routes) Marshal() ([]byte, error) {
-// 	return proto.Marshal(r.ToProto())
-// }
-
-// func (r *Routes) Unmarshal(b []byte) error {
-// 	return proto.Unmarshal(b, r.ToProto())
-// }
-
-// func (r *Routes) MarshalTo(data []byte) (n int, err error) {
-// 	return r.protoRoutes().MarshalTo(data)
-// }
-
-// func (r *Routes) Unmarshal(data []byte) error {
-// 	pr := &ProtoRoutes{}
-// 	err := pr.Unmarshal(data)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if pr.Routes == nil {
-// 		return nil
-// 	}
-
-// 	routes := map[string]*json.RawMessage{}
-// 	for k, v := range pr.Routes {
-// 		raw := json.RawMessage(v)
-// 		routes[k] = &raw
-// 	}
-// 	*r = routes
-
-// 	return nil
-// }
-
-// func (r *Routes) Size() int {
-// 	if r == nil {
-// 		return 0
-// 	}
-
-// 	return r.protoRoutes().Size()
-// }
-
 func (r *Routes) Equal(other Routes) bool {
 	if other == nil {
 		return r == nil

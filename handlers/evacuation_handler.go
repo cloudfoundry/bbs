@@ -36,7 +36,6 @@ func NewEvacuationHandler(
 type MessageValidator interface {
 	proto.Message
 	Validate() error
-	// Unmarshal(data []byte) error
 }
 
 func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {

@@ -378,9 +378,6 @@ var _ = Describe("SecurityGroupRule", func() {
         ],
 		"annotations":["quack"]
       }`
-			// TODO: double-check these fields
-			// protojson doesn't emit this
-			// "log": false,
 
 			securityGroup = models.SecurityGroupRule{
 				Protocol:     "all",
@@ -413,9 +410,6 @@ var _ = Describe("SecurityGroupRule", func() {
 						"0.0.0.0-9.255.255.255"
 					]
 				}`
-				// TODO: double-check these fields
-				// protojson doesn't emit this
-				// "log": false,
 
 				securityGroup.Annotations = []string{}
 			})
