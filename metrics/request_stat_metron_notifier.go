@@ -57,10 +57,6 @@ func NewRequestStatMetronNotifier(
 	}
 }
 
-func (notifier *RequestStatMetronNotifier) GetAdvancedMetricsConfig() config.AdvancedMetrics {
-	return notifier.advancedMetricsConfig
-}
-
 func (notifier *RequestStatMetronNotifier) IncrementRequestCounter(delta int, route string) {
 	notifier.lock.Lock()
 	defer notifier.lock.Unlock()
