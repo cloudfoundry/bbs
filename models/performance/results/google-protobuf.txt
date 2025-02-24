@@ -1,14 +1,6 @@
-NOTE:
-
-These results were as of 2025-02-21.
-
-diego-release commit b8093ae2fe8b43fed7ab81a71d453402e2b0bc0b
-bbs commit 889d496b7f5b82b135e393e2a30282b562aef330
-=========================================================================================================================
-
 Running Suite: Performance Suite - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance
 =========================================================================================================================
-Random Seed: 1740177911
+Random Seed: 1740437021
 
 Will run 24 of 24 specs
 ------------------------------
@@ -17,35 +9,35 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:354
 
   Report Entries >>
-  BBS Struct => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:45:12.234
+  BBS Struct => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:43:42.464
     BBS Struct => Protobuf Struct
-    Name               | N | Min    | Median | Mean   | StdDev | Max   
-    ===================================================================
-    convert [duration] | 1 | 38.6µs | 38.6µs | 38.6µs | 0s     | 38.6µs
+    Name               | N | Min      | Median   | Mean     | StdDev | Max     
+    ===========================================================================
+    convert [duration] | 1 | 51.799µs | 51.799µs | 51.799µs | 0s     | 51.799µs
   << Report Entries
 ------------------------------
-• [0.066 seconds]
+• [0.062 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a BBS Plugin Struct Measures conversion time 1,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:355
 
   Report Entries >>
-  BBS Struct => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:45:12.236
+  BBS Struct => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:43:42.465
     BBS Struct => Protobuf Struct
     Name               | N    | Min   | Median | Mean     | StdDev   | Max      
     ============================================================================
-    convert [duration] | 1000 | 8.1µs | 9.4µs  | 20.067µs | 40.342µs | 811.394µs
+    convert [duration] | 1000 | 7.8µs | 9.1µs  | 19.333µs | 46.236µs | 990.891µs
   << Report Entries
 ------------------------------
-• [50.931 seconds]
+• [51.649 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a BBS Plugin Struct Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:356
 
   Report Entries >>
-  BBS Struct => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:45:12.302
+  BBS Struct => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:43:42.528
     BBS Struct => Protobuf Struct
-    Name               | N       | Min   | Median | Mean     | StdDev   | Max      
-    ===============================================================================
-    convert [duration] | 1000000 | 7.7µs | 9µs    | 10.412µs | 16.449µs | 4.40447ms
+    Name               | N       | Min   | Median | Mean     | StdDev   | Max       
+    ================================================================================
+    convert [duration] | 1000000 | 7.5µs | 9.1µs  | 10.584µs | 17.173µs | 5.894842ms
   << Report Entries
 ------------------------------
 • [0.002 seconds]
@@ -53,35 +45,35 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:358
 
   Report Entries >>
-  BBS Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:46:03.286
+  BBS Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:44:34.234
     BBS Struct => Protobuf Binary
     Name               | N | Min       | Median    | Mean      | StdDev | Max      
     ===============================================================================
-    convert [duration] | 1 | 925.193µs | 925.193µs | 925.193µs | 0s     | 925.193µs
+    convert [duration] | 1 | 904.491µs | 904.491µs | 904.491µs | 0s     | 904.491µs
   << Report Entries
 ------------------------------
-• [0.063 seconds]
+• [0.064 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a BBS Plugin Struct Measures conversion time 1,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:359
 
   Report Entries >>
-  BBS Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:46:03.288
+  BBS Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:44:34.236
     BBS Struct => Protobuf Binary
-    Name               | N    | Min    | Median | Mean     | StdDev   | Max      
-    =============================================================================
-    convert [duration] | 1000 | 17.7µs | 19.5µs | 21.582µs | 11.406µs | 258.198µs
+    Name               | N    | Min      | Median   | Mean     | StdDev   | Max      
+    =================================================================================
+    convert [duration] | 1000 | 17.899µs | 19.999µs | 22.638µs | 20.519µs | 541.794µs
   << Report Entries
 ------------------------------
-• [61.811 seconds]
+• [62.503 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a BBS Plugin Struct Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:360
 
   Report Entries >>
-  BBS Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:46:03.351
+  BBS Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:44:34.3
     BBS Struct => Protobuf Binary
-    Name               | N       | Min    | Median | Mean     | StdDev   | Max       
-    =================================================================================
-    convert [duration] | 1000000 | 17.5µs | 19.7µs | 21.384µs | 13.766µs | 2.800081ms
+    Name               | N       | Min      | Median | Mean    | StdDev   | Max       
+    ==================================================================================
+    convert [duration] | 1000000 | 17.499µs | 19.8µs | 21.65µs | 14.392µs | 1.718484ms
   << Report Entries
 ------------------------------
 • [0.001 seconds]
@@ -89,35 +81,35 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:362
 
   Report Entries >>
-  BBS Struct => Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:47:05.222
+  BBS Struct => Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:45:36.866
     BBS Struct => Protobuf Binary => BBS Struct
     Name               | N | Min       | Median    | Mean      | StdDev | Max      
     ===============================================================================
-    convert [duration] | 1 | 116.898µs | 116.898µs | 116.898µs | 0s     | 116.898µs
+    convert [duration] | 1 | 110.199µs | 110.199µs | 110.199µs | 0s     | 110.199µs
   << Report Entries
 ------------------------------
-• [0.088 seconds]
+• [0.082 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a BBS Plugin Struct Measures conversion time 1,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:363
 
   Report Entries >>
-  BBS Struct => Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:47:05.223
+  BBS Struct => Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:45:36.867
     BBS Struct => Protobuf Binary => BBS Struct
     Name               | N    | Min    | Median | Mean     | StdDev   | Max      
     =============================================================================
-    convert [duration] | 1000 | 32.6µs | 37µs   | 44.535µs | 33.307µs | 828.794µs
+    convert [duration] | 1000 | 32.2µs | 36µs   | 40.084µs | 12.761µs | 141.099µs
   << Report Entries
 ------------------------------
-• [80.871 seconds]
+• [81.441 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a BBS Plugin Struct Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:364
 
   Report Entries >>
-  BBS Struct => Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/21/25 22:47:05.311
+  BBS Struct => Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:346 @ 02/24/25 22:45:36.949
     BBS Struct => Protobuf Binary => BBS Struct
-    Name               | N       | Min    | Median | Mean     | StdDev   | Max       
-    =================================================================================
-    convert [duration] | 1000000 | 30.6µs | 36.5µs | 39.658µs | 20.488µs | 3.951374ms
+    Name               | N       | Min    | Median   | Mean     | StdDev   | Max       
+    ===================================================================================
+    convert [duration] | 1000000 | 31.5µs | 36.699µs | 40.024µs | 23.476µs | 7.043036ms
   << Report Entries
 ------------------------------
 • [0.001 seconds]
@@ -125,11 +117,11 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:388
 
   Report Entries >>
-  Protobuf Struct => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:48:26.259
+  Protobuf Struct => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:46:58.471
     Protobuf Struct => BBS Struct
-    Name               | N | Min      | Median   | Mean     | StdDev | Max     
-    ===========================================================================
-    convert [duration] | 1 | 65.399µs | 65.399µs | 65.399µs | 0s     | 65.399µs
+    Name               | N | Min    | Median | Mean   | StdDev | Max   
+    ===================================================================
+    convert [duration] | 1 | 11.9µs | 11.9µs | 11.9µs | 0s     | 11.9µs
   << Report Entries
 ------------------------------
 • [0.052 seconds]
@@ -137,23 +129,23 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:389
 
   Report Entries >>
-  Protobuf Struct => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:48:26.259
+  Protobuf Struct => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:46:58.472
     Protobuf Struct => BBS Struct
-    Name               | N    | Min   | Median | Mean     | StdDev  | Max   
-    ========================================================================
-    convert [duration] | 1000 | 8.5µs | 9.3µs  | 10.186µs | 5.305µs | 66.5µs
+    Name               | N    | Min   | Median  | Mean     | StdDev   | Max      
+    =============================================================================
+    convert [duration] | 1000 | 7.9µs | 8.999µs | 10.734µs | 22.383µs | 641.195µs
   << Report Entries
 ------------------------------
-• [50.026 seconds]
+• [50.232 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Struct Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:390
 
   Report Entries >>
-  Protobuf Struct => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:48:26.312
+  Protobuf Struct => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:46:58.524
     Protobuf Struct => BBS Struct
     Name               | N       | Min   | Median | Mean    | StdDev  | Max       
     ==============================================================================
-    convert [duration] | 1000000 | 7.4µs | 8.9µs  | 9.694µs | 7.057µs | 3.139179ms
+    convert [duration] | 1000000 | 7.5µs | 8.9µs  | 9.768µs | 7.655µs | 1.780784ms
   << Report Entries
 ------------------------------
 • [0.001 seconds]
@@ -161,35 +153,35 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:392
 
   Report Entries >>
-  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:49:16.409
+  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:47:48.812
     Protobuf Struct => Protobuf Binary
     Name               | N | Min    | Median | Mean   | StdDev | Max   
     ===================================================================
-    convert [duration] | 1 | 45.7µs | 45.7µs | 45.7µs | 0s     | 45.7µs
+    convert [duration] | 1 | 48.5µs | 48.5µs | 48.5µs | 0s     | 48.5µs
   << Report Entries
 ------------------------------
-• [0.061 seconds]
+• [0.060 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Struct Measures conversion time 1,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:393
 
   Report Entries >>
-  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:49:16.41
+  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:47:48.813
     Protobuf Struct => Protobuf Binary
-    Name               | N    | Min    | Median | Mean     | StdDev  | Max      
-    ============================================================================
-    convert [duration] | 1000 | 16.2µs | 17.1µs | 18.469µs | 7.717µs | 176.599µs
+    Name               | N    | Min    | Median | Mean     | StdDev  | Max     
+    ===========================================================================
+    convert [duration] | 1000 | 15.6µs | 16.6µs | 17.979µs | 6.091µs | 78.699µs
   << Report Entries
 ------------------------------
-• [57.776 seconds]
+• [57.886 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Struct Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:394
 
   Report Entries >>
-  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:49:16.471
+  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:47:48.873
     Protobuf Struct => Protobuf Binary
-    Name               | N       | Min    | Median | Mean     | StdDev  | Max       
-    ================================================================================
-    convert [duration] | 1000000 | 14.8µs | 16.5µs | 17.506µs | 7.774µs | 2.409084ms
+    Name               | N       | Min      | Median | Mean     | StdDev  | Max       
+    ==================================================================================
+    convert [duration] | 1000000 | 14.699µs | 16.5µs | 17.548µs | 9.828µs | 4.373362ms
   << Report Entries
 ------------------------------
 • [0.001 seconds]
@@ -197,11 +189,11 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:396
 
   Report Entries >>
-  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:50:14.302
+  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:48:46.812
     Protobuf Struct => Protobuf Binary
-    Name               | N | Min    | Median | Mean   | StdDev | Max   
-    ===================================================================
-    convert [duration] | 1 | 70.5µs | 70.5µs | 70.5µs | 0s     | 70.5µs
+    Name               | N | Min      | Median   | Mean     | StdDev | Max     
+    ===========================================================================
+    convert [duration] | 1 | 72.699µs | 72.699µs | 72.699µs | 0s     | 72.699µs
   << Report Entries
 ------------------------------
 • [0.074 seconds]
@@ -209,23 +201,23 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:397
 
   Report Entries >>
-  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:50:14.303
+  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:48:46.813
     Protobuf Struct => Protobuf Binary
-    Name               | N    | Min      | Median | Mean     | StdDev | Max      
-    =============================================================================
-    convert [duration] | 1000 | 28.401µs | 30.9µs | 32.711µs | 7.45µs | 105.699µs
+    Name               | N    | Min    | Median   | Mean     | StdDev   | Max      
+    ===============================================================================
+    convert [duration] | 1000 | 27.4µs | 29.949µs | 32.653µs | 10.381µs | 158.399µs
   << Report Entries
 ------------------------------
-• [72.988 seconds]
+• [73.342 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Struct Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:398
 
   Report Entries >>
-  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/21/25 22:50:14.378
+  Protobuf Struct => Protobuf Binary - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:380 @ 02/24/25 22:48:46.887
     Protobuf Struct => Protobuf Binary
-    Name               | N       | Min      | Median   | Mean     | StdDev   | Max       
-    =====================================================================================
-    convert [duration] | 1000000 | 26.199µs | 30.099µs | 32.312µs | 14.441µs | 1.623989ms
+    Name               | N       | Min  | Median | Mean     | StdDev   | Max       
+    ===============================================================================
+    convert [duration] | 1000000 | 26µs | 30.1µs | 32.552µs | 14.917µs | 4.022467ms
   << Report Entries
 ------------------------------
 • [0.001 seconds]
@@ -233,35 +225,35 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:424
 
   Report Entries >>
-  Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/21/25 22:51:27.434
+  Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/24/25 22:50:00.307
     Protobuf Binary => BBS Struct
     Name               | N | Min      | Median   | Mean     | StdDev | Max     
     ===========================================================================
-    convert [duration] | 1 | 48.199µs | 48.199µs | 48.199µs | 0s     | 48.199µs
+    convert [duration] | 1 | 85.499µs | 85.499µs | 85.499µs | 0s     | 85.499µs
   << Report Entries
 ------------------------------
-• [0.066 seconds]
+• [0.070 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Binary Measures conversion time 1,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:425
 
   Report Entries >>
-  Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/21/25 22:51:27.435
+  Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/24/25 22:50:00.308
     Protobuf Binary => BBS Struct
-    Name               | N    | Min    | Median | Mean     | StdDev  | Max      
+    Name               | N    | Min  | Median   | Mean     | StdDev  | Max      
     ============================================================================
-    convert [duration] | 1000 | 20.4µs | 23µs   | 25.064µs | 8.636µs | 144.299µs
+    convert [duration] | 1000 | 22µs | 24.349µs | 26.517µs | 7.621µs | 113.099µs
   << Report Entries
 ------------------------------
-• [66.116 seconds]
+• [66.740 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Binary Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:426
 
   Report Entries >>
-  Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/21/25 22:51:27.502
+  Protobuf Binary => BBS Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/24/25 22:50:00.378
     Protobuf Binary => BBS Struct
-    Name               | N       | Min      | Median | Mean     | StdDev   | Max       
-    ===================================================================================
-    convert [duration] | 1000000 | 19.899µs | 23.2µs | 25.228µs | 12.841µs | 1.768488ms
+    Name               | N       | Min    | Median | Mean     | StdDev   | Max       
+    =================================================================================
+    convert [duration] | 1000000 | 19.9µs | 23.3µs | 25.655µs | 15.308µs | 5.960651ms
   << Report Entries
 ------------------------------
 • [0.001 seconds]
@@ -269,41 +261,41 @@ BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with 
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:428
 
   Report Entries >>
-  Protobuf Binary => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/21/25 22:52:33.686
+  Protobuf Binary => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/24/25 22:51:07.188
     Protobuf Binary => Protobuf Struct
     Name               | N | Min    | Median | Mean   | StdDev | Max   
     ===================================================================
-    convert [duration] | 1 | 35.8µs | 35.8µs | 35.8µs | 0s     | 35.8µs
+    convert [duration] | 1 | 39.9µs | 39.9µs | 39.9µs | 0s     | 39.9µs
   << Report Entries
 ------------------------------
-• [0.064 seconds]
+• [0.063 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Binary Measures conversion time 1,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:429
 
   Report Entries >>
-  Protobuf Binary => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/21/25 22:52:33.687
+  Protobuf Binary => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/24/25 22:51:07.189
     Protobuf Binary => Protobuf Struct
-    Name               | N    | Min      | Median   | Mean    | StdDev  | Max      
-    ===============================================================================
-    convert [duration] | 1000 | 18.901µs | 20.599µs | 22.01µs | 7.273µs | 164.699µs
+    Name               | N    | Min    | Median | Mean     | StdDev  | Max      
+    ============================================================================
+    convert [duration] | 1000 | 17.9µs | 20.1µs | 21.688µs | 6.919µs | 132.998µs
   << Report Entries
 ------------------------------
-• [62.418 seconds]
+• [63.271 seconds]
 BBS Plugin Conversion: Desired LRP Conversion Performance Testing Starting with a Protobuf Binary Measures conversion time 1,000,000 conversions
 /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:430
 
   Report Entries >>
-  Protobuf Binary => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/21/25 22:52:33.751
+  Protobuf Binary => Protobuf Struct - /home/pivotal/workspace/diego-release/src/code.cloudfoundry.org/bbs/models/performance/bbs_plugin_test.go:416 @ 02/24/25 22:51:07.252
     Protobuf Binary => Protobuf Struct
-    Name               | N       | Min    | Median | Mean     | StdDev   | Max       
-    =================================================================================
-    convert [duration] | 1000000 | 17.2µs | 20.1µs | 21.789µs | 10.938µs | 2.161257ms
+    Name               | N       | Min      | Median   | Mean    | StdDev  | Max       
+    ===================================================================================
+    convert [duration] | 1000000 | 17.399µs | 20.399µs | 22.27µs | 12.74µs | 3.224974ms
   << Report Entries
 ------------------------------
 
-Ran 24 of 24 Specs in 504.003 seconds
+Ran 24 of 24 Specs in 508.129 seconds
 SUCCESS! -- 24 Passed | 0 Failed | 0 Pending | 0 Skipped
 PASS
 
-Ginkgo ran 1 suite in 8m35.427356274s
+Ginkgo ran 1 suite in 8m29.286576729s
 Test Suite Passed
