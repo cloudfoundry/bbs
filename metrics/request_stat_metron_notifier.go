@@ -39,14 +39,10 @@ func NewRequestStatMetronNotifier(
 	advancedMetricsConfig config.AdvancedMetrics) *RequestStatMetronNotifier {
 
 	requestMetricsPerRoute := make(map[string]*requestMetrics)
-	initRouteMaps := func(routes []string) {
-		for _, route := range routes {
-			requestMetricsPerRoute[route] = &requestMetrics{}
-		}
-	}
 
-	initRouteMaps(advancedMetricsConfig.RouteConfig.RequestCountRoutes)
-	initRouteMaps(advancedMetricsConfig.RouteConfig.RequestLatencyRoutes)
+	if advancedMetricsConfig.Enabled {
+		initRoutes(advancedMetricsConfig.RouteConfig, requestMetricsPerRoute)
+	}
 
 	return &RequestStatMetronNotifier{
 		logger:                 logger,
@@ -55,6 +51,17 @@ func NewRequestStatMetronNotifier(
 		requestMetricsPerRoute: requestMetricsPerRoute,
 		advancedMetricsConfig:  advancedMetricsConfig,
 	}
+}
+
+func initRoutes(routeConfig config.RouteConfiguration, requestMetricsPerRoute map[string]*requestMetrics) {
+	initRouteMaps := func(routes []string) {
+		for _, route := range routes {
+			requestMetricsPerRoute[route] = &requestMetrics{}
+		}
+	}
+
+	initRouteMaps(routeConfig.RequestCountRoutes)
+	initRouteMaps(routeConfig.RequestLatencyRoutes)
 }
 
 func (notifier *RequestStatMetronNotifier) IncrementRequestCounter(delta int, route string) {
