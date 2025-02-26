@@ -82,7 +82,14 @@ var _ = Describe("BBSConfig", func() {
 			"sql_enable_identity_verification": true,
 			"task_callback_workers": 1000,
 			"update_workers": 1000,
-			"max_task_retries": 3
+			"max_task_retries": 3,
+			"advanced_metrics": {
+				"enabled": true,
+				"route_config": {
+					"request_count": ["StartActualLRP", "Tasks"],
+					"request_latency": ["DesiredLRPs", "StartActualLRP"]
+				}
+			  }
 		}`
 	})
 
@@ -175,6 +182,13 @@ var _ = Describe("BBSConfig", func() {
 			TaskCallbackWorkers:           1000,
 			UpdateWorkers:                 1000,
 			MaxTaskRetries:                3,
+			AdvancedMetricsConfig: config.AdvancedMetrics{
+				Enabled: true,
+				RouteConfig: config.RouteConfiguration{
+					RequestCountRoutes:   []string{"StartActualLRP", "Tasks"},
+					RequestLatencyRoutes: []string{"DesiredLRPs", "StartActualLRP"},
+				},
+			},
 		}
 
 		Expect(bbsConfig).To(test_helpers.DeepEqual(config))
