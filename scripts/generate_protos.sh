@@ -13,5 +13,8 @@ popd > /dev/null
 
 # regenerate protos for models
 pushd "${DIR}/../models" > /dev/null
-  protoc --proto_path=.:../protoc-gen-go-bbs --go_out=. --go-bbs_out=. --go_opt=paths=source_relative --go-bbs_opt=paths=source_relative ./*.proto 
+  protoc --proto_path=.:../protoc-gen-go-bbs \
+    --go_out=. --go_opt=paths=source_relative \
+    --go-bbs_out=. --go-bbs_opt=paths=source_relative \
+    ./*.proto 
 popd > /dev/null

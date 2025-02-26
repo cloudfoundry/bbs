@@ -19,9 +19,11 @@ type bbsGenerateHelperInterface interface {
 	genFromProtoMethod(g *protogen.GeneratedFile, msg *protogen.Message)
 	genToProtoSliceMethod(g *protogen.GeneratedFile, msg *protogen.Message)
 	genFromProtoSliceMethod(g *protogen.GeneratedFile, msg *protogen.Message)
-	genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message)
+	genMessageEnums(g *protogen.GeneratedFile, msg *protogen.Message)
 	genAccessors(g *protogen.GeneratedFile, msg *protogen.Message)
 	genEqual(g *protogen.GeneratedFile, msg *protogen.Message)
+
+	genGlobalEnum(g *protogen.GeneratedFile, eNuM *protogen.Enum)
 }
 type bbsGenerateHelper struct{}
 
@@ -392,19 +394,25 @@ func getCustomType(field *protogen.Field) string {
 	return customType.(string)
 }
 
-func (bbsGenerateHelper) genFriendlyEnums(g *protogen.GeneratedFile, msg *protogen.Message) {
+func (bbsGenerateHelper) genGlobalEnum(g *protogen.GeneratedFile, eNuM *protogen.Enum) {
+	genEnumTypeWithValues(g, eNuM, nil)
+	genEnumValueMaps(g, eNuM)
+	genEnumStringFunc(g, eNuM)
+}
+
+func (bbsGenerateHelper) genMessageEnums(g *protogen.GeneratedFile, msg *protogen.Message) {
 	for _, eNuM := range msg.Enums {
 		if *debug {
 			log.Printf("Nested Enum: %+v\n", eNuM)
 		}
 
-		genEnumTypeWithValues(g, msg, eNuM)
+		genEnumTypeWithValues(g, eNuM, msg)
 		genEnumValueMaps(g, eNuM)
 		genEnumStringFunc(g, eNuM)
 	}
 }
 
-func genEnumTypeWithValues(g *protogen.GeneratedFile, msg *protogen.Message, eNuM *protogen.Enum) {
+func genEnumTypeWithValues(g *protogen.GeneratedFile, eNuM *protogen.Enum, msg *protogen.Message) {
 	copysafeName, _ := getCopysafeName(g, eNuM.GoIdent)
 	g.P("type ", copysafeName, " int32")
 	g.P("const (")
@@ -412,7 +420,7 @@ func genEnumTypeWithValues(g *protogen.GeneratedFile, msg *protogen.Message, eNu
 		if isEnumValueDeprecated(enumValue) {
 			g.P("// Deprecated: marked deprecated in proto file")
 		}
-		enumValueName := getEnumValueName(g, msg, enumValue)
+		enumValueName := getEnumValueName(g, enumValue, msg)
 		actualValue := enumValue.Desc.Number()
 
 		g.P(enumValueName, " ", copysafeName, "=", actualValue)
@@ -455,14 +463,18 @@ func genEnumStringFunc(g *protogen.GeneratedFile, eNuM *protogen.Enum) {
 	g.P("}")
 }
 
-func getEnumValueName(g *protogen.GeneratedFile, msg *protogen.Message, enumValue *protogen.EnumValue) string {
-	copysafeParentName, _ := getCopysafeName(g, msg.GoIdent)
+func getEnumValueName(g *protogen.GeneratedFile, enumValue *protogen.EnumValue, msg *protogen.Message) string {
 	copysafeEnumValueName, _ := getCopysafeName(g, enumValue.GoIdent)
 	customName := proto.GetExtension(enumValue.Desc.Options().(*descriptorpb.EnumValueOptions), E_BbsEnumvalueCustomname)
 
 	result := copysafeEnumValueName
 	if len(customName.(string)) > 0 {
-		result = copysafeParentName + "_" + customName.(string)
+		if msg == nil {
+			result = customName.(string)
+		} else {
+			copysafeParentName, _ := getCopysafeName(g, msg.GoIdent)
+			result = copysafeParentName + "_" + customName.(string)
+		}
 	}
 	return result
 
@@ -695,8 +707,22 @@ func protocVersion(plugin *protogen.Plugin) string {
 }
 
 var ignoredMessages []string = []string{"ProtoRoutes"}
+var ignoredEnums []string = []string{}
 
 func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
+	for _, eNuM := range file.Enums {
+		if *debug {
+			log.Printf("New Enum Detected: %+v\n\n", eNuM)
+		}
+
+		if slices.Contains(ignoredMessages, getUnsafeName(g, eNuM.GoIdent)) {
+			log.Printf("\tIgnoring enum %s", eNuM.Desc.Name())
+			continue
+		}
+
+		helper.genGlobalEnum(g, eNuM)
+	}
+
 	for _, msg := range file.Messages {
 		if *debug {
 			log.Printf("New Message Detected: %+v\n\n", msg)
@@ -706,7 +732,7 @@ func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 			log.Printf("\tIgnoring message %s", msg.Desc.Name())
 			continue
 		}
-		helper.genFriendlyEnums(g, msg)
+		helper.genMessageEnums(g, msg)
 		helper.genCopysafeStruct(g, msg)
 		helper.genToProtoMethod(g, msg)
 		helper.genFromProtoMethod(g, msg)
