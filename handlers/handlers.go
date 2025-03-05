@@ -142,14 +142,14 @@ func New(
 
 		// Events
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.EventStreamRoute_r0: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0), emitter), // DEPRECATED
+		bbs.EventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0), emitter), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.TaskEventStreamRoute_r0: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0), emitter), // DEPRECATED
+		bbs.TaskEventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0), emitter), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.LrpInstanceEventStreamRoute_r0: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0), emitter), // DEPRECATED
-		bbs.LRPGroupEventStreamRoute_r1:    middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1), emitter),
-		bbs.TaskEventStreamRoute_r1:        middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1), emitter),
-		bbs.LRPInstanceEventStreamRoute_r1: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1), emitter),
+		bbs.LrpInstanceEventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0), emitter), // DEPRECATED
+		bbs.LRPGroupEventStreamRoute_r1:    middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1), emitter),
+		bbs.TaskEventStreamRoute_r1:        middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1), emitter),
+		bbs.LRPInstanceEventStreamRoute_r1: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1), emitter),
 
 		// Cells
 		bbs.CellsRoute_r0: metricsAndLoggingWrap(cellsHandler.Cells, bbs.CellsRoute_r0),
