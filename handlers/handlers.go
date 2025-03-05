@@ -140,17 +140,16 @@ func New(
 		bbs.ResolvingTaskRoute_r0: metricsAndLoggingWrap(taskHandler.ResolvingTask, bbs.ResolvingTaskRoute_r0),
 		bbs.DeleteTaskRoute_r0:    metricsAndLoggingWrap(taskHandler.DeleteTask, bbs.DeleteTaskRoute_r0),
 
-		//TODO: Check with community if should emit default/advanced metrics for these events
 		// Events
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.EventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0), emitter), // DEPRECATED
+		bbs.EventStreamRoute_r0: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r0), emitter), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.TaskEventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0), emitter), // DEPRECATED
+		bbs.TaskEventStreamRoute_r0: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r0), emitter), // DEPRECATED
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
-		bbs.LrpInstanceEventStreamRoute_r0: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0), emitter), // DEPRECATED
-		bbs.LRPGroupEventStreamRoute_r1:    middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1), emitter),
-		bbs.TaskEventStreamRoute_r1:        middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1), emitter),
-		bbs.LRPInstanceEventStreamRoute_r1: middleware.RecordRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1), emitter),
+		bbs.LrpInstanceEventStreamRoute_r0: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r0), emitter), // DEPRECATED
+		bbs.LRPGroupEventStreamRoute_r1:    middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpGroupEventsHandler.Subscribe_r1), emitter),
+		bbs.TaskEventStreamRoute_r1:        middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, taskEventsHandler.Subscribe_r1), emitter),
+		bbs.LRPInstanceEventStreamRoute_r1: middleware.UpdateRequestCount(middleware.LogWrap(logger, accessLogger, lrpInstanceEventsHandler.Subscribe_r1), emitter),
 
 		// Cells
 		bbs.CellsRoute_r0: metricsAndLoggingWrap(cellsHandler.Cells, bbs.CellsRoute_r0),
@@ -160,13 +159,6 @@ func New(
 	if err != nil {
 		panic("unable to create router: " + err.Error())
 	}
-
-	//return middleware.RecordRequestCount(
-	//	UnavailableWrap(handler,
-	//		migrationsDone,
-	//	),
-	//	emitter,
-	//)
 
 	return UnavailableWrap(handler,
 		migrationsDone,

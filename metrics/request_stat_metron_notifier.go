@@ -143,7 +143,6 @@ func (notifier *RequestStatMetronNotifier) emitRequestLatency(
 	requestLatencyMetricValue time.Duration,
 	logger lager.Logger) {
 
-	//TODO: Check what happens if the latency is 0 and emitted/not emitted
 	logger.Info("sending-latency", lager.Data{"latency": requestLatencyMetricValue})
 	metricErr := notifier.metronClient.SendDuration(requestLatencyMetricName, requestLatencyMetricValue)
 	if metricErr != nil {
