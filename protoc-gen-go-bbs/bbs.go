@@ -715,7 +715,7 @@ func generateFileContent(file *protogen.File, g *protogen.GeneratedFile) {
 			log.Printf("New Enum Detected: %+v\n\n", eNuM)
 		}
 
-		if slices.Contains(ignoredMessages, getUnsafeName(g, eNuM.GoIdent)) {
+		if slices.Contains(ignoredEnums, getUnsafeName(g, eNuM.GoIdent)) {
 			log.Printf("\tIgnoring enum %s", eNuM.Desc.Name())
 			continue
 		}
