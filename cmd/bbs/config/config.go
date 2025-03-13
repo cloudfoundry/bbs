@@ -12,6 +12,16 @@ import (
 	"code.cloudfoundry.org/locket"
 )
 
+type RouteConfiguration struct {
+	RequestCountRoutes   []string `json:"request_count"`
+	RequestLatencyRoutes []string `json:"request_latency"`
+}
+
+type AdvancedMetrics struct {
+	Enabled     bool               `json:"enabled"`
+	RouteConfig RouteConfiguration `json:"route_config"`
+}
+
 type BBSConfig struct {
 	AccessLogPath                 string                `json:"access_log_path,omitempty"`
 	AdvertiseURL                  string                `json:"advertise_url,omitempty"`
@@ -53,6 +63,7 @@ type BBSConfig struct {
 	TaskCallbackWorkers           int                   `json:"task_callback_workers,omitempty"`
 	UpdateWorkers                 int                   `json:"update_workers,omitempty"`
 	LoggregatorConfig             loggingclient.Config  `json:"loggregator"`
+	AdvancedMetricsConfig         AdvancedMetrics       `json:"advanced_metrics"`
 	debugserver.DebugServerConfig
 	encryption.EncryptionConfig
 	lagerflags.LagerConfig
