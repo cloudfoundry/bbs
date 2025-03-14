@@ -42,6 +42,10 @@ func main() {
 			log.Printf("Generating %s\n", file.Desc.Path())
 
 			generateFile(plugin, file)
+			if len(file.Services) > 0 {
+				generateRpcFile(plugin, file)
+			}
+
 		}
 		return nil
 	})
