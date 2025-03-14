@@ -340,7 +340,7 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 
 		It("returns the desired lrp scheduling info", func() {
-			schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.ProcessGuid)
+			schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.DesiredLrpKey.ProcessGuid)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(*schedInfo).To(BeEquivalentTo(expectedDesiredLRPSchedulingInfo))
@@ -366,7 +366,7 @@ var _ = Describe("DesiredLRPDB", func() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
 
-				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPSchedulingInfo.ProcessGuid)
+				result, err := db.ExecContext(ctx, queryStr, "{{", expectedDesiredLRPSchedulingInfo.DesiredLrpKey.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				rowsAffected, err := result.RowsAffected()
 				Expect(err).NotTo(HaveOccurred())
@@ -374,7 +374,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns an invalid record error", func() {
-				schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.ProcessGuid)
+				schedInfo, err := sqlDB.DesiredLRPSchedulingInfoByProcessGuid(ctx, logger, expectedDesiredLRPSchedulingInfo.DesiredLrpKey.ProcessGuid)
 				Expect(err).To(HaveOccurred())
 				Expect(schedInfo).To(BeNil())
 			})
@@ -455,7 +455,8 @@ var _ = Describe("DesiredLRPDB", func() {
 		JustBeforeEach(func() {
 			Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
 			update = &models.DesiredLRPUpdate{}
-			update.SetInstances(1)
+			instances := int32(1)
+			update.SetInstances(&instances)
 		})
 
 		It("updates the lrp", func() {
@@ -464,8 +465,10 @@ var _ = Describe("DesiredLRPDB", func() {
 				"blah": (*json.RawMessage)(&routeContent),
 			}
 			update = &models.DesiredLRPUpdate{Routes: &routes}
-			update.SetInstances(123)
-			update.SetAnnotation("annotated")
+			instances := int32(123)
+			update.SetInstances(&instances)
+			annotation := "annotated"
+			update.SetAnnotation(&annotation)
 			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -482,7 +485,8 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		It("returns the desired lrp from before the update", func() {
 			update = &models.DesiredLRPUpdate{}
-			update.SetInstances(20)
+			instances := int32(20)
+			update.SetInstances(&instances)
 
 			beforeDesiredLRP, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
@@ -491,7 +495,8 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		It("updates only the fields in the update parameter", func() {
 			update = &models.DesiredLRPUpdate{}
-			update.SetInstances(20)
+			instances := int32(20)
+			update.SetInstances(&instances)
 			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
 			Expect(err).NotTo(HaveOccurred())
 

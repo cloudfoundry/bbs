@@ -222,7 +222,7 @@ func main() {
 	lockIdentifier := &locketmodels.Resource{
 		Key:      bbsLockKey,
 		Owner:    bbsConfig.UUID,
-		TypeCode: locketmodels.LOCK,
+		TypeCode: locketmodels.TypeCode_LOCK,
 		Type:     locketmodels.LockType,
 	}
 

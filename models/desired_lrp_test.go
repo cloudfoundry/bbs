@@ -10,11 +10,12 @@ import (
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	gomegaformat "github.com/onsi/gomega/format"
 )
 
 var _ = Describe("DesiredLRP", func() {
@@ -344,28 +345,34 @@ var _ = Describe("DesiredLRP", func() {
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
+			// JSON
 			jsonSerialization, err := json.Marshal(desiredLRP)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(jsonDesiredLRP))
 
-			protoSerialization, err := proto.Marshal(&desiredLRP)
+			// Protobuf
+			protoDesiredLrp := desiredLRP.ToProto()
+			protoSerialization, err := proto.Marshal(protoDesiredLrp)
 			Expect(err).NotTo(HaveOccurred())
 
-			var protoDeserialization models.DesiredLRP
+			var protoDeserialization models.ProtoDesiredLRP
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
 			desiredRoutes := *desiredLRP.Routes
-			deserializedRoutes := *protoDeserialization.Routes
+			deserializedRoutes := protoDeserialization.Routes
 
-			Expect(deserializedRoutes).To(HaveLen(len(desiredRoutes)))
+			Expect(deserializedRoutes.Routes).To(HaveLen(len(desiredRoutes)))
 			for k := range desiredRoutes {
-				Expect(string(*deserializedRoutes[k])).To(MatchJSON(string(*desiredRoutes[k])))
+				Expect(string(deserializedRoutes.Routes[k])).To(MatchJSON(string(*desiredRoutes[k])))
 			}
 
 			desiredLRP.Routes = nil
 			protoDeserialization.Routes = nil
-			Expect(protoDeserialization).To(Equal(desiredLRP))
+			fromProtoDesiredLrp := *protoDeserialization.FromProto()
+			gomegaformat.MaxLength = 0
+			Expect(fromProtoDesiredLrp.Equal(desiredLRP)).To(BeTrue())
+			Expect(fromProtoDesiredLrp).To(Equal(desiredLRP))
 		})
 	})
 
@@ -373,7 +380,7 @@ var _ = Describe("DesiredLRP", func() {
 		It("updates instances", func() {
 			instances := int32(100)
 			update := &models.DesiredLRPUpdate{}
-			update.SetInstances(instances)
+			update.SetInstances(&instances)
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
@@ -392,7 +399,7 @@ var _ = Describe("DesiredLRP", func() {
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = models.Routes{}
+			expectedSchedulingInfo.Routes = &models.Routes{}
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
@@ -402,7 +409,7 @@ var _ = Describe("DesiredLRP", func() {
 		It("allows annotation to be set", func() {
 			annotation := "new-annotation"
 			update := &models.DesiredLRPUpdate{}
-			update.SetAnnotation(annotation)
+			update.SetAnnotation(&annotation)
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
@@ -417,7 +424,7 @@ var _ = Describe("DesiredLRP", func() {
 		It("allows empty annotation to be set", func() {
 			emptyAnnotation := ""
 			update := &models.DesiredLRPUpdate{}
-			update.SetAnnotation(emptyAnnotation)
+			update.SetAnnotation(&emptyAnnotation)
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
@@ -431,18 +438,17 @@ var _ = Describe("DesiredLRP", func() {
 
 		It("updates routes", func() {
 			rawMessage := json.RawMessage([]byte(`{"port": 8080,"hosts":["new-route-1","new-route-2"]}`))
+			routes := &models.Routes{
+				"router": &rawMessage,
+			}
 			update := &models.DesiredLRPUpdate{
-				Routes: &models.Routes{
-					"router": &rawMessage,
-				},
+				Routes: routes,
 			}
 
 			schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 
 			expectedSchedulingInfo := schedulingInfo
-			expectedSchedulingInfo.Routes = models.Routes{
-				"router": &rawMessage,
-			}
+			expectedSchedulingInfo.Routes = routes
 			expectedSchedulingInfo.ModificationTag.Increment()
 
 			schedulingInfo.ApplyUpdate(update)
@@ -465,7 +471,8 @@ var _ = Describe("DesiredLRP", func() {
 
 			Context("when update does not contain routes", func() {
 				BeforeEach(func() {
-					update.SetInstances(2)
+					instances := int32(2)
+					update.SetInstances(&instances)
 				})
 
 				It("returns false", func() {
@@ -688,17 +695,17 @@ var _ = Describe("DesiredLRP", func() {
 							Name:            "dep0",
 							Url:             "u0",
 							DestinationPath: "/tmp/0",
-							LayerType:       models.LayerTypeExclusive,
-							MediaType:       models.MediaTypeTgz,
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							LayerType:       models.ImageLayer_LayerTypeExclusive,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
-							LayerType:       models.LayerTypeShared,
-							MediaType:       models.MediaTypeTgz,
+							LayerType:       models.ImageLayer_LayerTypeShared,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
 						},
 					}
 					desiredLRP.CachedDependencies = []*models.CachedDependency{
@@ -783,17 +790,17 @@ var _ = Describe("DesiredLRP", func() {
 							Name:            "dep0",
 							Url:             "u0",
 							DestinationPath: "/tmp/0",
-							LayerType:       models.LayerTypeShared,
-							MediaType:       models.MediaTypeTgz,
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							LayerType:       models.ImageLayer_LayerTypeShared,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
-							LayerType:       models.LayerTypeShared,
-							MediaType:       models.MediaTypeTgz,
+							LayerType:       models.ImageLayer_LayerTypeShared,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
 						},
 					}
 					desiredLRP.CachedDependencies = []*models.CachedDependency{
@@ -853,18 +860,18 @@ var _ = Describe("DesiredLRP", func() {
 							Name:            "dep0",
 							Url:             "u0",
 							DestinationPath: "/tmp/0",
-							LayerType:       models.LayerTypeExclusive,
-							MediaType:       models.MediaTypeTgz,
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							LayerType:       models.ImageLayer_LayerTypeExclusive,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "some-sha",
 						},
 						{
 							Name:            "dep1",
 							Url:             "u1",
 							DestinationPath: "/tmp/1",
-							LayerType:       models.LayerTypeExclusive,
-							MediaType:       models.MediaTypeTgz,
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							LayerType:       models.ImageLayer_LayerTypeExclusive,
+							MediaType:       models.ImageLayer_MediaTypeTgz,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "some-other-sha",
 						},
 					}
@@ -1252,7 +1259,7 @@ var _ = Describe("DesiredLRP", func() {
 					{
 						Url:             "here",
 						DestinationPath: "there",
-						DigestAlgorithm: models.DigestAlgorithmSha256,
+						DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 					},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "value")
@@ -1265,9 +1272,9 @@ var _ = Describe("DesiredLRP", func() {
 						{
 							Url:             "here",
 							DestinationPath: "there",
-							DigestAlgorithm: models.DigestAlgorithmSha256,
+							DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
 							DigestValue:     "sum value",
-							LayerType:       models.LayerTypeExclusive,
+							LayerType:       models.ImageLayer_LayerTypeExclusive,
 						},
 					}
 					assertDesiredLRPValidationFailsWithMessage(desiredLRP, "legacy_download_user")
@@ -1278,7 +1285,7 @@ var _ = Describe("DesiredLRP", func() {
 		Context("metric tags", func() {
 			It("is invalid when both static and dynamic values are provided", func() {
 				desiredLRP.MetricTags = map[string]*models.MetricTagValue{
-					"some_metric": {Static: "some-value", Dynamic: models.MetricTagDynamicValueIndex},
+					"some_metric": {Static: "some-value", Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "metric_tags")
 				assertDesiredLRPValidationFailsWithMessage(desiredLRP, "static")
@@ -1343,11 +1350,15 @@ var _ = Describe("DesiredLRPUpdate", func() {
 	var desiredLRPUpdate models.DesiredLRPUpdate
 
 	BeforeEach(func() {
-		desiredLRPUpdate.SetInstances(2)
-		desiredLRPUpdate.Routes = &models.Routes{
+		instances := int32(2)
+		desiredLRPUpdate.Instances = &instances
+		routes := &models.Routes{
 			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
 		}
-		desiredLRPUpdate.SetAnnotation("some-text")
+
+		desiredLRPUpdate.Routes = routes
+		annotation := "some-text"
+		desiredLRPUpdate.SetAnnotation(&annotation)
 		desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
 			"some-tag": {Static: "some-value"},
 		}
@@ -1361,28 +1372,31 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		}
 
 		It("requires a positive nonzero number of instances", func() {
-			desiredLRPUpdate.SetInstances(-1)
+			invalidInstances := int32(-1)
+			desiredLRPUpdate.Instances = &invalidInstances
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "instances")
 
-			desiredLRPUpdate.SetInstances(0)
+			zeroInstances := int32(0)
+			desiredLRPUpdate.Instances = &zeroInstances
 			validationErr := desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 
-			desiredLRPUpdate.SetInstances(1)
+			oneInstance := int32(1)
+			desiredLRPUpdate.Instances = &oneInstance
 			validationErr = desiredLRPUpdate.Validate()
 			Expect(validationErr).NotTo(HaveOccurred())
 		})
 
 		It("limits the annotation length", func() {
 			largeString := randStringBytes(50000)
-			desiredLRPUpdate.SetAnnotation(largeString)
+			desiredLRPUpdate.Annotation = &largeString
 			assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "annotation")
 		})
 
 		Context("metric tags", func() {
 			It("is invalid when both static and dynamic values are provided for the same key", func() {
 				desiredLRPUpdate.MetricTags = map[string]*models.MetricTagValue{
-					"some_metric": {Static: "some-value", Dynamic: models.MetricTagDynamicValueIndex},
+					"some_metric": {Static: "some-value", Dynamic: models.MetricTagValue_DynamicValue(models.ProtoMetricTagValue_INDEX)},
 				}
 				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "metric_tags")
 				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "static")
@@ -1419,9 +1433,10 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		})
 
 		It("can marshal to JSON and back", func() {
-			Expect(json.Marshal(desiredLRPUpdate)).To(MatchJSON(expectedJSON))
+			actual, _ := json.Marshal(&desiredLRPUpdate)
+			Expect(actual).To(MatchJSON(expectedJSON))
 
-			var testV models.DesiredLRPUpdate
+			testV := models.DesiredLRPUpdate{}
 			Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 			Expect(testV).To(Equal(desiredLRPUpdate))
 		})
@@ -1444,8 +1459,8 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		})
 		Context("when the metric tags differ in a single dynamic value", func() {
 			It("returns true", func() {
-				existingTags := map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagDynamicValueIndex}}
-				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagDynamicValueInstanceGuid}}}
+				existingTags := map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex}}
+				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Dynamic: models.MetricTagValue_MetricTagDynamicValueInstanceGuid}}}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeTrue())
 			})
 		})
@@ -1577,12 +1592,12 @@ var _ = Describe("DesiredLRPSchedulingInfo", func() {
 				Expect(err.Error()).To(ContainSubstring(expectedErr))
 			}
 		},
-		Entry("valid scheduling info", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), routes, tag, nil, nil), ""),
-		Entry("invalid annotation", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), largeString, instances, newValidResource(), routes, tag, nil, nil), "annotation"),
-		Entry("invalid instances", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, -2, newValidResource(), routes, tag, nil, nil), "instances"),
-		Entry("invalid key", models.NewDesiredLRPSchedulingInfo(models.DesiredLRPKey{}, annotation, instances, newValidResource(), routes, tag, nil, nil), "process_guid"),
-		Entry("invalid resource", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, models.DesiredLRPResource{}, routes, tag, nil, nil), "rootfs"),
-		Entry("invalid routes", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), largeRoutes, tag, nil, nil), "routes"),
+		Entry("valid scheduling info", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), &routes, tag, nil, nil), ""),
+		Entry("invalid annotation", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), largeString, instances, newValidResource(), &routes, tag, nil, nil), "annotation"),
+		Entry("invalid instances", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, -2, newValidResource(), &routes, tag, nil, nil), "instances"),
+		Entry("invalid key", models.NewDesiredLRPSchedulingInfo(models.DesiredLRPKey{}, annotation, instances, newValidResource(), &routes, tag, nil, nil), "process_guid"),
+		Entry("invalid resource", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, models.DesiredLRPResource{}, &routes, tag, nil, nil), "rootfs"),
+		Entry("invalid routes", models.NewDesiredLRPSchedulingInfo(newValidLRPKey(), annotation, instances, newValidResource(), &largeRoutes, tag, nil, nil), "routes"),
 	)
 })
 
@@ -1614,12 +1629,12 @@ var _ = Describe("DesiredLRPRoutingInfo", func() {
 		Entry("invalid instances", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), -2, &routes, &tag, map[string]*models.MetricTagValue{}), "instances"),
 		Entry("invalid key", models.NewDesiredLRPRoutingInfo(models.DesiredLRPKey{}, instances, &routes, &tag, map[string]*models.MetricTagValue{}), "process_guid"),
 		Entry("invalid routes", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &largeRoutes, &tag, map[string]*models.MetricTagValue{}), "routes"),
-		Entry("invalid metricTags", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &routes, &tag, map[string]*models.MetricTagValue{"foo": {Dynamic: models.DynamicValueInvalid}}), "metric_tags"),
+		Entry("invalid metricTags", models.NewDesiredLRPRoutingInfo(newValidLRPKey(), instances, &routes, &tag, map[string]*models.MetricTagValue{"foo": {Dynamic: models.MetricTagValue_DynamicValueInvalid}}), "metric_tags"),
 	)
 })
 
 var _ = Describe("DesiredLRPRunInfo", func() {
-	var envVars = []models.EnvironmentVariable{{"FOO", "bar"}}
+	var envVars = []*models.EnvironmentVariable{{"FOO", "bar"}}
 	var action = model_helpers.NewValidAction()
 	const startTimeoutMs int64 = 12
 	const privileged = true
@@ -1666,14 +1681,14 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 		},
 		Entry("valid run info", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{{Action: action}}, logRateLimit, volumeMountedFiles), ""),
 		Entry("invalid key", models.NewDesiredLRPRunInfo(models.DesiredLRPKey{}, createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "process_guid"),
-		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "name"),
+		Entry("invalid env vars", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, append(envVars, &models.EnvironmentVariable{}), nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "name"),
 		Entry("invalid setup action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, &models.Action{}, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "inner-action"),
 		Entry("invalid run action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, &models.Action{}, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "inner-action"),
 		Entry("invalid monitor action", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, &models.Action{}, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "inner-action"),
 		Entry("invalid http check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 65536}}}, "healthcheck_log_source", []*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{Port: 77777}}}}, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "port"),
 		Entry("invalid tcp check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source", []*models.Check{&models.Check{TcpCheck: &models.TCPCheck{}}}}, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "port"),
 		Entry("invalid check in check definition", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "legacy-jim", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", &models.CheckDefinition{[]*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}, "healthcheck_log_source", []*models.Check{&models.Check{HttpCheck: &models.HTTPCheck{}, TcpCheck: &models.TCPCheck{}}}}, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "check"),
-		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: models.MediaTypeTgz, LayerType: models.LayerTypeExclusive}}, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "legacy_download_user"),
+		Entry("invalid legacy download user", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, []*models.ImageLayer{{Url: "url", DestinationPath: "path", MediaType: models.ImageLayer_MediaTypeTgz, LayerType: models.ImageLayer_LayerTypeExclusive}}, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "legacy_download_user"),
 		Entry("invalid cached dependency", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, []*models.CachedDependency{{To: "here"}}, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "cached_dependency"),
 		Entry("invalid volume mount", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{{Mode: "lol"}}, nil, nil, "", "", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "volume_mount"),
 		Entry("invalid image username", models.NewDesiredLRPRunInfo(newValidLRPKey(), createdAt, envVars, nil, action, action, action, startTimeoutMs, privileged, cpuWeight, ports, egressRules, logSource, metricsGuid, "user", trustedSystemCertificatesPath, []*models.VolumeMount{}, nil, nil, "", "password", httpCheckDef, nil, []*models.Sidecar{}, logRateLimit, volumeMountedFiles), "image_username"),

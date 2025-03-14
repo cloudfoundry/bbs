@@ -37,9 +37,9 @@ err := client.DesireTask(
             Url:             "https://blobstore.com/bits/other-bits",
             DestinationPath: "/usr/local/app/other",
             DigestValue:     "some digest",
-            DigestAlgorithm: models.DigestAlgorithmSha256,
-            MediaType:       models.MediaTypeTgz,
-            LayerType:       models.LayerTypeExclusive,
+            DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256,
+            MediaType:       models.ImageLayer_MediaTypeTgz,
+            LayerType:       models.ImageLayer_LayerTypeExclusive,
         },
 	},
     Action: models.WrapAction(&models.RunAction{

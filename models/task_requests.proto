@@ -1,78 +1,79 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 import "task.proto";
 import "error.proto";
 
-message TaskLifecycleResponse {
-  Error error = 1;
+message ProtoTaskLifecycleResponse {
+  ProtoError error = 1;
 }
 
-message DesireTaskRequest {
-  TaskDefinition task_definition = 1 [(gogoproto.jsontag) = "task_definition"];
-  string task_guid = 2 [(gogoproto.jsontag) =  "task_guid"];
-  string domain = 3 [(gogoproto.jsontag) =  "domain"];
+message ProtoDesireTaskRequest {
+  ProtoTaskDefinition task_definition = 1 [json_name = "task_definition", (bbs.bbs_json_always_emit) = true];
+  string task_guid                    = 2 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string domain                       = 3 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
 }
 
-message StartTaskRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string cell_id = 2 [(gogoproto.jsontag) =  "cell_id"];
+message ProtoStartTaskRequest {
+  string task_guid  = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string cell_id    = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message StartTaskResponse {
-  Error error = 1;
-  bool should_start = 2 [(gogoproto.jsontag) =  "should_start"];
+message ProtoStartTaskResponse {
+  ProtoError error  = 1;
+  bool should_start = 2 [json_name = "should_start", (bbs.bbs_json_always_emit) = true];
 }
 
-message FailTaskRequest {
+message ProtoFailTaskRequest {
   option deprecated = true;
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string failure_reason = 2 [(gogoproto.jsontag) =  "failure_reason"];
+  string task_guid      = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string failure_reason = 2 [json_name = "failure_reason", (bbs.bbs_json_always_emit) = true];
 }
 
-message RejectTaskRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string rejection_reason = 2 [(gogoproto.jsontag) =  "rejection_reason"];
+message ProtoRejectTaskRequest {
+  string task_guid        = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string rejection_reason = 2 [json_name = "rejection_reason", (bbs.bbs_json_always_emit) = true];
 }
 
-message TaskGuidRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
+message ProtoTaskGuidRequest {
+  string task_guid = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
 }
 
-message CompleteTaskRequest {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  string cell_id = 2 [(gogoproto.jsontag) =  "cell_id"];
-  bool failed = 3 [(gogoproto.jsontag) =  "failed"];
-  string failure_reason = 4 [(gogoproto.jsontag) =  "failure_reason"];
-  string result = 5 [(gogoproto.jsontag) =  "result"];
+message ProtoCompleteTaskRequest {
+  string task_guid      = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  string cell_id        = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
+  bool failed           = 3 [json_name = "failed", (bbs.bbs_json_always_emit) = true];
+  string failure_reason = 4 [json_name = "failure_reason", (bbs.bbs_json_always_emit) = true];
+  string result         = 5 [json_name = "result", (bbs.bbs_json_always_emit) = true];
 }
 
-message TaskCallbackResponse {
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
-  bool failed = 2 [(gogoproto.jsontag) =  "failed"];
-  string failure_reason = 3 [(gogoproto.jsontag) =  "failure_reason"];
-  string result = 4 [(gogoproto.jsontag) =  "result"];
-  string annotation = 5;
-  int64 created_at = 6 [(gogoproto.jsontag) =  "created_at"];
+message ProtoTaskCallbackResponse {
+  string task_guid      = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
+  bool failed           = 2 [json_name = "failed", (bbs.bbs_json_always_emit) = true];
+  string failure_reason = 3 [json_name = "failure_reason", (bbs.bbs_json_always_emit) = true];
+  string result         = 4 [json_name = "result", (bbs.bbs_json_always_emit) = true];
+  string annotation     = 5;
+  int64 created_at      = 6 [json_name = "created_at", (bbs.bbs_json_always_emit) = true];
 }
 
-message TasksRequest{
-  string domain = 1 [(gogoproto.jsontag) =  "domain"];
-  string cell_id = 2 [(gogoproto.jsontag) =  "cell_id"];
+message ProtoTasksRequest{
+  string domain   = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  string cell_id  = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message TasksResponse{
-  Error error = 1;
-  repeated Task tasks = 2;
+message ProtoTasksResponse{
+  ProtoError error          = 1;
+  repeated ProtoTask tasks  = 2;
 }
 
-message TaskByGuidRequest{
-  string task_guid = 1 [(gogoproto.jsontag) =  "task_guid"];
+message ProtoTaskByGuidRequest{
+  string task_guid = 1 [json_name = "task_guid", (bbs.bbs_json_always_emit) = true];
 }
 
-message TaskResponse{
-  Error error = 1;
-  Task task = 2;
+message ProtoTaskResponse{
+  ProtoError error  = 1;
+  ProtoTask task    = 2;
 }

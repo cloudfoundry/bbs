@@ -1,18 +1,19 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 
-message MetricTagValue {
+message ProtoMetricTagValue {
   enum DynamicValue {
     DynamicValueInvalid = 0;
-    INDEX               = 1 [(gogoproto.enumvalue_customname) = "MetricTagDynamicValueIndex"];
-    INSTANCE_GUID        = 2 [(gogoproto.enumvalue_customname) = "MetricTagDynamicValueInstanceGuid"];
+    INDEX               = 1 [(bbs.bbs_enumvalue_customname) = "MetricTagDynamicValueIndex"];
+    INSTANCE_GUID       = 2 [(bbs.bbs_enumvalue_customname) = "MetricTagDynamicValueInstanceGuid"];
   }
 
   // Note: we only expect one of the following set of fields to be
   // set.
-  string static        = 1;
-  DynamicValue dynamic = 2;
+  string static        = 1 [json_name = "static"];
+  DynamicValue dynamic = 2 [json_name = "dynamic"];
 }

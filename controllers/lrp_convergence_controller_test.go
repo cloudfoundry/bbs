@@ -425,7 +425,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			suspectActualLRP = model_helpers.NewValidActualLRP("to-unclaim-1", 0)
 
 			keysWithMissingCells = []*models.ActualLRPKeyWithSchedulingInfo{
-				{Key: &suspectActualLRP.ActualLRPKey, SchedulingInfo: &desiredLRP1},
+				{Key: &suspectActualLRP.ActualLrpKey, SchedulingInfo: &desiredLRP1},
 			}
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				KeysWithMissingCells: keysWithMissingCells,
@@ -450,14 +450,14 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				_, _, key, from, to := fakeLRPDB.ChangeActualLRPPresenceArgsForCall(0)
 				Expect(from).To(Equal(models.ActualLRP_Ordinary))
 				Expect(to).To(Equal(models.ActualLRP_Suspect))
-				Expect(key).To(Equal(&suspectActualLRP.ActualLRPKey))
+				Expect(key).To(Equal(&suspectActualLRP.ActualLrpKey))
 			})
 
 			It("creates a new unclaimed LRP", func() {
 				Expect(fakeLRPDB.CreateUnclaimedActualLRPCallCount()).To(Equal(1))
 				_, _, lrpKey := fakeLRPDB.CreateUnclaimedActualLRPArgsForCall(0)
 
-				Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLRPKey))
+				Expect(lrpKey).To(Equal(&suspectActualLRP.ActualLrpKey))
 			})
 
 			It("auctions new lrps", func() {
@@ -498,7 +498,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		Context("when there already is a Suspect LRP", func() {
 			BeforeEach(func() {
 				suspectLRPKeys := []*models.ActualLRPKey{
-					&suspectActualLRP.ActualLRPKey,
+					&suspectActualLRP.ActualLrpKey,
 				}
 				fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 					KeysWithMissingCells: keysWithMissingCells,
@@ -567,7 +567,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			removedActualLRP = model_helpers.NewValidActualLRP("removed-1", 0)
 			suspectActualLRP.Presence = models.ActualLRP_Suspect
 
-			suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLRPKey}
+			suspectKeysWithExistingCells = []*models.ActualLRPKey{&suspectActualLRP.ActualLrpKey}
 
 			fakeLRPDB.ActualLRPsReturns([]*models.ActualLRP{ordinaryActualLRP}, nil)
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
@@ -693,7 +693,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		BeforeEach(func() {
 			retiringActualLRP1 = model_helpers.NewValidActualLRP("to-retire-1", 0)
 			retiringActualLRP2 = model_helpers.NewValidActualLRP("to-retire-2", 1)
-			keysToRetire = []*models.ActualLRPKey{&retiringActualLRP1.ActualLRPKey, &retiringActualLRP2.ActualLRPKey}
+			keysToRetire = []*models.ActualLRPKey{&retiringActualLRP1.ActualLrpKey, &retiringActualLRP2.ActualLrpKey}
 
 			result := db.ConvergenceResult{
 				KeysToRetire: keysToRetire,
@@ -721,8 +721,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				stoppedKeys[i] = key
 			}
 
-			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP1.ActualLRPKey))
-			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP2.ActualLRPKey))
+			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP1.ActualLrpKey))
+			Expect(stoppedKeys).To(ContainElement(&retiringActualLRP2.ActualLrpKey))
 		})
 	})
 

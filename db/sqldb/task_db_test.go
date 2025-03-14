@@ -87,7 +87,9 @@ var _ = Describe("TaskDB", func() {
 				Expect(rejectionReason).To(Equal(""))
 
 				var actualTaskDef models.TaskDefinition
-				err = serializer.Unmarshal(logger, taskDefData, &actualTaskDef)
+				var protoActualTaskDef models.ProtoTaskDefinition
+				err = serializer.Unmarshal(logger, taskDefData, &protoActualTaskDef)
+				actualTaskDef = *protoActualTaskDef.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actualTaskDef).To(Equal(*taskDef))
 
@@ -1250,7 +1252,8 @@ var _ = Describe("TaskDB", func() {
 })
 
 func insertTask(ctx context.Context, db helpers.QueryableDB, serializer format.Serializer, task *models.Task, malformedTaskDefinition bool) {
-	taskDefData, err := serializer.Marshal(logger, task.TaskDefinition)
+	protoTaskDef := task.TaskDefinition.ToProto()
+	taskDefData, err := serializer.Marshal(logger, protoTaskDef)
 	Expect(err).NotTo(HaveOccurred())
 
 	if malformedTaskDefinition {
@@ -1284,7 +1287,8 @@ func insertTask(ctx context.Context, db helpers.QueryableDB, serializer format.S
 }
 
 func updateTaskToInvalid(ctx context.Context, db helpers.QueryableDB, serializer format.Serializer, task *models.Task) {
-	_, err := serializer.Marshal(logger, task.TaskDefinition)
+	protoTaskDef := task.TaskDefinition.ToProto()
+	_, err := serializer.Marshal(logger, protoTaskDef)
 	Expect(err).NotTo(HaveOccurred())
 
 	taskDefData := []byte("{{{{{{{{{{")

@@ -32,16 +32,6 @@ func (err *Error) ToError() error {
 	return err
 }
 
-func (err *Error) Equal(other error) bool {
-	if e, ok := other.(*Error); ok {
-		if err == nil && e != nil {
-			return false
-		}
-		return e.GetType() == err.GetType()
-	}
-	return false
-}
-
 func (err *Error) Error() string {
 	return err.GetMessage()
 }

@@ -1,75 +1,72 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 import "modification_tag.proto";
 
-option (gogoproto.goproto_enum_prefix_all) = true;
-
-message ActualLRPGroup {
+message ProtoActualLRPGroup {
   option deprecated = true;
-  ActualLRP instance = 1;
-  ActualLRP evacuating = 2;
+  ProtoActualLRP instance = 1;
+  ProtoActualLRP evacuating = 2;
 }
 
-message PortMapping {
-  uint32 container_port = 1 [(gogoproto.jsontag) = "container_port"];
-  uint32 host_port = 2 [(gogoproto.jsontag) = "host_port"];
-  uint32 container_tls_proxy_port = 3 [(gogoproto.jsontag) = "container_tls_proxy_port"];
-  uint32 host_tls_proxy_port = 4 [(gogoproto.jsontag) = "host_tls_proxy_port"];
+message ProtoPortMapping {
+  uint32 container_port = 1 [json_name = "container_port", (bbs.bbs_json_always_emit) = true];
+  uint32 host_port = 2 [json_name = "host_port", (bbs.bbs_json_always_emit) = true];
+  uint32 container_tls_proxy_port = 3 [json_name = "container_tls_proxy_port", (bbs.bbs_json_always_emit) = true];
+  uint32 host_tls_proxy_port = 4 [json_name = "host_tls_proxy_port", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPKey {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
-  int32 index = 2 [(gogoproto.jsontag) = "index"];
-  string domain = 3 [(gogoproto.jsontag) = "domain"];
+message ProtoActualLRPKey {
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  int32 index = 2 [json_name = "index", (bbs.bbs_json_always_emit) = true];
+  string domain = 3 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPInstanceKey {
-  string instance_guid = 1 [(gogoproto.jsontag) = "instance_guid"];
-  string cell_id = 2 [(gogoproto.jsontag) = "cell_id"];
+message ProtoActualLRPInstanceKey {
+  string instance_guid = 1 [json_name = "instance_guid", (bbs.bbs_json_always_emit) = true];
+  string cell_id = 2 [json_name = "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPNetInfo {
-  string address = 1 [(gogoproto.jsontag) = "address"];
-  repeated PortMapping ports = 2 [(gogoproto.jsontag) = "ports"];
-  string instance_address = 3;
+message ProtoActualLRPNetInfo {
+  string address = 1 [json_name = "address", (bbs.bbs_json_always_emit) = true];
+  repeated ProtoPortMapping ports = 2 [json_name = "ports", (bbs.bbs_json_always_emit) = true];
+  string instance_address = 3 [json_name = "instance_address"];
 
   enum PreferredAddress {
-    UNKNOWN = 0 [(gogoproto.enumvalue_customname) = "PreferredAddressUnknown"];
-    INSTANCE = 1 [(gogoproto.enumvalue_customname) = "PreferredAddressInstance"];
-    HOST = 2 [(gogoproto.enumvalue_customname) = "PreferredAddressHost"];
+    UNKNOWN   = 0 [(bbs.bbs_enumvalue_customname) = "PreferredAddressUnknown"];
+    INSTANCE  = 1 [(bbs.bbs_enumvalue_customname) = "PreferredAddressInstance"];
+    HOST      = 2 [(bbs.bbs_enumvalue_customname) = "PreferredAddressHost"];
   }
 
-  PreferredAddress preferred_address = 4 [(gogoproto.jsontag) = "preferred_address"];
+  PreferredAddress preferred_address = 4 [json_name = "preferred_address", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPInternalRoute {
-  string hostname = 1 [(gogoproto.jsontag) = "hostname"];
+message ProtoActualLRPInternalRoute {
+  string hostname = 1 [json_name = "hostname", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRP {
+message ProtoActualLRP {
   enum Presence {
-    ORDINARY   = 0 [(gogoproto.enumvalue_customname) = "Ordinary"];
-    EVACUATING = 1 [(gogoproto.enumvalue_customname) = "Evacuating"];
-    SUSPECT    = 2 [(gogoproto.enumvalue_customname) = "Suspect"];
+    ORDINARY   = 0 [(bbs.bbs_enumvalue_customname) = "Ordinary"];
+    EVACUATING = 1 [(bbs.bbs_enumvalue_customname) = "Evacuating"];
+    SUSPECT    = 2 [(bbs.bbs_enumvalue_customname) = "Suspect"];
   }
 
-  ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  int32 crash_count = 4 [(gogoproto.jsontag) = "crash_count"];
-  string crash_reason = 5;
-  string state = 6 [(gogoproto.jsontag) = "state"];
-  string placement_error = 7;
-  int64 since = 8 [(gogoproto.jsontag) = "since"];
-  ModificationTag modification_tag = 9 [(gogoproto.nullable) = false,(gogoproto.jsontag) = "modification_tag"];
-  Presence presence = 10 [(gogoproto.jsontag) = "presence"];
-  repeated ActualLRPInternalRoute actual_lrp_internal_routes = 11;
-  map<string, string> metric_tags = 12;
-  oneof optional_routable {
-    bool routable = 13 [(gogoproto.jsontag) = "routable"];
-  }
-  string availability_zone = 14 [(gogoproto.jsontag) = "availability_zone"];
+  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
+  int32 crash_count = 4 [json_name = "crash_count", (bbs.bbs_json_always_emit) = true];
+  string crash_reason = 5 [json_name = "crash_reason"];
+  string state = 6 [json_name = "state", (bbs.bbs_json_always_emit) = true];
+  string placement_error = 7 [json_name = "placement_error"];
+  int64 since = 8 [json_name = "since", (bbs.bbs_json_always_emit) = true];
+  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag", (bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
+  Presence presence = 10 [json_name = "presence"];
+  repeated ProtoActualLRPInternalRoute actual_lrp_internal_routes = 11;
+  map<string, string> metric_tags = 12 [json_name = "metric_tags"];
+  optional bool routable = 13 [json_name = "routable", (bbs.bbs_json_always_emit) = true];
+  string availability_zone = 14 [json_name = "availability_zone", (bbs.bbs_json_always_emit) = true];
 }

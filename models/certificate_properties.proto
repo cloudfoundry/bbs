@@ -1,8 +1,9 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-message CertificateProperties {
-  repeated string organizational_unit = 1;
+message ProtoCertificateProperties {
+  repeated string organizational_unit = 1 [json_name = "organizational_unit"];
 }
 

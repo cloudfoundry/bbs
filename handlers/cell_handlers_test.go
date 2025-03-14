@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Cell Handlers", func() {
@@ -89,8 +90,10 @@ var _ = Describe("Cell Handlers", func() {
 			It("returns a list of cells", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				response := &models.CellsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.CellsResponse
+				var protoResponse models.ProtoCellsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -106,8 +109,10 @@ var _ = Describe("Cell Handlers", func() {
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				response := &models.CellsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.CellsResponse
+				var protoResponse models.ProtoCellsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -135,8 +140,10 @@ var _ = Describe("Cell Handlers", func() {
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				response := &models.CellsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.CellsResponse
+				var protoResponse models.ProtoCellsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
