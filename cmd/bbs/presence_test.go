@@ -86,7 +86,7 @@ var _ = Describe("CellPresence", func() {
 				Key:      "cell-locket",
 				Owner:    "anything",
 				Value:    string(data),
-				TypeCode: locketmodels.TypeCode_PRESENCE,
+				TypeCode: locketmodels.PRESENCE,
 			}
 
 			cellPresenceLocket = ginkgomon.Invoke(

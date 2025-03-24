@@ -39,7 +39,7 @@ func (s *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 
 	var cellSet = models.CellSet{}
 
-	resp, err := s.locketClient.FetchAll(context.Background(), &locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.TypeCode_PRESENCE})
+	resp, err := s.locketClient.FetchAll(context.Background(), &locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.PRESENCE})
 	if err != nil {
 		logger.Error("failed-to-fetch-cells-from-locket", err)
 		return nil, err
