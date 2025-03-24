@@ -26,18 +26,18 @@ var _ = Describe("Suspect ActualLRPs", func() {
 		actualLRP.ModificationTag.Increment()
 		actualLRP.ModificationTag.Increment()
 
-		_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+		_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLrpKey)
 		Expect(err).NotTo(HaveOccurred())
-		_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
+		_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLrpInstanceKey)
 		Expect(err).NotTo(HaveOccurred())
-		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false, actualLRP.AvailabilityZone)
+		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false, actualLRP.AvailabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("PromoteSuspectActualLRP", func() {
 		Context("when gettting suspect LRP fails", func() {
 			It("returns an error", func() {
-				_, _, _, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, actualLRP.ProcessGuid, actualLRP.Index)
+				_, _, _, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
@@ -60,12 +60,13 @@ var _ = Describe("Suspect ActualLRPs", func() {
 					replacementLRP.ModificationTag.Increment()
 					replacementLRP.ModificationTag.Increment()
 					replacementLRP.MetricTags = nil
-					replacementLRP.SetRoutable(false)
-					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &replacementLRP.ActualLRPKey)
+					routable := false
+					replacementLRP.SetRoutable(&routable)
+					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &replacementLRP.ActualLrpKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, replacementGuid, replacementIndex, &replacementLRP.ActualLRPInstanceKey)
+					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, replacementGuid, replacementIndex, &replacementLRP.ActualLrpInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, replacementLRP.GetRoutable(), replacementLRP.AvailabilityZone)
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLrpKey, &replacementLRP.ActualLrpInstanceKey, &replacementLRP.ActualLrpNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, *replacementLRP.GetRoutable(), replacementLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -74,7 +75,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(beforeLRPs).To(ConsistOf(replacementLRP))
 
-					_, _, removedLRP, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, replacementLRP.ProcessGuid, replacementLRP.Index)
+					_, _, removedLRP, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, replacementLRP.ActualLrpKey.ProcessGuid, replacementLRP.ActualLrpKey.Index)
 					Expect(err).To(HaveOccurred())
 					Expect(removedLRP).To(BeNil())
 
@@ -91,18 +92,18 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.ExecContext(ctx, queryStr, models.ActualLRP_Suspect, actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Ordinary)
+				_, err := db.ExecContext(ctx, queryStr, models.ActualLRP_Suspect, actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index, models.ActualLRP_Ordinary)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("when there is an ordinary actualLRP with the same key", func() {
 				BeforeEach(func() {
 					replacementLRP := model_helpers.NewValidActualLRP(guid, index)
-					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &replacementLRP.ActualLRPKey)
+					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &replacementLRP.ActualLrpKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &replacementLRP.ActualLRPInstanceKey)
+					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &replacementLRP.ActualLrpInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLRPKey, &replacementLRP.ActualLRPInstanceKey, &replacementLRP.ActualLRPNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false, replacementLRP.AvailabilityZone)
+					_, _, err = sqlDB.StartActualLRP(ctx, logger, &replacementLRP.ActualLrpKey, &replacementLRP.ActualLrpInstanceKey, &replacementLRP.ActualLrpNetInfo, model_helpers.NewActualLRPInternalRoutes(), nil, false, replacementLRP.AvailabilityZone)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -110,7 +111,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 					beforeLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 					Expect(err).NotTo(HaveOccurred())
 
-					beforeLRP, afterLRP, removedLRP, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, actualLRP.ProcessGuid, actualLRP.Index)
+					beforeLRP, afterLRP, removedLRP, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(beforeLRPs).To(ConsistOf(removedLRP, beforeLRP))
 
@@ -121,7 +122,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 			})
 
 			It("promotes suspect LRP to ordinary", func() {
-				_, afterLRP, _, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, actualLRP.ProcessGuid, actualLRP.Index)
+				_, afterLRP, _, err := sqlDB.PromoteSuspectActualLRP(ctx, logger, actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index)
 				Expect(err).NotTo(HaveOccurred())
 
 				afterLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
@@ -139,7 +140,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				if test_helpers.UsePostgres() {
 					queryStr = test_helpers.ReplaceQuestionMarks(queryStr)
 				}
-				_, err := db.ExecContext(ctx, queryStr, models.ActualLRP_Suspect, actualLRP.ProcessGuid, actualLRP.Index, models.ActualLRP_Ordinary)
+				_, err := db.ExecContext(ctx, queryStr, models.ActualLRP_Suspect, actualLRP.ActualLrpKey.ProcessGuid, actualLRP.ActualLrpKey.Index, models.ActualLRP_Ordinary)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -147,7 +148,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				beforeLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
 				Expect(err).NotTo(HaveOccurred())
 
-				lrp, err := sqlDB.RemoveSuspectActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+				lrp, err := sqlDB.RemoveSuspectActualLRP(ctx, logger, &actualLRP.ActualLrpKey)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(beforeLRPs).To(ConsistOf(lrp))
 
@@ -164,7 +165,7 @@ var _ = Describe("Suspect ActualLRPs", func() {
 				before, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: "some-guid"})
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = sqlDB.RemoveSuspectActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+				_, err = sqlDB.RemoveSuspectActualLRP(ctx, logger, &actualLRP.ActualLrpKey)
 				Expect(err).NotTo(HaveOccurred())
 
 				after, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: "some-guid"})

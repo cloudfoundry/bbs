@@ -1,7 +1,15 @@
 package models
 
+func (request *ProtoDesiredLRPsRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *DesiredLRPsRequest) Validate() error {
 	return nil
+}
+
+func (request *ProtoDesiredLRPByProcessGuidRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *DesiredLRPByProcessGuidRequest) Validate() error {
@@ -18,6 +26,10 @@ func (request *DesiredLRPByProcessGuidRequest) Validate() error {
 	return nil
 }
 
+func (request *ProtoDesireLRPRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *DesireLRPRequest) Validate() error {
 	var validationError ValidationError
 
@@ -32,6 +44,10 @@ func (request *DesireLRPRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoUpdateDesiredLRPRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *UpdateDesiredLRPRequest) Validate() error {
@@ -52,6 +68,10 @@ func (request *UpdateDesiredLRPRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (request *ProtoRemoveDesiredLRPRequest) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *RemoveDesiredLRPRequest) Validate() error {

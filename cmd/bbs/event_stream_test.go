@@ -136,7 +136,7 @@ var _ = Describe("Events API", func() {
 			getEvacuatingLRPFromList := func(lrps []*models.ActualLRP) models.ActualLRPInstanceKey {
 				for _, lrp := range lrps {
 					if lrp.Presence == models.ActualLRP_Evacuating {
-						return lrp.ActualLRPInstanceKey
+						return lrp.ActualLrpInstanceKey
 					}
 				}
 				return models.ActualLRPInstanceKey{}
@@ -184,7 +184,7 @@ var _ = Describe("Events API", func() {
 
 					var ce *models.ActualLRPInstanceChangedEvent
 					Eventually(eventChannel).Should(Receive(&ce))
-					Expect(ce.ActualLRPInstanceKey).To(Equal(actualLRPGroup[0].ActualLRPInstanceKey))
+					Expect(ce.ActualLrpInstanceKey).To(Equal(actualLRPGroup[0].ActualLrpInstanceKey))
 					Expect(ce.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 					Expect(ce.After.State).To(Equal(models.ActualLRPStateUnclaimed))
 					Expect(ce.After.PlacementError).ToNot(Equal(""))
@@ -197,7 +197,7 @@ var _ = Describe("Events API", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Eventually(eventChannel).Should(Receive(&ce))
-					Expect(ce.ActualLRPInstanceKey).To(Equal(actualLRPGroup[0].ActualLRPInstanceKey))
+					Expect(ce.ActualLrpInstanceKey).To(Equal(actualLRPGroup[0].ActualLrpInstanceKey))
 					Expect(ce.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 					Expect(ce.After.State).To(Equal(models.ActualLRPStateClaimed))
 
@@ -217,20 +217,20 @@ var _ = Describe("Events API", func() {
 					evacuatingLRP := getEvacuatingLRPFromList(evacuatingLRPGroup)
 
 					Eventually(eventChannel).Should(Receive(&ce))
-					Expect(ce.ActualLRPInstanceKey).To(Equal(evacuatingLRP))
+					Expect(ce.ActualLrpInstanceKey).To(Equal(evacuatingLRP))
 					Expect(ce.Before.Presence).To(Equal(models.ActualLRP_Ordinary))
 					Expect(ce.After.Presence).To(Equal(models.ActualLRP_Evacuating))
 
 					Eventually(eventChannel).Should(Receive(&created))
-					Expect(created.ActualLrp.ActualLRPKey).To(Equal(actualLRPGroup[0].ActualLRPKey))
+					Expect(created.ActualLrp.ActualLrpKey).To(Equal(actualLRPGroup[0].ActualLrpKey))
 
 					By("starting and then evacuating the ActualLRP on another cell")
 					err = client.StartActualLRP(logger, "some-trace-id", &key, &newInstanceKey, &netInfo, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "")
 					Expect(err).NotTo(HaveOccurred())
 
 					Eventually(eventChannel).Should(Receive(&ce))
-					Expect(ce.ActualLRPKey).To(Equal(actualLRPGroup[0].ActualLRPKey))
-					Expect(ce.ActualLRPInstanceKey.CellId).To(Equal("other-cell-id"))
+					Expect(ce.ActualLrpKey).To(Equal(actualLRPGroup[0].ActualLrpKey))
+					Expect(ce.ActualLrpInstanceKey.CellId).To(Equal("other-cell-id"))
 					Expect(ce.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 					Expect(ce.After.State).To(Equal(models.ActualLRPStateRunning))
 					Expect(ce.After.Presence).To(Equal(models.ActualLRP_Ordinary))
@@ -245,13 +245,13 @@ var _ = Describe("Events API", func() {
 					Expect(request.RequestURI).To(Equal("/v1/lrps"))
 
 					Eventually(eventChannel).Should(Receive(&ce))
-					Expect(ce.ActualLRPKey).To(Equal(actualLRPGroup[0].ActualLRPKey))
-					Expect(ce.ActualLRPInstanceKey.CellId).To(Equal("other-cell-id"))
+					Expect(ce.ActualLrpKey).To(Equal(actualLRPGroup[0].ActualLrpKey))
+					Expect(ce.ActualLrpInstanceKey.CellId).To(Equal("other-cell-id"))
 					Expect(ce.After.State).To(Equal(models.ActualLRPStateRunning))
 					Expect(ce.After.Presence).To(Equal(models.ActualLRP_Evacuating))
 
 					Eventually(eventChannel).Should(Receive(&created))
-					Expect(ce.ActualLRPKey).To(Equal(actualLRPGroup[0].ActualLRPKey))
+					Expect(ce.ActualLrpKey).To(Equal(actualLRPGroup[0].ActualLrpKey))
 
 					By("removing the new ActualLRP")
 					actualLRPGroup, err = client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: desiredLRP.ProcessGuid, Index: &index0})
@@ -262,8 +262,8 @@ var _ = Describe("Events API", func() {
 
 					var re *models.ActualLRPInstanceRemovedEvent
 					Eventually(eventChannel).Should(Receive(&re))
-					Expect(re.ActualLrp.ActualLRPKey).To(Equal(actualLRPGroup[0].ActualLRPKey))
-					Expect(re.ActualLrp.ActualLRPInstanceKey.CellId).To(Equal(""))
+					Expect(re.ActualLrp.ActualLrpKey).To(Equal(actualLRPGroup[0].ActualLrpKey))
+					Expect(re.ActualLrp.ActualLrpInstanceKey.CellId).To(Equal(""))
 					Expect(re.ActualLrp.Presence).To(Equal(models.ActualLRP_Ordinary))
 
 					By("removing the evacuating ActualLRP")
@@ -271,8 +271,8 @@ var _ = Describe("Events API", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Eventually(eventChannel).Should(Receive(&re))
-					Expect(re.ActualLrp.ActualLRPKey).To(Equal(actualLRPGroup[0].ActualLRPKey))
-					Expect(re.ActualLrp.ActualLRPInstanceKey.CellId).To(Equal("other-cell-id"))
+					Expect(re.ActualLrp.ActualLrpKey).To(Equal(actualLRPGroup[0].ActualLrpKey))
+					Expect(re.ActualLrp.ActualLrpInstanceKey.CellId).To(Equal("other-cell-id"))
 					Expect(re.ActualLrp.Presence).To(Equal(models.ActualLRP_Evacuating))
 				})
 			})
@@ -316,11 +316,11 @@ var _ = Describe("Events API", func() {
 
 							var e *models.ActualLRPInstanceChangedEvent
 							Eventually(eventChannel).Should(Receive(&e))
-							Expect(e.ActualLRPInstanceKey).To(BeEquivalentTo(actualLRPGroup[0].ActualLRPInstanceKey))
+							Expect(e.ActualLrpInstanceKey).To(BeEquivalentTo(actualLRPGroup[0].ActualLrpInstanceKey))
 							Expect(e.Before.State).To(Equal(models.ActualLRPStateUnclaimed))
 							Expect(e.After.State).To(Equal(models.ActualLRPStateClaimed))
 
-							Expect(actualLRPGroup[0].GetCellId()).To(Equal(cellID))
+							Expect(actualLRPGroup[0].ActualLrpInstanceKey.GetCellId()).To(Equal(cellID))
 						}
 						claimLRP()
 
@@ -345,8 +345,8 @@ var _ = Describe("Events API", func() {
 						Eventually(eventChannel).Should(Receive(&event))
 
 						actualLRPRemovedEvent := event.(*models.ActualLRPInstanceRemovedEvent)
-						Expect(actualLRPRemovedEvent.ActualLrp.ActualLRPInstanceKey).To(Equal(instanceKey))
-						Expect(actualLRPRemovedEvent.ActualLrp.ActualLRPInstanceKey.CellId).To(Equal(cellID))
+						Expect(actualLRPRemovedEvent.ActualLrp.ActualLrpInstanceKey).To(Equal(instanceKey))
+						Expect(actualLRPRemovedEvent.ActualLrp.ActualLrpInstanceKey.CellId).To(Equal(cellID))
 					})
 
 					It("does not receive events from the other cells", func() {

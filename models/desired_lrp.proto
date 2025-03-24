@@ -1,9 +1,10 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actions.proto";
+import "bbs.proto";
 import "cached_dependency.proto";
 import "certificate_properties.proto";
 import "environment_variables.proto";
@@ -18,60 +19,60 @@ import "sidecar.proto";
 import "log_rate_limit.proto";
 import "file.proto";
 
-message DesiredLRPSchedulingInfo {
-  DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+message ProtoDesiredLRPSchedulingInfo {
+  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "desired_lrp_key", (bbs.bbs_json_always_emit) = true];
 
-  string annotation = 2 [(gogoproto.jsontag) = "annotation"];
-  int32 instances = 3 [(gogoproto.jsontag) = "instances"];
+  string annotation = 2 [json_name = "annotation", (bbs.bbs_json_always_emit) = true];
+  int32 instances = 3 [json_name = "instances", (bbs.bbs_json_always_emit) = true];
 
-  DesiredLRPResource desired_lrp_resource = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+  ProtoDesiredLRPResource desired_lrp_resource = 4 [(bbs.bbs_by_value) = true, json_name = "desired_lrp_resource", (bbs.bbs_json_always_emit) = true];
 
-  ProtoRoutes routes = 5 [(gogoproto.nullable) = false, (gogoproto.customtype) = "Routes"];
-  ModificationTag modification_tag = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  VolumePlacement volume_placement = 7;
-  repeated string PlacementTags = 8 [(gogoproto.jsontag) ="placement_tags,omitempty"];
+  ProtoRoutes routes = 5 [(bbs.bbs_by_value) = false];
+  ProtoModificationTag modification_tag = 6 [(bbs.bbs_by_value) = true, json_name = "modification_tag", (bbs.bbs_json_always_emit) = true];
+  ProtoVolumePlacement volume_placement = 7 [json_name = "volume_placement"];
+  repeated string PlacementTags = 8 [json_name ="placement_tags"];
 }
 
-message DesiredLRPRunInfo {
-  DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
+message ProtoDesiredLRPRunInfo {
+  ProtoDesiredLRPKey desired_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "desired_lrp_key", (bbs.bbs_json_always_emit) = true];
 
-  repeated EnvironmentVariable environment_variables = 2 [(gogoproto.jsontag) = "env", (gogoproto.nullable) = false];
-  Action setup = 3;
-  Action action = 4;
-  Action monitor = 5;
+  repeated ProtoEnvironmentVariable environment_variables = 2 [json_name = "env", (bbs.bbs_by_value) = false, (bbs.bbs_json_always_emit) = true];
+  ProtoAction setup = 3;
+  ProtoAction action = 4;
+  ProtoAction monitor = 5;
 
-  uint32 deprecated_start_timeout_s = 6 [(gogoproto.jsontag) = "start_timeout,omitempty", deprecated=true];
+  uint32 deprecated_start_timeout_s = 6 [json_name = "start_timeout", deprecated=true];
 
-  bool privileged = 7 [(gogoproto.jsontag) = "privileged"];
+  bool privileged = 7 [json_name = "privileged", (bbs.bbs_json_always_emit) = true];
 
-  uint32 cpu_weight = 8 [(gogoproto.jsontag) = "cpu_weight"];
+  uint32 cpu_weight = 8 [json_name = "cpu_weight", (bbs.bbs_json_always_emit) = true];
   repeated uint32 ports = 9 [packed = false];
-  repeated SecurityGroupRule egress_rules = 10 [(gogoproto.nullable) = false];
-  string log_source = 11 [(gogoproto.jsontag) = "log_source"];
-  string metrics_guid = 12 [deprecated=true, (gogoproto.jsontag) = "metrics_guid"];
-  int64 created_at = 13 [(gogoproto.jsontag) = "created_at"];
-  repeated CachedDependency cached_dependencies = 14;
-  string legacy_download_user = 15 [deprecated=true];
-  string trusted_system_certificates_path = 16;
-  repeated VolumeMount volume_mounts = 17;
-  Network network = 18;
+  repeated ProtoSecurityGroupRule egress_rules = 10 [(bbs.bbs_by_value) = false, json_name = "egress_rules"];
+  string log_source = 11 [json_name = "log_source", (bbs.bbs_json_always_emit) = true];
+  string metrics_guid = 12 [deprecated=true, json_name = "metrics_guid", (bbs.bbs_json_always_emit) = true];
+  int64 created_at = 13 [json_name = "created_at", (bbs.bbs_json_always_emit) = true];
+  repeated ProtoCachedDependency cached_dependencies = 14;
+  string legacy_download_user = 15 [deprecated=true, json_name = "legacy_download_user"];
+  string trusted_system_certificates_path = 16 [json_name = "trusted_system_certificates_path"];
+  repeated ProtoVolumeMount volume_mounts = 17 [json_name = "volume_mounts"];
+  ProtoNetwork network = 18;
 
-  int64 start_timeout_ms = 19 [(gogoproto.jsontag) = "start_timeout_ms"];
+  int64 start_timeout_ms = 19 [json_name = "start_timeout_ms", (bbs.bbs_json_always_emit) = true];
 
-  CertificateProperties certificate_properties = 20 [(gogoproto.nullable) = true];
+  optional ProtoCertificateProperties certificate_properties = 20 [json_name = "certificate_properties"];
 
-  string image_username = 21;
-  string image_password = 22;
+  string image_username = 21 [json_name = "image_username"];
+  string image_password = 22 [json_name = "image_password"];
 
-  CheckDefinition check_definition = 23;
+  ProtoCheckDefinition check_definition = 23 [json_name = "check_definition"];
 
-  repeated ImageLayer image_layers = 24;
+  repeated ProtoImageLayer image_layers = 24 [json_name = "image_layers"];
 
-  map<string, MetricTagValue> metric_tags = 25 [deprecated=true];
+  map<string, ProtoMetricTagValue> metric_tags = 25 [json_name = "metric_tags", deprecated=true];
 
-  repeated Sidecar sidecars = 26;
-  LogRateLimit log_rate_limit = 27;
-  repeated File volume_mounted_files = 28 [(gogoproto.jsontag) = "volume_mounted_files"];
+  repeated ProtoSidecar sidecars = 26;
+  ProtoLogRateLimit log_rate_limit = 27 [json_name = "log_rate_limit"];
+  repeated ProtoFile volume_mounted_files = 28 [json_name = "volume_mounted_files", (bbs.bbs_json_always_emit) = true];
 }
 
 // helper message for marshalling routes
@@ -79,75 +80,71 @@ message ProtoRoutes {
   map<string, bytes> routes = 1;
 }
 
-message DesiredLRPUpdate {
-  oneof optional_instances {
-    int32 instances = 1;
-  }
-  ProtoRoutes routes = 2 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
-  oneof optional_annotation {
-    string annotation = 3;
-  }
-  map<string, MetricTagValue> metric_tags = 4;
+message ProtoDesiredLRPUpdate {
+  optional int32 instances = 1;
+  optional ProtoRoutes routes = 2 [(bbs.bbs_by_value) = false];
+  optional string annotation = 3;
+  map<string, ProtoMetricTagValue> metric_tags = 4 [json_name = "metric_tags"];
 }
 
-message DesiredLRPKey {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
-  string domain = 2 [(gogoproto.jsontag) = "domain"];
-  string log_guid = 3 [(gogoproto.jsontag) = "log_guid"];
+message ProtoDesiredLRPKey {
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  string domain = 2 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  string log_guid = 3 [json_name = "log_guid", (bbs.bbs_json_always_emit) = true];
 }
 
-message DesiredLRPResource {
-  int32 memory_mb = 1 [(gogoproto.jsontag) = "memory_mb"];
-  int32 disk_mb = 2 [(gogoproto.jsontag) = "disk_mb"];
-  string root_fs = 3 [(gogoproto.jsontag) = "rootfs"];
-  int32 max_pids = 4 [(gogoproto.jsontag) = "max_pids"];
+message ProtoDesiredLRPResource {
+  int32 memory_mb = 1 [json_name = "memory_mb", (bbs.bbs_json_always_emit) = true];
+  int32 disk_mb = 2 [json_name = "disk_mb", (bbs.bbs_json_always_emit) = true];
+  string root_fs = 3 [json_name = "rootfs", (bbs.bbs_json_always_emit) = true];
+  int32 max_pids = 4 [json_name = "max_pids", (bbs.bbs_json_always_emit) = true];
 }
 
-message DesiredLRP {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
-  string domain = 2 [(gogoproto.jsontag) = "domain"];
-  string root_fs = 3 [(gogoproto.jsontag) = "rootfs"];
-  int32 instances = 4 [(gogoproto.jsontag) = "instances"];
-  repeated EnvironmentVariable environment_variables = 5 [(gogoproto.jsontag) = "env"];
-  Action setup = 6;
-  Action action = 7;
+message ProtoDesiredLRP {
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  string domain = 2 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  string root_fs = 3 [json_name = "rootfs", (bbs.bbs_json_always_emit) = true];
+  int32 instances = 4 [json_name = "instances", (bbs.bbs_json_always_emit) = true];
+  repeated ProtoEnvironmentVariable environment_variables = 5 [json_name = "env", (bbs.bbs_json_always_emit) = true];
+  ProtoAction setup = 6;
+  ProtoAction action = 7;
 
-  int64 start_timeout_ms = 27 [(gogoproto.jsontag) = "start_timeout_ms"];
-  uint32 deprecated_start_timeout_s = 8 [(gogoproto.jsontag) = "deprecated_timeout_ns,omitempty", deprecated=true];
+  int64 start_timeout_ms = 27 [json_name = "start_timeout_ms", (bbs.bbs_json_always_emit) = true];
+  uint32 deprecated_start_timeout_s = 8 [json_name = "deprecated_timeout_ns", deprecated=true];
 
-  Action monitor = 9;
-  int32 disk_mb = 10 [(gogoproto.jsontag) = "disk_mb"];
-  int32 memory_mb = 11 [(gogoproto.jsontag) = "memory_mb"];
-  uint32 cpu_weight = 12 [(gogoproto.jsontag) = "cpu_weight"];
-  bool privileged = 13 [(gogoproto.jsontag) = "privileged"];
+  ProtoAction monitor = 9;
+  int32 disk_mb = 10 [json_name = "disk_mb", (bbs.bbs_json_always_emit) = true];
+  int32 memory_mb = 11 [json_name = "memory_mb", (bbs.bbs_json_always_emit) = true];
+  uint32 cpu_weight = 12 [json_name = "cpu_weight", (bbs.bbs_json_always_emit) = true];
+  bool privileged = 13 [json_name = "privileged", (bbs.bbs_json_always_emit) = true];
   repeated uint32 ports = 14 [packed = false];
-  ProtoRoutes routes = 15 [(gogoproto.nullable) = true, (gogoproto.customtype) = "Routes"];
-  string log_source = 16 [(gogoproto.jsontag) = "log_source"];
-  string log_guid = 17 [(gogoproto.jsontag) = "log_guid"];
-  string metrics_guid = 18 [deprecated=true, (gogoproto.jsontag) = "metrics_guid"];
-  string annotation = 19 [(gogoproto.jsontag) = "annotation"];
-  repeated SecurityGroupRule egress_rules = 20;
-  ModificationTag modification_tag = 21;
-  repeated CachedDependency cached_dependencies = 22;
-  string legacy_download_user = 23 [deprecated=true];
-  string trusted_system_certificates_path = 24;
-  repeated VolumeMount volume_mounts = 25;
-  Network network = 26;
-  repeated string PlacementTags = 28 [(gogoproto.jsontag) ="placement_tags,omitempty"];
-  int32 max_pids = 29 [(gogoproto.jsontag) = "max_pids"];
+  optional ProtoRoutes routes = 15 [(bbs.bbs_by_value) = false];
+  string log_source = 16 [json_name = "log_source", (bbs.bbs_json_always_emit) = true];
+  string log_guid = 17 [json_name = "log_guid", (bbs.bbs_json_always_emit) = true];
+  string metrics_guid = 18 [deprecated=true, json_name = "metrics_guid", (bbs.bbs_json_always_emit) = true];
+  string annotation = 19 [json_name = "annotation", (bbs.bbs_json_always_emit) = true];
+  repeated ProtoSecurityGroupRule egress_rules = 20 [json_name = "egress_rules"];
+  ProtoModificationTag modification_tag = 21 [json_name = "modification_tag"];
+  repeated ProtoCachedDependency cached_dependencies = 22 [json_name = "cached_dependencies"];
+  string legacy_download_user = 23 [deprecated=true, json_name = "legacy_download_user"];
+  string trusted_system_certificates_path = 24 [json_name = "trusted_system_certificates_path"];
+  repeated ProtoVolumeMount volume_mounts = 25 [json_name = "volume_mounts"];
+  ProtoNetwork network = 26;
+  repeated string PlacementTags = 28 [json_name ="placement_tags"];
+  int32 max_pids = 29 [json_name = "max_pids", (bbs.bbs_json_always_emit) = true];
 
-  CertificateProperties certificate_properties = 30 [(gogoproto.nullable) = true];
+  optional ProtoCertificateProperties certificate_properties = 30 [json_name = "certificate_properties"];
 
-  string image_username = 31;
-  string image_password = 32;
+  string image_username = 31 [json_name = "image_username"];
+  string image_password = 32 [json_name = "image_password"];
 
-  CheckDefinition check_definition = 33;
+  ProtoCheckDefinition check_definition = 33 [json_name = "check_definition"];
 
-  repeated ImageLayer image_layers = 34;
+  repeated ProtoImageLayer image_layers = 34 [json_name = "image_layers"];
 
-  map<string, MetricTagValue> metric_tags = 35;
+  map<string, ProtoMetricTagValue> metric_tags = 35 [json_name = "metric_tags"];
 
-  repeated Sidecar sidecars = 36;
-  LogRateLimit log_rate_limit = 37;
-  repeated File volume_mounted_files = 38 [(gogoproto.jsontag) = "volume_mounted_files"];
+  repeated ProtoSidecar sidecars = 36;
+  ProtoLogRateLimit log_rate_limit = 37 [json_name = "log_rate_limit"];
+  repeated ProtoFile volume_mounted_files = 38 [json_name = "volume_mounted_files", (bbs.bbs_json_always_emit) = true];
 }

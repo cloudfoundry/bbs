@@ -25,6 +25,10 @@ func NewDomainSet(domains []string) DomainSet {
 	return domainSet
 }
 
+func (request *ProtoUpsertDomainRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
 func (request *UpsertDomainRequest) Validate() error {
 	var validationError ValidationError
 

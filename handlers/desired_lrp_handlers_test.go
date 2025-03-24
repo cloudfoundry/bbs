@@ -27,6 +27,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("DesiredLRP Handlers", func() {
@@ -83,7 +84,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 	})
 
 	Describe("DesiredLRPs_r2", func() {
-		var requestBody interface{}
+		var requestBody *models.DesiredLRPsRequest
 
 		BeforeEach(func() {
 			requestBody = &models.DesiredLRPsRequest{}
@@ -92,7 +93,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPs_r2(logger, responseRecorder, request)
 		})
@@ -107,8 +109,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a list of desired lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -125,8 +129,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				BeforeEach(func() {
 					desiredLRPsWithImageLayers := []*models.DesiredLRP{
-						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
-						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}},
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}},
+						&models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}},
 					}
 					fakeDesiredLRPDB.DesiredLRPsReturns(desiredLRPsWithImageLayers, nil)
 
@@ -138,8 +142,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("returns a list of desired lrps downgraded to convert image layers to cached dependencies and download actions", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := models.DesiredLRPsResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.DesiredLRPsResponse
+					var protoResponse models.ProtoDesiredLRPsResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -165,8 +171,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("returns desired lrps with populated metrics_guid", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := models.DesiredLRPsResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.DesiredLRPsResponse
+					var protoResponse models.ProtoDesiredLRPsResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -214,8 +222,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -242,8 +252,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -252,16 +264,17 @@ var _ = Describe("DesiredLRP Handlers", func() {
 	})
 
 	Describe("DesiredLRPs", func() {
-		var requestBody interface{}
+		var requestBody *models.DesiredLRPsRequest
 
 		BeforeEach(func() {
 			requestBody = &models.DesiredLRPsRequest{}
-			desiredLRP1 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}
-			desiredLRP2 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}}}
+			desiredLRP1 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}}
+			desiredLRP2 = models.DesiredLRP{ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}}}
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPs(logger, responseRecorder, request)
 		})
@@ -274,8 +287,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a list of desired lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -301,8 +316,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 				It("returns desired lrps with populated metrics_guid", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := models.DesiredLRPsResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.DesiredLRPsResponse
+					var protoResponse models.ProtoDesiredLRPsResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(response.Error).To(BeNil())
@@ -350,8 +367,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -378,8 +397,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -391,7 +412,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid = "process-guid"
 
-			requestBody interface{}
+			requestBody *models.DesiredLRPByProcessGuidRequest
 		)
 
 		BeforeEach(func() {
@@ -401,7 +422,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPByProcessGuid_r2(logger, responseRecorder, request)
 		})
@@ -420,8 +442,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(actualProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -435,7 +459,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRP := &models.DesiredLRP{
 					ProcessGuid: processGuid,
-					ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}},
+					ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP.Copy(), nil)
 
@@ -444,8 +468,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a list of desired lrps downgraded to convert image layers to cached dependencies and download actions", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -469,8 +495,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns desired lrps with populated metrics_guid", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -485,8 +513,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a resource not found error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
@@ -512,8 +542,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -525,7 +557,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid = "process-guid"
 
-			requestBody interface{}
+			requestBody *models.DesiredLRPByProcessGuidRequest
 		)
 
 		BeforeEach(func() {
@@ -535,7 +567,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPByProcessGuid(logger, responseRecorder, request)
 		})
@@ -546,7 +579,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			BeforeEach(func() {
 				desiredLRP = models.DesiredLRP{
 					ProcessGuid: processGuid,
-					ImageLayers: []*models.ImageLayer{{LayerType: models.LayerTypeExclusive}, {LayerType: models.LayerTypeShared}},
+					ImageLayers: []*models.ImageLayer{{LayerType: models.ImageLayer_LayerTypeExclusive}, {LayerType: models.ImageLayer_LayerTypeShared}},
 				}
 				fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP.Copy(), nil)
 			})
@@ -557,8 +590,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(actualProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -580,8 +615,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns desired lrps with populated metrics_guid", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -596,8 +633,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a resource not found error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
@@ -623,8 +662,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPResponse
+				var protoResponse models.ProtoDesiredLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -634,7 +675,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 	Describe("DesiredLRPSchedulingInfos", func() {
 		var (
-			requestBody     interface{}
+			requestBody     *models.DesiredLRPsRequest
 			schedulingInfo1 models.DesiredLRPSchedulingInfo
 			schedulingInfo2 models.DesiredLRPSchedulingInfo
 		)
@@ -646,7 +687,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPSchedulingInfos(logger, responseRecorder, request)
 		})
@@ -661,8 +703,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a list of desired lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPSchedulingInfosResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPSchedulingInfosResponse
+				var protoResponse models.ProtoDesiredLRPSchedulingInfosResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -709,8 +753,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPSchedulingInfosResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPSchedulingInfosResponse
+				var protoResponse models.ProtoDesiredLRPSchedulingInfosResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -737,8 +783,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPSchedulingInfosResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPSchedulingInfosResponse
+				var protoResponse models.ProtoDesiredLRPSchedulingInfosResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -750,7 +798,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid = "process-guid"
 
-			requestBody interface{}
+			requestBody *models.DesiredLRPByProcessGuidRequest
 		)
 
 		BeforeEach(func() {
@@ -760,7 +808,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesiredLRPSchedulingInfoByProcessGuid(logger, responseRecorder, request)
 		})
@@ -787,12 +836,15 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(receivedProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).ToNot(HaveOccurred())
+				var response models.DesiredLRPSchedulingInfoByProcessGuidResponse
+				var protoResponse models.ProtoDesiredLRPSchedulingInfoByProcessGuidResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
 				responseSchedInfo := response.DesiredLrpSchedulingInfo
+				Expect(*responseSchedInfo).To(Equal(schedInfo))
 				Expect(*responseSchedInfo).To(DeepEqual(schedInfo))
 			})
 		})
@@ -804,9 +856,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a resource not found error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
-				Expect(err).ToNot(HaveOccurred())
+				var response models.DesiredLRPSchedulingInfoByProcessGuidResponse
+				var protoResponse models.ProtoDesiredLRPSchedulingInfoByProcessGuidResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrResourceNotFound))
 			})
@@ -831,8 +885,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPSchedulingInfoByProcessGuidResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPSchedulingInfoByProcessGuidResponse
+				var protoResponse models.ProtoDesiredLRPSchedulingInfoByProcessGuidResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -842,7 +898,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 	Describe("DesiredLRPRoutingInfos", func() {
 		var (
-			requestBody  interface{}
+			requestBody  *models.DesiredLRPsRequest
 			routingInfo1 models.DesiredLRP
 			routingInfo2 models.DesiredLRP
 		)
@@ -854,7 +910,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			handler.DesiredLRPRoutingInfos(logger, responseRecorder, request)
 		})
 
@@ -868,8 +925,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns a list of desired lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -916,8 +975,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -943,8 +1004,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPsResponse
+				var protoResponse models.ProtoDesiredLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -956,7 +1019,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			desiredLRP *models.DesiredLRP
 
-			requestBody interface{}
+			requestBody *models.DesireLRPRequest
 		)
 
 		BeforeEach(func() {
@@ -968,7 +1031,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.DesireDesiredLRP(logger, responseRecorder, request)
 		})
@@ -1029,8 +1093,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(actualDesiredLRP).To(Equal(desiredLRP))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPLifecycleResponse
+				var protoResponse models.ProtoDesiredLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -1178,8 +1244,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPLifecycleResponse
+				var protoResponse models.ProtoDesiredLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -1198,7 +1266,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			beforeDesiredLRP *models.DesiredLRP
 			afterDesiredLRP  *models.DesiredLRP
 
-			requestBody interface{}
+			requestBody *models.UpdateDesiredLRPRequest
 		)
 
 		BeforeEach(func() {
@@ -1210,7 +1278,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			afterDesiredLRP.Annotation = someText
 
 			update = &models.DesiredLRPUpdate{}
-			update.SetAnnotation(someText)
+			update.SetAnnotation(&someText)
 		})
 
 		JustBeforeEach(func() {
@@ -1219,7 +1287,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Update:      update,
 			}
 
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.UpdateDesiredLRP(logger, responseRecorder, request)
 			time.Sleep(100 * time.Millisecond)
@@ -1260,8 +1329,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(actualUpdate).To(Equal(update))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPLifecycleResponse
+				var protoResponse models.ProtoDesiredLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Error).To(BeNil())
 			})
@@ -1283,7 +1354,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			Context("when the number of instances changes", func() {
 				BeforeEach(func() {
-					update.SetInstances(3)
+					instances := int32(3)
+					update.SetInstances(&instances)
 
 					desiredLRP := &models.DesiredLRP{
 						ProcessGuid:   "some-guid",
@@ -1333,11 +1405,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Expect(fakeRepClient.StopLRPInstanceCallCount()).To(Equal(2))
 						_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
 						_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
-						Expect((key0 == actualLRPs[0].ActualLRPKey && key1 == actualLRPs[1].ActualLRPKey) ||
-							(key1 == actualLRPs[0].ActualLRPKey && key0 == actualLRPs[1].ActualLRPKey)).To(BeTrue())
+						Expect((key0 == actualLRPs[0].ActualLrpKey && key1 == actualLRPs[1].ActualLrpKey) ||
+							(key1 == actualLRPs[0].ActualLrpKey && key0 == actualLRPs[1].ActualLrpKey)).To(BeTrue())
 
-						Expect((instanceKey0 == actualLRPs[0].ActualLRPInstanceKey && instanceKey1 == actualLRPs[1].ActualLRPInstanceKey) ||
-							(instanceKey1 == actualLRPs[0].ActualLRPInstanceKey && instanceKey0 == actualLRPs[1].ActualLRPInstanceKey)).To(BeTrue())
+						Expect((instanceKey0 == actualLRPs[0].ActualLrpInstanceKey && instanceKey1 == actualLRPs[1].ActualLrpInstanceKey) ||
+							(instanceKey1 == actualLRPs[0].ActualLrpInstanceKey && instanceKey0 == actualLRPs[1].ActualLrpInstanceKey)).To(BeTrue())
 
 					})
 
@@ -1365,8 +1437,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 							})
 
 							It("should return the error", func() {
-								response := models.DesiredLRPLifecycleResponse{}
-								err := response.Unmarshal(responseRecorder.Body.Bytes())
+								var response models.DesiredLRPLifecycleResponse
+								var protoResponse models.ProtoDesiredLRPLifecycleResponse
+								err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+								response = *protoResponse.FromProto()
 								Expect(err).NotTo(HaveOccurred())
 
 								Expect(response.Error).To(BeNil())
@@ -1488,8 +1562,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					It("does not update the actual lrps", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-						response := models.DesiredLRPLifecycleResponse{}
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var response models.DesiredLRPLifecycleResponse
+						var protoResponse models.ProtoDesiredLRPLifecycleResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 
@@ -1505,8 +1581,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 					It("does not update the actual lrps", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-						response := models.DesiredLRPLifecycleResponse{}
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var response models.DesiredLRPLifecycleResponse
+						var protoResponse models.ProtoDesiredLRPLifecycleResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 
@@ -1656,7 +1734,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					}
 
 					update = &models.DesiredLRPUpdate{MetricTags: expectedTags}
-					update.SetAnnotation("new-annotation")
+					annotation := "new-annotation"
+					update.SetAnnotation(&annotation)
 
 					requestBody = &models.UpdateDesiredLRPRequest{
 						ProcessGuid: processGuid,
@@ -1671,8 +1750,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(actualUpdate).To(Equal(update))
 
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-					response := models.DesiredLRPLifecycleResponse{}
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var response models.DesiredLRPLifecycleResponse
+					var protoResponse models.ProtoDesiredLRPLifecycleResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(response.Error).To(BeNil())
 				})
@@ -1834,8 +1915,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPLifecycleResponse
+				var protoResponse models.ProtoDesiredLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -1847,7 +1930,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var (
 			processGuid string
 
-			requestBody interface{}
+			requestBody *models.RemoveDesiredLRPRequest
 		)
 
 		BeforeEach(func() {
@@ -1859,7 +1942,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		})
 
 		JustBeforeEach(func() {
-			request := newTestRequest(requestBody)
+			protoRequestBody := requestBody.ToProto()
+			request := newTestRequest(protoRequestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 			handler.RemoveDesiredLRP(logger, responseRecorder, request)
 			time.Sleep(100 * time.Millisecond)
@@ -1880,8 +1964,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(actualProcessGuid).To(Equal(processGuid))
 
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPLifecycleResponse
+				var protoResponse models.ProtoDesiredLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -1961,11 +2047,11 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					_, key0, instanceKey0 := fakeRepClient.StopLRPInstanceArgsForCall(0)
 					_, key1, instanceKey1 := fakeRepClient.StopLRPInstanceArgsForCall(1)
 
-					Expect((key0 == runningActualLRP0.ActualLRPKey && key1 == evacuatingActualLRP1.ActualLRPKey) ||
-						(key1 == runningActualLRP0.ActualLRPKey && key0 == evacuatingActualLRP1.ActualLRPKey)).To(BeTrue())
+					Expect((key0 == runningActualLRP0.ActualLrpKey && key1 == evacuatingActualLRP1.ActualLrpKey) ||
+						(key1 == runningActualLRP0.ActualLrpKey && key0 == evacuatingActualLRP1.ActualLrpKey)).To(BeTrue())
 
-					Expect((instanceKey0 == runningActualLRP0.ActualLRPInstanceKey && instanceKey1 == evacuatingActualLRP1.ActualLRPInstanceKey) ||
-						(instanceKey1 == runningActualLRP0.ActualLRPInstanceKey && instanceKey0 == evacuatingActualLRP1.ActualLRPInstanceKey)).To(BeTrue())
+					Expect((instanceKey0 == runningActualLRP0.ActualLrpInstanceKey && instanceKey1 == evacuatingActualLRP1.ActualLrpInstanceKey) ||
+						(instanceKey1 == runningActualLRP0.ActualLrpInstanceKey && instanceKey0 == evacuatingActualLRP1.ActualLrpInstanceKey)).To(BeTrue())
 
 				})
 
@@ -2034,8 +2120,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					It("logs the error but still succeeds", func() {
 						Expect(fakeRepClientFactory.CreateClientCallCount()).To(Equal(0))
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-						response := models.DesiredLRPLifecycleResponse{}
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var response models.DesiredLRPLifecycleResponse
+						var protoResponse models.ProtoDesiredLRPLifecycleResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(response.Error).To(BeNil())
@@ -2065,8 +2153,10 @@ var _ = Describe("DesiredLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := models.DesiredLRPLifecycleResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DesiredLRPLifecycleResponse
+				var protoResponse models.ProtoDesiredLRPLifecycleResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))

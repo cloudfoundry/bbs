@@ -36,7 +36,8 @@ var _ = Describe("ActualLRP Requests", func() {
 					CellId:      "abc123",
 					ProcessGuid: "def456",
 				}
-				request.SetIndex(3)
+				index := int32(3)
+				request.SetIndex(&index)
 
 				expectedJSON = `{
 					"domain": "cfapps",

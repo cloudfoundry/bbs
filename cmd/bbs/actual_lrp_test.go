@@ -126,68 +126,70 @@ var _ = Describe("ActualLRP API", func() {
 		crashingLRPKey = models.NewActualLRPKey(crashingProcessGuid, crashingIndex, crashingDomain)
 		crashingLRPInstanceKey = models.NewActualLRPInstanceKey(crashingInstanceGuid, otherCellID)
 
+		routableTrue := true
+		routableFalse := false
 		baseLRP = &models.ActualLRP{
-			ActualLRPKey:            baseLRPKey,
-			ActualLRPInstanceKey:    baseLRPInstanceKey,
-			ActualLRPNetInfo:        netInfo,
+			ActualLrpKey:            baseLRPKey,
+			ActualLrpInstanceKey:    baseLRPInstanceKey,
+			ActualLrpNetInfo:        netInfo,
 			State:                   models.ActualLRPStateRunning,
 			ActualLrpInternalRoutes: internalRoutes,
 			MetricTags:              metricTags,
 			AvailabilityZone:        availabilityZone,
 		}
-		baseLRP.SetRoutable(true)
+		baseLRP.SetRoutable(&routableTrue)
 
 		evacuatingLRP = &models.ActualLRP{
-			ActualLRPKey:            evacuatingLRPKey,
-			ActualLRPInstanceKey:    evacuatingLRPInstanceKey,
-			ActualLRPNetInfo:        netInfo,
+			ActualLrpKey:            evacuatingLRPKey,
+			ActualLrpInstanceKey:    evacuatingLRPInstanceKey,
+			ActualLrpNetInfo:        netInfo,
 			State:                   models.ActualLRPStateRunning,
 			Presence:                models.ActualLRP_Evacuating,
 			ActualLrpInternalRoutes: internalRoutes,
 			MetricTags:              metricTags,
 			AvailabilityZone:        availabilityZone,
 		}
-		evacuatingLRP.SetRoutable(true)
+		evacuatingLRP.SetRoutable(&routableTrue)
 
 		evacuatingInstanceLRP = &models.ActualLRP{
-			ActualLRPKey:            evacuatingLRPKey,
+			ActualLrpKey:            evacuatingLRPKey,
 			State:                   models.ActualLRPStateUnclaimed,
 			ActualLrpInternalRoutes: internalRoutes,
 			MetricTags:              metricTags,
 			AvailabilityZone:        availabilityZone,
 		}
-		evacuatingInstanceLRP.SetRoutable(true)
+		evacuatingInstanceLRP.SetRoutable(&routableTrue)
 
 		otherLRP0 = &models.ActualLRP{
-			ActualLRPKey:            otherLRP0Key,
-			ActualLRPInstanceKey:    otherLRPInstanceKey,
-			ActualLRPNetInfo:        netInfo,
+			ActualLrpKey:            otherLRP0Key,
+			ActualLrpInstanceKey:    otherLRPInstanceKey,
+			ActualLrpNetInfo:        netInfo,
 			State:                   models.ActualLRPStateRunning,
 			ActualLrpInternalRoutes: internalRoutes,
 			MetricTags:              metricTags,
 			AvailabilityZone:        availabilityZone,
 		}
-		otherLRP0.SetRoutable(true)
+		otherLRP0.SetRoutable(&routableTrue)
 
 		otherLRP1 = &models.ActualLRP{
-			ActualLRPKey:            otherLRP1Key,
-			ActualLRPInstanceKey:    otherLRPInstanceKey,
-			ActualLRPNetInfo:        netInfo,
+			ActualLrpKey:            otherLRP1Key,
+			ActualLrpInstanceKey:    otherLRPInstanceKey,
+			ActualLrpNetInfo:        netInfo,
 			State:                   models.ActualLRPStateRunning,
 			ActualLrpInternalRoutes: internalRoutes,
 			MetricTags:              metricTags,
 			AvailabilityZone:        availabilityZone,
 		}
-		otherLRP1.SetRoutable(false)
+		otherLRP1.SetRoutable(&routableFalse)
 
 		unclaimedLRP = &models.ActualLRP{
-			ActualLRPKey: unclaimedLRPKey,
+			ActualLrpKey: unclaimedLRPKey,
 			State:        models.ActualLRPStateUnclaimed,
 		}
-		unclaimedLRP.SetRoutable(false)
+		unclaimedLRP.SetRoutable(&routableFalse)
 
 		crashingLRP = &models.ActualLRP{
-			ActualLRPKey:            crashingLRPKey,
+			ActualLrpKey:            crashingLRPKey,
 			State:                   models.ActualLRPStateCrashed,
 			CrashReason:             "crash",
 			CrashCount:              3,
@@ -195,63 +197,63 @@ var _ = Describe("ActualLRP API", func() {
 			MetricTags:              metricTags,
 			AvailabilityZone:        availabilityZone,
 		}
-		crashingLRP.SetRoutable(false)
+		crashingLRP.SetRoutable(&routableFalse)
 
 		retiredLRP = &models.ActualLRP{
-			ActualLRPKey:            retiredLRPKey,
+			ActualLrpKey:            retiredLRPKey,
 			State:                   models.ActualLRPStateRunning,
 			ActualLrpInternalRoutes: internalRoutes,
 			MetricTags:              metricTags,
 			AvailabilityZone:        availabilityZone,
 		}
-		retiredLRP.SetRoutable(false)
+		retiredLRP.SetRoutable(&routableFalse)
 
 		var err error
 
-		baseDesiredLRP := model_helpers.NewValidDesiredLRP(baseLRP.ProcessGuid)
+		baseDesiredLRP := model_helpers.NewValidDesiredLRP(baseLRP.ActualLrpKey.ProcessGuid)
 		baseDesiredLRP.Domain = baseDomain
 		err = client.DesireLRP(logger, "some-trace-id", baseDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, "some-trace-id", &baseLRPKey, &baseLRPInstanceKey, &netInfo, internalRoutes, metricTags, baseLRP.GetRoutable(), availabilityZone)
+		err = client.StartActualLRP(logger, "some-trace-id", &baseLRPKey, &baseLRPInstanceKey, &netInfo, internalRoutes, metricTags, *baseLRP.GetRoutable(), availabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 
-		otherDesiredLRP := model_helpers.NewValidDesiredLRP(otherLRP0.ProcessGuid)
+		otherDesiredLRP := model_helpers.NewValidDesiredLRP(otherLRP0.ActualLrpKey.ProcessGuid)
 		otherDesiredLRP.Domain = otherDomain
 		Expect(client.DesireLRP(logger, "some-trace-id", otherDesiredLRP)).To(Succeed())
-		err = client.StartActualLRP(logger, "some-trace-id", &otherLRP0Key, &otherLRPInstanceKey, &netInfo, internalRoutes, metricTags, otherLRP0.GetRoutable(), availabilityZone)
+		err = client.StartActualLRP(logger, "some-trace-id", &otherLRP0Key, &otherLRPInstanceKey, &netInfo, internalRoutes, metricTags, *otherLRP0.GetRoutable(), availabilityZone)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, "some-trace-id", &otherLRP1Key, &otherLRPInstanceKey, &netInfo, internalRoutes, metricTags, otherLRP1.GetRoutable(), availabilityZone)
+		err = client.StartActualLRP(logger, "some-trace-id", &otherLRP1Key, &otherLRPInstanceKey, &netInfo, internalRoutes, metricTags, *otherLRP1.GetRoutable(), availabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 
-		evacuatingDesiredLRP := model_helpers.NewValidDesiredLRP(evacuatingLRP.ProcessGuid)
+		evacuatingDesiredLRP := model_helpers.NewValidDesiredLRP(evacuatingLRP.ActualLrpKey.ProcessGuid)
 		evacuatingDesiredLRP.Domain = evacuatingDomain
 		err = client.DesireLRP(logger, "some-trace-id", evacuatingDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, "some-trace-id", &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, internalRoutes, metricTags, evacuatingLRP.GetRoutable(), availabilityZone)
+		err = client.StartActualLRP(logger, "some-trace-id", &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, internalRoutes, metricTags, *evacuatingLRP.GetRoutable(), availabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 		_, err = client.EvacuateRunningActualLRP(logger, "some-trace-id", &evacuatingLRPKey, &evacuatingLRPInstanceKey, &netInfo, internalRoutes, metricTags, true, availabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 
-		unclaimedDesiredLRP := model_helpers.NewValidDesiredLRP(unclaimedLRP.ProcessGuid)
+		unclaimedDesiredLRP := model_helpers.NewValidDesiredLRP(unclaimedLRP.ActualLrpKey.ProcessGuid)
 		unclaimedDesiredLRP.Domain = unclaimedDomain
 		err = client.DesireLRP(logger, "some-trace-id", unclaimedDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
 
-		crashingDesiredLRP := model_helpers.NewValidDesiredLRP(crashingLRP.ProcessGuid)
+		crashingDesiredLRP := model_helpers.NewValidDesiredLRP(crashingLRP.ActualLrpKey.ProcessGuid)
 		crashingDesiredLRP.Domain = crashingDomain
 		Expect(client.DesireLRP(logger, "some-trace-id", crashingDesiredLRP)).To(Succeed())
 		for i := 0; i < 3; i++ {
-			err = client.StartActualLRP(logger, "some-trace-id", &crashingLRPKey, &crashingLRPInstanceKey, &netInfo, internalRoutes, metricTags, crashingLRP.GetRoutable(), availabilityZone)
+			err = client.StartActualLRP(logger, "some-trace-id", &crashingLRPKey, &crashingLRPInstanceKey, &netInfo, internalRoutes, metricTags, *crashingLRP.GetRoutable(), availabilityZone)
 			Expect(err).NotTo(HaveOccurred())
 			err = client.CrashActualLRP(logger, "some-trace-id", &crashingLRPKey, &crashingLRPInstanceKey, "crash")
 			Expect(err).NotTo(HaveOccurred())
 		}
 
-		retiredDesiredLRP := model_helpers.NewValidDesiredLRP(retiredLRP.ProcessGuid)
+		retiredDesiredLRP := model_helpers.NewValidDesiredLRP(retiredLRP.ActualLrpKey.ProcessGuid)
 		retiredDesiredLRP.Domain = retiredDomain
 		err = client.DesireLRP(logger, "some-trace-id", retiredDesiredLRP)
 		Expect(err).NotTo(HaveOccurred())
-		err = client.StartActualLRP(logger, "some-trace-id", &retiredLRPKey, &retiredLRPInstanceKey, &netInfo, internalRoutes, metricTags, retiredLRP.GetRoutable(), availabilityZone)
+		err = client.StartActualLRP(logger, "some-trace-id", &retiredLRPKey, &retiredLRPInstanceKey, &netInfo, internalRoutes, metricTags, *retiredLRP.GetRoutable(), availabilityZone)
 		Expect(err).NotTo(HaveOccurred())
 		retireErr := client.RetireActualLRP(logger, "some-trace-id", &retiredLRPKey)
 		Expect(retireErr).NotTo(HaveOccurred())
@@ -378,22 +380,23 @@ var _ = Describe("ActualLRP API", func() {
 				tlsNetInfo = models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressHost, models.NewPortMappingWithTLSProxy(8080, 80, 60042, 443))
 
 				tlsEnabledLRP = &models.ActualLRP{
-					ActualLRPKey:            tlsEnabledLRPKey,
-					ActualLRPInstanceKey:    tlsEnabledLRPInstanceKey,
-					ActualLRPNetInfo:        tlsNetInfo,
+					ActualLrpKey:            tlsEnabledLRPKey,
+					ActualLrpInstanceKey:    tlsEnabledLRPInstanceKey,
+					ActualLrpNetInfo:        tlsNetInfo,
 					State:                   models.ActualLRPStateRunning,
 					ActualLrpInternalRoutes: internalRoutes,
 					MetricTags:              metricTags,
 					AvailabilityZone:        availabilityZone,
 				}
-				tlsEnabledLRP.SetRoutable(true)
+				routable := true
+				tlsEnabledLRP.SetRoutable(&routable)
 
-				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ProcessGuid)
+				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ActualLrpKey.ProcessGuid)
 				tlsEnabledDesiredLRP.Domain = tlsEnabledDomain
 
 				err := client.DesireLRP(logger, "some-trace-id", tlsEnabledDesiredLRP)
 				Expect(err).NotTo(HaveOccurred())
-				err = client.StartActualLRP(logger, "some-trace-id", &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo, internalRoutes, metricTags, tlsEnabledLRP.GetRoutable(), availabilityZone)
+				err = client.StartActualLRP(logger, "some-trace-id", &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo, internalRoutes, metricTags, *tlsEnabledLRP.GetRoutable(), availabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -477,22 +480,23 @@ var _ = Describe("ActualLRP API", func() {
 				tlsNetInfo = models.NewActualLRPNetInfo("127.0.0.1", "10.10.10.10", models.ActualLRPNetInfo_PreferredAddressHost, models.NewPortMappingWithTLSProxy(8080, 80, 60042, 443))
 
 				tlsEnabledLRP = &models.ActualLRP{
-					ActualLRPKey:            tlsEnabledLRPKey,
-					ActualLRPInstanceKey:    tlsEnabledLRPInstanceKey,
-					ActualLRPNetInfo:        tlsNetInfo,
+					ActualLrpKey:            tlsEnabledLRPKey,
+					ActualLrpInstanceKey:    tlsEnabledLRPInstanceKey,
+					ActualLrpNetInfo:        tlsNetInfo,
 					State:                   models.ActualLRPStateRunning,
 					ActualLrpInternalRoutes: internalRoutes,
 					MetricTags:              metricTags,
 					AvailabilityZone:        availabilityZone,
 				}
-				tlsEnabledLRP.SetRoutable(true)
+				routable := true
+				tlsEnabledLRP.SetRoutable(&routable)
 
-				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ProcessGuid)
+				tlsEnabledDesiredLRP := model_helpers.NewValidDesiredLRP(tlsEnabledLRP.ActualLrpKey.ProcessGuid)
 				tlsEnabledDesiredLRP.Domain = tlsEnabledDomain
 
 				err := client.DesireLRP(logger, "some-trace-id", tlsEnabledDesiredLRP)
 				Expect(err).NotTo(HaveOccurred())
-				err = client.StartActualLRP(logger, "some-trace-id", &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo, internalRoutes, metricTags, tlsEnabledLRP.GetRoutable(), availabilityZone)
+				err = client.StartActualLRP(logger, "some-trace-id", &tlsEnabledLRPKey, &tlsEnabledLRPInstanceKey, &tlsNetInfo, internalRoutes, metricTags, *tlsEnabledLRP.GetRoutable(), availabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -564,7 +568,7 @@ var _ = Describe("ActualLRP API", func() {
 
 			expectedActualLRP := *unclaimedLRP
 			expectedActualLRP.State = models.ActualLRPStateClaimed
-			expectedActualLRP.ActualLRPInstanceKey = instanceKey
+			expectedActualLRP.ActualLrpInstanceKey = instanceKey
 
 			fetchedActualLRPGroup, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: unclaimedProcessGuid, Index: &unclaimedIndex})
 			Expect(err).NotTo(HaveOccurred())
@@ -592,11 +596,12 @@ var _ = Describe("ActualLRP API", func() {
 
 			expectedActualLRP := *unclaimedLRP
 			expectedActualLRP.State = models.ActualLRPStateRunning
-			expectedActualLRP.ActualLRPInstanceKey = instanceKey
-			expectedActualLRP.ActualLRPNetInfo = netInfo
+			expectedActualLRP.ActualLrpInstanceKey = instanceKey
+			expectedActualLRP.ActualLrpNetInfo = netInfo
 			expectedActualLRP.ActualLrpInternalRoutes = internalRoutes
 			expectedActualLRP.MetricTags = metricTags
-			expectedActualLRP.SetRoutable(true)
+			routable := true
+			expectedActualLRP.SetRoutable(&routable)
 			expectedActualLRP.AvailabilityZone = availabilityZone
 
 			fetchedActualLRPGroup, err := client.ActualLRPs(logger, "some-trace-id", models.ActualLRPFilter{ProcessGuid: unclaimedProcessGuid, Index: &unclaimedIndex})

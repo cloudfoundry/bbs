@@ -6,7 +6,7 @@ import (
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/v3"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 //counterfeiter:generate -o fake_controllers/fake_evacuation_controller.go . EvacuationController
@@ -36,7 +36,6 @@ func NewEvacuationHandler(
 type MessageValidator interface {
 	proto.Message
 	Validate() error
-	Unmarshal(data []byte) error
 }
 
 func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
@@ -45,13 +44,15 @@ func (h *EvacuationHandler) RemoveEvacuatingActualLRP(logger lager.Logger, w htt
 	logger.Info("started")
 	defer logger.Info("completed")
 
-	request := &models.RemoveEvacuatingActualLRPRequest{}
+	var request *models.RemoveEvacuatingActualLRPRequest
+	protoRequest := &models.ProtoRemoveEvacuatingActualLRPRequest{}
 	response := &models.RemoveEvacuatingActualLRPResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -66,12 +67,14 @@ func (h *EvacuationHandler) EvacuateClaimedActualLRP(logger lager.Logger, w http
 	logger.Info("started")
 	defer logger.Info("completed")
 
-	request := &models.EvacuateClaimedActualLRPRequest{}
+	var request *models.EvacuateClaimedActualLRPRequest
+	protoRequest := &models.ProtoEvacuateClaimedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -89,12 +92,14 @@ func (h *EvacuationHandler) EvacuateCrashedActualLRP(logger lager.Logger, w http
 	logger.Info("started")
 	defer logger.Info("completed")
 
-	request := &models.EvacuateCrashedActualLRPRequest{}
+	var request *models.EvacuateCrashedActualLRPRequest
+	protoRequest := &models.ProtoEvacuateCrashedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		response.Error = models.ConvertError(err)
@@ -110,13 +115,15 @@ func (h *EvacuationHandler) commonEvacuateRunningActualLRP(logger lager.Logger, 
 	logger.Info("starting")
 	defer logger.Info("completed")
 
+	var request *models.EvacuateRunningActualLRPRequest
+	protoRequest := &models.ProtoEvacuateRunningActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 	response.KeepContainer = true
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	request := &models.EvacuateRunningActualLRPRequest{}
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		response.Error = models.ConvertError(err)
 		return
@@ -132,7 +139,7 @@ func (h *EvacuationHandler) commonEvacuateRunningActualLRP(logger lager.Logger, 
 	routable := true
 	if request.RoutableExists() {
 		r := request.GetRoutable()
-		routable = r
+		routable = *r
 	}
 
 	keepContainer, err = h.controller.EvacuateRunningActualLRP(req.Context(), logger, request.ActualLrpKey, request.ActualLrpInstanceKey, request.ActualLrpNetInfo, actualLrpInternalRoutes, metricTags, routable, request.AvailabilityZone)
@@ -153,13 +160,15 @@ func (h *EvacuationHandler) EvacuateRunningActualLRP_r0(logger lager.Logger, w h
 func (h *EvacuationHandler) EvacuateStoppedActualLRP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("evacuate-stopped-actual-lrp").WithTraceInfo(req)
 
-	request := &models.EvacuateStoppedActualLRPRequest{}
+	var request *models.EvacuateStoppedActualLRPRequest
+	protoRequest := &models.ProtoEvacuateStoppedActualLRPRequest{}
 	response := &models.EvacuationResponse{}
 
 	defer func() { exitIfUnrecoverable(logger, h.exitChan, response.Error) }()
-	defer writeResponse(w, response)
+	defer func() { writeResponse(w, response.ToProto()) }()
 
-	err := parseRequest(logger, req, request)
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-to-parse-request", err)
 		response.Error = models.ConvertError(err)

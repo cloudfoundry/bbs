@@ -25,11 +25,11 @@ func (l *ImageLayer) Validate() error {
 		validationError = validationError.Append(ErrInvalidField{"media_type"})
 	}
 
-	if (l.DigestValue != "" || l.LayerType == LayerTypeExclusive) && l.DigestAlgorithm == DigestAlgorithmInvalid {
+	if (l.DigestValue != "" || l.LayerType == ImageLayer_LayerTypeExclusive) && l.DigestAlgorithm == ImageLayer_DigestAlgorithmInvalid {
 		validationError = validationError.Append(ErrInvalidField{"digest_algorithm"})
 	}
 
-	if (l.DigestAlgorithm != DigestAlgorithmInvalid || l.LayerType == LayerTypeExclusive) && l.DigestValue == "" {
+	if (l.DigestAlgorithm != ImageLayer_DigestAlgorithmInvalid || l.LayerType == ImageLayer_LayerTypeExclusive) && l.DigestValue == "" {
 		validationError = validationError.Append(ErrInvalidField{"digest_value"})
 	}
 
@@ -56,7 +56,7 @@ func validateImageLayers(layers []*ImageLayer, legacyDownloadUser string) Valida
 				validationError = validationError.Append(err)
 			}
 
-			if layer.LayerType == LayerTypeExclusive {
+			if layer.LayerType == ImageLayer_LayerTypeExclusive {
 				requiresLegacyDownloadUser = true
 			}
 		}
@@ -85,7 +85,7 @@ func (layers ImageLayers) FilterByType(layerType ImageLayer_Type) ImageLayers {
 func (layers ImageLayers) ToDownloadActions(legacyDownloadUser string, existingAction *Action) *Action {
 	downloadActions := []ActionInterface{}
 
-	for _, layer := range layers.FilterByType(LayerTypeExclusive) {
+	for _, layer := range layers.FilterByType(ImageLayer_LayerTypeExclusive) {
 		digestAlgorithmName := strings.ToLower(layer.DigestAlgorithm.String())
 		downloadActions = append(downloadActions, &DownloadAction{
 			Artifact:          layer.Name,
@@ -115,7 +115,7 @@ func (layers ImageLayers) ToDownloadActions(legacyDownloadUser string, existingA
 
 func (layers ImageLayers) ToCachedDependencies() []*CachedDependency {
 	cachedDependencies := []*CachedDependency{}
-	for _, layer := range layers.FilterByType(LayerTypeShared) {
+	for _, layer := range layers.FilterByType(ImageLayer_LayerTypeShared) {
 		c := &CachedDependency{
 			Name:          layer.Name,
 			From:          layer.Url,
@@ -123,7 +123,7 @@ func (layers ImageLayers) ToCachedDependencies() []*CachedDependency {
 			ChecksumValue: layer.DigestValue,
 		}
 
-		if layer.DigestAlgorithm == DigestAlgorithmInvalid {
+		if layer.DigestAlgorithm == ImageLayer_DigestAlgorithmInvalid {
 			c.ChecksumAlgorithm = ""
 		} else {
 			c.ChecksumAlgorithm = strings.ToLower(layer.DigestAlgorithm.String())
@@ -143,9 +143,9 @@ func (layers ImageLayers) ToCachedDependencies() []*CachedDependency {
 
 func (d ImageLayer_DigestAlgorithm) Valid() bool {
 	switch d {
-	case DigestAlgorithmSha256:
+	case ImageLayer_DigestAlgorithmSha256:
 		return true
-	case DigestAlgorithmSha512:
+	case ImageLayer_DigestAlgorithmSha512:
 		return true
 	default:
 		return false
@@ -154,11 +154,11 @@ func (d ImageLayer_DigestAlgorithm) Valid() bool {
 
 func (m ImageLayer_MediaType) Valid() bool {
 	switch m {
-	case MediaTypeTar:
+	case ImageLayer_MediaTypeTar:
 		return true
-	case MediaTypeTgz:
+	case ImageLayer_MediaTypeTgz:
 		return true
-	case MediaTypeZip:
+	case ImageLayer_MediaTypeZip:
 		return true
 	default:
 		return false
@@ -167,9 +167,9 @@ func (m ImageLayer_MediaType) Valid() bool {
 
 func (t ImageLayer_Type) Valid() bool {
 	switch t {
-	case LayerTypeExclusive:
+	case ImageLayer_LayerTypeExclusive:
 		return true
-	case LayerTypeShared:
+	case ImageLayer_LayerTypeShared:
 		return true
 	default:
 		return false

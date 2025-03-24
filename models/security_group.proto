@@ -1,25 +1,26 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 
-message PortRange {
-  uint32 start = 1 [(gogoproto.jsontag) =  "start"];
-  uint32 end = 2 [(gogoproto.jsontag) =  "end"];
+message ProtoPortRange {
+  uint32 start  = 1 [json_name = "start", (bbs.bbs_json_always_emit) = true];
+  uint32 end    = 2 [json_name = "end", (bbs.bbs_json_always_emit) = true];
 }
 
-message ICMPInfo {
-  int32 type = 1 [(gogoproto.jsontag) =  "type"];
-  int32 code = 2 [(gogoproto.jsontag) =  "code"];
+message ProtoICMPInfo {
+  int32 type = 1 [json_name =  "type", (bbs.bbs_json_always_emit) = true];
+  int32 code = 2 [json_name =  "code", (bbs.bbs_json_always_emit) = true];
 }
 
-message SecurityGroupRule {
-  string protocol = 1;
-  repeated string destinations = 2;
-  repeated uint32 ports = 3 [packed = false];
-  PortRange port_range = 4;
-  ICMPInfo icmp_info = 5;
-  bool log = 6 [(gogoproto.jsontag) = "log"];
-  repeated string annotations = 7;
+message ProtoSecurityGroupRule {
+  string protocol               = 1;
+  repeated string destinations  = 2;
+  repeated uint32 ports         = 3 [packed = false];
+  ProtoPortRange port_range     = 4 [json_name = "port_range"];
+  ProtoICMPInfo icmp_info       = 5 [json_name = "icmp_info"];
+  bool log                      = 6 [json_name = "log", (bbs.bbs_json_always_emit) = true];
+  repeated string annotations   = 7;
 }

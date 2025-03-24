@@ -18,8 +18,8 @@ import (
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
-	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
+	"google.golang.org/protobuf/proto"
 )
 
 func New(
@@ -173,7 +173,7 @@ func parseRequest(logger lager.Logger, req *http.Request, request MessageValidat
 		return models.ErrUnknownError
 	}
 
-	err = request.Unmarshal(data)
+	err = proto.Unmarshal(data, request)
 	if err != nil {
 		logger.Error("failed-to-parse-request-body", err)
 		return models.ErrBadRequest
