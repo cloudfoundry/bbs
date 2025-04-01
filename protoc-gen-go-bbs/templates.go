@@ -45,12 +45,12 @@ var clientInterfaceMethod = `
 var clientMethod = `
 func (c *{{.Service.Name | LowerFirst}}Client) {{.MethodName}}(ctx context.Context, in *{{.MethodName}}Request, opts ...grpc.CallOption) (*{{.MethodName}}Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new({{.MethodName}}Response)
-	err := c.cc.Invoke(ctx, {{.Service.Name}}_{{.MethodName}}_FullMethodName, in, out, cOpts...)
+	out := new(Proto{{.MethodName}}Response)
+	err := c.cc.Invoke(ctx, {{.Service.Name}}_{{.MethodName}}_FullMethodName, in.ToProto(), out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	return out.FromProto(), nil
 }
 `
 
