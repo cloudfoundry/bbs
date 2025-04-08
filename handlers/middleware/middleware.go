@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"net/http"
+	"slices"
 	"time"
 
+	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/lager/v3"
 )
 
@@ -13,8 +15,8 @@ type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *htt
 
 //counterfeiter:generate -o fakes/fake_emitter.go . Emitter
 type Emitter interface {
-	IncrementRequestCounter(delta int)
-	UpdateLatency(latency time.Duration)
+	IncrementRequestCounter(delta int, route string)
+	UpdateLatency(latency time.Duration, route string)
 }
 
 func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
@@ -56,17 +58,93 @@ func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHand
 	}
 }
 
-func RecordLatency(f http.HandlerFunc, emitter Emitter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		startTime := time.Now()
-		f(w, r)
-		emitter.UpdateLatency(time.Since(startTime))
+type metadata struct {
+	latency time.Duration
+}
+
+type handlerWithMetadata func(w http.ResponseWriter, r *http.Request) metadata
+
+func initHandlerWithMetadata(f http.Handler) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
+		f.ServeHTTP(w, r)
+		return metadata{}
 	}
 }
 
-func RecordRequestCount(handler http.Handler, emitter Emitter) http.HandlerFunc {
+func stripMetadata(f handlerWithMetadata) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		emitter.IncrementRequestCounter(1)
-		handler.ServeHTTP(w, r)
+		f(w, r)
 	}
+}
+
+func recordLatency(f handlerWithMetadata) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
+		startTime := time.Now()
+		metadata := f(w, r)
+		metadata.latency = time.Since(startTime)
+		return metadata
+	}
+}
+
+func updateLatency(f handlerWithMetadata, emitter Emitter, route string) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
+		metadata := f(w, r)
+		emitter.UpdateLatency(metadata.latency, route)
+		return metadata
+	}
+}
+
+func incrementRequestCount(f handlerWithMetadata, emitter Emitter, route string) handlerWithMetadata {
+	return func(w http.ResponseWriter, r *http.Request) metadata {
+		metadata := f(w, r)
+		emitter.IncrementRequestCounter(1, route)
+		return metadata
+	}
+}
+
+func RecordLatency(f http.Handler, emitter Emitter) http.HandlerFunc {
+	handlerMeta := initHandlerWithMetadata(f)
+	handlerMeta = recordLatency(handlerMeta)
+	handlerMeta = updateLatency(handlerMeta, emitter, "")
+	return stripMetadata(handlerMeta)
+}
+
+func RecordRequestCount(f http.Handler, emitter Emitter) http.HandlerFunc {
+	handlerMeta := initHandlerWithMetadata(f)
+	handlerMeta = incrementRequestCount(handlerMeta, emitter, "")
+	return stripMetadata(handlerMeta)
+}
+
+func RecordMetrics(f http.HandlerFunc, emitter Emitter, advancedMetricsConfig config.AdvancedMetrics, calledRoute string) http.HandlerFunc {
+	// Record Default Metrics
+	handlerMeta := initHandlerWithMetadata(f)
+	handlerMeta = recordLatency(handlerMeta)
+
+	handlerMeta = updateLatency(handlerMeta, emitter, "")
+	handlerMeta = incrementRequestCount(handlerMeta, emitter, "")
+
+	// Record Advanced Metrics
+	if advancedMetricsConfig.Enabled {
+		if calledRoute == "" {
+			panic("calledRoute is required for advanced metrics")
+		}
+
+		handlerMeta = recordAdvancedMetrics(handlerMeta, emitter, advancedMetricsConfig, calledRoute)
+	}
+
+	return stripMetadata(handlerMeta)
+}
+
+func recordAdvancedMetrics(handlerMeta handlerWithMetadata, emitter Emitter, advancedMetricsConfig config.AdvancedMetrics, calledRoute string) handlerWithMetadata {
+	isRouteFound := slices.Contains(advancedMetricsConfig.RouteConfig.RequestCountRoutes, calledRoute)
+	if isRouteFound {
+		handlerMeta = incrementRequestCount(handlerMeta, emitter, calledRoute)
+	}
+
+	isRouteFound = slices.Contains(advancedMetricsConfig.RouteConfig.RequestLatencyRoutes, calledRoute)
+	if isRouteFound {
+		handlerMeta = updateLatency(handlerMeta, emitter, calledRoute)
+	}
+
+	return handlerMeta
 }

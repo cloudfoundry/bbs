@@ -56,18 +56,18 @@ var _ = Describe("BBSConfig", func() {
 			"locket_client_cert_file": "locket-client-cert",
 			"locket_client_key_file": "locket-client-key",
 			"log_level": "debug",
-      "loggregator": {
-        "loggregator_use_v2_api": true,
-        "loggregator_api_port": 1234,
-        "loggregator_ca_path": "ca-path",
-        "loggregator_cert_path": "cert-path",
-        "loggregator_key_path": "key-path",
-        "loggregator_job_deployment": "job-deployment",
-        "loggregator_job_name": "job-name",
-        "loggregator_job_index": "job-index",
-        "loggregator_job_ip": "job-ip",
-        "loggregator_job_origin": "job-origin"
-      },
+		    "loggregator": {
+				"loggregator_use_v2_api": true,
+				"loggregator_api_port": 1234,
+				"loggregator_ca_path": "ca-path",
+				"loggregator_cert_path": "cert-path",
+				"loggregator_key_path": "key-path",
+				"loggregator_job_deployment": "job-deployment",
+				"loggregator_job_name": "job-name",
+				"loggregator_job_index": "job-index",
+				"loggregator_job_ip": "job-ip",
+				"loggregator_job_origin": "job-origin"
+            },
 			"max_idle_database_connections": 50,
 			"max_open_database_connections": 200,
 			"rep_ca_cert": "/var/vcap/jobs/bbs/config/rep.ca",
@@ -82,7 +82,14 @@ var _ = Describe("BBSConfig", func() {
 			"sql_enable_identity_verification": true,
 			"task_callback_workers": 1000,
 			"update_workers": 1000,
-			"max_task_retries": 3
+			"max_task_retries": 3,
+			"advanced_metrics": {
+				"enabled": true,
+				"route_config": {
+					"request_count": ["StartActualLRP", "Tasks"],
+					"request_latency": ["DesiredLRPs", "StartActualLRP"]
+				}
+			  }
 		}`
 	})
 
@@ -175,6 +182,13 @@ var _ = Describe("BBSConfig", func() {
 			TaskCallbackWorkers:           1000,
 			UpdateWorkers:                 1000,
 			MaxTaskRetries:                3,
+			AdvancedMetricsConfig: config.AdvancedMetrics{
+				Enabled: true,
+				RouteConfig: config.RouteConfiguration{
+					RequestCountRoutes:   []string{"StartActualLRP", "Tasks"},
+					RequestLatencyRoutes: []string{"DesiredLRPs", "StartActualLRP"},
+				},
+			},
 		}
 
 		Expect(bbsConfig).To(test_helpers.DeepEqual(config))
