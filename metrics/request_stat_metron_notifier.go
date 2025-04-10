@@ -126,10 +126,10 @@ func (notifier *RequestStatMetronNotifier) emitMetrics(logger lager.Logger) {
 
 	// Emit Default Metrics
 	requestCountMetricValue := readAndResetMetric(&notifier.requestMetricsAll.requestCount)
-	notifier.emitRequestCount(requestCounter, requestCountMetricValue, logger)
+	notifier.emitRequestCount("", requestCountMetricValue, logger)
 
 	requestLatencyMetricValue := readAndResetMetric(&notifier.requestMetricsAll.maxRequestLatency)
-	notifier.emitRequestLatency(requestLatencyDuration, requestLatencyMetricValue, logger)
+	notifier.emitRequestLatency("", requestLatencyMetricValue, logger)
 
 	// Emit Route Specific/Advanced Metrics
 	if !notifier.advancedMetricsConfig.Enabled {
@@ -138,34 +138,34 @@ func (notifier *RequestStatMetronNotifier) emitMetrics(logger lager.Logger) {
 
 	for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestCountRoutes {
 		requestCountMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].requestCount)
-		notifier.emitRequestCount(requestCounter+"."+route, requestCountMetricValue, logger)
+		notifier.emitRequestCount("."+route, requestCountMetricValue, logger)
 	}
 
 	for _, route := range notifier.advancedMetricsConfig.RouteConfig.RequestLatencyRoutes {
 		requestLatencyMetricValue := readAndResetMetric(&notifier.requestMetricsPerRoute[route].maxRequestLatency)
-		notifier.emitRequestLatency(requestLatencyDuration+"."+route, requestLatencyMetricValue, logger)
+		notifier.emitRequestLatency("."+route, requestLatencyMetricValue, logger)
 	}
 }
 
 func (notifier *RequestStatMetronNotifier) emitRequestLatency(
-	requestLatencyMetricName string,
+	postfix string,
 	requestLatencyMetricValue time.Duration,
 	logger lager.Logger) {
 
 	logger.Info("sending-latency", lager.Data{"latency": requestLatencyMetricValue})
-	metricErr := notifier.metronClient.SendDuration(requestLatencyMetricName, requestLatencyMetricValue)
+	metricErr := notifier.metronClient.SendDuration(requestLatencyDuration+postfix, requestLatencyMetricValue)
 	if metricErr != nil {
 		logger.Debug("failed-to-emit-request-latency-metric", lager.Data{"error": metricErr})
 	}
 }
 
 func (notifier *RequestStatMetronNotifier) emitRequestCount(
-	requestCountMetricName string,
+	postfix string,
 	requestCountMetricValue uint64,
 	logger lager.Logger) {
 
 	logger.Info("adding-counter", lager.Data{"add": requestCountMetricValue})
-	metricErr := notifier.metronClient.IncrementCounterWithDelta(requestCountMetricName, requestCountMetricValue)
+	metricErr := notifier.metronClient.IncrementCounterWithDelta(requestCounter+postfix, requestCountMetricValue)
 	if metricErr != nil {
 		logger.Debug("failed-to-emit-request-counter", lager.Data{"error": metricErr})
 	}
