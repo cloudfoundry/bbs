@@ -30,10 +30,12 @@ type {{.Service.Name}}Client interface {
 
 type {{.Service.Name | LowerFirst}}Client struct { 
 	cc grpc.ClientConnInterface
+	plc Proto{{.Service.Name}}Client
 }
 
 func New{{.Service.Name}}Client(cc grpc.ClientConnInterface) {{.Service.Name}}Client {
-	return &{{.Service.Name | LowerFirst}}Client{cc}
+	proto := NewProto{{.Service.Name}}Client(cc)
+	return &{{.Service.Name | LowerFirst}}Client{cc, proto}
 }
 
 {{.ClientMethods}}
@@ -45,8 +47,7 @@ var clientInterfaceMethod = `
 var clientMethod = `
 func (c *{{.Service.Name | LowerFirst}}Client) {{.MethodName}}(ctx context.Context, in *{{.MethodName}}Request, opts ...grpc.CallOption) (*{{.MethodName}}Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Proto{{.MethodName}}Response)
-	err := c.cc.Invoke(ctx, {{.Service.Name}}_{{.MethodName}}_FullMethodName, in.ToProto(), out, cOpts...)
+	out, err := c.plc.Proto{{.MethodName}}(ctx, in.ToProto(), cOpts...)
 	if err != nil {
 		return nil, err
 	}
