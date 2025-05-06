@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("BBS Plugin Conversion: Desired LRP", func() {
-	var nanosecondPrecision gmeasure.PrecisionBundle = gmeasure.Precision(1 * time.Nanosecond)
+	var nanosecondPrecision = gmeasure.Precision(1 * time.Nanosecond)
 	var desiredLRP models.DesiredLRP
 
 	desiredLRPjson := `{
