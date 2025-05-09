@@ -103,10 +103,12 @@ var serverInterfaceMethod = `
 
 var serverHandler = `
 func _{{.Service.Name}}_{{.MethodName}}_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new({{.MethodName}}Request)
-	if err := dec(in.ToProto()); err != nil {
+	protoIn := new(Proto{{.MethodName}}Request)
+	if err := dec(protoIn); err != nil {
 		return nil, err
 	}
+	in := protoIn.FromProto()
+
 	if interceptor == nil {
 		response, err := srv.({{.Service.Name}}Server).{{.MethodName}}(ctx, in)
 		return response.ToProto(), err
