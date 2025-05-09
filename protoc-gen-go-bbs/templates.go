@@ -30,12 +30,10 @@ type {{.Service.Name}}Client interface {
 
 type {{.Service.Name | LowerFirst}}Client struct { 
 	cc grpc.ClientConnInterface
-	plc Proto{{.Service.Name}}Client
 }
 
 func New{{.Service.Name}}Client(cc grpc.ClientConnInterface) {{.Service.Name}}Client {
-	proto := NewProto{{.Service.Name}}Client(cc)
-	return &{{.Service.Name | LowerFirst}}Client{cc, proto}
+	return &{{.Service.Name | LowerFirst}}Client{cc}
 }
 
 {{.ClientMethods}}
@@ -47,7 +45,9 @@ var clientInterfaceMethod = `
 var clientMethod = `
 func (c *{{.Service.Name | LowerFirst}}Client) {{.MethodName}}(ctx context.Context, in *{{.MethodName}}Request, opts ...grpc.CallOption) (*{{.MethodName}}Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out, err := c.plc.Proto{{.MethodName}}(ctx, in.ToProto(), cOpts...)
+	out := new(Proto{{.MethodName}}Response)
+	protoIn := in.ToProto()
+	err := c.cc.Invoke(ctx, {{.Service.Name}}_{{.MethodName}}_FullMethodName, protoIn, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,18 +104,20 @@ var serverInterfaceMethod = `
 var serverHandler = `
 func _{{.Service.Name}}_{{.MethodName}}_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new({{.MethodName}}Request)
-	if err := dec(in); err != nil {
+	if err := dec(in.ToProto()); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.({{.Service.Name}}Server).{{.MethodName}}(ctx, in)
+		response, err := srv.({{.Service.Name}}Server).{{.MethodName}}(ctx, in)
+		return response.ToProto(), err
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
 		FullMethod: {{.Service.Name}}_{{.MethodName}}_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.({{.Service.Name}}Server).{{.MethodName}}(ctx, req.(*{{.MethodName}}Request))
+		response, err := srv.({{.Service.Name}}Server).{{.MethodName}}(ctx, req.(*{{.MethodName}}Request))
+		return response.ToProto(), err
 	}
 	return interceptor(ctx, in, info, handler)
 }
