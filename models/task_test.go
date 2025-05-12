@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("Task", func() {
 	var taskPayload string
-	var task models.Task
+	var initTask models.Task
 
 	BeforeEach(func() {
 		taskPayload = `{
@@ -117,30 +117,34 @@ var _ = Describe("Task", func() {
 		  }
 		}`
 
-		err := json.Unmarshal([]byte(taskPayload), &task)
+		err := json.Unmarshal([]byte(taskPayload), &initTask)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("serialization", func() {
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := json.Marshal(task)
+			var serializeTask models.Task
+			err := json.Unmarshal([]byte(taskPayload), &serializeTask)
+			Expect(err).NotTo(HaveOccurred())
+
+			jsonSerialization, err := json.Marshal(serializeTask)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(taskPayload))
 
-			protoSerialization, err := proto.Marshal(task.ToProto())
+			protoSerialization, err := proto.Marshal(serializeTask.ToProto())
 			Expect(err).NotTo(HaveOccurred())
 
 			var protoDeserialization models.ProtoTask
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(*protoDeserialization.FromProto()).To(Equal(task))
+			Expect(*protoDeserialization.FromProto()).To(Equal(serializeTask))
 		})
 	})
 
 	Describe("Validate", func() {
 		Context("when the task has a domain, valid guid, stack, and valid action", func() {
 			It("is valid", func() {
-				task = models.Task{
+				validateTask := models.Task{
 					Domain:   "some-domain",
 					TaskGuid: "some-task-guid",
 					TaskDefinition: &models.TaskDefinition{
@@ -152,14 +156,14 @@ var _ = Describe("Task", func() {
 					},
 				}
 
-				err := task.Validate()
+				err := validateTask.Validate()
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		Context("when the task GUID is present but invalid", func() {
 			It("returns an error indicating so", func() {
-				task = models.Task{
+				validateTask := models.Task{
 					Domain:   "some-domain",
 					TaskGuid: "invalid/guid",
 					TaskDefinition: &models.TaskDefinition{
@@ -171,7 +175,7 @@ var _ = Describe("Task", func() {
 					},
 				}
 
-				err := task.Validate()
+				err := validateTask.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("task_guid"))
 			})
