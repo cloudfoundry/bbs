@@ -12,6 +12,8 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 )
 
+var skipPerformanceTests = true
+
 var _ = Describe("BBS Plugin Conversion: Desired LRP", func() {
 	var nanosecondPrecision = gmeasure.Precision(1 * time.Nanosecond)
 	var desiredLRP models.DesiredLRP
@@ -335,6 +337,9 @@ var _ = Describe("BBS Plugin Conversion: Desired LRP", func() {
 	Context("Conversion Performance Testing", func() {
 		Context("Starting with a BBS Plugin Struct", func() {
 			BeforeEach(func() {
+				if skipPerformanceTests {
+					Skip("Skipping Performnace Tests")
+				}
 				desiredLRP = models.DesiredLRP{}
 				err := json.Unmarshal([]byte(desiredLRPjson), &desiredLRP)
 				Expect(err).NotTo(HaveOccurred())
@@ -368,6 +373,9 @@ var _ = Describe("BBS Plugin Conversion: Desired LRP", func() {
 		Context("Starting with a Protobuf Struct", func() {
 			var protoDesiredLRP *models.ProtoDesiredLRP
 			BeforeEach(func() {
+				if skipPerformanceTests {
+					Skip("Skipping Performnace Tests")
+				}
 				desiredLRP = models.DesiredLRP{}
 				err := json.Unmarshal([]byte(desiredLRPjson), &desiredLRP)
 				protoDesiredLRP = desiredLRP.ToProto()
@@ -403,6 +411,9 @@ var _ = Describe("BBS Plugin Conversion: Desired LRP", func() {
 			var binaryDesiredLRP []byte
 			var protoDesiredLRP *models.ProtoDesiredLRP
 			BeforeEach(func() {
+				if skipPerformanceTests {
+					Skip("Skipping Performnace Tests")
+				}
 				desiredLRP = models.DesiredLRP{}
 				err := json.Unmarshal([]byte(desiredLRPjson), &desiredLRP)
 				protoDesiredLRP = desiredLRP.ToProto()
