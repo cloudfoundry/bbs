@@ -83,8 +83,8 @@ var _ = Describe("DesiredLRP", func() {
               },
               "user": "vcap",
               "log_source": "APP",
-              "suppress_log_output": false,
-              "volume_mounted_files": null
+			  "suppress_log_output": false,
+			  "volume_mounted_files": null
             }
           },
           {
@@ -123,8 +123,8 @@ var _ = Describe("DesiredLRP", func() {
                 "nofile": 16384
               },
               "user": "vcap",
-              "suppress_log_output": false,
-              "volume_mounted_files": null
+			  "suppress_log_output": false,
+			  "volume_mounted_files": null
             }
           }
         ]
@@ -143,8 +143,8 @@ var _ = Describe("DesiredLRP", func() {
             },
             "user": "vcap",
             "log_source": "HEALTH",
-            "suppress_log_output": true,
-            "volume_mounted_files": null
+			"suppress_log_output": true,
+			"volume_mounted_files": null
           }
         },
         "timeout_ms": 30000000

@@ -71,7 +71,6 @@ message DesiredLRPRunInfo {
 
   repeated Sidecar sidecars = 26;
   LogRateLimit log_rate_limit = 27;
-
   repeated File volume_mounted_files = 28 [(gogoproto.jsontag) = "volume_mounted_files"];
 }
 
