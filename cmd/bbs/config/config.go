@@ -54,7 +54,6 @@ type BBSConfig struct {
 	RepClientCert                 string                `json:"rep_client_cert,omitempty"`
 	RepClientKey                  string                `json:"rep_client_key,omitempty"`
 	RepClientSessionCacheSize     int                   `json:"rep_client_session_cache_size,omitempty"`
-	RepRequireTLS                 bool                  `json:"rep_require_tls,omitempty"`
 	ReportInterval                durationjson.Duration `json:"report_interval,omitempty"`
 	RequireSSL                    bool                  `json:"require_ssl,omitempty"`
 	SQLCACertFile                 string                `json:"sql_ca_cert_file,omitempty"`
