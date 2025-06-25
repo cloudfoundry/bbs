@@ -46,6 +46,27 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
+func (h *ActualLRPHandler) MultipleActualLRPsByMultipleGuids(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	var err error
+	logger = logger.Session("multiple-actual-lrps").WithTraceInfo(req)
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	request := &models.MultipleActualLRPsByMultipleGuidsRequest{}
+	response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+
+	err = parseRequest(logger, req, request)
+	if err == nil {
+		filter := models.MultipleActualLRPsByMultipleGuidsFilter{ProcessGuid: request.ProcessGuids}
+		response.ActualLrps, err = h.db.MultipleActualLRPsByMultipleGuids(req.Context(), logger, filter)
+	}
+
+	response.Error = models.ConvertError(err)
+
+	writeResponse(w, response)
+	exitIfUnrecoverable(logger, h.exitChan, response.Error)
+}
+
 // Deprecated: use ActaulLRPs instead
 func (h *ActualLRPHandler) ActualLRPGroups(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error

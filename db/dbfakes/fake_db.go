@@ -408,6 +408,21 @@ type FakeDB struct {
 		result1 []string
 		result2 error
 	}
+	MultipleActualLRPsByMultipleGuidsStub        func(context.Context, lager.Logger, models.MultipleActualLRPsByMultipleGuidsFilter) ([]*models.ActualLRP, error)
+	multipleActualLRPsByMultipleGuidsMutex       sync.RWMutex
+	multipleActualLRPsByMultipleGuidsArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 models.MultipleActualLRPsByMultipleGuidsFilter
+	}
+	multipleActualLRPsByMultipleGuidsReturns struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}
+	multipleActualLRPsByMultipleGuidsReturnsOnCall map[int]struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}
 	PerformEncryptionStub        func(context.Context, lager.Logger) error
 	performEncryptionMutex       sync.RWMutex
 	performEncryptionArgsForCall []struct {
@@ -2330,6 +2345,72 @@ func (fake *FakeDB) FreshDomainsReturnsOnCall(i int, result1 []string, result2 e
 	}{result1, result2}
 }
 
+func (fake *FakeDB) MultipleActualLRPsByMultipleGuids(arg1 context.Context, arg2 lager.Logger, arg3 models.MultipleActualLRPsByMultipleGuidsFilter) ([]*models.ActualLRP, error) {
+	fake.multipleActualLRPsByMultipleGuidsMutex.Lock()
+	ret, specificReturn := fake.multipleActualLRPsByMultipleGuidsReturnsOnCall[len(fake.multipleActualLRPsByMultipleGuidsArgsForCall)]
+	fake.multipleActualLRPsByMultipleGuidsArgsForCall = append(fake.multipleActualLRPsByMultipleGuidsArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 models.MultipleActualLRPsByMultipleGuidsFilter
+	}{arg1, arg2, arg3})
+	stub := fake.MultipleActualLRPsByMultipleGuidsStub
+	fakeReturns := fake.multipleActualLRPsByMultipleGuidsReturns
+	fake.recordInvocation("MultipleActualLRPsByMultipleGuids", []interface{}{arg1, arg2, arg3})
+	fake.multipleActualLRPsByMultipleGuidsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeDB) MultipleActualLRPsByMultipleGuidsCallCount() int {
+	fake.multipleActualLRPsByMultipleGuidsMutex.RLock()
+	defer fake.multipleActualLRPsByMultipleGuidsMutex.RUnlock()
+	return len(fake.multipleActualLRPsByMultipleGuidsArgsForCall)
+}
+
+func (fake *FakeDB) MultipleActualLRPsByMultipleGuidsCalls(stub func(context.Context, lager.Logger, models.MultipleActualLRPsByMultipleGuidsFilter) ([]*models.ActualLRP, error)) {
+	fake.multipleActualLRPsByMultipleGuidsMutex.Lock()
+	defer fake.multipleActualLRPsByMultipleGuidsMutex.Unlock()
+	fake.MultipleActualLRPsByMultipleGuidsStub = stub
+}
+
+func (fake *FakeDB) MultipleActualLRPsByMultipleGuidsArgsForCall(i int) (context.Context, lager.Logger, models.MultipleActualLRPsByMultipleGuidsFilter) {
+	fake.multipleActualLRPsByMultipleGuidsMutex.RLock()
+	defer fake.multipleActualLRPsByMultipleGuidsMutex.RUnlock()
+	argsForCall := fake.multipleActualLRPsByMultipleGuidsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeDB) MultipleActualLRPsByMultipleGuidsReturns(result1 []*models.ActualLRP, result2 error) {
+	fake.multipleActualLRPsByMultipleGuidsMutex.Lock()
+	defer fake.multipleActualLRPsByMultipleGuidsMutex.Unlock()
+	fake.MultipleActualLRPsByMultipleGuidsStub = nil
+	fake.multipleActualLRPsByMultipleGuidsReturns = struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeDB) MultipleActualLRPsByMultipleGuidsReturnsOnCall(i int, result1 []*models.ActualLRP, result2 error) {
+	fake.multipleActualLRPsByMultipleGuidsMutex.Lock()
+	defer fake.multipleActualLRPsByMultipleGuidsMutex.Unlock()
+	fake.MultipleActualLRPsByMultipleGuidsStub = nil
+	if fake.multipleActualLRPsByMultipleGuidsReturnsOnCall == nil {
+		fake.multipleActualLRPsByMultipleGuidsReturnsOnCall = make(map[int]struct {
+			result1 []*models.ActualLRP
+			result2 error
+		})
+	}
+	fake.multipleActualLRPsByMultipleGuidsReturnsOnCall[i] = struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeDB) PerformEncryption(arg1 context.Context, arg2 lager.Logger) error {
 	fake.performEncryptionMutex.Lock()
 	ret, specificReturn := fake.performEncryptionReturnsOnCall[len(fake.performEncryptionArgsForCall)]
@@ -3591,6 +3672,8 @@ func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	defer fake.failTaskMutex.RUnlock()
 	fake.freshDomainsMutex.RLock()
 	defer fake.freshDomainsMutex.RUnlock()
+	fake.multipleActualLRPsByMultipleGuidsMutex.RLock()
+	defer fake.multipleActualLRPsByMultipleGuidsMutex.RUnlock()
 	fake.performEncryptionMutex.RLock()
 	defer fake.performEncryptionMutex.RUnlock()
 	fake.promoteSuspectActualLRPMutex.RLock()
