@@ -52,6 +52,10 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(internalRequest)
 }
 
+func (request *MultipleActualLRPsByMultipleGuidsRequest) Validate() error {
+	return nil
+}
+
 // Deprecated: use the ActualLRPInstances API instead
 func (request *ActualLRPGroupsRequest) Validate() error {
 	return nil

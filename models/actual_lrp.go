@@ -40,6 +40,10 @@ type ActualLRPFilter struct {
 	Index       *int32
 }
 
+type MultipleActualLRPsByMultipleGuidsFilter struct {
+	ProcessGuid []string
+}
+
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
 	return ActualLRPKey{processGuid, index, domain}
 }
@@ -100,6 +104,7 @@ func NewPortMappingWithTLSProxy(hostPort, containerPort, tlsHost, tlsContainer u
 func (key ActualLRPInstanceKey) Empty() bool {
 	return key.InstanceGuid == "" && key.CellId == ""
 }
+
 func (a *ActualLRP) Copy() *ActualLRP {
 	newActualLRP := *a
 	return &newActualLRP

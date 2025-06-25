@@ -12,6 +12,8 @@ const (
 
 	// Actual LRPs
 	ActualLRPsRoute_r0 = "ActualLRPs"
+	// Multiple actual LRPs by process GUID
+	MultipleActualLRPsByProcessGuidRoute_r0 = "MultipleActualLRPsByProcessGuid"
 	// Deprecated: use the ActualLRPInstances API instead
 	ActualLRPGroupsRoute_r0 = "ActualLRPGroups"
 	// Deprecated: use the ActualLRPInstances API instead
@@ -72,15 +74,15 @@ const (
 	TaskByGuidRoute_r2 = "TaskByGuid_r2"
 
 	// Event Streaming
-	//Deprecated: use LRPInstanceEventStreamRoute_1 instead
+	// Deprecated: use LRPInstanceEventStreamRoute_1 instead
 	LRPGroupEventStreamRoute_r1    = "EventStream"
 	TaskEventStreamRoute_r1        = "TaskEventStream"
 	LRPInstanceEventStreamRoute_r1 = "LRPInstanceEventStream"
-	//Deprecated: use LRPInstanceEventStreamRoute_1 instead
+	// Deprecated: use LRPInstanceEventStreamRoute_1 instead
 	EventStreamRoute_r0 = "EventStream_r0"
 	// Deprecated: use TaskEventStreamRoute_r1 instead
 	TaskEventStreamRoute_r0 = "TaskEventStream_r0"
-	//Deprecated: use LrpInstanceEventStreamRoute_r1 instead
+	// Deprecated: use LrpInstanceEventStreamRoute_r1 instead
 	LrpInstanceEventStreamRoute_r0 = "LrpInstanceEventStream_r0"
 
 	// Cell Presence
@@ -97,6 +99,7 @@ var Routes = rata.Routes{
 
 	// Actual LRPs
 	{Path: "/v1/actual_lrps/list", Method: "POST", Name: ActualLRPsRoute_r0},
+	{Path: "/v1/actual_lrps/list_by_multiple_process_guid", Method: "POST", Name: MultipleActualLRPsByProcessGuidRoute_r0},
 	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute_r0},                                              // DEPRECATED
 	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute_r0},                 // DEPRECATED
 	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute_r0}, // DEPRECATED
