@@ -115,10 +115,9 @@ var _ = Describe("ActualLRP Handlers", func() {
 					Since:    2626,
 					Presence: models.ActualLRP_Suspect,
 				}
-				actualLRPs =
-					[]*models.ActualLRP{
-						&suspectLRP1, &actualLRP1, &actualLRP2, &evacuatingLRP2,
-					}
+				actualLRPs = []*models.ActualLRP{
+					&suspectLRP1, &actualLRP1, &actualLRP2, &evacuatingLRP2,
+				}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 			})
 
@@ -258,6 +257,131 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 	})
 
+	Describe("MultipleActualLRPsByMultipleGuids", func() {
+		var requestBody *models.MultipleActualLRPsByMultipleGuidsRequest
+
+		BeforeEach(func() {
+			requestBody = &models.MultipleActualLRPsByMultipleGuidsRequest{
+				ProcessGuids: []string{"guid1", "guid2"},
+			}
+		})
+
+		JustBeforeEach(func() {
+			request := newTestRequest(requestBody)
+			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+			handler.MultipleActualLRPsByMultipleGuids(logger, responseRecorder, request)
+		})
+
+		Context("when the DB returns actual lrps for the given GUIDs", func() {
+			var actualLRPs []*models.ActualLRP
+
+			BeforeEach(func() {
+				actualLRPs = []*models.ActualLRP{
+					{
+						ActualLRPKey: models.ActualLRPKey{
+							ProcessGuid: "guid1",
+							Index:       0,
+							Domain:      "domain",
+						},
+						State: models.ActualLRPStateRunning,
+					},
+					{
+						ActualLRPKey: models.ActualLRPKey{
+							ProcessGuid: "guid2",
+							Index:       1,
+							Domain:      "domain",
+						},
+						State: models.ActualLRPStateClaimed,
+					},
+				}
+				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns(actualLRPs, nil)
+			})
+
+			It("returns a list of actual lrps", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.ActualLrps).To(Equal(actualLRPs))
+			})
+
+			It("calls the DB with the correct filter", func() {
+				Expect(fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsCallCount()).To(Equal(1))
+				_, _, filter := fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsArgsForCall(0)
+				Expect(filter.ProcessGuid).To(Equal([]string{"guid1", "guid2"}))
+			})
+		})
+
+		Context("when the DB returns no actual lrps", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns([]*models.ActualLRP{}, nil)
+			})
+
+			It("returns an empty list", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(BeNil())
+				Expect(response.ActualLrps).To(BeEmpty())
+			})
+		})
+
+		Context("when the request has an empty process_guids list", func() {
+			BeforeEach(func() {
+				requestBody = &models.MultipleActualLRPsByMultipleGuidsRequest{
+					ProcessGuids: []string{},
+				}
+			})
+
+			JustBeforeEach(func() {
+				request := newTestRequest(requestBody)
+				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
+				handler.MultipleActualLRPsByMultipleGuids(logger, responseRecorder, request)
+			})
+
+			It("returns a validation error", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error.Message).To(ContainSubstring("process_guids must not be empty"))
+			})
+		})
+
+		Context("when the DB returns an unrecoverable error", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns([]*models.ActualLRP{}, models.NewUnrecoverableError(nil))
+			})
+
+			It("logs and writes to the exit channel", func() {
+				Eventually(logger).Should(gbytes.Say("unrecoverable-error"))
+				Eventually(logger).Should(gbytes.Say(b3RequestIdHeader))
+				Eventually(exitCh).Should(Receive())
+			})
+		})
+
+		Context("when the DB errors out", func() {
+			BeforeEach(func() {
+				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns([]*models.ActualLRP{}, models.ErrUnknownError)
+			})
+
+			It("provides relevant error information", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
+			})
+		})
+	})
+
 	Describe("ActualLRPGroups", func() {
 		var requestBody interface{}
 
@@ -277,20 +401,19 @@ var _ = Describe("ActualLRP Handlers", func() {
 			var actualLRPGroups []*models.ActualLRPGroup
 
 			BeforeEach(func() {
-				actualLRPs :=
-					[]*models.ActualLRP{
-						&actualLRP1,
-						&actualLRP2,
-						&evacuatingLRP2,
-					}
+				actualLRPs := []*models.ActualLRP{
+					&actualLRP1,
+					&actualLRP2,
+					&evacuatingLRP2,
+				}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				actualLRPGroups = []*models.ActualLRPGroup{
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					&models.ActualLRPGroup{Instance: &actualLRP1},
+					{Instance: &actualLRP1},
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					&models.ActualLRPGroup{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
+					{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
 				}
 			})
 
@@ -425,19 +548,17 @@ var _ = Describe("ActualLRP Handlers", func() {
 			var actualLRPGroups []*models.ActualLRPGroup
 
 			BeforeEach(func() {
-				actualLRPGroups =
-					//lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-					[]*models.ActualLRPGroup{
-						{Instance: &actualLRP1},
-						{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
-					}
+				actualLRPGroups = //lint:ignore SA1019 - deprecated model used for testing deprecated functionality
+				[]*models.ActualLRPGroup{
+					{Instance: &actualLRP1},
+					{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
+				}
 
-				actualLRPs =
-					[]*models.ActualLRP{
-						&actualLRP1,
-						&actualLRP2,
-						&evacuatingLRP2,
-					}
+				actualLRPs = []*models.ActualLRP{
+					&actualLRP1,
+					&actualLRP2,
+					&evacuatingLRP2,
+				}
 				fakeActualLRPDB.ActualLRPsReturns(actualLRPs, nil)
 			})
 

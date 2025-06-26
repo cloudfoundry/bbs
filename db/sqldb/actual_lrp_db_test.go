@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("ActualLRPDB", func() {
-	var availabilityZone = "some-zone"
+	availabilityZone := "some-zone"
 
 	BeforeEach(func() {
 		fakeGUIDProvider.NextGUIDReturns("my-awesome-guid", nil)
@@ -585,6 +585,62 @@ var _ = Describe("ActualLRPDB", func() {
 					Expect(actualLRPs).To(BeEmpty())
 				})
 			})
+		})
+	})
+
+	Describe("MultipleActualLRPsByMultipleGuids", func() {
+		var allActualLRPs []*models.ActualLRP
+
+		BeforeEach(func() {
+			allActualLRPs = []*models.ActualLRP{}
+			fakeGUIDProvider.NextGUIDReturns("mod-tag-guid", nil)
+
+			for i, guid := range []string{"guid1", "guid2", "guid3"} {
+				key := &models.ActualLRPKey{
+					ProcessGuid: guid,
+					Index:       int32(i),
+					Domain:      "domain",
+				}
+				_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, key)
+				Expect(err).NotTo(HaveOccurred())
+
+				lrp := &models.ActualLRP{
+					ActualLRPKey: *key,
+					State:        models.ActualLRPStateUnclaimed,
+					Since:        fakeClock.Now().UnixNano(),
+					ModificationTag: models.ModificationTag{
+						Epoch: "mod-tag-guid",
+						Index: 0,
+					},
+					ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
+					MetricTags:              map[string]string{},
+					OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
+				}
+				allActualLRPs = append(allActualLRPs, lrp)
+			}
+		})
+
+		It("returns all LRPs for the given GUIDs", func() {
+			filter := models.MultipleActualLRPsByMultipleGuidsFilter{
+				ProcessGuid: []string{"guid1", "guid3"},
+			}
+			lrps, err := sqlDB.MultipleActualLRPsByMultipleGuids(ctx, logger, filter)
+			Expect(err).NotTo(HaveOccurred())
+
+			var guids []string
+			for _, lrp := range lrps {
+				guids = append(guids, lrp.ProcessGuid)
+			}
+			Expect(guids).To(ConsistOf("guid1", "guid3"))
+		})
+
+		It("returns empty if no GUIDs match", func() {
+			filter := models.MultipleActualLRPsByMultipleGuidsFilter{
+				ProcessGuid: []string{"notfound"},
+			}
+			lrps, err := sqlDB.MultipleActualLRPsByMultipleGuids(ctx, logger, filter)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lrps).To(BeEmpty())
 		})
 	})
 
@@ -1216,9 +1272,7 @@ var _ = Describe("ActualLRPDB", func() {
 						})
 
 						Context("and the routable is NOT the same", func() {
-							var (
-								expectedActualLRPs []*models.ActualLRP
-							)
+							var expectedActualLRPs []*models.ActualLRP
 
 							BeforeEach(func() {
 								var err error
@@ -1245,9 +1299,7 @@ var _ = Describe("ActualLRPDB", func() {
 						})
 
 						Context("and the availability_zone is NOT the same", func() {
-							var (
-								expectedActualLRPs []*models.ActualLRP
-							)
+							var expectedActualLRPs []*models.ActualLRP
 
 							BeforeEach(func() {
 								var err error
@@ -1835,7 +1887,6 @@ var _ = Describe("ActualLRPDB", func() {
 
 					_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone)
 					Expect(err).NotTo(HaveOccurred())
-
 				})
 
 				It("only update the non evacuating one", func() {
@@ -1867,7 +1918,7 @@ var _ = Describe("ActualLRPDB", func() {
 	})
 
 	Describe("FailActualLRP", func() {
-		var actualLRPKey = &models.ActualLRPKey{
+		actualLRPKey := &models.ActualLRPKey{
 			ProcessGuid: "the-guid",
 			Index:       1,
 			Domain:      "the-domain",
@@ -1985,7 +2036,7 @@ var _ = Describe("ActualLRPDB", func() {
 	})
 
 	Describe("RemoveActualLRP", func() {
-		var actualLRPKey = &models.ActualLRPKey{
+		actualLRPKey := &models.ActualLRPKey{
 			ProcessGuid: "the-guid",
 			Index:       1,
 			Domain:      "the-domain",
@@ -1993,7 +2044,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 		Context("when the actual LRP exists", func() {
 			var actualLRP *models.ActualLRP
-			var otherActualLRPKey = &models.ActualLRPKey{
+			otherActualLRPKey := &models.ActualLRPKey{
 				ProcessGuid: "other-guid",
 				Index:       1,
 				Domain:      "the-domain",

@@ -56,6 +56,33 @@ var _ = Describe("ActualLRP Requests", func() {
 		})
 	})
 
+	Describe("MultipleActualLRPsByMultipleGuidsRequest", func() {
+		Describe("Validate", func() {
+			var request models.MultipleActualLRPsByMultipleGuidsRequest
+
+			BeforeEach(func() {
+				request = models.MultipleActualLRPsByMultipleGuidsRequest{}
+			})
+
+			Context("when process_guids is empty", func() {
+				It("returns a validation error", func() {
+					Expect(request.Validate()).To(HaveOccurred())
+					Expect(request.Validate().Error()).To(ContainSubstring("process_guids must not be empty"))
+				})
+			})
+
+			Context("when process_guids is not empty", func() {
+				BeforeEach(func() {
+					request.ProcessGuids = []string{"guid1", "guid2"}
+				})
+
+				It("returns nil", func() {
+					Expect(request.Validate()).To(BeNil())
+				})
+			})
+		})
+	})
+
 	Describe("ActualLRPGroupsRequest", func() {
 		Describe("Validate", func() {
 			var request models.ActualLRPGroupsRequest
