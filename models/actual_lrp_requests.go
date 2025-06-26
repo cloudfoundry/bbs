@@ -53,6 +53,9 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 }
 
 func (request *MultipleActualLRPsByMultipleGuidsRequest) Validate() error {
+	if len(request.ProcessGuids) == 0 {
+		return NewError(Error_InvalidRequest, "process_guids must not be empty")
+	}
 	return nil
 }
 
