@@ -183,7 +183,6 @@ var _ = BeforeEach(func() {
 		MaxIdleDatabaseConnections:  200,
 		AuctioneerRequireTLS:        false,
 		RepClientSessionCacheSize:   0,
-		RepRequireTLS:               false,
 
 		ListenAddress:     bbsAddress,
 		AdvertiseURL:      bbsURL.String(),

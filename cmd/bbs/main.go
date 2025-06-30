@@ -159,7 +159,7 @@ func main() {
 	taskHub := events.NewHub(logger)
 
 	repTLSConfig := &rep.TLSConfig{
-		RequireTLS:      bbsConfig.RepRequireTLS,
+		RequireTLS:      true,
 		CaCertFile:      bbsConfig.RepCACert,
 		CertFile:        bbsConfig.RepClientCert,
 		KeyFile:         bbsConfig.RepClientKey,
