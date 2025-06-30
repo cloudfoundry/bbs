@@ -1,13 +1,11 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 
-option (gogoproto.equal_all) = false;
-option (gogoproto.goproto_enum_prefix_all) = true;
-
-message Error {
+message ProtoError {
   enum Type {
     reserved 1, 2, 10, 20, 22, 23, 25; // previously used and removed values
 
@@ -47,6 +45,6 @@ message Error {
     Timeout = 31;
   }
 
-  Type type = 1 [(gogoproto.jsontag) = "type"];
-  string message = 2 [(gogoproto.jsontag) = "message"];
+  Type type = 1 [json_name = "type", (bbs.bbs_json_always_emit) = true];
+  string message = 2 [json_name = "message", (bbs.bbs_json_always_emit) = true, (bbs.bbs_exclude_from_equal) = true];
 }

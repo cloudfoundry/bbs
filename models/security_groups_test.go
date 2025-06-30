@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/bbs/models"
-	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("SecurityGroupRule", func() {
@@ -376,8 +376,7 @@ var _ = Describe("SecurityGroupRule", func() {
         "destinations": [
           "0.0.0.0-9.255.255.255"
         ],
-        "log": false,
-				"annotations":["quack"]
+		"annotations":["quack"]
       }`
 
 			securityGroup = models.SecurityGroupRule{
@@ -389,18 +388,18 @@ var _ = Describe("SecurityGroupRule", func() {
 		})
 
 		It("successfully round trips through json and protobuf", func() {
-			jsonSerialization, err := json.Marshal(securityGroup)
+			jsonSerialization, err := json.Marshal(securityGroup.ToProto())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 
-			protoSerialization, err := proto.Marshal(&securityGroup)
+			protoSerialization, err := proto.Marshal(securityGroup.ToProto())
 			Expect(err).NotTo(HaveOccurred())
 
-			var protoDeserialization models.SecurityGroupRule
+			var protoDeserialization models.ProtoSecurityGroupRule
 			err = proto.Unmarshal(protoSerialization, &protoDeserialization)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(protoDeserialization).To(Equal(securityGroup))
+			Expect(*protoDeserialization.FromProto()).To(Equal(securityGroup))
 		})
 
 		Context("when annotations are empty", func() {
@@ -409,15 +408,14 @@ var _ = Describe("SecurityGroupRule", func() {
 					"protocol": "all",
 					"destinations": [
 						"0.0.0.0-9.255.255.255"
-					],
-					"log": false
+					]
 				}`
 
 				securityGroup.Annotations = []string{}
 			})
 
 			It("successfully json serializes empty arrays to nil", func() {
-				jsonSerialization, err := json.Marshal(securityGroup)
+				jsonSerialization, err := json.Marshal(securityGroup.ToProto())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(jsonSerialization).To(MatchJSON(securityGroupJson))
 			})

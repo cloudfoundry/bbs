@@ -1,28 +1,27 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 
-option (gogoproto.goproto_enum_prefix_all) = true;
-
-message SharedDevice {
-  string volume_id = 1 [(gogoproto.jsontag) = "volume_id"];
-  string mount_config = 2 [(gogoproto.jsontag) = "mount_config"];
+message ProtoSharedDevice {
+  string volume_id = 1 [json_name = "volume_id", (bbs.bbs_json_always_emit) = true];
+  string mount_config = 2 [json_name = "mount_config", (bbs.bbs_json_always_emit) = true];
 }
 
-message VolumeMount {
+message ProtoVolumeMount {
   reserved 2, 4, 5;
 
-  string driver = 1 [(gogoproto.jsontag) = "driver"];
-  string container_dir = 3 [(gogoproto.jsontag) = "container_dir"];
-  string mode = 6 [(gogoproto.jsontag) = "mode"];
+  string driver = 1 [json_name = "driver", (bbs.bbs_json_always_emit) = true];
+  string container_dir = 3 [json_name = "container_dir", (bbs.bbs_json_always_emit) = true];
+  string mode = 6 [json_name = "mode", (bbs.bbs_json_always_emit) = true];
 
   // oneof device {
-    SharedDevice shared = 7 [(gogoproto.jsontag) = "shared"];
+    ProtoSharedDevice shared = 7 [json_name = "shared", (bbs.bbs_json_always_emit) = true];
   // }
 }
 
-message VolumePlacement {
-  repeated string driver_names = 1 [(gogoproto.jsontag) = "driver_names"];
+message ProtoVolumePlacement {
+  repeated string driver_names = 1 [json_name = "driver_names", (bbs.bbs_json_always_emit) = true];
 }

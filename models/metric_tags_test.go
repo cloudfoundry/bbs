@@ -19,7 +19,7 @@ var _ = Describe("MetricTagValue", func() {
 
 		It("is valid when there is only a dynamic value specified", func() {
 			value := &models.MetricTagValue{
-				Dynamic: models.MetricTagDynamicValueIndex,
+				Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex,
 			}
 			Expect(value.Validate()).To(Succeed())
 		})
@@ -34,7 +34,7 @@ var _ = Describe("MetricTagValue", func() {
 		It("is not valid when both static and dynamic values are specified", func() {
 			value := &models.MetricTagValue{
 				Static:  "some-value",
-				Dynamic: models.MetricTagDynamicValueIndex,
+				Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex,
 			}
 			err := value.Validate()
 			Expect(err).To(MatchError(ContainSubstring("static")))
@@ -58,9 +58,9 @@ var _ = Describe("MetricTagValue", func() {
 					Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 					Expect(testV).To(Equal(v))
 				},
-				Entry("invalid", models.DynamicValueInvalid, `"DynamicValueInvalid"`),
-				Entry("index", models.MetricTagDynamicValueIndex, `"INDEX"`),
-				Entry("instance_guid", models.MetricTagDynamicValueInstanceGuid, `"INSTANCE_GUID"`),
+				Entry("invalid", models.MetricTagValue_DynamicValueInvalid, `"DynamicValueInvalid"`),
+				Entry("index", models.MetricTagValue_MetricTagDynamicValueIndex, `"INDEX"`),
+				Entry("instance_guid", models.MetricTagValue_MetricTagDynamicValueInstanceGuid, `"INSTANCE_GUID"`),
 			)
 		})
 	})
@@ -69,11 +69,11 @@ var _ = Describe("MetricTagValue", func() {
 		It("converts a valid maps", func() {
 			tags, err := models.ConvertMetricTags(map[string]*models.MetricTagValue{
 				"foo": &models.MetricTagValue{Static: "bar"},
-				"biz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueIndex},
-				"baz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueInstanceGuid},
+				"biz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex},
+				"baz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueInstanceGuid},
 			}, map[models.MetricTagValue_DynamicValue]interface{}{
-				models.MetricTagDynamicValueIndex:        int32(4),
-				models.MetricTagDynamicValueInstanceGuid: "my-guid",
+				models.MetricTagValue_MetricTagDynamicValueIndex:        int32(4),
+				models.MetricTagValue_MetricTagDynamicValueInstanceGuid: "my-guid",
 			})
 			Expect(err).To(Succeed())
 			Expect(tags).To(Equal(map[string]string{
@@ -86,11 +86,11 @@ var _ = Describe("MetricTagValue", func() {
 		It("errors with invalid Index value", func() {
 			_, err := models.ConvertMetricTags(map[string]*models.MetricTagValue{
 				"foo": &models.MetricTagValue{Static: "bar"},
-				"biz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueIndex},
-				"baz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueInstanceGuid},
+				"biz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex},
+				"baz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueInstanceGuid},
 			}, map[models.MetricTagValue_DynamicValue]interface{}{
-				models.MetricTagDynamicValueIndex:        "$44",
-				models.MetricTagDynamicValueInstanceGuid: "my-guid",
+				models.MetricTagValue_MetricTagDynamicValueIndex:        "$44",
+				models.MetricTagValue_MetricTagDynamicValueInstanceGuid: "my-guid",
 			})
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("could not convert value $44 of type string to int32"))
@@ -99,11 +99,11 @@ var _ = Describe("MetricTagValue", func() {
 		It("errors with invalid InstanceGuid value", func() {
 			_, err := models.ConvertMetricTags(map[string]*models.MetricTagValue{
 				"foo": &models.MetricTagValue{Static: "bar"},
-				"biz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueIndex},
-				"baz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueInstanceGuid},
+				"biz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex},
+				"baz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueInstanceGuid},
 			}, map[models.MetricTagValue_DynamicValue]interface{}{
-				models.MetricTagDynamicValueIndex:        int32(33),
-				models.MetricTagDynamicValueInstanceGuid: 55,
+				models.MetricTagValue_MetricTagDynamicValueIndex:        int32(33),
+				models.MetricTagValue_MetricTagDynamicValueInstanceGuid: 55,
 			})
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("could not convert value 55 of type int to string"))
@@ -112,8 +112,8 @@ var _ = Describe("MetricTagValue", func() {
 		It("errors with nil dynamic value map", func() {
 			_, err := models.ConvertMetricTags(map[string]*models.MetricTagValue{
 				"foo": &models.MetricTagValue{Static: "bar"},
-				"biz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueIndex},
-				"baz": &models.MetricTagValue{Dynamic: models.MetricTagDynamicValueInstanceGuid},
+				"biz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueIndex},
+				"baz": &models.MetricTagValue{Dynamic: models.MetricTagValue_MetricTagDynamicValueInstanceGuid},
 			}, map[models.MetricTagValue_DynamicValue]interface{}{})
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("could not convert value <nil> of type <nil>"))

@@ -1,10 +1,9 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-
-message File {
-  string path = 1 [(gogoproto.jsontag) = "path"];
-  string content = 2 [(gogoproto.jsontag) = "content"];
+message ProtoFile {
+  string path = 1 [json_name = "path"];
+  string content = 2 [json_name = "content"];
 }

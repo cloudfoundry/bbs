@@ -1,53 +1,54 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 import "desired_lrp.proto";
 import "error.proto";
 
-message DesiredLRPLifecycleResponse {
-  Error error = 1;
+message ProtoDesiredLRPLifecycleResponse {
+  ProtoError error = 1;
 }
 
-message DesiredLRPsResponse {
-  Error error = 1;
-  repeated DesiredLRP desired_lrps = 2;
+message ProtoDesiredLRPsResponse {
+  ProtoError error                      = 1;
+  repeated ProtoDesiredLRP desired_lrps = 2 [json_name = "desired_lrps"];
 }
 
-message DesiredLRPsRequest {
-  string domain = 1 [(gogoproto.jsontag) = "domain"];
-  repeated string process_guids = 2;
+message ProtoDesiredLRPsRequest {
+  string domain                 = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
+  repeated string process_guids = 2 [json_name = "process_guids"];
 }
 
-message DesiredLRPResponse {
-  Error error = 1;
-  DesiredLRP desired_lrp = 2;
+message ProtoDesiredLRPResponse {
+  ProtoError error            = 1;
+  ProtoDesiredLRP desired_lrp = 2 [json_name = "desired_lrp"];
 }
 
-message DesiredLRPSchedulingInfosResponse {
-  Error error = 1;
-  repeated DesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2;
+message ProtoDesiredLRPSchedulingInfosResponse {
+  ProtoError error                                                    = 1;
+  repeated ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_infos = 2 [json_name = "desired_lrp_scheduling_infos"];
 }
 
-message DesiredLRPSchedulingInfoByProcessGuidResponse {
-  Error error = 1;
-  DesiredLRPSchedulingInfo desired_lrp_scheduling_info = 2;
+message ProtoDesiredLRPSchedulingInfoByProcessGuidResponse {
+  ProtoError error                                          = 1;
+  ProtoDesiredLRPSchedulingInfo desired_lrp_scheduling_info = 2 [json_name = "desired_lrp_scheduling_info"];
 }
 
-message DesiredLRPByProcessGuidRequest {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+message ProtoDesiredLRPByProcessGuidRequest {
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
 }
 
-message DesireLRPRequest {
-  DesiredLRP desired_lrp = 1;
+message ProtoDesireLRPRequest {
+  ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
 }
 
-message UpdateDesiredLRPRequest {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
-  DesiredLRPUpdate update = 2;
+message ProtoUpdateDesiredLRPRequest {
+  string process_guid           = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
+  ProtoDesiredLRPUpdate update  = 2;
 }
 
-message RemoveDesiredLRPRequest {
-  string process_guid = 1 [(gogoproto.jsontag) = "process_guid"];
+message ProtoRemoveDesiredLRPRequest {
+  string process_guid = 1 [json_name = "process_guid", (bbs.bbs_json_always_emit) = true];
 }

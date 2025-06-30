@@ -14,9 +14,9 @@ var _ = Describe("Actions", func() {
 	itSerializes := func(actionPayload string, a *models.Action) {
 		action := models.UnwrapAction(a)
 		It("Action -> JSON for "+string(action.ActionType()), func() {
-			json, err := json.Marshal(action)
+			marshalJson, err := json.Marshal(a.GetValue())
 			Expect(err).NotTo(HaveOccurred())
-			Expect(json).To(MatchJSON(actionPayload))
+			Expect(marshalJson).To(MatchJSON(actionPayload))
 		})
 	}
 
@@ -58,7 +58,7 @@ var _ = Describe("Actions", func() {
 
 	Describe("Nil Actions", func() {
 		It("Action -> JSON for a Nil action", func() {
-			var action *models.Action = nil
+			var action *models.ProtoAction = nil
 			By("marshalling to JSON", func() {
 				json, err := json.Marshal(action)
 				Expect(err).NotTo(HaveOccurred())
@@ -191,7 +191,7 @@ var _ = Describe("Actions", func() {
 
 				Context("with checksum", func() {
 					for _, testCase := range []ValidatorErrorCase{
-						ValidatorErrorCase{
+						{
 							"checksum value",
 							&models.DownloadAction{
 								From:              "web_location",
@@ -201,7 +201,7 @@ var _ = Describe("Actions", func() {
 								ChecksumValue:     "",
 							},
 						},
-						ValidatorErrorCase{
+						{
 							"checksum algorithm",
 							&models.DownloadAction{
 								From:              "web_location",
@@ -211,7 +211,7 @@ var _ = Describe("Actions", func() {
 								ChecksumValue:     "some checksum",
 							},
 						},
-						ValidatorErrorCase{
+						{
 							"invalid algorithm",
 							&models.DownloadAction{
 								From:              "web_location",
@@ -293,8 +293,8 @@ var _ = Describe("Actions", func() {
 			nproc  uint64 = 20
 		)
 		resourceLimits := &models.ResourceLimits{}
-		resourceLimits.SetNofile(nofile)
-		resourceLimits.SetNproc(nproc)
+		resourceLimits.SetNofile(&nofile)
+		resourceLimits.SetNproc(&nproc)
 		itSerializesAndDeserializes(
 			`{
 					"user": "me",
@@ -320,7 +320,8 @@ var _ = Describe("Actions", func() {
 					{"FOO", "1"},
 					{"BAR", "2"},
 				},
-				ResourceLimits: resourceLimits,
+				ResourceLimits:    resourceLimits,
+				SuppressLogOutput: false,
 				VolumeMountedFiles: []*models.File{
 					{Path: "/redis/username", Content: "username"},
 				},
@@ -365,17 +366,17 @@ var _ = Describe("Actions", func() {
 		var nofile uint64 = 10
 
 		resourceLimits := &models.ResourceLimits{}
-		resourceLimits.SetNofile(nofile)
+		resourceLimits.SetNofile(&nofile)
 
 		itSerializesAndDeserializes(
 			`{
 				"action": {
 					"run": {
 						"path": "echo",
-						"user": "someone",
 						"resource_limits":{
 							"nofile": 10
 						},
+						"user": "someone",
 						"suppress_log_output": false,
 						"volume_mounted_files": null
 					}
@@ -557,7 +558,7 @@ var _ = Describe("Actions", func() {
 				It("is valid", func() {
 					parallelAction = &models.ParallelAction{
 						Actions: []*models.Action{
-							&models.Action{
+							{
 								UploadAction: &models.UploadAction{
 									From: "local_location",
 									To:   "web_location",
@@ -593,7 +594,7 @@ var _ = Describe("Actions", func() {
 					"from",
 					&models.ParallelAction{
 						Actions: []*models.Action{
-							&models.Action{
+							{
 								UploadAction: &models.UploadAction{
 									To: "web_location",
 								},
@@ -779,7 +780,7 @@ var _ = Describe("Actions", func() {
 								"volume_mounted_files": null
 							}
 						}
-					]
+					]			
 			}`,
 			models.WrapAction(models.Codependent(
 				&models.DownloadAction{

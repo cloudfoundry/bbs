@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Domain Handlers", func() {
@@ -49,7 +50,7 @@ var _ = Describe("Domain Handlers", func() {
 			domain = "domain-to-add"
 			ttl = 12345
 
-			requestBody = &models.UpsertDomainRequest{
+			requestBody = &models.ProtoUpsertDomainRequest{
 				Domain: domain,
 				Ttl:    ttl,
 			}
@@ -78,28 +79,32 @@ var _ = Describe("Domain Handlers", func() {
 			})
 
 			It("responds with no error", func() {
-				var upsertDomainResponse models.UpsertDomainResponse
-				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.UpsertDomainResponse
+				var protoResponse models.ProtoUpsertDomainResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(upsertDomainResponse.Error).To(BeNil())
+				Expect(response.Error).To(BeNil())
 			})
 		})
 
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
-				requestBody = &models.UpsertDomainRequest{}
+				requestBody = &models.ProtoUpsertDomainRequest{}
 			})
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				var upsertDomainResponse models.UpsertDomainResponse
-				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.UpsertDomainResponse
+				var protoResponse models.ProtoUpsertDomainResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(upsertDomainResponse.Error).NotTo(BeNil())
-				Expect(upsertDomainResponse.Error.Type).To(Equal(models.Error_InvalidRequest))
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error.Type).To(Equal(models.Error_InvalidRequest))
 			})
 		})
 
@@ -111,12 +116,14 @@ var _ = Describe("Domain Handlers", func() {
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				var upsertDomainResponse models.UpsertDomainResponse
-				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.UpsertDomainResponse
+				var protoResponse models.ProtoUpsertDomainResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(upsertDomainResponse.Error).NotTo(BeNil())
-				Expect(upsertDomainResponse.Error).To(Equal(models.ErrBadRequest))
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error).To(Equal(models.ErrBadRequest))
 			})
 		})
 
@@ -140,12 +147,14 @@ var _ = Describe("Domain Handlers", func() {
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				var upsertDomainResponse models.UpsertDomainResponse
-				err := upsertDomainResponse.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.UpsertDomainResponse
+				var protoResponse models.ProtoUpsertDomainResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(upsertDomainResponse.Error).NotTo(BeNil())
-				Expect(upsertDomainResponse.Error).To(Equal(models.ErrUnknownError))
+				Expect(response.Error).NotTo(BeNil())
+				Expect(response.Error).To(Equal(models.ErrUnknownError))
 			})
 		})
 	})
@@ -175,8 +184,10 @@ var _ = Describe("Domain Handlers", func() {
 			It("returns a list of domains", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				response := &models.DomainsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DomainsResponse
+				var protoResponse models.ProtoDomainsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -192,8 +203,10 @@ var _ = Describe("Domain Handlers", func() {
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				response := &models.DomainsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DomainsResponse
+				var protoResponse models.ProtoDomainsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -221,8 +234,10 @@ var _ = Describe("Domain Handlers", func() {
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
-				response := &models.DomainsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.DomainsResponse
+				var protoResponse models.ProtoDomainsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))

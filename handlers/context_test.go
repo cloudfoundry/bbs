@@ -22,6 +22,7 @@ import (
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/tedsuo/ifrit"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
+	"google.golang.org/protobuf/proto"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -139,7 +140,7 @@ var _ = Describe("Context", func() {
 			<-sleepStarting
 			ctxWithCancel, cancelFn := context.WithCancel(context.Background())
 
-			requestBody := &models.ActualLRPsRequest{}
+			requestBody := &models.ProtoActualLRPsRequest{}
 			request := newTestRequest(requestBody).WithContext(ctxWithCancel)
 			responseRecorder := httptest.NewRecorder()
 			finishedRequest := make(chan struct{}, 1)
@@ -148,8 +149,10 @@ var _ = Describe("Context", func() {
 				defer GinkgoRecover()
 				handler.ActualLRPs(logger, responseRecorder, request)
 
-				response := models.ActualLRPsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsResponse
+				var protoResponse models.ProtoActualLRPsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(HaveOccurred())

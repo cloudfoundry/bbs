@@ -2,32 +2,33 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 
-message CheckDefinition {
-  repeated Check checks = 1;
-  string log_source = 2 [(gogoproto.jsontag) = "log_source"];
-  repeated Check readiness_checks = 3;
+message ProtoCheckDefinition {
+  repeated ProtoCheck checks            = 1;
+  string log_source                     = 2 [json_name = "log_source", (bbs.bbs_json_always_emit) = true];
+  repeated ProtoCheck readiness_checks  = 3 [json_name = "readiness_checks"];
 }
 
-message Check {
+message ProtoCheck {
   // oneof is hard to use right now, instead we can do this check in validation
   // oneof check {
-    TCPCheck tcp_check = 1;
-    HTTPCheck http_check = 2;
+    ProtoTCPCheck tcp_check   = 1 [json_name = "tcp_check"];
+    ProtoHTTPCheck http_check = 2 [json_name = "http_check"];
   // }
 }
 
-message TCPCheck {
-  uint32 port = 1 [(gogoproto.jsontag) = "port"];
-  uint64 connect_timeout_ms = 2;
-  uint64 interval_ms = 3;
+message ProtoTCPCheck {
+  uint32 port               = 1 [json_name = "port", (bbs.bbs_json_always_emit) = true];
+  uint64 connect_timeout_ms = 2 [json_name = "connect_timeout_ms"];
+  uint64 interval_ms        = 3 [json_name = "interval_ms"];
 }
 
-message HTTPCheck {
-  uint32 port = 1 [(gogoproto.jsontag) = "port"];
-  uint64 request_timeout_ms = 2;
-  string path = 3 [(gogoproto.jsontag) = "path"];
-  uint64 interval_ms = 4;
+message ProtoHTTPCheck {
+  uint32 port               = 1 [json_name = "port", (bbs.bbs_json_always_emit) = true];
+  uint64 request_timeout_ms = 2 [json_name = "request_timeout_ms"];
+  string path               = 3 [json_name = "path", (bbs.bbs_json_always_emit) = true];
+  uint64 interval_ms        = 4 [json_name = "interval_ms"];
 }

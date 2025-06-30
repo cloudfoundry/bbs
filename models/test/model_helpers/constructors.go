@@ -9,10 +9,13 @@ import (
 )
 
 func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
+	actualLrpKey := models.NewActualLRPKey(guid, index, "some-domain")
+	actualLrpInstanceKey := models.NewActualLRPInstanceKey("some-guid", "some-cell")
+	actualLrpNetInfo := models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444))
 	actualLRP := &models.ActualLRP{
-		ActualLRPKey:            models.NewActualLRPKey(guid, index, "some-domain"),
-		ActualLRPInstanceKey:    models.NewActualLRPInstanceKey("some-guid", "some-cell"),
-		ActualLRPNetInfo:        models.NewActualLRPNetInfo("some-address", "container-address", models.ActualLRPNetInfo_PreferredAddressUnknown, models.NewPortMapping(2222, 4444)),
+		ActualLrpKey:            actualLrpKey,
+		ActualLrpInstanceKey:    actualLrpInstanceKey,
+		ActualLrpNetInfo:        actualLrpNetInfo,
 		ActualLrpInternalRoutes: NewActualLRPInternalRoutes(),
 		MetricTags:              NewActualLRPMetricTags(),
 		AvailabilityZone:        "some-zone",
@@ -25,7 +28,8 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 			Index: 999,
 		},
 	}
-	actualLRP.SetRoutable(false)
+	routable := false
+	actualLRP.SetRoutable(&routable)
 	err := actualLRP.Validate()
 	Expect(err).NotTo(HaveOccurred())
 
@@ -47,13 +51,15 @@ func NewActualLRPMetricTags() map[string]string {
 func NewValidEvacuatingActualLRP(guid string, index int32) *models.ActualLRP {
 	actualLRP := NewValidActualLRP(guid, index)
 	actualLRP.Presence = models.ActualLRP_Evacuating
-	actualLRP.ActualLRPInstanceKey = models.NewActualLRPInstanceKey("some-guid", "some-evacuating-cell")
+	actualLrpInstanceKey := models.NewActualLRPInstanceKey("some-guid", "some-evacuating-cell")
+	actualLRP.ActualLrpInstanceKey = actualLrpInstanceKey
 	return actualLRP
 }
 
 func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	myRouterJSON := json.RawMessage(`{"foo":"bar"}`)
 	modTag := models.NewModificationTag("epoch", 0)
+	routes := &models.Routes{"my-router": &myRouterJSON}
 	desiredLRP := &models.DesiredLRP{
 		ProcessGuid:          guid,
 		Domain:               "some-domain",
@@ -90,7 +96,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		MemoryMb:    1024,
 		CpuWeight:   42,
 		MaxPids:     1024,
-		Routes:      &models.Routes{"my-router": &myRouterJSON},
+		Routes:      routes,
 		LogSource:   "some-log-source",
 		LogGuid:     "some-log-guid",
 		MetricsGuid: "some-metrics-guid",
@@ -127,8 +133,8 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
 		ImageLayers: []*models.ImageLayer{
-			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
-			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
+			{Name: "shared layer", LayerType: models.ImageLayer_LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.ImageLayer_MediaTypeTgz},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.ImageLayer_MediaTypeZip, DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256, DigestValue: "some-sha256"},
 		},
 		MetricTags: map[string]*models.MetricTagValue{
 			"source_id": {Static: "some-metrics-guid"},
@@ -227,8 +233,8 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 		ImageUsername: "image-username",
 		ImagePassword: "image-password",
 		ImageLayers: []*models.ImageLayer{
-			{Name: "shared layer", LayerType: models.LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.MediaTypeTgz},
-			{Name: "exclusive layer", LayerType: models.LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.MediaTypeZip, DigestAlgorithm: models.DigestAlgorithmSha256, DigestValue: "some-sha256"},
+			{Name: "shared layer", LayerType: models.ImageLayer_LayerTypeShared, Url: "some-url", DestinationPath: "/tmp", MediaType: models.ImageLayer_MediaTypeTgz},
+			{Name: "exclusive layer", LayerType: models.ImageLayer_LayerTypeExclusive, Url: "some-url-2", DestinationPath: "/tmp/foo", MediaType: models.ImageLayer_MediaTypeZip, DigestAlgorithm: models.ImageLayer_DigestAlgorithmSha256, DigestValue: "some-sha256"},
 		},
 		MetricTags: map[string]*models.MetricTagValue{
 			"source_id": {Static: "some-metrics-guid"},
@@ -236,8 +242,8 @@ func NewValidTaskDefinition() *models.TaskDefinition {
 	}
 }
 
-func NewValidEgressRules() []models.SecurityGroupRule {
-	return []models.SecurityGroupRule{
+func NewValidEgressRules() []*models.SecurityGroupRule {
+	return []*models.SecurityGroupRule{
 		{
 			Protocol:     "tcp",
 			Destinations: []string{"0.0.0.0/0"},

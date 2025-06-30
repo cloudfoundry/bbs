@@ -61,33 +61,36 @@ var _ = Describe("Client", func() {
 			It("populates the request", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
 				request := models.StartActualLRPRequest{
-					ActualLrpKey:            &actualLRP.ActualLRPKey,
-					ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-					ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
 					MetricTags:              actualLRP.MetricTags,
 					AvailabilityZone:        actualLRP.AvailabilityZone,
 				}
-				request.SetRoutable(false)
+				routable := false
+				request.SetRoutable(&routable)
+				response := &models.ActualLRPLifecycleResponse{Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.VerifyProtoRepresenting(&request),
-						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
+						ghttp.VerifyProtoRepresenting(request.ToProto()),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("Calls the current endpoint", func() {
+				response := &models.ActualLRPLifecycleResponse{Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 
@@ -97,6 +100,15 @@ var _ = Describe("Client", func() {
 
 			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+				request := &models.StartActualLRPRequest{
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
+					ActualLrpInternalRoutes: nil,
+					MetricTags:              nil,
+					AvailabilityZone:        "",
+				}
+				response := &models.ActualLRPLifecycleResponse{Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start.r1"),
@@ -106,19 +118,12 @@ var _ = Describe("Client", func() {
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/start"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.VerifyProtoRepresenting(&models.StartActualLRPRequest{
-							ActualLrpKey:            &actualLRP.ActualLRPKey,
-							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
-							ActualLrpInternalRoutes: nil,
-							MetricTags:              nil,
-							AvailabilityZone:        "",
-						}),
-						ghttp.RespondWithProto(200, &models.ActualLRPLifecycleResponse{Error: nil}),
+						ghttp.VerifyProtoRepresenting(request.ToProto()),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 
-				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+				err := internalClient.StartActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, *actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -157,32 +162,35 @@ var _ = Describe("Client", func() {
 		Context("evacuateRunningActualLrp", func() {
 			It("populates the request", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+				request := &models.EvacuateRunningActualLRPRequest{
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
+					ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
+					MetricTags:              actualLRP.MetricTags,
+					AvailabilityZone:        actualLRP.AvailabilityZone,
+					Routable:                actualLRP.GetRoutable(),
+				}
+				response := &models.EvacuationResponse{KeepContainer: true, Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
-							ActualLrpKey:            &actualLRP.ActualLRPKey,
-							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
-							ActualLrpInternalRoutes: actualLRP.ActualLrpInternalRoutes,
-							MetricTags:              actualLRP.MetricTags,
-							AvailabilityZone:        actualLRP.AvailabilityZone,
-							OptionalRoutable:        &models.EvacuateRunningActualLRPRequest_Routable{Routable: actualLRP.GetRoutable()},
-						}),
-						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
+						ghttp.VerifyProtoRepresenting(request.ToProto()),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, *actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 			It("Calls the current endpoint", func() {
+				response := &models.EvacuationResponse{KeepContainer: true, Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 
@@ -192,6 +200,16 @@ var _ = Describe("Client", func() {
 
 			It("Falls back to the deprecated endpoint if the current endpoint returns a 404", func() {
 				actualLRP := model_helpers.NewValidActualLRP("some-guid", 0)
+				request := &models.EvacuateRunningActualLRPRequest{
+					ActualLrpKey:            &actualLRP.ActualLrpKey,
+					ActualLrpInstanceKey:    &actualLRP.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actualLRP.ActualLrpNetInfo,
+					ActualLrpInternalRoutes: nil,
+					MetricTags:              nil,
+					Routable:                nil,
+					AvailabilityZone:        "",
+				}
+				response := &models.EvacuationResponse{KeepContainer: true, Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running.r1"),
@@ -201,20 +219,12 @@ var _ = Describe("Client", func() {
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/evacuate_running"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.VerifyProtoRepresenting(&models.EvacuateRunningActualLRPRequest{
-							ActualLrpKey:            &actualLRP.ActualLRPKey,
-							ActualLrpInstanceKey:    &actualLRP.ActualLRPInstanceKey,
-							ActualLrpNetInfo:        &actualLRP.ActualLRPNetInfo,
-							ActualLrpInternalRoutes: nil,
-							MetricTags:              nil,
-							OptionalRoutable:        nil,
-							AvailabilityZone:        "",
-						}),
-						ghttp.RespondWithProto(200, &models.EvacuationResponse{KeepContainer: true, Error: nil}),
+						ghttp.VerifyProtoRepresenting(request.ToProto()),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 
-				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &actualLRP.ActualLRPNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
+				_, err := internalClient.EvacuateRunningActualLRP(logger, "some-trace-id", &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, actualLRP.ActualLrpInternalRoutes, actualLRP.MetricTags, false, actualLRP.AvailabilityZone)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -342,6 +352,17 @@ var _ = Describe("Client", func() {
 		})
 
 		JustBeforeEach(func() {
+			//lint:ignore SA1019 - testing of deprecated code
+			response := &models.ActualLRPGroupsResponse{
+				//lint:ignore SA1019 - testing of deprecated code
+				ActualLrpGroups: []*models.ActualLRPGroup{
+					{
+						Instance: &models.ActualLRP{
+							State: "running",
+						},
+					},
+				},
+			}
 			bbsServer.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", "/v1/actual_lrp_groups/list"),
@@ -349,17 +370,8 @@ var _ = Describe("Client", func() {
 					func(w http.ResponseWriter, req *http.Request) {
 						<-blockCh
 					},
-					//lint:ignore SA1019 - testing of deprecated code
-					ghttp.RespondWithProto(200, &models.ActualLRPGroupsResponse{
-						//lint:ignore SA1019 - testing of deprecated code
-						ActualLrpGroups: []*models.ActualLRPGroup{
-							{
-								Instance: &models.ActualLRP{
-									State: "running",
-								},
-							},
-						},
-					}),
+					// lint:ignore SA1019 - testing of deprecated code
+					ghttp.RespondWithProto(200, response.ToProto()),
 				),
 			)
 		})

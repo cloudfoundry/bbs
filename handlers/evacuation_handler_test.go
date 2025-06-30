@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ = Describe("Evacuation Handlers", func() {
@@ -61,9 +62,9 @@ var _ = Describe("Evacuation Handlers", func() {
 		)
 
 		BeforeEach(func() {
-			requestBody = &models.RemoveEvacuatingActualLRPRequest{
-				ActualLrpKey:         &key,
-				ActualLrpInstanceKey: &instanceKey,
+			requestBody = &models.ProtoRemoveEvacuatingActualLRPRequest{
+				ActualLrpKey:         key.ToProto(),
+				ActualLrpInstanceKey: instanceKey.ToProto(),
 			}
 		})
 
@@ -78,7 +79,9 @@ var _ = Describe("Evacuation Handlers", func() {
 				It("should respond without an error", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 					var response models.RemoveEvacuatingActualLRPResponse
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var protoResponse models.ProtoRemoveEvacuatingActualLRPResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(response.Error).To(BeNil())
 				})
@@ -93,7 +96,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.RemoveEvacuatingActualLRPResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoRemoveEvacuatingActualLRPResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -116,14 +121,16 @@ var _ = Describe("Evacuation Handlers", func() {
 
 		Context("when the request is invalid", func() {
 			BeforeEach(func() {
-				requestBody = &models.RemoveEvacuatingActualLRPRequest{}
+				requestBody = &models.ProtoRemoveEvacuatingActualLRPRequest{}
 			})
 
 			It("responds with an error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
 				var response models.RemoveEvacuatingActualLRPResponse
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var protoResponse models.ProtoRemoveEvacuatingActualLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).NotTo(BeNil())
@@ -140,7 +147,9 @@ var _ = Describe("Evacuation Handlers", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 
 				var response models.RemoveEvacuatingActualLRPResponse
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var protoResponse models.ProtoRemoveEvacuatingActualLRPResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).NotTo(BeNil())
@@ -161,10 +170,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateClaimedActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+					ActualLrpKey:         &actual.ActualLrpKey,
+					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateClaimedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -179,7 +188,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return no error and keep the container", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 						Expect(response.KeepContainer).To(BeFalse())
@@ -194,7 +205,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return no error and keep the container", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 						Expect(response.KeepContainer).To(BeTrue())
@@ -211,7 +224,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -227,7 +242,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -258,8 +275,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			It("returns an error and keeps the container", func() {
-				response := models.EvacuationResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.EvacuationResponse
+				var protoResponse models.ProtoEvacuationResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.KeepContainer).To(BeTrue())
 				Expect(response.Error).NotTo(BeNil())
@@ -279,11 +298,11 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateCrashedActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+					ActualLrpKey:         &actual.ActualLrpKey,
+					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
 					ErrorMessage:         "i failed",
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateCrashedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -297,7 +316,9 @@ var _ = Describe("Evacuation Handlers", func() {
 				It("should return no error", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 					var response models.EvacuationResponse
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var protoResponse models.ProtoEvacuationResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(response.Error).To(BeNil())
 					Expect(response.KeepContainer).To(BeFalse())
@@ -313,7 +334,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -344,8 +367,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			It("returns an error and keeps the container", func() {
-				response := models.EvacuationResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.EvacuationResponse
+				var protoResponse models.ProtoEvacuationResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Error).NotTo(BeNil())
 				Expect(response.Error).To(Equal(models.ErrBadRequest))
@@ -364,11 +389,11 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateRunningActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
-					ActualLrpNetInfo:     &actual.ActualLRPNetInfo,
+					ActualLrpKey:         &actual.ActualLrpKey,
+					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
+					ActualLrpNetInfo:     &actual.ActualLrpNetInfo,
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP_r0(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -383,7 +408,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return no error and keep the container", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 						Expect(response.KeepContainer).To(BeFalse())
@@ -398,7 +425,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return no error and keep the container", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 						Expect(response.KeepContainer).To(BeTrue())
@@ -415,7 +444,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -431,7 +462,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -462,8 +495,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			It("returns an error and keeps the container", func() {
-				response := models.EvacuationResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.EvacuationResponse
+				var protoResponse models.ProtoEvacuationResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.KeepContainer).To(BeTrue())
 				Expect(response.Error).NotTo(BeNil())
@@ -483,9 +518,9 @@ var _ = Describe("Evacuation Handlers", func() {
 			BeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateRunningActualLRPRequest{
-					ActualLrpKey:            &actual.ActualLRPKey,
-					ActualLrpInstanceKey:    &actual.ActualLRPInstanceKey,
-					ActualLrpNetInfo:        &actual.ActualLRPNetInfo,
+					ActualLrpKey:            &actual.ActualLrpKey,
+					ActualLrpInstanceKey:    &actual.ActualLrpInstanceKey,
+					ActualLrpNetInfo:        &actual.ActualLrpNetInfo,
 					ActualLrpInternalRoutes: actual.ActualLrpInternalRoutes,
 					MetricTags:              actual.MetricTags,
 					AvailabilityZone:        actual.AvailabilityZone,
@@ -493,7 +528,7 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			JustBeforeEach(func() {
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateRunningActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -502,9 +537,9 @@ var _ = Describe("Evacuation Handlers", func() {
 			It("calls the controller", func() {
 				Expect(controller.EvacuateRunningActualLRPCallCount()).To(Equal(1))
 				_, _, actualKey, actualInstanceKey, actualNetInfo, actualInternalRoutes, actualMetricTags, routable, availabilityZone := controller.EvacuateRunningActualLRPArgsForCall(0)
-				Expect(actualKey).To(Equal(&actual.ActualLRPKey))
-				Expect(actualInstanceKey).To(Equal(&actual.ActualLRPInstanceKey))
-				Expect(actualNetInfo).To(Equal(&actual.ActualLRPNetInfo))
+				Expect(actualKey).To(Equal(&actual.ActualLrpKey))
+				Expect(actualInstanceKey).To(Equal(&actual.ActualLrpInstanceKey))
+				Expect(actualNetInfo).To(Equal(&actual.ActualLrpNetInfo))
 				Expect(actualInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
 				Expect(actualMetricTags).To(Equal(actual.MetricTags))
 				Expect(availabilityZone).To(Equal(actual.AvailabilityZone))
@@ -520,7 +555,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return no error and keep the container", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 						Expect(response.KeepContainer).To(BeFalse())
@@ -535,7 +572,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return no error and keep the container", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).To(BeNil())
 						Expect(response.KeepContainer).To(BeTrue())
@@ -552,7 +591,8 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("when routable is provided as false", func() {
 					BeforeEach(func() {
-						requestBody.SetRoutable(false)
+						routable := false
+						requestBody.SetRoutable(&routable)
 					})
 
 					It("sets it to false", func() {
@@ -564,7 +604,8 @@ var _ = Describe("Evacuation Handlers", func() {
 
 				Context("when routable is provided as true", func() {
 					BeforeEach(func() {
-						requestBody.SetRoutable(true)
+						routable := true
+						requestBody.SetRoutable(&routable)
 					})
 
 					It("sets it to false", func() {
@@ -584,7 +625,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -600,7 +643,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -631,8 +676,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			It("returns an error and keeps the container", func() {
-				response := models.EvacuationResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.EvacuationResponse
+				var protoResponse models.ProtoEvacuationResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.KeepContainer).To(BeTrue())
 				Expect(response.Error).NotTo(BeNil())
@@ -652,10 +699,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			JustBeforeEach(func() {
 				actual = model_helpers.NewValidActualLRP("process-guid", 1)
 				requestBody = &models.EvacuateStoppedActualLRPRequest{
-					ActualLrpKey:         &actual.ActualLRPKey,
-					ActualLrpInstanceKey: &actual.ActualLRPInstanceKey,
+					ActualLrpKey:         &actual.ActualLrpKey,
+					ActualLrpInstanceKey: &actual.ActualLrpInstanceKey,
 				}
-				request = newTestRequest(requestBody)
+				request = newTestRequest(requestBody.ToProto())
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
 				handler.EvacuateStoppedActualLRP(logger, responseRecorder, request)
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
@@ -669,7 +716,9 @@ var _ = Describe("Evacuation Handlers", func() {
 				It("should return no error", func() {
 					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 					var response models.EvacuationResponse
-					err := response.Unmarshal(responseRecorder.Body.Bytes())
+					var protoResponse models.ProtoEvacuationResponse
+					err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+					response = *protoResponse.FromProto()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(response.Error).To(BeNil())
 					Expect(response.KeepContainer).To(BeFalse())
@@ -685,7 +734,9 @@ var _ = Describe("Evacuation Handlers", func() {
 					It("should return the error in the response", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 						var response models.EvacuationResponse
-						err := response.Unmarshal(responseRecorder.Body.Bytes())
+						var protoResponse models.ProtoEvacuationResponse
+						err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+						response = *protoResponse.FromProto()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(response.Error).NotTo(BeNil())
 						Expect(response.Error).To(Equal(models.ErrUnknownError))
@@ -716,8 +767,10 @@ var _ = Describe("Evacuation Handlers", func() {
 			})
 
 			It("returns an error and keeps the container", func() {
-				response := models.EvacuationResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.EvacuationResponse
+				var protoResponse models.ProtoEvacuationResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Error).NotTo(BeNil())
 				Expect(response.Error).To(Equal(models.ErrBadRequest))

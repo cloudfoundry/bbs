@@ -1,9 +1,10 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "bbs.proto";
 
-message PingResponse {
-  bool available = 1 [(gogoproto.jsontag) =  "available"];
+message ProtoPingResponse {
+  bool available = 1 [json_name =  "available", (bbs.bbs_json_always_emit) = true];
 }

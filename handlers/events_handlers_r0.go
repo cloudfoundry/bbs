@@ -11,8 +11,10 @@ import (
 func (h *LRPGroupEventsHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
 	logger = logger.Session("subscribe-r0").WithTraceInfo(req)
 
-	request := &models.EventsByCellId{}
-	err := parseRequest(logger, req, request)
+	var request *models.EventsByCellId
+	protoRequest := &models.ProtoEventsByCellId{}
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -86,8 +88,10 @@ func (h *LRPGroupEventsHandler) Subscribe_r1(logger lager.Logger, w http.Respons
 func (h *LRPInstanceEventHandler) commonSubscribe(logger lager.Logger, w http.ResponseWriter, req *http.Request, target format.Version) {
 	logger = logger.Session("subscribe-r0").WithTraceInfo(req)
 
-	request := &models.EventsByCellId{}
-	err := parseRequest(logger, req, request)
+	var request *models.EventsByCellId
+	protoRequest := &models.ProtoEventsByCellId{}
+	err := parseRequest(logger, req, protoRequest)
+	request = protoRequest.FromProto()
 	if err != nil {
 		logger.Error("failed-parsing-request", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -205,7 +209,7 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 			return false, resolveError
 		}
 
-		if lrp.CellId != cellID {
+		if lrp.ActualLrpInstanceKey.CellId != cellID {
 			return false, nil
 		}
 
@@ -221,7 +225,7 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 		if afterResolveError != nil {
 			return false, afterResolveError
 		}
-		if afterLRP.CellId != cellID && beforeLRP.CellId != cellID {
+		if afterLRP.ActualLrpInstanceKey.CellId != cellID && beforeLRP.ActualLrpInstanceKey.CellId != cellID {
 			return false, nil
 		}
 
@@ -232,12 +236,12 @@ func filterByCellID(cellID string, bbsEvent models.Event, err error) (bool, erro
 		if resolveError != nil {
 			return false, resolveError
 		}
-		if lrp.CellId != cellID {
+		if lrp.ActualLrpInstanceKey.CellId != cellID {
 			return false, nil
 		}
 
 	case *models.ActualLRPCrashedEvent:
-		if x.ActualLRPInstanceKey.CellId != cellID {
+		if x.ActualLrpInstanceKey.CellId != cellID {
 			return false, nil
 		}
 	}
@@ -249,23 +253,23 @@ func filterInstanceEventByCellID(cellID string, bbsEvent models.Event, err error
 	switch x := bbsEvent.(type) {
 	case *models.ActualLRPInstanceCreatedEvent:
 		lrp := x.ActualLrp
-		if lrp.CellId != cellID {
+		if lrp.ActualLrpInstanceKey.CellId != cellID {
 			return false
 		}
 
 	case *models.ActualLRPInstanceChangedEvent:
-		if x.CellId != cellID {
+		if x.ActualLrpInstanceKey.CellId != cellID {
 			return false
 		}
 
 	case *models.ActualLRPInstanceRemovedEvent:
 		lrp := x.ActualLrp
-		if lrp.CellId != cellID {
+		if lrp.ActualLrpInstanceKey.CellId != cellID {
 			return false
 		}
 
 	case *models.ActualLRPCrashedEvent:
-		if x.ActualLRPInstanceKey.CellId != cellID {
+		if x.ActualLrpInstanceKey.CellId != cellID {
 			return false
 		}
 	}

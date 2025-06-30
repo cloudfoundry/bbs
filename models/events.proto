@@ -1,99 +1,102 @@
 syntax = "proto3";
 
 package models;
+option go_package="code.cloudfoundry.org/bbs/models";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actual_lrp.proto";
+import "bbs.proto";
 import "desired_lrp.proto";
 import "task.proto";
 import "modification_tag.proto";
 
-message ActualLRPCreatedEvent  {
+message ProtoActualLRPCreatedEvent  {
   option deprecated = true;
-  ActualLRPGroup actual_lrp_group = 1;
+  ProtoActualLRPGroup actual_lrp_group = 1 [json_name = "actual_lrp_group"];
 }
 
-message ActualLRPChangedEvent {
+message ProtoActualLRPChangedEvent {
   option deprecated = true;
-  ActualLRPGroup before = 1;
-  ActualLRPGroup after = 2;
+  ProtoActualLRPGroup before = 1;
+  ProtoActualLRPGroup after = 2;
 }
 
-message ActualLRPRemovedEvent {
+message ProtoActualLRPRemovedEvent {
   option deprecated = true;
-  ActualLRPGroup actual_lrp_group = 1;
+  ProtoActualLRPGroup actual_lrp_group = 1 [json_name = "actual_lrp_group"];
 }
 
-message ActualLRPInstanceCreatedEvent  {
-  ActualLRP actual_lrp = 1;
-  string trace_id = 2 [(gogoproto.jsontag) =  "trace_id"];
+message ProtoActualLRPInstanceCreatedEvent  {
+  ProtoActualLRP actual_lrp = 1 [json_name = "actual_lrp"];
+  string trace_id = 2 [json_name = "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPInfo {
-  ActualLRPNetInfo actual_lrp_net_info = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  int32 crash_count = 4 [(gogoproto.jsontag) =  "crash_count"];
-  string crash_reason = 5;
-  string state = 6 [(gogoproto.jsontag) =  "state"];
-  string placement_error = 7;
-  int64 since = 8 [(gogoproto.jsontag) =  "since"];
-  ModificationTag modification_tag = 9 [(gogoproto.nullable) = false,(gogoproto.jsontag) = "modification_tag"];
-  ActualLRP.Presence presence = 10 [(gogoproto.jsontag) = "presence"];
-  oneof optional_routable {
-    bool Routable = 11;
-  }
-  string availability_zone = 12 [(gogoproto.jsontag) = "availability_zone"];
+message ProtoActualLRPInfo {
+  ProtoActualLRPNetInfo actual_lrp_net_info = 3 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_net_info", (bbs.bbs_json_always_emit) = true];
+  int32 crash_count = 4 [json_name =  "crash_count", (bbs.bbs_json_always_emit) = true];
+  string crash_reason = 5 [json_name = "crash_reason"];
+  string state = 6 [json_name =  "state", (bbs.bbs_json_always_emit) = true];
+  string placement_error = 7 [json_name = "placement_error"];
+  int64 since = 8 [json_name =  "since", (bbs.bbs_json_always_emit) = true];
+  ProtoModificationTag modification_tag = 9 [json_name = "modification_tag",  (bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRP.Presence presence = 10 [json_name = "presence", (bbs.bbs_by_value) = true, (bbs.bbs_json_always_emit) = true];
+  optional bool Routable = 11;
+  string availability_zone = 12 [json_name = "availability_zone", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPInstanceChangedEvent {
-  ActualLRPKey actual_lrp_key                  = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  ActualLRPInfo before                         = 3;
-  ActualLRPInfo after                          = 4;
-  string trace_id                              = 5 [(gogoproto.jsontag) =  "trace_id"];
+message ProtoActualLRPInstanceChangedEvent {
+  ProtoActualLRPKey actual_lrp_key                  = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key", (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key", (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRPInfo before                         = 3;
+  ProtoActualLRPInfo after                          = 4;
+  string trace_id                                   = 5 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPInstanceRemovedEvent {
-  ActualLRP actual_lrp = 1;
-  string trace_id = 2 [(gogoproto.jsontag) =  "trace_id"];
+message ProtoActualLRPInstanceRemovedEvent {
+  ProtoActualLRP actual_lrp = 1 [json_name = "actual_lrp"];
+  string trace_id = 2 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message DesiredLRPCreatedEvent {
-  DesiredLRP desired_lrp = 1;
-  string trace_id = 2 [(gogoproto.jsontag) =  "trace_id"];
+message ProtoDesiredLRPCreatedEvent {
+  ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
+  string trace_id = 2 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message DesiredLRPChangedEvent {
-  DesiredLRP before = 1;
-  DesiredLRP after = 2;
-  string trace_id = 3 [(gogoproto.jsontag) =  "trace_id"];
+message ProtoDesiredLRPChangedEvent {
+  ProtoDesiredLRP before = 1;
+  ProtoDesiredLRP after = 2;
+  string trace_id = 3 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message DesiredLRPRemovedEvent {
-  DesiredLRP desired_lrp = 1;
-  string trace_id = 2 [(gogoproto.jsontag) =  "trace_id"];
+message ProtoDesiredLRPRemovedEvent {
+  ProtoDesiredLRP desired_lrp = 1 [json_name = "desired_lrp"];
+  string trace_id = 2 [json_name =  "trace_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message ActualLRPCrashedEvent {
-  ActualLRPKey actual_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  ActualLRPInstanceKey actual_lrp_instance_key = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
-  int32 crash_count = 3 [(gogoproto.jsontag) =  "crash_count"];
-  string crash_reason = 4;
-  int64 since = 5 [(gogoproto.jsontag) =  "since"];
+message ProtoActualLRPCrashedEvent {
+  ProtoActualLRPKey actual_lrp_key = 1 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_key", (bbs.bbs_json_always_emit) = true];
+  ProtoActualLRPInstanceKey actual_lrp_instance_key = 2 [(bbs.bbs_by_value) = true, json_name = "actual_lrp_instance_key", (bbs.bbs_json_always_emit) = true];
+  int32 crash_count = 3 [json_name =  "crash_count", (bbs.bbs_json_always_emit) = true];
+  string crash_reason = 4 [json_name = "crash_reason"];
+  int64 since = 5 [json_name =  "since", (bbs.bbs_json_always_emit) = true];
 }
 
-message EventsByCellId {
-   string cell_id  = 1 [(gogoproto.jsontag) =  "cell_id"];
+message ProtoEventsByCellId {
+   string cell_id  = 1 [json_name =  "cell_id", (bbs.bbs_json_always_emit) = true];
 }
 
-message TaskCreatedEvent {
-  Task task = 1;
+message ProtoTaskCreatedEvent {
+  ProtoTask task = 1;
 }
 
-message TaskChangedEvent {
-  Task before = 1;
-  Task after = 2;
+message ProtoTaskChangedEvent {
+  ProtoTask before = 1;
+  ProtoTask after = 2;
 }
 
-message TaskRemovedEvent {
-  Task task = 1;
+message ProtoTaskRemovedEvent {
+  ProtoTask task = 1;
+}
+
+message ProtoFakeEvent {
+  string token = 1;
 }

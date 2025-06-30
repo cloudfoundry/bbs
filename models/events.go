@@ -2,13 +2,13 @@ package models
 
 import (
 	"code.cloudfoundry.org/bbs/format"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type Event interface {
 	EventType() string
 	Key() string
-	proto.Message
+	ToEventProto() proto.Message
 }
 
 const (
@@ -33,6 +33,8 @@ const (
 	EventTypeTaskCreated = "task_created"
 	EventTypeTaskChanged = "task_changed"
 	EventTypeTaskRemoved = "task_removed"
+
+	EventTypeFake = "fake"
 )
 
 // Downgrade the DesiredLRPEvent payload (i.e. DesiredLRP(s)) to the given
@@ -83,6 +85,10 @@ func (event *DesiredLRPCreatedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
 }
 
+func (event *DesiredLRPCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewDesiredLRPChangedEvent(before, after *DesiredLRP, traceId string) *DesiredLRPChangedEvent {
 	return &DesiredLRPChangedEvent{
 		Before:  before,
@@ -97,6 +103,10 @@ func (event *DesiredLRPChangedEvent) EventType() string {
 
 func (event *DesiredLRPChangedEvent) Key() string {
 	return event.Before.GetProcessGuid()
+}
+
+func (event *DesiredLRPChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 func NewDesiredLRPRemovedEvent(desiredLRP *DesiredLRP, traceId string) *DesiredLRPRemovedEvent {
@@ -114,6 +124,10 @@ func (event DesiredLRPRemovedEvent) Key() string {
 	return event.DesiredLrp.GetProcessGuid()
 }
 
+func (event *DesiredLRPRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 // FIXME: change the signature
 func NewActualLRPInstanceChangedEvent(before, after *ActualLRP, traceId string) *ActualLRPInstanceChangedEvent {
 	var (
@@ -121,23 +135,23 @@ func NewActualLRPInstanceChangedEvent(before, after *ActualLRP, traceId string) 
 		actualLRPInstanceKey ActualLRPInstanceKey
 	)
 
-	if (before != nil && before.ActualLRPKey != ActualLRPKey{}) {
-		actualLRPKey = before.ActualLRPKey
+	if (before != nil && before.ActualLrpKey != ActualLRPKey{}) {
+		actualLRPKey = before.ActualLrpKey
 	}
-	if (after != nil && after.ActualLRPKey != ActualLRPKey{}) {
-		actualLRPKey = after.ActualLRPKey
+	if (after != nil && after.ActualLrpKey != ActualLRPKey{}) {
+		actualLRPKey = after.ActualLrpKey
 	}
 
-	if (before != nil && before.ActualLRPInstanceKey != ActualLRPInstanceKey{}) {
-		actualLRPInstanceKey = before.ActualLRPInstanceKey
+	if (before != nil && before.ActualLrpInstanceKey != ActualLRPInstanceKey{}) {
+		actualLRPInstanceKey = before.ActualLrpInstanceKey
 	}
-	if (after != nil && after.ActualLRPInstanceKey != ActualLRPInstanceKey{}) {
-		actualLRPInstanceKey = after.ActualLRPInstanceKey
+	if (after != nil && after.ActualLrpInstanceKey != ActualLRPInstanceKey{}) {
+		actualLRPInstanceKey = after.ActualLrpInstanceKey
 	}
 
 	return &ActualLRPInstanceChangedEvent{
-		ActualLRPKey:         actualLRPKey,
-		ActualLRPInstanceKey: actualLRPInstanceKey,
+		ActualLrpKey:         actualLRPKey,
+		ActualLrpInstanceKey: actualLRPInstanceKey,
 		Before:               before.ToActualLRPInfo(),
 		After:                after.ToActualLRPInfo(),
 		TraceId:              traceId,
@@ -149,7 +163,11 @@ func (event *ActualLRPInstanceChangedEvent) EventType() string {
 }
 
 func (event *ActualLRPInstanceChangedEvent) Key() string {
-	return event.GetInstanceGuid()
+	return event.ActualLrpInstanceKey.GetInstanceGuid()
+}
+
+func (event *ActualLRPInstanceChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -171,13 +189,18 @@ func (event *ActualLRPChangedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
+}
+
+// Deprecated: use the ActualLRPInstance versions of this instead
+func (event *ActualLRPChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 func NewActualLRPCrashedEvent(before, after *ActualLRP) *ActualLRPCrashedEvent {
 	return &ActualLRPCrashedEvent{
-		ActualLRPKey:         after.ActualLRPKey,
-		ActualLRPInstanceKey: before.ActualLRPInstanceKey,
+		ActualLrpKey:         after.ActualLrpKey,
+		ActualLrpInstanceKey: before.ActualLrpInstanceKey,
 		CrashCount:           after.CrashCount,
 		CrashReason:          after.CrashReason,
 		Since:                after.Since,
@@ -189,7 +212,11 @@ func (event *ActualLRPCrashedEvent) EventType() string {
 }
 
 func (event *ActualLRPCrashedEvent) Key() string {
-	return event.ActualLRPInstanceKey.InstanceGuid
+	return event.ActualLrpInstanceKey.InstanceGuid
+}
+
+func (event *ActualLRPCrashedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -210,7 +237,12 @@ func (event *ActualLRPRemovedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
+}
+
+// Deprecated: use the ActualLRPInstance versions of this instead
+func (event *ActualLRPRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 func NewActualLRPInstanceRemovedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceRemovedEvent {
@@ -228,7 +260,11 @@ func (event *ActualLRPInstanceRemovedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetInstanceGuid()
+	return event.ActualLrp.ActualLrpInstanceKey.GetInstanceGuid()
+}
+
+func (event *ActualLRPInstanceRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 // Deprecated: use the ActualLRPInstance versions of this instead
@@ -249,7 +285,11 @@ func (event *ActualLRPCreatedEvent) Key() string {
 	if resolveError != nil {
 		return ""
 	}
-	return actualLRP.GetInstanceGuid()
+	return actualLRP.ActualLrpInstanceKey.GetInstanceGuid()
+}
+
+func (event *ActualLRPCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 func NewActualLRPInstanceCreatedEvent(actualLrp *ActualLRP, traceId string) *ActualLRPInstanceCreatedEvent {
@@ -267,7 +307,15 @@ func (event *ActualLRPInstanceCreatedEvent) Key() string {
 	if event.ActualLrp == nil {
 		return ""
 	}
-	return event.ActualLrp.GetInstanceGuid()
+	return event.ActualLrp.ActualLrpInstanceKey.GetInstanceGuid()
+}
+
+func (event *ActualLRPInstanceCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
+func (request *ProtoEventsByCellId) Validate() error {
+	return request.FromProto().Validate()
 }
 
 func (request *EventsByCellId) Validate() error {
@@ -288,6 +336,10 @@ func (event *TaskCreatedEvent) Key() string {
 	return event.Task.GetTaskGuid()
 }
 
+func (event *TaskCreatedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
+}
+
 func NewTaskChangedEvent(before, after *Task) *TaskChangedEvent {
 	return &TaskChangedEvent{
 		Before: before,
@@ -301,6 +353,10 @@ func (event *TaskChangedEvent) EventType() string {
 
 func (event *TaskChangedEvent) Key() string {
 	return event.Before.GetTaskGuid()
+}
+
+func (event *TaskChangedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
 func NewTaskRemovedEvent(task *Task) *TaskRemovedEvent {
@@ -317,13 +373,18 @@ func (event TaskRemovedEvent) Key() string {
 	return event.Task.GetTaskGuid()
 }
 
-func (info *ActualLRPInfo) SetRoutable(routable bool) {
-	info.OptionalRoutable = &ActualLRPInfo_Routable{
-		Routable: routable,
-	}
+func (event *TaskRemovedEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
 
-func (info *ActualLRPInfo) RoutableExists() bool {
-	_, ok := info.GetOptionalRoutable().(*ActualLRPInfo_Routable)
-	return ok
+func (event *FakeEvent) EventType() string {
+	return EventTypeFake
+}
+
+func (event FakeEvent) Key() string {
+	return event.Token
+}
+
+func (event *FakeEvent) ToEventProto() proto.Message {
+	return event.ToProto()
 }
