@@ -171,6 +171,31 @@ var _ = Describe("SecurityGroupRule", func() {
 			})
 		}
 
+		itExpectsAnIPv6Destination := func() {
+			Describe("destination", func() {
+				Context("when the destination is valid", func() {
+					BeforeEach(func() {
+						destination = "2100::1/64"
+					})
+
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
+				})
+
+				Context("when the destination is invalid", func() {
+					BeforeEach(func() {
+						destination = "garbage/32"
+					})
+
+					It("returns an error", func() {
+						Expect(validationErr).To(MatchError(ContainSubstring("destination")))
+					})
+				})
+
+			})
+		}
+
 		itFailsWithPorts := func() {
 			Context("when Port range is provided", func() {
 				BeforeEach(func() {
@@ -223,53 +248,107 @@ var _ = Describe("SecurityGroupRule", func() {
 				ports = []uint32{1}
 			})
 
-			Context("when its an IP Address", func() {
-				BeforeEach(func() {
-					destination = "8.8.8.8"
-				})
-
-				It("passes validation and does not return an error", func() {
-					Expect(validationErr).NotTo(HaveOccurred())
-				})
-			})
-
-			Context("when its a range of IP Addresses", func() {
-				BeforeEach(func() {
-					destination = "8.8.8.8-8.8.8.9"
-				})
-
-				It("passes validation and does not return an error", func() {
-					Expect(validationErr).NotTo(HaveOccurred())
-				})
-
-				Context("and the range is not valid", func() {
+			Context("and it's ipv4 address", func() {
+				Context("when its an IP Address", func() {
 					BeforeEach(func() {
-						destination = "1.2.3.4 - 1.2.1.3"
+						destination = "8.8.8.8"
 					})
 
-					It("fails", func() {
-						Expect(validationErr).To(MatchError(ContainSubstring("destination")))
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
+				})
+
+				Context("when its a range of IP Addresses", func() {
+					BeforeEach(func() {
+						destination = "8.8.8.8-8.8.8.9"
+					})
+
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
+
+					Context("and the range is not valid", func() {
+						BeforeEach(func() {
+							destination = "1.2.3.4 - 1.2.1.3"
+						})
+
+						It("fails", func() {
+							Expect(validationErr).To(MatchError(ContainSubstring("destination")))
+						})
+					})
+				})
+
+				Context("when its a CIDR", func() {
+					BeforeEach(func() {
+						destination = "8.8.8.8/16"
+					})
+
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
+				})
+
+				Context("when it's a comma-delimited list of ips", func() {
+					BeforeEach(func() {
+						destination = "1.2.3.4,5.6.7.8"
+					})
+
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
 					})
 				})
 			})
 
-			Context("when its a CIDR", func() {
-				BeforeEach(func() {
-					destination = "8.8.8.8/16"
+			Context("and it's ipv6 address", func() {
+				Context("when its an IP Address", func() {
+					BeforeEach(func() {
+						destination = "2100::1"
+					})
+
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
 				})
 
-				It("passes validation and does not return an error", func() {
-					Expect(validationErr).NotTo(HaveOccurred())
-				})
-			})
+				Context("when its a range of IP Addresses", func() {
+					BeforeEach(func() {
+						destination = "2100::1-2100::2"
+					})
 
-			Context("when it's a comma-delimited list of ips", func() {
-				BeforeEach(func() {
-					destination = "1.2.3.4,5.6.7.8"
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
+
+					Context("and the range is not valid", func() {
+						BeforeEach(func() {
+							destination = "2100::1 - 2100::2"
+						})
+
+						It("fails", func() {
+							Expect(validationErr).To(MatchError(ContainSubstring("destination")))
+						})
+					})
 				})
 
-				It("passes validation and does not return an error", func() {
-					Expect(validationErr).NotTo(HaveOccurred())
+				Context("when its a CIDR", func() {
+					BeforeEach(func() {
+						destination = "2100::1/16"
+					})
+
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
+				})
+
+				Context("when it's a comma-delimited list of ips", func() {
+					BeforeEach(func() {
+						destination = "2100::1,2100::2"
+					})
+
+					It("passes validation and does not return an error", func() {
+						Expect(validationErr).NotTo(HaveOccurred())
+					})
 				})
 			})
 
@@ -316,6 +395,27 @@ var _ = Describe("SecurityGroupRule", func() {
 				})
 
 				itExpectsADestination()
+				itFailsWithPorts()
+				itAllowsLogging()
+
+				Context("when no ICMPInfo is provided", func() {
+					BeforeEach(func() {
+						icmpInfo = nil
+					})
+
+					It("fails", func() {
+						Expect(validationErr).To(HaveOccurred())
+					})
+				})
+			})
+
+			Context("when the protocol is icmpv6", func() {
+				BeforeEach(func() {
+					protocol = "icmpv6"
+					icmpInfo = &models.ICMPInfo{}
+				})
+
+				itExpectsAnIPv6Destination()
 				itFailsWithPorts()
 				itAllowsLogging()
 
