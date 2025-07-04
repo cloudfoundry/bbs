@@ -40,8 +40,8 @@ type ActualLRPFilter struct {
 	Index       *int32
 }
 
-type MultipleActualLRPsByMultipleGuidsFilter struct {
-	ProcessGuid []string
+type ActualLRPsByProcessGuidsFilter struct {
+	ProcessGuids []string
 }
 
 func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {

@@ -56,12 +56,12 @@ var _ = Describe("ActualLRP Requests", func() {
 		})
 	})
 
-	Describe("MultipleActualLRPsByMultipleGuidsRequest", func() {
+	Describe("ActualLRPsByProcessGuids", func() {
 		Describe("Validate", func() {
-			var request models.MultipleActualLRPsByMultipleGuidsRequest
+			var request models.ActualLRPsByProcessGuidsRequest
 
 			BeforeEach(func() {
-				request = models.MultipleActualLRPsByMultipleGuidsRequest{}
+				request = models.ActualLRPsByProcessGuidsRequest{}
 			})
 
 			Context("when process_guids is empty", func() {

@@ -588,7 +588,7 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 	})
 
-	Describe("MultipleActualLRPsByMultipleGuids", func() {
+	Describe("ActualLRPsByProcessGuids", func() {
 		var allActualLRPs []*models.ActualLRP
 
 		BeforeEach(func() {
@@ -621,10 +621,10 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 
 		It("returns all LRPs for the given GUIDs", func() {
-			filter := models.MultipleActualLRPsByMultipleGuidsFilter{
-				ProcessGuid: []string{"guid1", "guid3"},
+			filter := models.ActualLRPsByProcessGuidsFilter{
+				ProcessGuids: []string{"guid1", "guid3"},
 			}
-			lrps, err := sqlDB.MultipleActualLRPsByMultipleGuids(ctx, logger, filter)
+			lrps, err := sqlDB.ActualLRPsByProcessGuids(ctx, logger, filter)
 			Expect(err).NotTo(HaveOccurred())
 
 			var guids []string
@@ -635,10 +635,10 @@ var _ = Describe("ActualLRPDB", func() {
 		})
 
 		It("returns empty if no GUIDs match", func() {
-			filter := models.MultipleActualLRPsByMultipleGuidsFilter{
-				ProcessGuid: []string{"notfound"},
+			filter := models.ActualLRPsByProcessGuidsFilter{
+				ProcessGuids: []string{"notfound"},
 			}
-			lrps, err := sqlDB.MultipleActualLRPsByMultipleGuids(ctx, logger, filter)
+			lrps, err := sqlDB.ActualLRPsByProcessGuids(ctx, logger, filter)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(lrps).To(BeEmpty())
 		})

@@ -52,7 +52,7 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(internalRequest)
 }
 
-func (request *MultipleActualLRPsByMultipleGuidsRequest) Validate() error {
+func (request *ActualLRPsByProcessGuidsRequest) Validate() error {
 	if len(request.ProcessGuids) == 0 {
 		return NewError(Error_InvalidRequest, "process_guids must not be empty")
 	}

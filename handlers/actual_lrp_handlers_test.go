@@ -257,11 +257,11 @@ var _ = Describe("ActualLRP Handlers", func() {
 		})
 	})
 
-	Describe("MultipleActualLRPsByMultipleGuids", func() {
-		var requestBody *models.MultipleActualLRPsByMultipleGuidsRequest
+	Describe("ActualLRPsByProcessGuids", func() {
+		var requestBody *models.ActualLRPsByProcessGuidsRequest
 
 		BeforeEach(func() {
-			requestBody = &models.MultipleActualLRPsByMultipleGuidsRequest{
+			requestBody = &models.ActualLRPsByProcessGuidsRequest{
 				ProcessGuids: []string{"guid1", "guid2"},
 			}
 		})
@@ -269,7 +269,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 		JustBeforeEach(func() {
 			request := newTestRequest(requestBody)
 			request.Header.Set(lager.RequestIdHeader, requestIdHeader)
-			handler.MultipleActualLRPsByMultipleGuids(logger, responseRecorder, request)
+			handler.ActualLRPsByProcessGuids(logger, responseRecorder, request)
 		})
 
 		Context("when the DB returns actual lrps for the given GUIDs", func() {
@@ -294,12 +294,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 						State: models.ActualLRPStateClaimed,
 					},
 				}
-				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns(actualLRPs, nil)
+				fakeActualLRPDB.ActualLRPsByProcessGuidsReturns(actualLRPs, nil)
 			})
 
 			It("returns a list of actual lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				response := &models.ActualLRPsByProcessGuidsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
@@ -308,20 +308,20 @@ var _ = Describe("ActualLRP Handlers", func() {
 			})
 
 			It("calls the DB with the correct filter", func() {
-				Expect(fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsCallCount()).To(Equal(1))
-				_, _, filter := fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsArgsForCall(0)
-				Expect(filter.ProcessGuid).To(Equal([]string{"guid1", "guid2"}))
+				Expect(fakeActualLRPDB.ActualLRPsByProcessGuidsCallCount()).To(Equal(1))
+				_, _, filter := fakeActualLRPDB.ActualLRPsByProcessGuidsArgsForCall(0)
+				Expect(filter.ProcessGuids).To(Equal([]string{"guid1", "guid2"}))
 			})
 		})
 
 		Context("when the DB returns no actual lrps", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns([]*models.ActualLRP{}, nil)
+				fakeActualLRPDB.ActualLRPsByProcessGuidsReturns([]*models.ActualLRP{}, nil)
 			})
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				response := &models.ActualLRPsByProcessGuidsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
@@ -332,7 +332,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the request has an empty process_guids list", func() {
 			BeforeEach(func() {
-				requestBody = &models.MultipleActualLRPsByMultipleGuidsRequest{
+				requestBody = &models.ActualLRPsByProcessGuidsRequest{
 					ProcessGuids: []string{},
 				}
 			})
@@ -340,12 +340,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 			JustBeforeEach(func() {
 				request := newTestRequest(requestBody)
 				request.Header.Set(lager.RequestIdHeader, requestIdHeader)
-				handler.MultipleActualLRPsByMultipleGuids(logger, responseRecorder, request)
+				handler.ActualLRPsByProcessGuids(logger, responseRecorder, request)
 			})
 
 			It("returns a validation error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				response := &models.ActualLRPsByProcessGuidsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
@@ -356,7 +356,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the DB returns an unrecoverable error", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns([]*models.ActualLRP{}, models.NewUnrecoverableError(nil))
+				fakeActualLRPDB.ActualLRPsByProcessGuidsReturns([]*models.ActualLRP{}, models.NewUnrecoverableError(nil))
 			})
 
 			It("logs and writes to the exit channel", func() {
@@ -368,12 +368,12 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 		Context("when the DB errors out", func() {
 			BeforeEach(func() {
-				fakeActualLRPDB.MultipleActualLRPsByMultipleGuidsReturns([]*models.ActualLRP{}, models.ErrUnknownError)
+				fakeActualLRPDB.ActualLRPsByProcessGuidsReturns([]*models.ActualLRP{}, models.ErrUnknownError)
 			})
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+				response := &models.ActualLRPsByProcessGuidsResponse{}
 				err := response.Unmarshal(responseRecorder.Body.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
