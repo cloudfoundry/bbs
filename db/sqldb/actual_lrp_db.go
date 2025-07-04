@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -102,6 +103,31 @@ func (db *SQLDB) ActualLRPs(ctx context.Context, logger lager.Logger, filter mod
 	return lrps, nil
 }
 
+func (db *SQLDB) ActualLRPsByProcessGuids(ctx context.Context, logger lager.Logger, filter models.ActualLRPsByProcessGuidsFilter) ([]*models.ActualLRP, error) {
+	logger = logger.Session("db-multiple-actual-lrps", lager.Data{"filter": filter})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	var wheres []string
+	var values []interface{}
+
+	if len(filter.ProcessGuids) > 0 {
+		placeholders := make([]string, len(filter.ProcessGuids))
+		for i, guid := range filter.ProcessGuids {
+			placeholders[i] = "?"
+			values = append(values, guid)
+		}
+		wheres = append(wheres, fmt.Sprintf("process_guid IN (%s)", strings.Join(placeholders, ",")))
+	}
+
+	lrps, err := db.getActualLRPs(ctx, logger, strings.Join(wheres, " AND "), values...)
+	if err != nil {
+		return nil, err
+	}
+
+	return lrps, nil
+}
+
 func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, error) {
 	logger = logger.Session("db-create-unclaimed-actual-lrps", lager.Data{"key": key})
 	logger.Info("starting")
@@ -151,7 +177,6 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 
 		return err
 	})
-
 	if err != nil {
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
 		return nil, err
@@ -411,7 +436,7 @@ func (db *SQLDB) CrashActualLRP(ctx context.Context, logger lager.Logger, key *m
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	var immediateRestart = false
+	immediateRestart := false
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
 

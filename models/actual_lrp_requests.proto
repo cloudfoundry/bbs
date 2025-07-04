@@ -92,3 +92,11 @@ message ActualLRPsRequest {
   }
 }
 
+message ActualLRPsByProcessGuidsResponse {
+  Error error = 1;
+  repeated ActualLRP actual_lrps = 2;
+}
+
+message ActualLRPsByProcessGuidsRequest {
+  repeated string process_guids = 1 [(gogoproto.jsontag) = "process_guids"];
+}

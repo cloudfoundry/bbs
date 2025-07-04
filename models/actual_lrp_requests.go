@@ -52,6 +52,13 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(internalRequest)
 }
 
+func (request *ActualLRPsByProcessGuidsRequest) Validate() error {
+	if len(request.ProcessGuids) == 0 {
+		return NewError(Error_InvalidRequest, "process_guids must not be empty")
+	}
+	return nil
+}
+
 // Deprecated: use the ActualLRPInstances API instead
 func (request *ActualLRPGroupsRequest) Validate() error {
 	return nil
