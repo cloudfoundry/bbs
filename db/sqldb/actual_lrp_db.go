@@ -103,7 +103,7 @@ func (db *SQLDB) ActualLRPs(ctx context.Context, logger lager.Logger, filter mod
 	return lrps, nil
 }
 
-func (db *SQLDB) MultipleActualLRPsByMultipleGuids(ctx context.Context, logger lager.Logger, filter models.MultipleActualLRPsByMultipleGuidsFilter) ([]*models.ActualLRP, error) {
+func (db *SQLDB) ActualLRPsByProcessGuids(ctx context.Context, logger lager.Logger, filter models.ActualLRPsByProcessGuidsFilter) ([]*models.ActualLRP, error) {
 	logger = logger.Session("db-multiple-actual-lrps", lager.Data{"filter": filter})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
@@ -111,9 +111,9 @@ func (db *SQLDB) MultipleActualLRPsByMultipleGuids(ctx context.Context, logger l
 	var wheres []string
 	var values []interface{}
 
-	if len(filter.ProcessGuid) > 0 {
-		placeholders := make([]string, len(filter.ProcessGuid))
-		for i, guid := range filter.ProcessGuid {
+	if len(filter.ProcessGuids) > 0 {
+		placeholders := make([]string, len(filter.ProcessGuids))
+		for i, guid := range filter.ProcessGuids {
 			placeholders[i] = "?"
 			values = append(values, guid)
 		}

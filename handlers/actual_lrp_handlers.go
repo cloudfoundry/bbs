@@ -46,19 +46,19 @@ func (h *ActualLRPHandler) ActualLRPs(logger lager.Logger, w http.ResponseWriter
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 
-func (h *ActualLRPHandler) MultipleActualLRPsByMultipleGuids(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *ActualLRPHandler) ActualLRPsByProcessGuids(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	var err error
 	logger = logger.Session("multiple-actual-lrps").WithTraceInfo(req)
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.MultipleActualLRPsByMultipleGuidsRequest{}
-	response := &models.MultipleActualLRPsByMultipleGuidsResponse{}
+	request := &models.ActualLRPsByProcessGuidsRequest{}
+	response := &models.ActualLRPsByProcessGuidsResponse{}
 
 	err = parseRequest(logger, req, request)
 	if err == nil {
-		filter := models.MultipleActualLRPsByMultipleGuidsFilter{ProcessGuid: request.ProcessGuids}
-		response.ActualLrps, err = h.db.MultipleActualLRPsByMultipleGuids(req.Context(), logger, filter)
+		filter := models.ActualLRPsByProcessGuidsFilter{ProcessGuids: request.ProcessGuids}
+		response.ActualLrps, err = h.db.ActualLRPsByProcessGuids(req.Context(), logger, filter)
 	}
 
 	response.Error = models.ConvertError(err)

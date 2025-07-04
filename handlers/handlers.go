@@ -83,8 +83,8 @@ func New(
 
 		// Actual LRPs
 		bbs.ActualLRPsRoute_r0: metricsAndLoggingWrap(actualLRPHandler.ActualLRPs, bbs.ActualLRPsRoute_r0),
-		// Multiple Actual LRPs by multiple GUID
-		bbs.MultipleActualLRPsByProcessGuidRoute_r0: metricsAndLoggingWrap(actualLRPHandler.MultipleActualLRPsByMultipleGuids, bbs.MultipleActualLRPsByProcessGuidRoute_r0),
+		// Multiple Actual LRPs by multiple Process GUIDs
+		bbs.ActualLRPsByProcessGuidsRoute_r0: metricsAndLoggingWrap(actualLRPHandler.ActualLRPsByProcessGuids, bbs.ActualLRPsByProcessGuidsRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed
 		bbs.ActualLRPGroupsRoute_r0: metricsAndLoggingWrap(actualLRPHandler.ActualLRPGroups, bbs.ActualLRPGroupsRoute_r0),
 		//lint:ignore SA1019 - implementing deprecated logic until it is removed

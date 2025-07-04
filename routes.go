@@ -13,7 +13,7 @@ const (
 	// Actual LRPs
 	ActualLRPsRoute_r0 = "ActualLRPs"
 	// Multiple actual LRPs by process GUID
-	MultipleActualLRPsByProcessGuidRoute_r0 = "MultipleActualLRPsByProcessGuid"
+	ActualLRPsByProcessGuidsRoute_r0 = "ActualLRPsByProcessGuids"
 	// Deprecated: use the ActualLRPInstances API instead
 	ActualLRPGroupsRoute_r0 = "ActualLRPGroups"
 	// Deprecated: use the ActualLRPInstances API instead
@@ -99,7 +99,7 @@ var Routes = rata.Routes{
 
 	// Actual LRPs
 	{Path: "/v1/actual_lrps/list", Method: "POST", Name: ActualLRPsRoute_r0},
-	{Path: "/v1/actual_lrps/list_by_multiple_process_guid", Method: "POST", Name: MultipleActualLRPsByProcessGuidRoute_r0},
+	{Path: "/v1/actual_lrps/list_by_process_guids", Method: "POST", Name: ActualLRPsByProcessGuidsRoute_r0},
 	{Path: "/v1/actual_lrp_groups/list", Method: "POST", Name: ActualLRPGroupsRoute_r0},                                              // DEPRECATED
 	{Path: "/v1/actual_lrp_groups/list_by_process_guid", Method: "POST", Name: ActualLRPGroupsByProcessGuidRoute_r0},                 // DEPRECATED
 	{Path: "/v1/actual_lrp_groups/get_by_process_guid_and_index", Method: "POST", Name: ActualLRPGroupByProcessGuidAndIndexRoute_r0}, // DEPRECATED
