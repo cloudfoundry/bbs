@@ -7,9 +7,12 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	reflect "reflect"
+	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -27,9 +30,8 @@ type ActualLRPLifecycleResponse struct {
 	Error *Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
 }
 
-func (m *ActualLRPLifecycleResponse) Reset()         { *m = ActualLRPLifecycleResponse{} }
-func (m *ActualLRPLifecycleResponse) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPLifecycleResponse) ProtoMessage()    {}
+func (m *ActualLRPLifecycleResponse) Reset()      { *m = ActualLRPLifecycleResponse{} }
+func (*ActualLRPLifecycleResponse) ProtoMessage() {}
 func (*ActualLRPLifecycleResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{0}
 }
@@ -73,9 +75,8 @@ type ActualLRPGroupsResponse struct {
 	ActualLrpGroups []*ActualLRPGroup `protobuf:"bytes,2,rep,name=actual_lrp_groups,json=actualLrpGroups,proto3" json:"actual_lrp_groups,omitempty"`
 }
 
-func (m *ActualLRPGroupsResponse) Reset()         { *m = ActualLRPGroupsResponse{} }
-func (m *ActualLRPGroupsResponse) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPGroupsResponse) ProtoMessage()    {}
+func (m *ActualLRPGroupsResponse) Reset()      { *m = ActualLRPGroupsResponse{} }
+func (*ActualLRPGroupsResponse) ProtoMessage() {}
 func (*ActualLRPGroupsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{1}
 }
@@ -126,9 +127,8 @@ type ActualLRPGroupResponse struct {
 	ActualLrpGroup *ActualLRPGroup `protobuf:"bytes,2,opt,name=actual_lrp_group,json=actualLrpGroup,proto3" json:"actual_lrp_group,omitempty"`
 }
 
-func (m *ActualLRPGroupResponse) Reset()         { *m = ActualLRPGroupResponse{} }
-func (m *ActualLRPGroupResponse) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPGroupResponse) ProtoMessage()    {}
+func (m *ActualLRPGroupResponse) Reset()      { *m = ActualLRPGroupResponse{} }
+func (*ActualLRPGroupResponse) ProtoMessage() {}
 func (*ActualLRPGroupResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{2}
 }
@@ -179,9 +179,8 @@ type ActualLRPGroupsRequest struct {
 	CellId string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
 }
 
-func (m *ActualLRPGroupsRequest) Reset()         { *m = ActualLRPGroupsRequest{} }
-func (m *ActualLRPGroupsRequest) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPGroupsRequest) ProtoMessage()    {}
+func (m *ActualLRPGroupsRequest) Reset()      { *m = ActualLRPGroupsRequest{} }
+func (*ActualLRPGroupsRequest) ProtoMessage() {}
 func (*ActualLRPGroupsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{3}
 }
@@ -231,9 +230,8 @@ type ActualLRPGroupsByProcessGuidRequest struct {
 	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid,json=processGuid,proto3" json:"process_guid"`
 }
 
-func (m *ActualLRPGroupsByProcessGuidRequest) Reset()         { *m = ActualLRPGroupsByProcessGuidRequest{} }
-func (m *ActualLRPGroupsByProcessGuidRequest) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPGroupsByProcessGuidRequest) ProtoMessage()    {}
+func (m *ActualLRPGroupsByProcessGuidRequest) Reset()      { *m = ActualLRPGroupsByProcessGuidRequest{} }
+func (*ActualLRPGroupsByProcessGuidRequest) ProtoMessage() {}
 func (*ActualLRPGroupsByProcessGuidRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{4}
 }
@@ -279,9 +277,6 @@ type ActualLRPGroupByProcessGuidAndIndexRequest struct {
 
 func (m *ActualLRPGroupByProcessGuidAndIndexRequest) Reset() {
 	*m = ActualLRPGroupByProcessGuidAndIndexRequest{}
-}
-func (m *ActualLRPGroupByProcessGuidAndIndexRequest) String() string {
-	return proto.CompactTextString(m)
 }
 func (*ActualLRPGroupByProcessGuidAndIndexRequest) ProtoMessage() {}
 func (*ActualLRPGroupByProcessGuidAndIndexRequest) Descriptor() ([]byte, []int) {
@@ -334,9 +329,8 @@ type ClaimActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,3,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3" json:"actual_lrp_instance_key,omitempty"`
 }
 
-func (m *ClaimActualLRPRequest) Reset()         { *m = ClaimActualLRPRequest{} }
-func (m *ClaimActualLRPRequest) String() string { return proto.CompactTextString(m) }
-func (*ClaimActualLRPRequest) ProtoMessage()    {}
+func (m *ClaimActualLRPRequest) Reset()      { *m = ClaimActualLRPRequest{} }
+func (*ClaimActualLRPRequest) ProtoMessage() {}
 func (*ClaimActualLRPRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{6}
 }
@@ -400,9 +394,8 @@ type StartActualLRPRequest struct {
 	AvailabilityZone string                                   `protobuf:"bytes,7,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone"`
 }
 
-func (m *StartActualLRPRequest) Reset()         { *m = StartActualLRPRequest{} }
-func (m *StartActualLRPRequest) String() string { return proto.CompactTextString(m) }
-func (*StartActualLRPRequest) ProtoMessage()    {}
+func (m *StartActualLRPRequest) Reset()      { *m = StartActualLRPRequest{} }
+func (*StartActualLRPRequest) ProtoMessage() {}
 func (*StartActualLRPRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{7}
 }
@@ -435,6 +428,7 @@ var xxx_messageInfo_StartActualLRPRequest proto.InternalMessageInfo
 
 type isStartActualLRPRequest_OptionalRoutable interface {
 	isStartActualLRPRequest_OptionalRoutable()
+	Equal(interface{}) bool
 	MarshalTo([]byte) (int, error)
 	Size() int
 }
@@ -514,9 +508,8 @@ type CrashActualLRPRequest struct {
 	ErrorMessage         string                `protobuf:"bytes,3,opt,name=error_message,json=errorMessage,proto3" json:"error_message"`
 }
 
-func (m *CrashActualLRPRequest) Reset()         { *m = CrashActualLRPRequest{} }
-func (m *CrashActualLRPRequest) String() string { return proto.CompactTextString(m) }
-func (*CrashActualLRPRequest) ProtoMessage()    {}
+func (m *CrashActualLRPRequest) Reset()      { *m = CrashActualLRPRequest{} }
+func (*CrashActualLRPRequest) ProtoMessage() {}
 func (*CrashActualLRPRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{8}
 }
@@ -573,9 +566,8 @@ type FailActualLRPRequest struct {
 	ErrorMessage string        `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message"`
 }
 
-func (m *FailActualLRPRequest) Reset()         { *m = FailActualLRPRequest{} }
-func (m *FailActualLRPRequest) String() string { return proto.CompactTextString(m) }
-func (*FailActualLRPRequest) ProtoMessage()    {}
+func (m *FailActualLRPRequest) Reset()      { *m = FailActualLRPRequest{} }
+func (*FailActualLRPRequest) ProtoMessage() {}
 func (*FailActualLRPRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{9}
 }
@@ -624,9 +616,8 @@ type RetireActualLRPRequest struct {
 	ActualLrpKey *ActualLRPKey `protobuf:"bytes,1,opt,name=actual_lrp_key,json=actualLrpKey,proto3" json:"actual_lrp_key,omitempty"`
 }
 
-func (m *RetireActualLRPRequest) Reset()         { *m = RetireActualLRPRequest{} }
-func (m *RetireActualLRPRequest) String() string { return proto.CompactTextString(m) }
-func (*RetireActualLRPRequest) ProtoMessage()    {}
+func (m *RetireActualLRPRequest) Reset()      { *m = RetireActualLRPRequest{} }
+func (*RetireActualLRPRequest) ProtoMessage() {}
 func (*RetireActualLRPRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{10}
 }
@@ -670,9 +661,8 @@ type RemoveActualLRPRequest struct {
 	ActualLrpInstanceKey *ActualLRPInstanceKey `protobuf:"bytes,3,opt,name=actual_lrp_instance_key,json=actualLrpInstanceKey,proto3" json:"actual_lrp_instance_key,omitempty"`
 }
 
-func (m *RemoveActualLRPRequest) Reset()         { *m = RemoveActualLRPRequest{} }
-func (m *RemoveActualLRPRequest) String() string { return proto.CompactTextString(m) }
-func (*RemoveActualLRPRequest) ProtoMessage()    {}
+func (m *RemoveActualLRPRequest) Reset()      { *m = RemoveActualLRPRequest{} }
+func (*RemoveActualLRPRequest) ProtoMessage() {}
 func (*RemoveActualLRPRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{11}
 }
@@ -729,9 +719,8 @@ type ActualLRPsResponse struct {
 	ActualLrps []*ActualLRP `protobuf:"bytes,2,rep,name=actual_lrps,json=actualLrps,proto3" json:"actual_lrps,omitempty"`
 }
 
-func (m *ActualLRPsResponse) Reset()         { *m = ActualLRPsResponse{} }
-func (m *ActualLRPsResponse) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPsResponse) ProtoMessage()    {}
+func (m *ActualLRPsResponse) Reset()      { *m = ActualLRPsResponse{} }
+func (*ActualLRPsResponse) ProtoMessage() {}
 func (*ActualLRPsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{12}
 }
@@ -781,14 +770,12 @@ type ActualLRPsRequest struct {
 	CellId      string `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id"`
 	ProcessGuid string `protobuf:"bytes,3,opt,name=process_guid,json=processGuid,proto3" json:"process_guid"`
 	// Types that are valid to be assigned to OptionalIndex:
-	//
 	//	*ActualLRPsRequest_Index
 	OptionalIndex isActualLRPsRequest_OptionalIndex `protobuf_oneof:"optional_index"`
 }
 
-func (m *ActualLRPsRequest) Reset()         { *m = ActualLRPsRequest{} }
-func (m *ActualLRPsRequest) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPsRequest) ProtoMessage()    {}
+func (m *ActualLRPsRequest) Reset()      { *m = ActualLRPsRequest{} }
+func (*ActualLRPsRequest) ProtoMessage() {}
 func (*ActualLRPsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{13}
 }
@@ -821,6 +808,7 @@ var xxx_messageInfo_ActualLRPsRequest proto.InternalMessageInfo
 
 type isActualLRPsRequest_OptionalIndex interface {
 	isActualLRPsRequest_OptionalIndex()
+	Equal(interface{}) bool
 	MarshalTo([]byte) (int, error)
 	Size() int
 }
@@ -878,9 +866,8 @@ type ActualLRPsByProcessGuidsResponse struct {
 	ActualLrps []*ActualLRP `protobuf:"bytes,2,rep,name=actual_lrps,json=actualLrps,proto3" json:"actual_lrps,omitempty"`
 }
 
-func (m *ActualLRPsByProcessGuidsResponse) Reset()         { *m = ActualLRPsByProcessGuidsResponse{} }
-func (m *ActualLRPsByProcessGuidsResponse) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPsByProcessGuidsResponse) ProtoMessage()    {}
+func (m *ActualLRPsByProcessGuidsResponse) Reset()      { *m = ActualLRPsByProcessGuidsResponse{} }
+func (*ActualLRPsByProcessGuidsResponse) ProtoMessage() {}
 func (*ActualLRPsByProcessGuidsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{14}
 }
@@ -929,9 +916,8 @@ type ActualLRPsByProcessGuidsRequest struct {
 	ProcessGuids []string `protobuf:"bytes,1,rep,name=process_guids,json=processGuids,proto3" json:"process_guids"`
 }
 
-func (m *ActualLRPsByProcessGuidsRequest) Reset()         { *m = ActualLRPsByProcessGuidsRequest{} }
-func (m *ActualLRPsByProcessGuidsRequest) String() string { return proto.CompactTextString(m) }
-func (*ActualLRPsByProcessGuidsRequest) ProtoMessage()    {}
+func (m *ActualLRPsByProcessGuidsRequest) Reset()      { *m = ActualLRPsByProcessGuidsRequest{} }
+func (*ActualLRPsByProcessGuidsRequest) ProtoMessage() {}
 func (*ActualLRPsByProcessGuidsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a7753fd8557db809, []int{15}
 }
@@ -992,63 +978,865 @@ func init() {
 func init() { proto.RegisterFile("actual_lrp_requests.proto", fileDescriptor_a7753fd8557db809) }
 
 var fileDescriptor_a7753fd8557db809 = []byte{
-	// 857 bytes of a gzipped FileDescriptorProto
+	// 888 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xcf, 0x8f, 0xdb, 0x44,
-	0x14, 0xce, 0x24, 0x9b, 0xb4, 0x79, 0xd9, 0xdd, 0x26, 0xee, 0xfe, 0x30, 0x51, 0x95, 0x04, 0x97,
-	0xc3, 0x0a, 0xa9, 0xa9, 0xb4, 0x95, 0x2a, 0xb4, 0x12, 0x12, 0x6b, 0x54, 0xb6, 0xab, 0x6e, 0xab,
-	0x6a, 0xda, 0x0b, 0x20, 0x61, 0x4d, 0x92, 0x49, 0x3a, 0xc2, 0xf6, 0x84, 0x99, 0xf1, 0x8a, 0xc0,
-	0x11, 0xa9, 0x07, 0x4e, 0xfc, 0x4d, 0x70, 0x80, 0x63, 0x0f, 0x1c, 0x38, 0x45, 0xd5, 0xee, 0x2d,
-	0x7f, 0x05, 0xf2, 0x4c, 0xec, 0xd8, 0x49, 0x8b, 0x76, 0x61, 0x41, 0xf4, 0x64, 0xbf, 0x6f, 0xde,
-	0x7c, 0xdf, 0xf7, 0x9e, 0xdf, 0xd8, 0x86, 0xf7, 0x48, 0x5f, 0x45, 0xc4, 0xf7, 0x7c, 0x31, 0xf6,
-	0x04, 0xfd, 0x26, 0xa2, 0x52, 0xc9, 0xee, 0x58, 0x70, 0xc5, 0xad, 0x4a, 0xc0, 0x07, 0xd4, 0x97,
-	0xcd, 0x3b, 0x23, 0xa6, 0x5e, 0x44, 0xbd, 0x6e, 0x9f, 0x07, 0x77, 0x47, 0x7c, 0xc4, 0xef, 0xea,
-	0xe5, 0x5e, 0x34, 0xd4, 0x91, 0x0e, 0xf4, 0x9d, 0xd9, 0xd6, 0xac, 0x2f, 0x18, 0xe7, 0x48, 0x8d,
-	0x0a, 0xc1, 0x85, 0x09, 0x9c, 0x43, 0x68, 0x1e, 0xea, 0x84, 0x13, 0xfc, 0xf4, 0x84, 0x0d, 0x69,
-	0x7f, 0xd2, 0xf7, 0x29, 0xa6, 0x72, 0xcc, 0x43, 0x49, 0xad, 0xdb, 0x50, 0xd6, 0xc9, 0x36, 0xea,
-	0xa0, 0xbd, 0xda, 0xfe, 0x46, 0xd7, 0x78, 0xe8, 0x3e, 0x88, 0x41, 0x6c, 0xd6, 0x9c, 0x97, 0x08,
-	0x76, 0x53, 0x8e, 0x23, 0xc1, 0xa3, 0xb1, 0xbc, 0x14, 0x81, 0xe5, 0x42, 0x23, 0x53, 0xf6, 0x48,
-	0x33, 0xd8, 0xc5, 0x4e, 0x69, 0xaf, 0xb6, 0xbf, 0x93, 0x6c, 0xc8, 0x0b, 0xe0, 0x1b, 0x66, 0xc3,
-	0x89, 0x18, 0x1b, 0xc1, 0x83, 0xa2, 0x8d, 0x9c, 0x1f, 0x10, 0xec, 0x2c, 0xe5, 0x5d, 0xca, 0xc7,
-	0x27, 0x50, 0x5f, 0xf6, 0x61, 0x17, 0x75, 0xfe, 0xdb, 0x6c, 0x6c, 0xe6, 0x6d, 0x68, 0x17, 0xc3,
-	0x65, 0x13, 0x12, 0x9b, 0x07, 0x69, 0x39, 0x50, 0x19, 0xf0, 0x80, 0xb0, 0x50, 0xbb, 0xa8, 0xba,
-	0x30, 0x9b, 0xb6, 0xe7, 0x08, 0x9e, 0x5f, 0xad, 0x0f, 0xe0, 0x5a, 0x9f, 0xfa, 0xbe, 0xc7, 0x06,
-	0x5a, 0xba, 0xea, 0xd6, 0x66, 0xd3, 0x76, 0x02, 0xe1, 0x4a, 0x7c, 0x73, 0x3c, 0xd0, 0x3a, 0x5f,
-	0xc1, 0xed, 0x25, 0x1d, 0x77, 0xf2, 0x54, 0xf0, 0x3e, 0x95, 0xf2, 0x28, 0x62, 0x83, 0x44, 0xf4,
-	0x1e, 0xac, 0x8f, 0x0d, 0xea, 0x8d, 0x22, 0x36, 0x98, 0x4b, 0xd7, 0x67, 0xd3, 0x76, 0x0e, 0xc7,
-	0xb5, 0xf1, 0x62, 0xaf, 0xe6, 0x7f, 0x89, 0xe0, 0xc3, 0xbc, 0x40, 0x8e, 0xff, 0x30, 0x1c, 0x1c,
-	0x87, 0x03, 0xfa, 0xed, 0x3f, 0xd1, 0xb1, 0xda, 0x50, 0x66, 0x31, 0x89, 0xae, 0xb5, 0xec, 0x56,
-	0x67, 0xd3, 0xb6, 0x01, 0xb0, 0xb9, 0x68, 0x23, 0x3f, 0x23, 0xd8, 0xfe, 0xd4, 0x27, 0x2c, 0x48,
-	0xdd, 0xfc, 0xab, 0x9a, 0xd6, 0x33, 0xd8, 0xcd, 0x8c, 0x01, 0x0b, 0xa5, 0x22, 0x61, 0x9f, 0x7a,
-	0x5f, 0xd3, 0x89, 0x5d, 0xd2, 0xd3, 0x70, 0x6b, 0x65, 0x1a, 0x8e, 0xe7, 0x49, 0x8f, 0xe8, 0x04,
-	0x6f, 0xa5, 0x33, 0x91, 0x41, 0x9d, 0xdf, 0xd7, 0x60, 0xfb, 0x99, 0x22, 0x42, 0xad, 0x14, 0x71,
-	0x00, 0x9b, 0x19, 0xb9, 0x58, 0xc5, 0xcc, 0xe8, 0xd6, 0x8a, 0x4a, 0xcc, 0xbe, 0x9e, 0xb2, 0x3f,
-	0xa2, 0x93, 0xbf, 0xb2, 0x5a, 0xfc, 0xbb, 0x56, 0xad, 0x23, 0xb8, 0x99, 0x21, 0x0d, 0xa9, 0xf2,
-	0x58, 0x38, 0xe4, 0xf3, 0xda, 0xed, 0x15, 0xc2, 0x27, 0x54, 0x1d, 0x87, 0x43, 0x8e, 0xeb, 0x29,
-	0xd9, 0x1c, 0xb1, 0xbe, 0x84, 0x66, 0xce, 0x9d, 0xa2, 0x22, 0x24, 0xbe, 0x27, 0x78, 0xa4, 0xa8,
-	0xb4, 0xd7, 0xf4, 0x01, 0x6f, 0xbd, 0xc1, 0xa0, 0xc9, 0xc3, 0x71, 0x1a, 0xde, 0xcd, 0x58, 0xcc,
-	0xe0, 0xd2, 0x7a, 0x02, 0xb5, 0x80, 0x2a, 0xc1, 0xfa, 0x9e, 0x22, 0x23, 0x69, 0x97, 0x35, 0xdb,
-	0x9d, 0x84, 0xed, 0x8d, 0xad, 0xee, 0x3e, 0xd6, 0x1b, 0x9e, 0x93, 0x91, 0x7c, 0x10, 0x2a, 0x31,
-	0xc1, 0x10, 0xa4, 0x80, 0x75, 0x0b, 0xae, 0xc7, 0xcc, 0xa4, 0xe7, 0x53, 0xbb, 0xd2, 0x41, 0x7b,
-	0xd7, 0x1f, 0x16, 0x70, 0x8a, 0xe8, 0x57, 0xd4, 0x29, 0x61, 0x3e, 0xe9, 0x31, 0x9f, 0xa9, 0x89,
-	0xf7, 0x1d, 0x0f, 0xa9, 0x7d, 0x4d, 0x8f, 0xdb, 0xf6, 0x6c, 0xda, 0x5e, 0x5d, 0xc4, 0xf5, 0x2c,
-	0xf4, 0x05, 0x0f, 0x69, 0xf3, 0x63, 0xb8, 0xb1, 0x64, 0xc0, 0xaa, 0x43, 0x29, 0x79, 0xe0, 0x55,
-	0x1c, 0xdf, 0x5a, 0x5b, 0x50, 0x3e, 0x25, 0x7e, 0x44, 0xcd, 0xe9, 0xc7, 0x26, 0x38, 0x28, 0x7e,
-	0x84, 0xdc, 0x9b, 0xd0, 0xe0, 0x63, 0xc5, 0x78, 0xd2, 0xc2, 0xd8, 0x97, 0xf3, 0x3a, 0x3e, 0x1b,
-	0x82, 0xc8, 0x17, 0xff, 0xff, 0xb1, 0xba, 0x0f, 0x1b, 0xfa, 0x35, 0xeb, 0x05, 0x54, 0x4a, 0x32,
-	0xa2, 0x7a, 0xa0, 0xaa, 0x6e, 0x63, 0x36, 0x6d, 0xe7, 0x17, 0xf0, 0xba, 0x0e, 0x1f, 0x9b, 0xc8,
-	0xf9, 0x11, 0xc1, 0xd6, 0x67, 0x84, 0xf9, 0x57, 0x5a, 0xe1, 0x8a, 0x99, 0xe2, 0xc5, 0xcc, 0x3c,
-	0x87, 0x1d, 0x4c, 0x15, 0x13, 0xf4, 0x2a, 0xdd, 0x38, 0xbf, 0xa0, 0x98, 0x36, 0xe0, 0xa7, 0xf4,
-	0x5d, 0x7e, 0xc5, 0x05, 0x60, 0xa5, 0xd9, 0x97, 0xfc, 0x03, 0xd8, 0x87, 0xda, 0xc2, 0x4f, 0xf2,
-	0xed, 0x6f, 0xac, 0x78, 0xc0, 0x90, 0x0a, 0x4b, 0xe7, 0x57, 0x04, 0x8d, 0xac, 0xde, 0x15, 0x7f,
-	0x63, 0x57, 0x3a, 0x5f, 0xba, 0x48, 0xe7, 0xdf, 0x4f, 0x3a, 0xbf, 0xb6, 0xd4, 0xf9, 0x87, 0x85,
-	0x79, 0xef, 0xdd, 0x3a, 0x6c, 0xa6, 0xe7, 0x58, 0x23, 0xce, 0xf7, 0xd0, 0x59, 0x14, 0x92, 0xfb,
-	0xc8, 0xfe, 0x07, 0x6d, 0xfc, 0x1c, 0xda, 0x6f, 0x17, 0x37, 0x3d, 0xbd, 0x0f, 0x1b, 0xd9, 0x8a,
-	0xa5, 0x8d, 0x3a, 0xa5, 0xe4, 0xb0, 0xe4, 0x16, 0xf0, 0x7a, 0xa6, 0x17, 0xd2, 0xb5, 0x7f, 0x3b,
-	0x6b, 0xa1, 0x57, 0x67, 0x2d, 0xf4, 0xfa, 0xac, 0x85, 0x7e, 0x3a, 0x6f, 0x15, 0x5e, 0x9d, 0xb7,
-	0x0a, 0x7f, 0x9c, 0xb7, 0x0a, 0xbd, 0x8a, 0xfe, 0xf9, 0xbc, 0xf7, 0x67, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x9c, 0xed, 0x03, 0xe8, 0xef, 0x0a, 0x00, 0x00,
+	0x14, 0xce, 0x24, 0x9b, 0xb4, 0x79, 0xd9, 0xdd, 0x26, 0xee, 0xfe, 0x30, 0x51, 0xe5, 0x04, 0x97,
+	0xc3, 0x0a, 0xa9, 0xa9, 0xb4, 0x45, 0x15, 0x5a, 0x09, 0x89, 0x35, 0x2a, 0xdb, 0x55, 0xb7, 0x55,
+	0x35, 0xed, 0x05, 0x90, 0xb0, 0x9c, 0x64, 0x92, 0x8e, 0xb0, 0x3d, 0xc1, 0x33, 0x5e, 0x11, 0xb8,
+	0x20, 0x21, 0xf5, 0xc0, 0x89, 0x3f, 0x83, 0xbf, 0x03, 0x0e, 0x70, 0xdc, 0x03, 0x87, 0x9e, 0xa2,
+	0x6e, 0xf6, 0x82, 0x72, 0xea, 0x9f, 0x80, 0x3c, 0x13, 0x3b, 0x76, 0xdc, 0xa2, 0x5d, 0x58, 0x10,
+	0x9c, 0xec, 0xf7, 0xcd, 0x9b, 0xef, 0xfb, 0xde, 0xf3, 0x1b, 0xdb, 0xf0, 0x96, 0xd3, 0x13, 0xa1,
+	0xe3, 0xda, 0x6e, 0x30, 0xb2, 0x03, 0xf2, 0x65, 0x48, 0xb8, 0xe0, 0x9d, 0x51, 0xc0, 0x04, 0xd3,
+	0x2a, 0x1e, 0xeb, 0x13, 0x97, 0x37, 0x6f, 0x0d, 0xa9, 0x78, 0x16, 0x76, 0x3b, 0x3d, 0xe6, 0xdd,
+	0x1e, 0xb2, 0x21, 0xbb, 0x2d, 0x97, 0xbb, 0xe1, 0x40, 0x46, 0x32, 0x90, 0x77, 0x6a, 0x5b, 0xb3,
+	0xbe, 0x60, 0x9c, 0x23, 0x35, 0x12, 0x04, 0x2c, 0x50, 0x81, 0xb9, 0x0f, 0xcd, 0x7d, 0x99, 0x70,
+	0x84, 0x1f, 0x1f, 0xd1, 0x01, 0xe9, 0x8d, 0x7b, 0x2e, 0xc1, 0x84, 0x8f, 0x98, 0xcf, 0x89, 0x76,
+	0x13, 0xca, 0x32, 0x59, 0x47, 0x6d, 0xb4, 0x53, 0xdb, 0x5d, 0xeb, 0x28, 0x0f, 0x9d, 0x7b, 0x11,
+	0x88, 0xd5, 0x9a, 0xf9, 0x1c, 0xc1, 0x76, 0xc2, 0x71, 0x10, 0xb0, 0x70, 0xc4, 0x2f, 0x44, 0xa0,
+	0x59, 0xd0, 0x48, 0x95, 0x3d, 0x94, 0x0c, 0x7a, 0xb1, 0x5d, 0xda, 0xa9, 0xed, 0x6e, 0xc5, 0x1b,
+	0xb2, 0x02, 0xf8, 0x9a, 0xda, 0x70, 0x14, 0x8c, 0x94, 0xe0, 0x5e, 0x51, 0x47, 0xe6, 0x77, 0x08,
+	0xb6, 0x96, 0xf2, 0x2e, 0xe4, 0xe3, 0x43, 0xa8, 0x2f, 0xfb, 0xd0, 0x8b, 0x32, 0xff, 0x4d, 0x36,
+	0xd6, 0xb3, 0x36, 0xa4, 0x8b, 0xc1, 0xb2, 0x09, 0x8e, 0xd5, 0x83, 0xd4, 0x4c, 0xa8, 0xf4, 0x99,
+	0xe7, 0x50, 0x5f, 0xba, 0xa8, 0x5a, 0x30, 0x9b, 0xb4, 0xe6, 0x08, 0x9e, 0x5f, 0xb5, 0x77, 0xe0,
+	0x4a, 0x8f, 0xb8, 0xae, 0x4d, 0xfb, 0x52, 0xba, 0x6a, 0xd5, 0x66, 0x93, 0x56, 0x0c, 0xe1, 0x4a,
+	0x74, 0x73, 0xd8, 0x97, 0x3a, 0x9f, 0xc3, 0xcd, 0x25, 0x1d, 0x6b, 0xfc, 0x38, 0x60, 0x3d, 0xc2,
+	0xf9, 0x41, 0x48, 0xfb, 0xb1, 0xe8, 0x1d, 0x58, 0x1d, 0x29, 0xd4, 0x1e, 0x86, 0xb4, 0x3f, 0x97,
+	0xae, 0xcf, 0x26, 0xad, 0x0c, 0x8e, 0x6b, 0xa3, 0xc5, 0x5e, 0xc9, 0xff, 0x1c, 0xc1, 0xbb, 0x59,
+	0x81, 0x0c, 0xff, 0xbe, 0xdf, 0x3f, 0xf4, 0xfb, 0xe4, 0xab, 0xbf, 0xa3, 0xa3, 0xb5, 0xa0, 0x4c,
+	0x23, 0x12, 0x59, 0x6b, 0xd9, 0xaa, 0xce, 0x26, 0x2d, 0x05, 0x60, 0x75, 0x91, 0x46, 0x7e, 0x42,
+	0xb0, 0xf9, 0x91, 0xeb, 0x50, 0x2f, 0x71, 0xf3, 0x8f, 0x6a, 0x6a, 0x4f, 0x60, 0x3b, 0x35, 0x06,
+	0xd4, 0xe7, 0xc2, 0xf1, 0x7b, 0xc4, 0xfe, 0x82, 0x8c, 0xf5, 0x92, 0x9c, 0x86, 0x1b, 0xb9, 0x69,
+	0x38, 0x9c, 0x27, 0x3d, 0x20, 0x63, 0xbc, 0x91, 0xcc, 0x44, 0x0a, 0x35, 0x7f, 0x5b, 0x81, 0xcd,
+	0x27, 0xc2, 0x09, 0x44, 0xae, 0x88, 0x3d, 0x58, 0x4f, 0xc9, 0x45, 0x2a, 0x6a, 0x46, 0x37, 0x72,
+	0x2a, 0x11, 0xfb, 0x6a, 0xc2, 0xfe, 0x80, 0x8c, 0xff, 0xcc, 0x6a, 0xf1, 0xaf, 0x5a, 0xd5, 0x0e,
+	0xe0, 0x7a, 0x8a, 0xd4, 0x27, 0xc2, 0xa6, 0xfe, 0x80, 0xcd, 0x6b, 0xd7, 0x73, 0x84, 0x8f, 0x88,
+	0x38, 0xf4, 0x07, 0x0c, 0xd7, 0x13, 0xb2, 0x39, 0xa2, 0x7d, 0x06, 0xcd, 0x8c, 0x3b, 0x41, 0x02,
+	0xdf, 0x71, 0xed, 0x80, 0x85, 0x82, 0x70, 0x7d, 0x45, 0x1e, 0x70, 0xe3, 0x35, 0x06, 0x55, 0x1e,
+	0x8e, 0xd2, 0xf0, 0x76, 0xca, 0x62, 0x0a, 0xe7, 0xda, 0x23, 0xa8, 0x79, 0x44, 0x04, 0xb4, 0x67,
+	0x0b, 0x67, 0xc8, 0xf5, 0xb2, 0x64, 0xbb, 0x15, 0xb3, 0xbd, 0xb6, 0xd5, 0x9d, 0x87, 0x72, 0xc3,
+	0x53, 0x67, 0xc8, 0xef, 0xf9, 0x22, 0x18, 0x63, 0xf0, 0x12, 0x40, 0xbb, 0x01, 0x57, 0x23, 0x66,
+	0xa7, 0xeb, 0x12, 0xbd, 0xd2, 0x46, 0x3b, 0x57, 0xef, 0x17, 0x70, 0x82, 0xc8, 0x57, 0xd4, 0xb1,
+	0x43, 0x5d, 0xa7, 0x4b, 0x5d, 0x2a, 0xc6, 0xf6, 0xd7, 0xcc, 0x27, 0xfa, 0x15, 0x39, 0x6e, 0x9b,
+	0xb3, 0x49, 0x2b, 0xbf, 0x88, 0xeb, 0x69, 0xe8, 0x53, 0xe6, 0x93, 0xe6, 0x07, 0x70, 0x6d, 0xc9,
+	0x80, 0x56, 0x87, 0x52, 0xfc, 0xc0, 0xab, 0x38, 0xba, 0xd5, 0x36, 0xa0, 0x7c, 0xec, 0xb8, 0x21,
+	0x51, 0xa7, 0x1f, 0xab, 0x60, 0xaf, 0xf8, 0x3e, 0xb2, 0xae, 0x43, 0x83, 0x8d, 0x04, 0x65, 0x71,
+	0x0b, 0x23, 0x5f, 0xe6, 0xcb, 0xe8, 0x6c, 0x04, 0x0e, 0x7f, 0xf6, 0xdf, 0x1f, 0xab, 0xbb, 0xb0,
+	0x26, 0x5f, 0xb3, 0xb6, 0x47, 0x38, 0x77, 0x86, 0x44, 0x0e, 0x54, 0xd5, 0x6a, 0xcc, 0x26, 0xad,
+	0xec, 0x02, 0x5e, 0x95, 0xe1, 0x43, 0x15, 0x99, 0xdf, 0x23, 0xd8, 0xf8, 0xd8, 0xa1, 0xee, 0xa5,
+	0x56, 0x98, 0x33, 0x53, 0x3c, 0x9f, 0x99, 0xa7, 0xb0, 0x85, 0x89, 0xa0, 0x01, 0xb9, 0x4c, 0x37,
+	0xe6, 0xcf, 0x28, 0xa2, 0xf5, 0xd8, 0x31, 0xf9, 0x3f, 0xbf, 0xe2, 0x3c, 0xd0, 0x92, 0xec, 0x0b,
+	0xfe, 0x01, 0xec, 0x42, 0x6d, 0xe1, 0x27, 0xfe, 0xf6, 0x37, 0x72, 0x1e, 0x30, 0x24, 0xc2, 0xdc,
+	0xfc, 0x05, 0x41, 0x23, 0xad, 0x77, 0xc9, 0xdf, 0xd8, 0x5c, 0xe7, 0x4b, 0xe7, 0xe9, 0xfc, 0xdb,
+	0x71, 0xe7, 0x57, 0x96, 0x3a, 0x7f, 0xbf, 0x30, 0xef, 0xbd, 0x55, 0x87, 0xf5, 0xe4, 0x1c, 0x4b,
+	0xc4, 0xfc, 0x06, 0xda, 0x8b, 0x42, 0x32, 0x1f, 0xd9, 0x7f, 0xa1, 0x8d, 0x9f, 0x40, 0xeb, 0xcd,
+	0xe2, 0xaa, 0xa7, 0x77, 0x61, 0x2d, 0x5d, 0x31, 0xd7, 0x51, 0xbb, 0x14, 0x1f, 0x96, 0xcc, 0x02,
+	0x5e, 0x4d, 0xf5, 0x82, 0x5b, 0xef, 0x9d, 0x9c, 0x1a, 0x85, 0x17, 0xa7, 0x46, 0xe1, 0xd5, 0xa9,
+	0x81, 0xbe, 0x9d, 0x1a, 0xe8, 0xc7, 0xa9, 0x81, 0x7e, 0x9d, 0x1a, 0xe8, 0x64, 0x6a, 0xa0, 0x97,
+	0x53, 0x03, 0xfd, 0x3e, 0x35, 0x0a, 0xaf, 0xa6, 0x06, 0xfa, 0xe1, 0xcc, 0x28, 0x9c, 0x9c, 0x19,
+	0x85, 0x17, 0x67, 0x46, 0xa1, 0x5b, 0x91, 0x3f, 0xa6, 0x77, 0xfe, 0x08, 0x00, 0x00, 0xff, 0xff,
+	0xd1, 0xa7, 0xd6, 0xe4, 0x0b, 0x0b, 0x00, 0x00,
 }
 
+func (this *ActualLRPLifecycleResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPLifecycleResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPLifecycleResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPGroupsResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupsResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.ActualLrpGroups) != len(that1.ActualLrpGroups) {
+		return false
+	}
+	for i := range this.ActualLrpGroups {
+		if !this.ActualLrpGroups[i].Equal(that1.ActualLrpGroups[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (this *ActualLRPGroupResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if !this.ActualLrpGroup.Equal(that1.ActualLrpGroup) {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPGroupsRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupsRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupsRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPGroupsByProcessGuidRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupsByProcessGuidRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupsByProcessGuidRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPGroupByProcessGuidAndIndexRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPGroupByProcessGuidAndIndexRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPGroupByProcessGuidAndIndexRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	return true
+}
+func (this *ClaimActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ClaimActualLRPRequest)
+	if !ok {
+		that2, ok := that.(ClaimActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	return true
+}
+func (this *StartActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*StartActualLRPRequest)
+	if !ok {
+		that2, ok := that.(StartActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if !this.ActualLrpNetInfo.Equal(that1.ActualLrpNetInfo) {
+		return false
+	}
+	if len(this.ActualLrpInternalRoutes) != len(that1.ActualLrpInternalRoutes) {
+		return false
+	}
+	for i := range this.ActualLrpInternalRoutes {
+		if !this.ActualLrpInternalRoutes[i].Equal(that1.ActualLrpInternalRoutes[i]) {
+			return false
+		}
+	}
+	if len(this.MetricTags) != len(that1.MetricTags) {
+		return false
+	}
+	for i := range this.MetricTags {
+		if this.MetricTags[i] != that1.MetricTags[i] {
+			return false
+		}
+	}
+	if that1.OptionalRoutable == nil {
+		if this.OptionalRoutable != nil {
+			return false
+		}
+	} else if this.OptionalRoutable == nil {
+		return false
+	} else if !this.OptionalRoutable.Equal(that1.OptionalRoutable) {
+		return false
+	}
+	if this.AvailabilityZone != that1.AvailabilityZone {
+		return false
+	}
+	return true
+}
+func (this *StartActualLRPRequest_Routable) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*StartActualLRPRequest_Routable)
+	if !ok {
+		that2, ok := that.(StartActualLRPRequest_Routable)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Routable != that1.Routable {
+		return false
+	}
+	return true
+}
+func (this *CrashActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CrashActualLRPRequest)
+	if !ok {
+		that2, ok := that.(CrashActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	if this.ErrorMessage != that1.ErrorMessage {
+		return false
+	}
+	return true
+}
+func (this *FailActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*FailActualLRPRequest)
+	if !ok {
+		that2, ok := that.(FailActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	if this.ErrorMessage != that1.ErrorMessage {
+		return false
+	}
+	return true
+}
+func (this *RetireActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RetireActualLRPRequest)
+	if !ok {
+		that2, ok := that.(RetireActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.ActualLrpKey.Equal(that1.ActualLrpKey) {
+		return false
+	}
+	return true
+}
+func (this *RemoveActualLRPRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RemoveActualLRPRequest)
+	if !ok {
+		that2, ok := that.(RemoveActualLRPRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	if !this.ActualLrpInstanceKey.Equal(that1.ActualLrpInstanceKey) {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPsResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPsResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.ActualLrps) != len(that1.ActualLrps) {
+		return false
+	}
+	for i := range this.ActualLrps {
+		if !this.ActualLrps[i].Equal(that1.ActualLrps[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (this *ActualLRPsRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPsRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPsRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.CellId != that1.CellId {
+		return false
+	}
+	if this.ProcessGuid != that1.ProcessGuid {
+		return false
+	}
+	if that1.OptionalIndex == nil {
+		if this.OptionalIndex != nil {
+			return false
+		}
+	} else if this.OptionalIndex == nil {
+		return false
+	} else if !this.OptionalIndex.Equal(that1.OptionalIndex) {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPsRequest_Index) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPsRequest_Index)
+	if !ok {
+		that2, ok := that.(ActualLRPsRequest_Index)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Index != that1.Index {
+		return false
+	}
+	return true
+}
+func (this *ActualLRPsByProcessGuidsResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPsByProcessGuidsResponse)
+	if !ok {
+		that2, ok := that.(ActualLRPsByProcessGuidsResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Error.Equal(that1.Error) {
+		return false
+	}
+	if len(this.ActualLrps) != len(that1.ActualLrps) {
+		return false
+	}
+	for i := range this.ActualLrps {
+		if !this.ActualLrps[i].Equal(that1.ActualLrps[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (this *ActualLRPsByProcessGuidsRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ActualLRPsByProcessGuidsRequest)
+	if !ok {
+		that2, ok := that.(ActualLRPsByProcessGuidsRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if len(this.ProcessGuids) != len(that1.ProcessGuids) {
+		return false
+	}
+	for i := range this.ProcessGuids {
+		if this.ProcessGuids[i] != that1.ProcessGuids[i] {
+			return false
+		}
+	}
+	return true
+}
+func (this *ActualLRPLifecycleResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ActualLRPLifecycleResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPGroupsResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ActualLRPGroupsResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.ActualLrpGroups != nil {
+		s = append(s, "ActualLrpGroups: "+fmt.Sprintf("%#v", this.ActualLrpGroups)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPGroupResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ActualLRPGroupResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.ActualLrpGroup != nil {
+		s = append(s, "ActualLrpGroup: "+fmt.Sprintf("%#v", this.ActualLrpGroup)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPGroupsRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ActualLRPGroupsRequest{")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPGroupsByProcessGuidRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ActualLRPGroupsByProcessGuidRequest{")
+	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPGroupByProcessGuidAndIndexRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ActualLRPGroupByProcessGuidAndIndexRequest{")
+	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
+	s = append(s, "Index: "+fmt.Sprintf("%#v", this.Index)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ClaimActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&models.ClaimActualLRPRequest{")
+	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
+	s = append(s, "Index: "+fmt.Sprintf("%#v", this.Index)+",\n")
+	if this.ActualLrpInstanceKey != nil {
+		s = append(s, "ActualLrpInstanceKey: "+fmt.Sprintf("%#v", this.ActualLrpInstanceKey)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *StartActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 11)
+	s = append(s, "&models.StartActualLRPRequest{")
+	if this.ActualLrpKey != nil {
+		s = append(s, "ActualLrpKey: "+fmt.Sprintf("%#v", this.ActualLrpKey)+",\n")
+	}
+	if this.ActualLrpInstanceKey != nil {
+		s = append(s, "ActualLrpInstanceKey: "+fmt.Sprintf("%#v", this.ActualLrpInstanceKey)+",\n")
+	}
+	if this.ActualLrpNetInfo != nil {
+		s = append(s, "ActualLrpNetInfo: "+fmt.Sprintf("%#v", this.ActualLrpNetInfo)+",\n")
+	}
+	if this.ActualLrpInternalRoutes != nil {
+		s = append(s, "ActualLrpInternalRoutes: "+fmt.Sprintf("%#v", this.ActualLrpInternalRoutes)+",\n")
+	}
+	keysForMetricTags := make([]string, 0, len(this.MetricTags))
+	for k, _ := range this.MetricTags {
+		keysForMetricTags = append(keysForMetricTags, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
+	mapStringForMetricTags := "map[string]string{"
+	for _, k := range keysForMetricTags {
+		mapStringForMetricTags += fmt.Sprintf("%#v: %#v,", k, this.MetricTags[k])
+	}
+	mapStringForMetricTags += "}"
+	if this.MetricTags != nil {
+		s = append(s, "MetricTags: "+mapStringForMetricTags+",\n")
+	}
+	if this.OptionalRoutable != nil {
+		s = append(s, "OptionalRoutable: "+fmt.Sprintf("%#v", this.OptionalRoutable)+",\n")
+	}
+	s = append(s, "AvailabilityZone: "+fmt.Sprintf("%#v", this.AvailabilityZone)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *StartActualLRPRequest_Routable) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.StartActualLRPRequest_Routable{` +
+		`Routable:` + fmt.Sprintf("%#v", this.Routable) + `}`}, ", ")
+	return s
+}
+func (this *CrashActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&models.CrashActualLRPRequest{")
+	if this.ActualLrpKey != nil {
+		s = append(s, "ActualLrpKey: "+fmt.Sprintf("%#v", this.ActualLrpKey)+",\n")
+	}
+	if this.ActualLrpInstanceKey != nil {
+		s = append(s, "ActualLrpInstanceKey: "+fmt.Sprintf("%#v", this.ActualLrpInstanceKey)+",\n")
+	}
+	s = append(s, "ErrorMessage: "+fmt.Sprintf("%#v", this.ErrorMessage)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *FailActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.FailActualLRPRequest{")
+	if this.ActualLrpKey != nil {
+		s = append(s, "ActualLrpKey: "+fmt.Sprintf("%#v", this.ActualLrpKey)+",\n")
+	}
+	s = append(s, "ErrorMessage: "+fmt.Sprintf("%#v", this.ErrorMessage)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *RetireActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.RetireActualLRPRequest{")
+	if this.ActualLrpKey != nil {
+		s = append(s, "ActualLrpKey: "+fmt.Sprintf("%#v", this.ActualLrpKey)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *RemoveActualLRPRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&models.RemoveActualLRPRequest{")
+	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
+	s = append(s, "Index: "+fmt.Sprintf("%#v", this.Index)+",\n")
+	if this.ActualLrpInstanceKey != nil {
+		s = append(s, "ActualLrpInstanceKey: "+fmt.Sprintf("%#v", this.ActualLrpInstanceKey)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPsResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ActualLRPsResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.ActualLrps != nil {
+		s = append(s, "ActualLrps: "+fmt.Sprintf("%#v", this.ActualLrps)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPsRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 8)
+	s = append(s, "&models.ActualLRPsRequest{")
+	s = append(s, "Domain: "+fmt.Sprintf("%#v", this.Domain)+",\n")
+	s = append(s, "CellId: "+fmt.Sprintf("%#v", this.CellId)+",\n")
+	s = append(s, "ProcessGuid: "+fmt.Sprintf("%#v", this.ProcessGuid)+",\n")
+	if this.OptionalIndex != nil {
+		s = append(s, "OptionalIndex: "+fmt.Sprintf("%#v", this.OptionalIndex)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPsRequest_Index) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&models.ActualLRPsRequest_Index{` +
+		`Index:` + fmt.Sprintf("%#v", this.Index) + `}`}, ", ")
+	return s
+}
+func (this *ActualLRPsByProcessGuidsResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&models.ActualLRPsByProcessGuidsResponse{")
+	if this.Error != nil {
+		s = append(s, "Error: "+fmt.Sprintf("%#v", this.Error)+",\n")
+	}
+	if this.ActualLrps != nil {
+		s = append(s, "ActualLrps: "+fmt.Sprintf("%#v", this.ActualLrps)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ActualLRPsByProcessGuidsRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&models.ActualLRPsByProcessGuidsRequest{")
+	s = append(s, "ProcessGuids: "+fmt.Sprintf("%#v", this.ProcessGuids)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func valueToGoStringActualLrpRequests(v interface{}, typ string) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+}
 func (m *ActualLRPLifecycleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2166,6 +2954,246 @@ func sovActualLrpRequests(x uint64) (n int) {
 }
 func sozActualLrpRequests(x uint64) (n int) {
 	return sovActualLrpRequests(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (this *ActualLRPLifecycleResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPLifecycleResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPGroupsResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	repeatedStringForActualLrpGroups := "[]*ActualLRPGroup{"
+	for _, f := range this.ActualLrpGroups {
+		repeatedStringForActualLrpGroups += strings.Replace(fmt.Sprintf("%v", f), "ActualLRPGroup", "ActualLRPGroup", 1) + ","
+	}
+	repeatedStringForActualLrpGroups += "}"
+	s := strings.Join([]string{`&ActualLRPGroupsResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`ActualLrpGroups:` + repeatedStringForActualLrpGroups + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPGroupResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroupResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`ActualLrpGroup:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpGroup), "ActualLRPGroup", "ActualLRPGroup", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPGroupsRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroupsRequest{`,
+		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
+		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPGroupsByProcessGuidRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroupsByProcessGuidRequest{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPGroupByProcessGuidAndIndexRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPGroupByProcessGuidAndIndexRequest{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ClaimActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ClaimActualLRPRequest{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *StartActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	repeatedStringForActualLrpInternalRoutes := "[]*ActualLRPInternalRoute{"
+	for _, f := range this.ActualLrpInternalRoutes {
+		repeatedStringForActualLrpInternalRoutes += strings.Replace(fmt.Sprintf("%v", f), "ActualLRPInternalRoute", "ActualLRPInternalRoute", 1) + ","
+	}
+	repeatedStringForActualLrpInternalRoutes += "}"
+	keysForMetricTags := make([]string, 0, len(this.MetricTags))
+	for k, _ := range this.MetricTags {
+		keysForMetricTags = append(keysForMetricTags, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForMetricTags)
+	mapStringForMetricTags := "map[string]string{"
+	for _, k := range keysForMetricTags {
+		mapStringForMetricTags += fmt.Sprintf("%v: %v,", k, this.MetricTags[k])
+	}
+	mapStringForMetricTags += "}"
+	s := strings.Join([]string{`&StartActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`ActualLrpNetInfo:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpNetInfo), "ActualLRPNetInfo", "ActualLRPNetInfo", 1) + `,`,
+		`ActualLrpInternalRoutes:` + repeatedStringForActualLrpInternalRoutes + `,`,
+		`MetricTags:` + mapStringForMetricTags + `,`,
+		`OptionalRoutable:` + fmt.Sprintf("%v", this.OptionalRoutable) + `,`,
+		`AvailabilityZone:` + fmt.Sprintf("%v", this.AvailabilityZone) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *StartActualLRPRequest_Routable) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&StartActualLRPRequest_Routable{`,
+		`Routable:` + fmt.Sprintf("%v", this.Routable) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *CrashActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&CrashActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`ErrorMessage:` + fmt.Sprintf("%v", this.ErrorMessage) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *FailActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&FailActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`ErrorMessage:` + fmt.Sprintf("%v", this.ErrorMessage) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *RetireActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&RetireActualLRPRequest{`,
+		`ActualLrpKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpKey), "ActualLRPKey", "ActualLRPKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *RemoveActualLRPRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&RemoveActualLRPRequest{`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+		`ActualLrpInstanceKey:` + strings.Replace(fmt.Sprintf("%v", this.ActualLrpInstanceKey), "ActualLRPInstanceKey", "ActualLRPInstanceKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPsResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	repeatedStringForActualLrps := "[]*ActualLRP{"
+	for _, f := range this.ActualLrps {
+		repeatedStringForActualLrps += strings.Replace(fmt.Sprintf("%v", f), "ActualLRP", "ActualLRP", 1) + ","
+	}
+	repeatedStringForActualLrps += "}"
+	s := strings.Join([]string{`&ActualLRPsResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`ActualLrps:` + repeatedStringForActualLrps + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPsRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPsRequest{`,
+		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
+		`CellId:` + fmt.Sprintf("%v", this.CellId) + `,`,
+		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
+		`OptionalIndex:` + fmt.Sprintf("%v", this.OptionalIndex) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPsRequest_Index) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPsRequest_Index{`,
+		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPsByProcessGuidsResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	repeatedStringForActualLrps := "[]*ActualLRP{"
+	for _, f := range this.ActualLrps {
+		repeatedStringForActualLrps += strings.Replace(fmt.Sprintf("%v", f), "ActualLRP", "ActualLRP", 1) + ","
+	}
+	repeatedStringForActualLrps += "}"
+	s := strings.Join([]string{`&ActualLRPsByProcessGuidsResponse{`,
+		`Error:` + strings.Replace(fmt.Sprintf("%v", this.Error), "Error", "Error", 1) + `,`,
+		`ActualLrps:` + repeatedStringForActualLrps + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ActualLRPsByProcessGuidsRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ActualLRPsByProcessGuidsRequest{`,
+		`ProcessGuids:` + fmt.Sprintf("%v", this.ProcessGuids) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func valueToStringActualLrpRequests(v interface{}) string {
+	rv := reflect.ValueOf(v)
+	if rv.IsNil() {
+		return "nil"
+	}
+	pv := reflect.Indirect(rv).Interface()
+	return fmt.Sprintf("*%v", pv)
 }
 func (m *ActualLRPLifecycleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
