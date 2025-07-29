@@ -549,10 +549,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			BeforeEach(func() {
 				actualLRPGroups = //lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-				[]*models.ActualLRPGroup{
-					{Instance: &actualLRP1},
-					{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
-				}
+					[]*models.ActualLRPGroup{
+						{Instance: &actualLRP1},
+						{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
+					}
 
 				actualLRPs = []*models.ActualLRP{
 					&actualLRP1,
