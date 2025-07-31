@@ -410,9 +410,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 				actualLRPGroups = []*models.ActualLRPGroup{
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					{Instance: &actualLRP1},
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
 					{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
 				}
 			})
@@ -548,8 +546,8 @@ var _ = Describe("ActualLRP Handlers", func() {
 			var actualLRPGroups []*models.ActualLRPGroup
 
 			BeforeEach(func() {
-				actualLRPGroups = //lint:ignore SA1019 - deprecated model used for testing deprecated functionality
-					[]*models.ActualLRPGroup{
+				actualLRPGroups =
+					[]*models.ActualLRPGroup{ //lint:ignore SA1019 - deprecated model used for testing deprecated functionality
 						{Instance: &actualLRP1},
 						{Instance: &actualLRP2, Evacuating: &evacuatingLRP2},
 					}
