@@ -62,5 +62,29 @@ var _ = Describe("VolumeMount", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
+		Context("given a DedicatedDevice", func() {
+			BeforeEach(func() {
+				mount.Dedicated = &models.DedicatedDevice{
+					MounterId:    "my-mounter",
+					MountConfig:  `{"foo":"bar"}`,
+					DeviceConfig: `{"baz":"qux"}`,
+				}
+			})
+
+			It("doesnt error with a good mount", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("given an invalid mounterId", func() {
+				BeforeEach(func() {
+					mount.Dedicated.MounterId = ""
+				})
+
+				It("should return an error", func() {
+					Expect(err).To(HaveOccurred())
+				})
+			})
+		})
 	})
 })

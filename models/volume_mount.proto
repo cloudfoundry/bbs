@@ -11,6 +11,12 @@ message SharedDevice {
   string mount_config = 2 [(gogoproto.jsontag) = "mount_config"];
 }
 
+message DedicatedDevice {
+  string mounter_id = 1 [(gogoproto.jsontag) = "mounter_id"];
+  string mount_config = 2 [(gogoproto.jsontag) = "mount_config"];
+  string device_config = 3 [(gogoproto.jsontag) = "device_config"];
+}
+
 message VolumeMount {
   reserved 2, 4, 5;
 
@@ -20,6 +26,7 @@ message VolumeMount {
 
   // oneof device {
     SharedDevice shared = 7 [(gogoproto.jsontag) = "shared"];
+    DedicatedDevice dedicated = 8 [(gogoproto.jsontag) = "dedicated"];
   // }
 }
 

@@ -76,18 +76,78 @@ func (m *SharedDevice) GetMountConfig() string {
 	return ""
 }
 
+type DedicatedDevice struct {
+	MounterId    string `protobuf:"bytes,1,opt,name=mounter_id,json=mounterId,proto3" json:"mounter_id"`
+	MountConfig  string `protobuf:"bytes,2,opt,name=mount_config,json=mountConfig,proto3" json:"mount_config"`
+	DeviceConfig string `protobuf:"bytes,3,opt,name=device_config,json=deviceConfig,proto3" json:"device_config"`
+}
+
+func (m *DedicatedDevice) Reset()      { *m = DedicatedDevice{} }
+func (*DedicatedDevice) ProtoMessage() {}
+func (*DedicatedDevice) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bbde336a4634d84f, []int{1}
+}
+func (m *DedicatedDevice) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DedicatedDevice) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DedicatedDevice.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DedicatedDevice) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DedicatedDevice.Merge(m, src)
+}
+func (m *DedicatedDevice) XXX_Size() int {
+	return m.Size()
+}
+func (m *DedicatedDevice) XXX_DiscardUnknown() {
+	xxx_messageInfo_DedicatedDevice.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DedicatedDevice proto.InternalMessageInfo
+
+func (m *DedicatedDevice) GetMounterId() string {
+	if m != nil {
+		return m.MounterId
+	}
+	return ""
+}
+
+func (m *DedicatedDevice) GetMountConfig() string {
+	if m != nil {
+		return m.MountConfig
+	}
+	return ""
+}
+
+func (m *DedicatedDevice) GetDeviceConfig() string {
+	if m != nil {
+		return m.DeviceConfig
+	}
+	return ""
+}
+
 type VolumeMount struct {
 	Driver       string `protobuf:"bytes,1,opt,name=driver,proto3" json:"driver"`
 	ContainerDir string `protobuf:"bytes,3,opt,name=container_dir,json=containerDir,proto3" json:"container_dir"`
 	Mode         string `protobuf:"bytes,6,opt,name=mode,proto3" json:"mode"`
 	// oneof device {
-	Shared *SharedDevice `protobuf:"bytes,7,opt,name=shared,proto3" json:"shared"`
+	Shared    *SharedDevice    `protobuf:"bytes,7,opt,name=shared,proto3" json:"shared"`
+	Dedicated *DedicatedDevice `protobuf:"bytes,8,opt,name=dedicated,proto3" json:"dedicated"`
 }
 
 func (m *VolumeMount) Reset()      { *m = VolumeMount{} }
 func (*VolumeMount) ProtoMessage() {}
 func (*VolumeMount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bbde336a4634d84f, []int{1}
+	return fileDescriptor_bbde336a4634d84f, []int{2}
 }
 func (m *VolumeMount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -144,6 +204,13 @@ func (m *VolumeMount) GetShared() *SharedDevice {
 	return nil
 }
 
+func (m *VolumeMount) GetDedicated() *DedicatedDevice {
+	if m != nil {
+		return m.Dedicated
+	}
+	return nil
+}
+
 type VolumePlacement struct {
 	DriverNames []string `protobuf:"bytes,1,rep,name=driver_names,json=driverNames,proto3" json:"driver_names"`
 }
@@ -151,7 +218,7 @@ type VolumePlacement struct {
 func (m *VolumePlacement) Reset()      { *m = VolumePlacement{} }
 func (*VolumePlacement) ProtoMessage() {}
 func (*VolumePlacement) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bbde336a4634d84f, []int{2}
+	return fileDescriptor_bbde336a4634d84f, []int{3}
 }
 func (m *VolumePlacement) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -189,6 +256,7 @@ func (m *VolumePlacement) GetDriverNames() []string {
 
 func init() {
 	proto.RegisterType((*SharedDevice)(nil), "models.SharedDevice")
+	proto.RegisterType((*DedicatedDevice)(nil), "models.DedicatedDevice")
 	proto.RegisterType((*VolumeMount)(nil), "models.VolumeMount")
 	proto.RegisterType((*VolumePlacement)(nil), "models.VolumePlacement")
 }
@@ -196,31 +264,36 @@ func init() {
 func init() { proto.RegisterFile("volume_mount.proto", fileDescriptor_bbde336a4634d84f) }
 
 var fileDescriptor_bbde336a4634d84f = []byte{
-	// 381 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x91, 0xc1, 0x6a, 0xa3, 0x40,
-	0x18, 0xc7, 0x9d, 0xc4, 0xb8, 0x66, 0x4c, 0x58, 0x77, 0xd8, 0x83, 0x2c, 0xcb, 0x18, 0x3c, 0x85,
-	0x85, 0x35, 0xd0, 0x94, 0xd2, 0x73, 0x1a, 0x0a, 0x0d, 0xb4, 0x14, 0x0b, 0xbd, 0x8a, 0xd1, 0x89,
-	0x19, 0x88, 0x4e, 0x31, 0x9a, 0x73, 0x1f, 0xa1, 0x8f, 0xd1, 0x47, 0xe9, 0x31, 0xd0, 0x4b, 0x4e,
-	0xd2, 0x98, 0x4b, 0xf1, 0x94, 0x47, 0x28, 0xce, 0xd8, 0x36, 0xb9, 0x38, 0xf3, 0xfb, 0x7f, 0x7f,
-	0x3f, 0xbf, 0xef, 0x2f, 0x44, 0x2b, 0xb6, 0xc8, 0x22, 0xe2, 0x46, 0x2c, 0x8b, 0x53, 0xfb, 0x21,
-	0x61, 0x29, 0x43, 0x4a, 0xc4, 0x02, 0xb2, 0x58, 0xfe, 0xf9, 0x1f, 0xd2, 0x74, 0x9e, 0x4d, 0x6d,
-	0x9f, 0x45, 0x83, 0x90, 0x85, 0x6c, 0xc0, 0xcb, 0xd3, 0x6c, 0xc6, 0x89, 0x03, 0xbf, 0x89, 0xd7,
-	0x2c, 0x06, 0x3b, 0x77, 0x73, 0x2f, 0x21, 0xc1, 0x98, 0xac, 0xa8, 0x4f, 0xd0, 0x3f, 0xd8, 0xae,
-	0x9b, 0xd3, 0xc0, 0x00, 0x3d, 0xd0, 0x6f, 0x8f, 0xba, 0x65, 0x6e, 0x7e, 0x8b, 0x8e, 0x2a, 0xae,
-	0x57, 0x01, 0x1a, 0xc2, 0x0e, 0x9f, 0xc0, 0xf5, 0x59, 0x3c, 0xa3, 0xa1, 0xd1, 0xe0, 0x76, 0xbd,
-	0xcc, 0xcd, 0x23, 0xdd, 0xd1, 0x38, 0x5d, 0x70, 0xb0, 0x5e, 0x01, 0xd4, 0xee, 0x79, 0x87, 0xeb,
-	0x4a, 0x45, 0x16, 0x54, 0x82, 0x84, 0xae, 0x48, 0x52, 0x7f, 0x0d, 0x96, 0xb9, 0x59, 0x2b, 0x4e,
-	0x7d, 0xa2, 0x33, 0xd8, 0xf5, 0x59, 0x9c, 0x7a, 0x34, 0x26, 0x89, 0x1b, 0xd0, 0xc4, 0x68, 0x72,
-	0xeb, 0xaf, 0x32, 0x37, 0x8f, 0x0b, 0x4e, 0xe7, 0x0b, 0xc7, 0x34, 0x41, 0x7f, 0xa1, 0x5c, 0xa5,
-	0x62, 0x28, 0xdc, 0xae, 0x96, 0xb9, 0xc9, 0xd9, 0xe1, 0x4f, 0x74, 0x0e, 0x95, 0x25, 0x5f, 0xdd,
-	0xf8, 0xd1, 0x03, 0x7d, 0xed, 0xe4, 0xb7, 0x2d, 0x22, 0xb4, 0x0f, 0x03, 0x11, 0xf3, 0x08, 0x9f,
-	0x53, 0x9f, 0x13, 0x59, 0x6d, 0xe8, 0xcd, 0x89, 0xac, 0xca, 0x7a, 0x6b, 0x22, 0xab, 0x2d, 0x5d,
-	0xb1, 0x2e, 0xe1, 0x4f, 0xb1, 0xd4, 0xed, 0xc2, 0xf3, 0x49, 0x44, 0xe2, 0xb4, 0x4a, 0x47, 0x8c,
-	0xef, 0xc6, 0x5e, 0x44, 0x96, 0x06, 0xe8, 0x35, 0x3f, 0xd3, 0x39, 0xd4, 0x1d, 0x4d, 0xd0, 0x4d,
-	0x05, 0xa3, 0xd3, 0xf5, 0x16, 0x83, 0xcd, 0x16, 0x4b, 0xfb, 0x2d, 0x06, 0x8f, 0x05, 0x06, 0xcf,
-	0x05, 0x06, 0x2f, 0x05, 0x06, 0xeb, 0x02, 0x83, 0xb7, 0x02, 0x83, 0xf7, 0x02, 0x4b, 0xfb, 0x02,
-	0x83, 0xa7, 0x1d, 0x96, 0xd6, 0x3b, 0x2c, 0x6d, 0x76, 0x58, 0x9a, 0x2a, 0xfc, 0x5f, 0x0e, 0x3f,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0x1a, 0x23, 0x60, 0xde, 0x18, 0x02, 0x00, 0x00,
+	// 451 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x52, 0x41, 0x8b, 0xd3, 0x40,
+	0x14, 0xce, 0xb4, 0xd9, 0x98, 0x4e, 0xbb, 0x6e, 0x1d, 0x04, 0x83, 0xc8, 0xa4, 0xf4, 0xb4, 0x08,
+	0xdb, 0x05, 0x57, 0xc4, 0xf3, 0x5a, 0x04, 0x0b, 0x8a, 0x8c, 0xe0, 0xb5, 0xa4, 0x99, 0xd9, 0xec,
+	0x40, 0x93, 0x91, 0x69, 0xd2, 0xb3, 0x3f, 0xc1, 0xab, 0xff, 0xc0, 0x8b, 0xff, 0xc3, 0x63, 0x8f,
+	0x7b, 0x0a, 0x36, 0xbd, 0x48, 0x4e, 0xfb, 0x13, 0x24, 0x6f, 0x92, 0x36, 0xf5, 0xe8, 0x25, 0xf3,
+	0xbe, 0xf7, 0xde, 0x37, 0xdf, 0xcb, 0xfb, 0x06, 0x93, 0xb5, 0x5a, 0x66, 0xb1, 0x98, 0xc7, 0x2a,
+	0x4b, 0xd2, 0xc9, 0x17, 0xad, 0x52, 0x45, 0x9c, 0x58, 0x71, 0xb1, 0x5c, 0x3d, 0xbd, 0x88, 0x64,
+	0x7a, 0x9b, 0x2d, 0x26, 0xa1, 0x8a, 0x2f, 0x23, 0x15, 0xa9, 0x4b, 0x28, 0x2f, 0xb2, 0x1b, 0x40,
+	0x00, 0x20, 0x32, 0xb4, 0xb1, 0xc2, 0x83, 0x4f, 0xb7, 0x81, 0x16, 0x7c, 0x2a, 0xd6, 0x32, 0x14,
+	0xe4, 0x39, 0xee, 0xd5, 0x97, 0x4b, 0xee, 0xa1, 0x11, 0x3a, 0xef, 0x5d, 0x9f, 0x96, 0xb9, 0x7f,
+	0x48, 0x32, 0xd7, 0x84, 0xef, 0x38, 0xb9, 0xc2, 0x03, 0x98, 0x60, 0x1e, 0xaa, 0xe4, 0x46, 0x46,
+	0x5e, 0x07, 0xda, 0x87, 0x65, 0xee, 0x1f, 0xe5, 0x59, 0x1f, 0xd0, 0x1b, 0x00, 0xe3, 0x9f, 0x08,
+	0x9f, 0x4d, 0x05, 0x97, 0x61, 0x90, 0xee, 0x45, 0x2f, 0x30, 0x86, 0x16, 0xa1, 0x0f, 0xaa, 0x0f,
+	0xcb, 0xdc, 0x6f, 0x65, 0x59, 0xaf, 0x8e, 0xff, 0x53, 0x97, 0xbc, 0xc2, 0xa7, 0x1c, 0xd4, 0x1a,
+	0x56, 0x17, 0x58, 0x8f, 0xca, 0xdc, 0x3f, 0x2e, 0xb0, 0x81, 0x81, 0xf5, 0xbc, 0xdf, 0x3b, 0xb8,
+	0xff, 0x19, 0xfe, 0xf8, 0x7d, 0x75, 0x1b, 0x19, 0x63, 0x87, 0x6b, 0xb9, 0x16, 0xba, 0x9e, 0x13,
+	0x97, 0xb9, 0x5f, 0x67, 0x58, 0x7d, 0x56, 0x5a, 0xa1, 0x4a, 0xd2, 0x40, 0x26, 0x42, 0xcf, 0xb9,
+	0xd4, 0x6d, 0xad, 0xa3, 0x02, 0x1b, 0xec, 0xe1, 0x54, 0x6a, 0xf2, 0x0c, 0xdb, 0x95, 0x8b, 0x9e,
+	0x03, 0xed, 0x6e, 0x99, 0xfb, 0x80, 0x19, 0x7c, 0xc9, 0x6b, 0xec, 0xac, 0xc0, 0x2a, 0xef, 0xc1,
+	0x08, 0x9d, 0xf7, 0x5f, 0x3c, 0x9e, 0x18, 0xcb, 0x27, 0x6d, 0x03, 0xcd, 0x3c, 0xa6, 0x8f, 0xd5,
+	0x27, 0x99, 0xe2, 0x1e, 0x6f, 0x56, 0xee, 0xb9, 0x40, 0x7e, 0xd2, 0x90, 0xff, 0xf1, 0xc2, 0xb8,
+	0xbd, 0xef, 0x66, 0x87, 0x70, 0x66, 0xbb, 0x9d, 0x61, 0x77, 0x66, 0xbb, 0xf6, 0xf0, 0x64, 0x66,
+	0xbb, 0x27, 0x43, 0x67, 0xfc, 0x16, 0x9f, 0x99, 0xd5, 0x7c, 0x5c, 0x06, 0xa1, 0x88, 0x45, 0x92,
+	0x56, 0xde, 0x98, 0x25, 0xcc, 0x93, 0x20, 0x16, 0x2b, 0x0f, 0x8d, 0xba, 0x8d, 0x37, 0xed, 0x3c,
+	0xeb, 0x1b, 0xf4, 0xa1, 0x02, 0xd7, 0x2f, 0x37, 0x5b, 0x8a, 0xee, 0xb6, 0xd4, 0xba, 0xdf, 0x52,
+	0xf4, 0xb5, 0xa0, 0xe8, 0x47, 0x41, 0xd1, 0xaf, 0x82, 0xa2, 0x4d, 0x41, 0xd1, 0xef, 0x82, 0xa2,
+	0x3f, 0x05, 0xb5, 0xee, 0x0b, 0x8a, 0xbe, 0xed, 0xa8, 0xb5, 0xd9, 0x51, 0xeb, 0x6e, 0x47, 0xad,
+	0x85, 0x03, 0x2f, 0xf8, 0xea, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xdc, 0x09, 0x4f, 0x81, 0x0e,
+	0x03, 0x00, 0x00,
 }
 
 func (this *SharedDevice) Equal(that interface{}) bool {
@@ -246,6 +319,36 @@ func (this *SharedDevice) Equal(that interface{}) bool {
 		return false
 	}
 	if this.MountConfig != that1.MountConfig {
+		return false
+	}
+	return true
+}
+func (this *DedicatedDevice) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*DedicatedDevice)
+	if !ok {
+		that2, ok := that.(DedicatedDevice)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.MounterId != that1.MounterId {
+		return false
+	}
+	if this.MountConfig != that1.MountConfig {
+		return false
+	}
+	if this.DeviceConfig != that1.DeviceConfig {
 		return false
 	}
 	return true
@@ -279,6 +382,9 @@ func (this *VolumeMount) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.Shared.Equal(that1.Shared) {
+		return false
+	}
+	if !this.Dedicated.Equal(that1.Dedicated) {
 		return false
 	}
 	return true
@@ -323,17 +429,32 @@ func (this *SharedDevice) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
+func (this *DedicatedDevice) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&models.DedicatedDevice{")
+	s = append(s, "MounterId: "+fmt.Sprintf("%#v", this.MounterId)+",\n")
+	s = append(s, "MountConfig: "+fmt.Sprintf("%#v", this.MountConfig)+",\n")
+	s = append(s, "DeviceConfig: "+fmt.Sprintf("%#v", this.DeviceConfig)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
 func (this *VolumeMount) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 9)
 	s = append(s, "&models.VolumeMount{")
 	s = append(s, "Driver: "+fmt.Sprintf("%#v", this.Driver)+",\n")
 	s = append(s, "ContainerDir: "+fmt.Sprintf("%#v", this.ContainerDir)+",\n")
 	s = append(s, "Mode: "+fmt.Sprintf("%#v", this.Mode)+",\n")
 	if this.Shared != nil {
 		s = append(s, "Shared: "+fmt.Sprintf("%#v", this.Shared)+",\n")
+	}
+	if this.Dedicated != nil {
+		s = append(s, "Dedicated: "+fmt.Sprintf("%#v", this.Dedicated)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
@@ -393,6 +514,50 @@ func (m *SharedDevice) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *DedicatedDevice) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DedicatedDevice) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DedicatedDevice) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DeviceConfig) > 0 {
+		i -= len(m.DeviceConfig)
+		copy(dAtA[i:], m.DeviceConfig)
+		i = encodeVarintVolumeMount(dAtA, i, uint64(len(m.DeviceConfig)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.MountConfig) > 0 {
+		i -= len(m.MountConfig)
+		copy(dAtA[i:], m.MountConfig)
+		i = encodeVarintVolumeMount(dAtA, i, uint64(len(m.MountConfig)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.MounterId) > 0 {
+		i -= len(m.MounterId)
+		copy(dAtA[i:], m.MounterId)
+		i = encodeVarintVolumeMount(dAtA, i, uint64(len(m.MounterId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *VolumeMount) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -413,6 +578,18 @@ func (m *VolumeMount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Dedicated != nil {
+		{
+			size, err := m.Dedicated.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintVolumeMount(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x42
+	}
 	if m.Shared != nil {
 		{
 			size, err := m.Shared.MarshalToSizedBuffer(dAtA[:i])
@@ -509,6 +686,27 @@ func (m *SharedDevice) Size() (n int) {
 	return n
 }
 
+func (m *DedicatedDevice) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MounterId)
+	if l > 0 {
+		n += 1 + l + sovVolumeMount(uint64(l))
+	}
+	l = len(m.MountConfig)
+	if l > 0 {
+		n += 1 + l + sovVolumeMount(uint64(l))
+	}
+	l = len(m.DeviceConfig)
+	if l > 0 {
+		n += 1 + l + sovVolumeMount(uint64(l))
+	}
+	return n
+}
+
 func (m *VolumeMount) Size() (n int) {
 	if m == nil {
 		return 0
@@ -529,6 +727,10 @@ func (m *VolumeMount) Size() (n int) {
 	}
 	if m.Shared != nil {
 		l = m.Shared.Size()
+		n += 1 + l + sovVolumeMount(uint64(l))
+	}
+	if m.Dedicated != nil {
+		l = m.Dedicated.Size()
 		n += 1 + l + sovVolumeMount(uint64(l))
 	}
 	return n
@@ -566,6 +768,18 @@ func (this *SharedDevice) String() string {
 	}, "")
 	return s
 }
+func (this *DedicatedDevice) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DedicatedDevice{`,
+		`MounterId:` + fmt.Sprintf("%v", this.MounterId) + `,`,
+		`MountConfig:` + fmt.Sprintf("%v", this.MountConfig) + `,`,
+		`DeviceConfig:` + fmt.Sprintf("%v", this.DeviceConfig) + `,`,
+		`}`,
+	}, "")
+	return s
+}
 func (this *VolumeMount) String() string {
 	if this == nil {
 		return "nil"
@@ -575,6 +789,7 @@ func (this *VolumeMount) String() string {
 		`ContainerDir:` + fmt.Sprintf("%v", this.ContainerDir) + `,`,
 		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
 		`Shared:` + strings.Replace(this.Shared.String(), "SharedDevice", "SharedDevice", 1) + `,`,
+		`Dedicated:` + strings.Replace(this.Dedicated.String(), "DedicatedDevice", "DedicatedDevice", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -689,6 +904,152 @@ func (m *SharedDevice) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.MountConfig = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVolumeMount(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DedicatedDevice) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVolumeMount
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DedicatedDevice: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DedicatedDevice: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MounterId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MounterId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MountConfig", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MountConfig = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeviceConfig", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeviceConfig = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -869,6 +1230,42 @@ func (m *VolumeMount) Unmarshal(dAtA []byte) error {
 				m.Shared = &SharedDevice{}
 			}
 			if err := m.Shared.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dedicated", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVolumeMount
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVolumeMount
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Dedicated == nil {
+				m.Dedicated = &DedicatedDevice{}
+			}
+			if err := m.Dedicated.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
