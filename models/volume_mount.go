@@ -25,6 +25,9 @@ func (v *VolumeMount) Validate() error {
 	if v.Shared != nil && v.Shared.VolumeId == "" {
 		ve = ve.Append(errors.New("invalid volume_mount volume id"))
 	}
+	if v.Dedicated != nil && v.Dedicated.MounterId == "" {
+		ve = ve.Append(errors.New("invalid volume_mount mounter id"))
+	}
 
 	if !ve.Empty() {
 		return ve
