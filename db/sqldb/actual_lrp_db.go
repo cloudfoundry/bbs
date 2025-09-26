@@ -212,8 +212,8 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 		}
 		beforeActualLRP = *actualLRP
 
-		if actualLRP.State == models.ActualLRPStateUnclaimed {
-			logger.Debug("already-unclaimed")
+		if actualLRP.State == models.ActualLRPStateUnclaimed || actualLRP.State == models.ActualLRPStateClaimed {
+			logger.Debug("already-" + actualLRP.State)
 			return models.ErrActualLRPCannotBeUnclaimed
 		}
 
