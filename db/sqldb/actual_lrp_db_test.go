@@ -2149,7 +2149,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				JustBeforeEach(func() {
 					var err error
-					beforeActualLRP, afterActualLRP, err = sqlDB.UnclaimActualLRP(ctx, logger, actualLRPKey)
+					beforeActualLRP, afterActualLRP, err = sqlDB.UnclaimActualLRP(ctx, logger, false, actualLRPKey)
 					Expect(err).ToNot(HaveOccurred())
 				})
 
@@ -2220,16 +2220,40 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 
 				It("returns an error", func() {
-					_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, actualLRPKey)
+					_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, false, actualLRPKey)
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(models.ErrActualLRPCannotBeUnclaimed))
+				})
+			})
+
+			Context("When the actual LRP is claimed and isStale is true", func() {
+				BeforeEach(func() {
+					actualLRP = &models.ActualLRP{
+						ActualLRPKey: *actualLRPKey,
+					}
+
+					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns an error and retains claimed state", func() {
+					_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, true, actualLRPKey)
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrActualLRPCannotBeUnclaimed))
+
+					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].State).To(Equal(models.ActualLRPStateClaimed))
 				})
 			})
 		})
 
 		Context("when the actual LRP doesn't exist", func() {
 			It("returns a resource not found error", func() {
-				_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, actualLRPKey)
+				_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, false, actualLRPKey)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(Equal(models.ErrResourceNotFound))
 			})
