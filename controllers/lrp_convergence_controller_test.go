@@ -320,6 +320,36 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
 			})
 		})
+
+		Context("when the LRP cannot be unclaimed because it is stale and already claimed", func() {
+			BeforeEach(func() {
+				fakeLRPDB.UnclaimActualLRPReturns(nil, nil, models.ErrActualLRPCannotBeUnclaimed)
+			})
+
+			It("retains the claimed state and still auctions off the returned keys", func() {
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+
+				_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				Expect(startAuctions).To(HaveLen(1))
+				Expect(actualTraceId).To(Equal(traceId))
+				request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
+				Expect(startAuctions).To(ContainElement(&request))
+			})
+
+			It("calls UnclaimActualLRP with isStaleUnclaimed=true", func() {
+				Expect(fakeLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+				_, _, isStaleUnclaimed, _ := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
+				Expect(isStaleUnclaimed).To(BeTrue())
+			})
+
+			It("does not emit LRP changed event", func() {
+				Consistently(actualHub.EmitCallCount).Should(BeZero())
+			})
+
+			It("does not emit any instance events", func() {
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
+			})
+		})
 	})
 
 	Context("when there are missing ActualLRPs", func() {

@@ -193,7 +193,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 	return lrp, nil
 }
 
-func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
+func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, isStale bool, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.Session("db-unclaim-actual-lrp", lager.Data{"key": key})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -212,8 +212,12 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 		}
 		beforeActualLRP = *actualLRP
 
-		if actualLRP.State == models.ActualLRPStateUnclaimed || actualLRP.State == models.ActualLRPStateClaimed {
+		if actualLRP.State == models.ActualLRPStateUnclaimed {
 			logger.Debug("already-" + actualLRP.State)
+			return models.ErrActualLRPCannotBeUnclaimed
+		}
+		if isStale && actualLRP.State == models.ActualLRPStateClaimed {
+			logger.Debug("a stale unstarted claim already-" + actualLRP.State + " by another cell.")
 			return models.ErrActualLRPCannotBeUnclaimed
 		}
 

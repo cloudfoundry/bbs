@@ -179,7 +179,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 	for _, lrpKey := range convergenceResult.UnstartedLRPKeys {
 		dereferencedKey := *lrpKey
 		works = append(works, func() {
-			before, after, err := h.lrpDB.UnclaimActualLRP(ctx, logger, dereferencedKey.Key)
+			before, after, err := h.lrpDB.UnclaimActualLRP(ctx, logger, true, dereferencedKey.Key)
 			if err != nil && err != models.ErrActualLRPCannotBeUnclaimed {
 				logger.Error("cannot-unclaim-lrp", err, lager.Data{"key": dereferencedKey})
 				return
@@ -218,7 +218,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				// there is a Suspect LRP already, unclaim this previously created
 				// replacement and reauction it
 				logger.Debug("found-suspect-lrp-unclaiming", lager.Data{"key": dereferencedKey.Key})
-				before, after, err := h.lrpDB.UnclaimActualLRP(ctx, logger, dereferencedKey.Key)
+				before, after, err := h.lrpDB.UnclaimActualLRP(ctx, logger, false, dereferencedKey.Key)
 				if err != nil {
 					logger.Error("failed-unclaiming-lrp", err)
 					return
