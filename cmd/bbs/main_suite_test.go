@@ -213,7 +213,6 @@ var _ = BeforeEach(func() {
 		LoggregatorConfig: diego_logging_client.Config{
 			BatchFlushInterval: 10 * time.Millisecond,
 			BatchMaxSize:       1,
-			UseV2API:           true,
 			APIPort:            metricsPort,
 			CACertPath:         metronCAFile,
 			KeyPath:            metronClientKeyFile,
