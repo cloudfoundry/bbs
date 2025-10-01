@@ -1,8 +1,11 @@
 package test_helpers
 
 import (
+	"fmt"
+
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
+	"code.cloudfoundry.org/fixtures"
 	"code.cloudfoundry.org/go-loggregator/v9/rpc/loggregator_v2"
 )
 
@@ -20,7 +23,9 @@ type MetronIngressSetup struct {
 }
 
 func StartMetronIngress(fixturesPath string) (*MetronIngressSetup, error) {
-	testIngressServer, err := testhelpers.NewTestIngressServer(MetronServerCertFile, MetronServerKeyFile, MetronCAFile)
+	fmt.Println("getting metron ...")
+	fmt.Println("*** path", fixtures.Path("CA.crt"))
+	testIngressServer, err := testhelpers.NewTestIngressServer(fixtures.Path("metron.crt"), fixtures.Path("metron.key"), fixtures.Path("CA.crt"))
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +51,8 @@ func StartMetronIngress(fixturesPath string) (*MetronIngressSetup, error) {
 
 func GetLoggregatorConfigWithMetronCerts() loggingclient.Config {
 	return loggingclient.Config{
-		CACertPath: MetronCAFile,
-		CertPath:   MetronServerCertFile,
-		KeyPath:    MetronServerKeyFile,
+		CACertPath: fixtures.Path("CA.crt"),
+		CertPath:   fixtures.Path("metron.crt"),
+		KeyPath:    fixtures.Path("metron.key"),
 	}
 }
