@@ -1,8 +1,6 @@
 package test_helpers
 
 import (
-	"fmt"
-
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/fixtures"
@@ -22,9 +20,7 @@ type MetronIngressSetup struct {
 	Port              int
 }
 
-func StartMetronIngress(fixturesPath string) (*MetronIngressSetup, error) {
-	fmt.Println("getting metron ...")
-	fmt.Println("*** path", fixtures.Path("CA.crt"))
+func StartMetronIngress() (*MetronIngressSetup, error) {
 	testIngressServer, err := testhelpers.NewTestIngressServer(fixtures.Path("metron.crt"), fixtures.Path("metron.key"), fixtures.Path("CA.crt"))
 	if err != nil {
 		return nil, err
