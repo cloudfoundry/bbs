@@ -48,7 +48,7 @@ func StartMetronIngress() (*MetronIngressSetup, error) {
 func GetLoggregatorConfigWithMetronCerts() loggingclient.Config {
 	return loggingclient.Config{
 		CACertPath: fixtures.Path("CA.crt"),
-		CertPath:   fixtures.Path("metron.crt"),
-		KeyPath:    fixtures.Path("metron.key"),
+		CertPath:   fixtures.Path("client.crt"),
+		KeyPath:    fixtures.Path("client.key"),
 	}
 }

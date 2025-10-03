@@ -64,6 +64,9 @@ var (
 	signalMetricsChan chan struct{}
 	sqlProcess        ifrit.Process
 	sqlRunner         sqlrunner.SQLRunner
+
+	metronCAFile, metronServerCertFile, metronServerKeyFile string
+	metricsPort                                             int
 )
 
 func TestBBS(t *testing.T) {
@@ -113,6 +116,24 @@ var _ = BeforeEach(func() {
 	ctx = context.Background()
 	fixturesPath := "fixtures"
 
+	metronCAFile = path.Join(fixturesPath, "metron", "CA.crt")
+	metronClientCertFile := path.Join(fixturesPath, "metron", "client.crt")
+	metronClientKeyFile := path.Join(fixturesPath, "metron", "client.key")
+	metronServerCertFile = path.Join(fixturesPath, "metron", "metron.crt")
+	metronServerKeyFile = path.Join(fixturesPath, "metron", "metron.key")
+
+	testIngressServer, err = testhelpers.NewTestIngressServer(metronServerCertFile, metronServerKeyFile, metronCAFile)
+	Expect(err).NotTo(HaveOccurred())
+
+	testIngressServer.Start()
+
+	metricsPort, err = strconv.Atoi(strings.TrimPrefix(testIngressServer.Addr(), "127.0.0.1:"))
+	Expect(err).NotTo(HaveOccurred())
+
+	receiversChan := testIngressServer.Receivers()
+
+	testMetricsChan, signalMetricsChan = testhelpers.TestMetricChan(receiversChan)
+
 	locketPort, err := portAllocator.ClaimPorts(1)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -122,14 +143,12 @@ var _ = BeforeEach(func() {
 		cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 		cfg.DatabaseDriver = sqlRunner.DriverName()
 		cfg.ListenAddress = locketAddress
+		cfg.LoggregatorConfig.APIPort = metricsPort
+		cfg.LoggregatorConfig.CACertPath = metronCAFile
+		cfg.LoggregatorConfig.CertPath = metronServerCertFile
+		cfg.LoggregatorConfig.KeyPath = metronServerKeyFile
 	})
 	locketProcess = ginkgomon.Invoke(locketRunner)
-
-	metronCAFile := path.Join(fixturesPath, "metron", "CA.crt")
-	metronClientCertFile := path.Join(fixturesPath, "metron", "client.crt")
-	metronClientKeyFile := path.Join(fixturesPath, "metron", "client.key")
-	metronServerCertFile := path.Join(fixturesPath, "metron", "metron.crt")
-	metronServerKeyFile := path.Join(fixturesPath, "metron", "metron.key")
 
 	auctioneerServer = ghttp.NewServer()
 	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
@@ -147,18 +166,6 @@ var _ = BeforeEach(func() {
 		Scheme: "https",
 		Host:   bbsAddress,
 	}
-
-	testIngressServer, err = testhelpers.NewTestIngressServer(metronServerCertFile, metronServerKeyFile, metronCAFile)
-	Expect(err).NotTo(HaveOccurred())
-
-	testIngressServer.Start()
-
-	metricsPort, err := strconv.Atoi(strings.TrimPrefix(testIngressServer.Addr(), "127.0.0.1:"))
-	Expect(err).NotTo(HaveOccurred())
-
-	receiversChan := testIngressServer.Receivers()
-
-	testMetricsChan, signalMetricsChan = testhelpers.TestMetricChan(receiversChan)
 
 	serverCaFile := path.Join(fixturesPath, "green-certs", "server-ca.crt")
 	clientCertFile := path.Join(fixturesPath, "green-certs", "client.crt")
@@ -212,7 +219,6 @@ var _ = BeforeEach(func() {
 		LagerConfig: lagerflags.LagerConfig{
 			LogLevel: lagerflags.DEBUG,
 		},
-
 		LoggregatorConfig: diego_logging_client.Config{
 			BatchFlushInterval: 10 * time.Millisecond,
 			BatchMaxSize:       1,
@@ -224,6 +230,7 @@ var _ = BeforeEach(func() {
 	}
 
 	bbsConfig.ClientLocketConfig.LocketAddress = locketAddress
+
 	locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 	Expect(err).NotTo(HaveOccurred())
 	locketHelper = test_helpers.NewLocketHelper(logger, locketClient)
