@@ -100,12 +100,18 @@ func main() {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
+	params := &helpers.BBSDBParam{
+		DriverName:                    bbsConfig.DatabaseDriver,
+		DatabaseConnectionString:      bbsConfig.DatabaseConnectionString,
+		SqlCACertFile:                 bbsConfig.SQLCACertFile,
+		SqlEnableIdentityVerification: bbsConfig.SQLEnableIdentityVerification,
+		ConnectionTimeout:             time.Duration(bbsConfig.DBConnectionTimeout),
+		ReadTimeout:                   time.Duration(bbsConfig.DBReadTimeout),
+		WriteTimeout:                  time.Duration(bbsConfig.DBWriteTimeout),
+	}
 	sqlConn, err := helpers.Connect(
 		logger,
-		bbsConfig.DatabaseDriver,
-		bbsConfig.DatabaseConnectionString,
-		bbsConfig.SQLCACertFile,
-		bbsConfig.SQLEnableIdentityVerification,
+		params,
 	)
 	if err != nil {
 		logger.Fatal("failed-to-open-sql", err)
