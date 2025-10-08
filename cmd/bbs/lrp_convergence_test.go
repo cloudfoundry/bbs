@@ -687,7 +687,16 @@ var _ = Describe("Convergence API", func() {
 
 				BeforeEach(func() {
 					Expect(client.UpsertDomain(logger, "some-trace-id", "some-domain", 0)).To(Succeed())
-					sqlConn, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
+					dbParams := &helpers.BBSDBParam{
+						DriverName:                    sqlRunner.DriverName(),
+						DatabaseConnectionString:      sqlRunner.ConnectionString(),
+						SqlCACertFile:                 "",
+						SqlEnableIdentityVerification: false,
+						ConnectionTimeout:             time.Duration(bbsConfig.DBConnectionTimeout),
+						ReadTimeout:                   time.Duration(bbsConfig.DBReadTimeout),
+						WriteTimeout:                  time.Duration(bbsConfig.DBWriteTimeout),
+					}
+					sqlConn, err = helpers.Connect(logger, dbParams)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err := sqlConn.Exec(

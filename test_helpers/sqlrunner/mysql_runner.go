@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
@@ -47,7 +48,16 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	baseConnString := fmt.Sprintf("%s:%s@/", user, password)
 
 	var err error
-	m.db, err = helpers.Connect(logger, "mysql", baseConnString, "", false)
+	dbParams := &helpers.BBSDBParam{
+		DriverName:                    "mysql",
+		DatabaseConnectionString:      baseConnString,
+		SqlCACertFile:                 "",
+		SqlEnableIdentityVerification: false,
+		ConnectionTimeout:             time.Duration(600),
+		ReadTimeout:                   time.Duration(600),
+		WriteTimeout:                  time.Duration(600),
+	}
+	m.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).To(Succeed())
 
@@ -60,7 +70,8 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	Expect(m.db.Close()).To(Succeed())
 
 	connStringWithDB := fmt.Sprintf("%s%s", baseConnString, m.sqlDBName)
-	m.db, err = helpers.Connect(logger, "mysql", connStringWithDB, "", false)
+	dbParams.DatabaseConnectionString = connStringWithDB
+	m.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).NotTo(HaveOccurred())
 

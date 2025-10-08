@@ -190,6 +190,9 @@ var _ = BeforeEach(func() {
 
 		DatabaseDriver:           sqlRunner.DriverName(),
 		DatabaseConnectionString: sqlRunner.ConnectionString(),
+		DBConnectionTimeout:      600,
+		DBReadTimeout:            600,
+		DBWriteTimeout:           600,
 		ReportInterval:           durationjson.Duration(time.Second / 2),
 		HealthAddress:            bbsHealthAddress,
 

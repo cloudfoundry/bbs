@@ -45,12 +45,18 @@ var _ = Describe("Context", func() {
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
 		var err error
+		dbParams := &helpers.BBSDBParam{
+			DriverName:                    sqlRunner.DriverName(),
+			DatabaseConnectionString:      sqlRunner.ConnectionString(),
+			SqlCACertFile:                 "",
+			SqlEnableIdentityVerification: false,
+			ConnectionTimeout:             time.Duration(600),
+			ReadTimeout:                   time.Duration(600),
+			WriteTimeout:                  time.Duration(600),
+		}
 		sqlConn, err = helpers.Connect(
 			logger,
-			sqlRunner.DriverName(),
-			sqlRunner.ConnectionString(),
-			"",
-			false,
+			dbParams,
 		)
 		Expect(err).NotTo(HaveOccurred())
 

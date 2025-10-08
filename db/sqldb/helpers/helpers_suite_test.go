@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
@@ -28,6 +29,7 @@ var (
 	dbBaseConnectionString string
 	dbFlavor               string
 	tableName              string
+	dbParams               *helpers.BBSDBParam
 )
 
 var _ = BeforeEach(func() {
@@ -66,7 +68,16 @@ var _ = BeforeEach(func() {
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
 	var err error
-	db, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	dbParams = &helpers.BBSDBParam{
+		DriverName:                    dbDriverName,
+		DatabaseConnectionString:      dbBaseConnectionString,
+		SqlCACertFile:                 "",
+		SqlEnableIdentityVerification: false,
+		ConnectionTimeout:             time.Duration(600),
+		ReadTimeout:                   time.Duration(600),
+		WriteTimeout:                  time.Duration(600),
+	}
+	db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 
@@ -81,7 +92,8 @@ var _ = BeforeEach(func() {
 	Expect(db.Close()).To(Succeed())
 
 	connStringWithDB := fmt.Sprintf("%s%s", dbBaseConnectionString, dbName)
-	db, err = helpers.Connect(logger, dbDriverName, connStringWithDB, "", false)
+	dbParams.DatabaseConnectionString = connStringWithDB
+	db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 })
@@ -90,7 +102,7 @@ var _ = AfterEach(func() {
 	logger := lager.NewLogger("helper-suite-test")
 
 	Expect(db.Close()).NotTo(HaveOccurred())
-	db, err := helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	db, err := helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).NotTo(HaveOccurred())
 	_, err = db.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelProcess()))

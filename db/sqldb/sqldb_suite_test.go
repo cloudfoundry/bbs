@@ -44,6 +44,7 @@ var (
 	dbDriverName, dbBaseConnectionString string
 	dbFlavor                             string
 	fakeMetronClient                     *mfakes.FakeIngressClient
+	dbParams                             *helpers.BBSDBParam
 )
 
 func TestSql(t *testing.T) {
@@ -88,7 +89,16 @@ var _ = BeforeSuite(func() {
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release .
-	rawDB, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	dbParams = &helpers.BBSDBParam{
+		DriverName:                    dbDriverName,
+		DatabaseConnectionString:      dbBaseConnectionString,
+		SqlCACertFile:                 "",
+		SqlEnableIdentityVerification: false,
+		ConnectionTimeout:             time.Duration(600),
+		ReadTimeout:                   time.Duration(600),
+		WriteTimeout:                  time.Duration(600),
+	}
+	rawDB, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
@@ -102,7 +112,8 @@ var _ = BeforeSuite(func() {
 	Expect(rawDB.Close()).To(Succeed())
 
 	connStringWithDB := fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelProcess())
-	rawDB, err = helpers.Connect(logger, dbDriverName, connStringWithDB, "", false)
+	dbParams.DatabaseConnectionString = connStringWithDB
+	rawDB, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 
@@ -168,7 +179,7 @@ var _ = AfterSuite(func() {
 	}
 
 	Expect(rawDB.Close()).NotTo(HaveOccurred())
-	rawDB, err := helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	rawDB, err := helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 	_, err = rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelProcess()))
