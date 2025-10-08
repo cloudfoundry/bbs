@@ -50,9 +50,6 @@ var _ = Describe("Context", func() {
 			DatabaseConnectionString:      sqlRunner.ConnectionString(),
 			SqlCACertFile:                 "",
 			SqlEnableIdentityVerification: false,
-			ConnectionTimeout:             time.Duration(600),
-			ReadTimeout:                   time.Duration(600),
-			WriteTimeout:                  time.Duration(600),
 		}
 		sqlConn, err = helpers.Connect(
 			logger,
