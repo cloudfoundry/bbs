@@ -18,7 +18,10 @@ import (
 // defines the length of the result returned by GROUP_CONCAT() function
 // default value 1024 only allows 282 instance indexes to be concatenated
 // this will allow 10_000_000 instance indexes
-const MYSQL_GROUP_CONCAT_MAX_LEN = 78888889
+const (
+	MYSQL_GROUP_CONCAT_MAX_LEN = 78888889
+	defaultTimeout             = 10 * time.Minute
+)
 
 type BBSDBParam struct {
 	DriverName                    string
@@ -68,9 +71,10 @@ func addTLSParams(
 			cfg.TLSConfig = "bbs-tls"
 		}
 
-		cfg.Timeout = bbsDBParam.ConnectionTimeout * time.Second
-		cfg.ReadTimeout = bbsDBParam.ReadTimeout * time.Second
-		cfg.WriteTimeout = bbsDBParam.WriteTimeout * time.Second
+		cfg.ReadTimeout = defaultTimeoutIfZero(bbsDBParam.ReadTimeout * time.Second)
+		cfg.WriteTimeout = defaultTimeoutIfZero(bbsDBParam.WriteTimeout * time.Second)
+		cfg.Timeout = defaultTimeoutIfZero(bbsDBParam.ConnectionTimeout * time.Second)
+
 		cfg.Params = map[string]string{
 			"group_concat_max_len": strconv.Itoa(MYSQL_GROUP_CONCAT_MAX_LEN),
 		}
@@ -158,4 +162,11 @@ func generateCustomTLSVerificationFunction(caCertPool *x509.CertPool) func([][]b
 
 		return nil
 	}
+}
+
+func defaultTimeoutIfZero(value time.Duration) time.Duration {
+	if value == 0 {
+		return defaultTimeout
+	}
+	return value * time.Second
 }

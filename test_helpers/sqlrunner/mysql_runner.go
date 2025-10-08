@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
@@ -53,9 +52,6 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 		DatabaseConnectionString:      baseConnString,
 		SqlCACertFile:                 "",
 		SqlEnableIdentityVerification: false,
-		ConnectionTimeout:             time.Duration(600),
-		ReadTimeout:                   time.Duration(600),
-		WriteTimeout:                  time.Duration(600),
 	}
 	m.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
