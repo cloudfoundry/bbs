@@ -17,7 +17,7 @@ import (
 // MYSQL group_concat_max_len system variable
 // defines the length of the result returned by GROUP_CONCAT() function
 // default value 1024 only allows 282 instance indexes to be concatenated
-// this wilsl allow 10_000_000 instance indexes
+// this will allow 10_000_000 instance indexes
 const MYSQL_GROUP_CONCAT_MAX_LEN = 78888889
 
 type BBSDBParam struct {
@@ -33,13 +33,13 @@ type BBSDBParam struct {
 func Connect(
 	logger lager.Logger, bbsDBParam *BBSDBParam) (*sql.DB, error) {
 	connString := addTLSParams(logger, bbsDBParam)
-	DriverName := bbsDBParam.DriverName
+	driverName := bbsDBParam.DriverName
 
-	if DriverName == "postgres" {
-		DriverName = "pgx"
+	if driverName == "postgres" {
+		driverName = "pgx"
 	}
 
-	return sql.Open(DriverName, connString)
+	return sql.Open(driverName, connString)
 }
 
 // addTLSParams appends necessary extra parameters to the
@@ -68,9 +68,9 @@ func addTLSParams(
 			cfg.TLSConfig = "bbs-tls"
 		}
 
-		cfg.Timeout = bbsDBParam.ConnectionTimeout
-		cfg.ReadTimeout = bbsDBParam.ReadTimeout
-		cfg.WriteTimeout = bbsDBParam.WriteTimeout
+		cfg.Timeout = 10 * time.Minute
+		cfg.ReadTimeout = 10 * time.Minute
+		cfg.WriteTimeout = 10 * time.Minute
 		cfg.Params = map[string]string{
 			"group_concat_max_len": strconv.Itoa(MYSQL_GROUP_CONCAT_MAX_LEN),
 		}
