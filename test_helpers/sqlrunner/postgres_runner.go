@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
@@ -47,7 +48,16 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	baseConnString := fmt.Sprintf("postgres://%s:%s@localhost/", user, password)
 
 	var err error
-	p.db, err = helpers.Connect(logger, "postgres", baseConnString, "", false)
+	dbParams := &helpers.BBSDBParam{
+		DriverName:                    "postgres",
+		DatabaseConnectionString:      baseConnString,
+		SqlCACertFile:                 "",
+		SqlEnableIdentityVerification: false,
+		ConnectionTimeout:             time.Duration(600),
+		ReadTimeout:                   time.Duration(600),
+		WriteTimeout:                  time.Duration(600),
+	}
+	p.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(p.db.Ping()).To(Succeed())
 
@@ -60,7 +70,8 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	Expect(p.db.Close()).To(Succeed())
 
 	connStringWithDB := fmt.Sprintf("%s/%s", baseConnString, p.sqlDBName)
-	p.db, err = helpers.Connect(logger, "postgres", connStringWithDB, "", false)
+	dbParams.DatabaseConnectionString = connStringWithDB
+	p.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(p.db.Ping()).To(Succeed())
 
@@ -74,7 +85,7 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	Expect(p.db.Close()).To(Succeed())
 
 	logger.Info("openning-connection-to-database")
-	p.db, err = helpers.Connect(logger, "postgres", baseConnString, "", false)
+	p.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 
 	logger.Info("dropping-database")

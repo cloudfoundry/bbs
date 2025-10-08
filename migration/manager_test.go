@@ -78,7 +78,16 @@ var _ = Describe("Migration Manager", func() {
 			sqlRunner := test_helpers.NewSQLRunner(dbName)
 			sqlProcess = ginkgomon.Invoke(sqlRunner)
 			var err error
-			rawSQLDB, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
+			dbParams := &helpers.BBSDBParam{
+				DriverName:                    sqlRunner.DriverName(),
+				DatabaseConnectionString:      sqlRunner.ConnectionString(),
+				SqlCACertFile:                 "",
+				SqlEnableIdentityVerification: false,
+				ConnectionTimeout:             time.Duration(600),
+				ReadTimeout:                   time.Duration(600),
+				WriteTimeout:                  time.Duration(600),
+			}
+			rawSQLDB, err = helpers.Connect(logger, dbParams)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 
