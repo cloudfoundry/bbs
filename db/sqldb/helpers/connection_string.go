@@ -68,9 +68,9 @@ func addTLSParams(
 			cfg.TLSConfig = "bbs-tls"
 		}
 
-		cfg.Timeout = 10 * time.Minute
-		cfg.ReadTimeout = 10 * time.Minute
-		cfg.WriteTimeout = 10 * time.Minute
+		cfg.Timeout = bbsDBParam.ConnectionTimeout * time.Second
+		cfg.ReadTimeout = bbsDBParam.ReadTimeout * time.Second
+		cfg.WriteTimeout = bbsDBParam.WriteTimeout * time.Second
 		cfg.Params = map[string]string{
 			"group_concat_max_len": strconv.Itoa(MYSQL_GROUP_CONCAT_MAX_LEN),
 		}
