@@ -682,6 +682,10 @@ var _ = Describe("ActualLRP API", func() {
 					cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 					cfg.DatabaseDriver = sqlRunner.DriverName()
 					cfg.ListenAddress = locketAddress
+					cfg.LoggregatorConfig.APIPort = metricsPort
+					cfg.LoggregatorConfig.CACertPath = metronCAFile
+					cfg.LoggregatorConfig.CertPath = metronServerCertFile
+					cfg.LoggregatorConfig.KeyPath = metronServerKeyFile
 				})
 
 				locketProcess = ginkgomon.Invoke(locketRunner)

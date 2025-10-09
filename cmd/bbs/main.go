@@ -460,10 +460,8 @@ func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggingc
 		return nil, err
 	}
 
-	if bbsConfig.LoggregatorConfig.UseV2API {
-		emitter := runtimeemitter.NewV1(client)
-		go emitter.Run()
-	}
+	emitter := runtimeemitter.NewV1(client)
+	go emitter.Run()
 
 	return client, nil
 }
