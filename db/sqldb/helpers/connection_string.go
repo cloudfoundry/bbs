@@ -72,7 +72,6 @@ func addTLSParams(
 			cfg.TLSConfig = "bbs-tls"
 		}
 
-		cmp.Or(bbsDBParam.ReadTimeout, defaultTimeout)
 		cfg.ReadTimeout = cmp.Or(bbsDBParam.ReadTimeout, defaultTimeout)
 		cfg.WriteTimeout = cmp.Or(bbsDBParam.WriteTimeout, defaultTimeout)
 		cfg.Timeout = cmp.Or(bbsDBParam.ConnectionTimeout, defaultTimeout)
@@ -164,11 +163,4 @@ func generateCustomTLSVerificationFunction(caCertPool *x509.CertPool) func([][]b
 
 		return nil
 	}
-}
-
-func defaultTimeoutIfZero(value time.Duration) time.Duration {
-	if value == 0 {
-		return defaultTimeout
-	}
-	return value * time.Second
 }
