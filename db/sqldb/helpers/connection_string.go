@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"cmp"
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
@@ -71,9 +72,10 @@ func addTLSParams(
 			cfg.TLSConfig = "bbs-tls"
 		}
 
-		cfg.ReadTimeout = defaultTimeoutIfZero(bbsDBParam.ReadTimeout * time.Second)
-		cfg.WriteTimeout = defaultTimeoutIfZero(bbsDBParam.WriteTimeout * time.Second)
-		cfg.Timeout = defaultTimeoutIfZero(bbsDBParam.ConnectionTimeout * time.Second)
+		cmp.Or(bbsDBParam.ReadTimeout, defaultTimeout)
+		cfg.ReadTimeout = cmp.Or(bbsDBParam.ReadTimeout, defaultTimeout)
+		cfg.WriteTimeout = cmp.Or(bbsDBParam.WriteTimeout, defaultTimeout)
+		cfg.Timeout = cmp.Or(bbsDBParam.ConnectionTimeout, defaultTimeout)
 
 		cfg.Params = map[string]string{
 			"group_concat_max_len": strconv.Itoa(MYSQL_GROUP_CONCAT_MAX_LEN),
