@@ -48,9 +48,9 @@ type BBSConfig struct {
 	LockRetryInterval             durationjson.Duration `json:"lock_retry_interval,omitempty"`
 	LockTTL                       durationjson.Duration `json:"lock_ttl,omitempty"`
 	MaxIdleDatabaseConnections    int                   `json:"max_idle_database_connections,omitempty"`
-	DBConnectionTimeout           durationjson.Duration `yaml:"db_connection_timeout"`
-	DBReadTimeout                 durationjson.Duration `yaml:"db_read_timeout"`
-	DBWriteTimeout                durationjson.Duration `yaml:"db_write_timeout"`
+	DBConnectionTimeout           durationjson.Duration `json:"db_connection_timeout,omitempty"`
+	DBReadTimeout                 durationjson.Duration `json:"db_read_timeout,omitempty"`
+	DBWriteTimeout                durationjson.Duration `json:"db_write_timeout,omitempty"`
 	MaxOpenDatabaseConnections    int                   `json:"max_open_database_connections,omitempty"`
 	MaxTaskRetries                int                   `json:"max_task_retries,omitempty"`
 	RepCACert                     string                `json:"rep_ca_cert,omitempty"`
