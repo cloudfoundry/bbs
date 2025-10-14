@@ -81,6 +81,7 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	Expect(p.db.Close()).To(Succeed())
 
 	logger.Info("openning-connection-to-database")
+	dbParams.DatabaseConnectionString = baseConnString
 	p.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 
