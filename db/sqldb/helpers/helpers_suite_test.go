@@ -96,7 +96,7 @@ var _ = BeforeEach(func() {
 
 var _ = AfterEach(func() {
 	logger := lager.NewLogger("helper-suite-test")
-
+	dbParams.DatabaseConnectionString = dbBaseConnectionString
 	Expect(db.Close()).NotTo(HaveOccurred())
 	db, err := helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
