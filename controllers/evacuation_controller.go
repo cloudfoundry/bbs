@@ -167,7 +167,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(ctx context.Context, log
 	}
 
 	// this is an ordinary LRP
-	before, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, actualLRPKey)
+	before, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, false, actualLRPKey)
 	bbsErr := models.ConvertError(err)
 	if bbsErr != nil {
 		if bbsErr.Type == models.Error_ResourceNotFound {
@@ -430,7 +430,7 @@ func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lage
 		return nil
 	}
 
-	_, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+	_, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, false, &actualLRP.ActualLRPKey)
 	if err != nil {
 		return err
 	}
