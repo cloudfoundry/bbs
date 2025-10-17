@@ -138,6 +138,7 @@ func main() {
 		clock,
 		bbsConfig.DatabaseDriver,
 		metronClient,
+		bbsConfig.DebugLRPStartHeartbeats,
 	)
 	err = sqlDB.CreateConfigurationsTable(context.Background(), logger)
 	if err != nil {
