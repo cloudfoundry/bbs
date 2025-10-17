@@ -133,7 +133,7 @@ var _ = Describe("Version", func() {
 				db, err = helpers.Connect(logger, dbParams)
 				Expect(err).NotTo(HaveOccurred())
 				helperDB = helpers.NewMonitoredDB(db, monitor.New())
-				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 			})
 
 			AfterEach(func() {

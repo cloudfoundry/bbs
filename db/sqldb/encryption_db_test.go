@@ -178,7 +178,7 @@ var _ = Describe("Encryption", func() {
 			Expect(err).NotTo(HaveOccurred())
 			cryptor = makeCryptor("new", "old")
 
-			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 			err = sqlDB.PerformEncryption(ctx, logger)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -240,7 +240,7 @@ var _ = Describe("Encryption", func() {
 
 			JustBeforeEach(func() {
 				cryptor = makeCryptor("new", "old")
-				sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+				sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 				err := sqlDB.PerformEncryption(ctx, logger)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -423,7 +423,7 @@ var _ = Describe("Encryption", func() {
 
 			cryptor = makeCryptor("new", "old")
 
-			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 			err = sqlDB.PerformEncryption(ctx, logger)
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -515,7 +515,7 @@ var _ = Describe("Encryption", func() {
 			}
 
 			cryptor = makeCryptor("new", "old")
-			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+			sqlDB := sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 			err = sqlDB.PerformEncryption(ctx, logger)
 			Expect(err).NotTo(HaveOccurred())
 

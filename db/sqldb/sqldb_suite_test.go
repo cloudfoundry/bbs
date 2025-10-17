@@ -124,7 +124,7 @@ var _ = BeforeSuite(func() {
 	db = helpers.NewMonitoredDB(rawDB, monitor.New())
 	ctx = context.Background()
 
-	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 	err = sqlDB.CreateConfigurationsTable(ctx, logger)
 	if err != nil {
 		logger.Fatal("sql-failed-create-configurations-table", err)
@@ -139,7 +139,7 @@ var _ = BeforeEach(func() {
 
 	fakeMetronClient = new(mfakes.FakeIngressClient)
 	migrationMetronClient := new(mfakes.FakeIngressClient)
-	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 
 	migrationsDone := make(chan struct{})
 

@@ -111,6 +111,7 @@ var _ = Describe("Convergence API", func() {
 						clock.NewClock(),
 						sqlRunner.DriverName(),
 						metronClient,
+						false,
 					)
 
 					Eventually(func() models.ActualLRP_Presence {
@@ -176,6 +177,7 @@ var _ = Describe("Convergence API", func() {
 							map[string]string{},
 							false,
 							"",
+							false,
 						)
 						Expect(err).NotTo(HaveOccurred())
 					})
