@@ -132,9 +132,11 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context,
 		return nil
 	}
 
+	isCurrentlyRunning := lrp.State == models.ActualLRPStateRunning
+
 	// creates ordinary running actual LRP if it doesn't exist, otherwise updates
 	// the existing ordinary actual LRP to running state
-	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, routable, availabilityZone)
+	before, after, err := h.db.StartActualLRP(ctx, logger, actualLRPKey, actualLRPInstanceKey, actualLRPNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, routable, availabilityZone, isCurrentlyRunning)
 	if err != nil {
 		return err
 	}
