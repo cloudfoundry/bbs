@@ -251,7 +251,7 @@ func main() {
 		lock = jointlock.NewJointLock(clock, 2*time.Second, locks...)
 	}
 
-	serviceClient := serviceclient.NewServiceClient(locketClient)
+	serviceClient := serviceclient.NewServiceClient(locketClient, time.Duration(bbsConfig.DBConnectionTimeout))
 
 	logger.Info("report-interval", lager.Data{"value": bbsConfig.ReportInterval})
 	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
