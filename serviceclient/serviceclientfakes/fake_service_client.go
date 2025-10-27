@@ -245,12 +245,6 @@ func (fake *FakeServiceClient) CellsReturnsOnCall(i int, result1 models.CellSet,
 func (fake *FakeServiceClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.cellByIdMutex.RLock()
-	defer fake.cellByIdMutex.RUnlock()
-	fake.cellEventsMutex.RLock()
-	defer fake.cellEventsMutex.RUnlock()
-	fake.cellsMutex.RLock()
-	defer fake.cellsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

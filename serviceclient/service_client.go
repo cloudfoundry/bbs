@@ -2,6 +2,7 @@ package serviceclient
 
 import (
 	"encoding/json"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,12 +26,14 @@ type ServiceClient interface {
 }
 
 type serviceClient struct {
-	locketClient locketmodels.LocketClient
+	locketClient      locketmodels.LocketClient
+	connectionTimeout time.Duration
 }
 
-func NewServiceClient(locketClient locketmodels.LocketClient) *serviceClient {
+func NewServiceClient(locketClient locketmodels.LocketClient, connectionTimeout time.Duration) *serviceClient {
 	return &serviceClient{
-		locketClient: locketClient,
+		locketClient:      locketClient,
+		connectionTimeout: connectionTimeout,
 	}
 }
 
@@ -38,8 +41,9 @@ func (s *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 	logger = logger.Session("cells")
 
 	var cellSet = models.CellSet{}
-
-	resp, err := s.locketClient.FetchAll(context.Background(), &locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.PRESENCE})
+	ctx, cancel := context.WithTimeout(context.Background(), s.connectionTimeout)
+	resp, err := s.locketClient.FetchAll(ctx, &locketmodels.FetchAllRequest{Type: locketmodels.PresenceType, TypeCode: locketmodels.PRESENCE})
+	defer cancel()
 	if err != nil {
 		logger.Error("failed-to-fetch-cells-from-locket", err)
 		return nil, err
@@ -60,10 +64,11 @@ func (s *serviceClient) Cells(logger lager.Logger) (models.CellSet, error) {
 func (s *serviceClient) CellById(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 	logger = logger.Session("cell-by-id", lager.Data{"cell-id": cellId})
 	var presence *models.CellPresence
-
-	resp, locketErr := s.locketClient.Fetch(context.Background(), &locketmodels.FetchRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), s.connectionTimeout)
+	resp, locketErr := s.locketClient.Fetch(ctx, &locketmodels.FetchRequest{
 		Key: cellId,
 	})
+	defer cancel()
 	if locketErr != nil {
 		logger.Error("failed-to-fetch-presence-from-locket", locketErr)
 		if status.Code(locketErr) == codes.NotFound {
