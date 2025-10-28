@@ -236,9 +236,9 @@ func main() {
 		logger,
 		locketClient,
 		lockIdentifier,
-		locket.DefaultSessionTTLInSeconds,
+		int64(time.Duration(bbsConfig.LockTTL)/time.Second),
 		clock,
-		locket.SQLRetryInterval,
+		time.Duration(bbsConfig.LockRetryInterval),
 	)})
 
 	var lock ifrit.Runner
