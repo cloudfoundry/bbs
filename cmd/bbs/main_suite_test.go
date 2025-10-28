@@ -117,8 +117,6 @@ var _ = BeforeEach(func() {
 	fixturesPath := "fixtures"
 
 	metronCAFile = path.Join(fixturesPath, "metron", "CA.crt")
-	metronClientCertFile := path.Join(fixturesPath, "metron", "client.crt")
-	metronClientKeyFile := path.Join(fixturesPath, "metron", "client.key")
 	metronServerCertFile = path.Join(fixturesPath, "metron", "metron.crt")
 	metronServerKeyFile = path.Join(fixturesPath, "metron", "metron.key")
 
@@ -223,9 +221,9 @@ var _ = BeforeEach(func() {
 			BatchFlushInterval: 10 * time.Millisecond,
 			BatchMaxSize:       1,
 			APIPort:            metricsPort,
-			CACertPath:         metronCAFile,
-			KeyPath:            metronClientKeyFile,
-			CertPath:           metronClientCertFile,
+			CACertPath:         path.Join(fixturesPath, "metron", "CA.crt"),
+			CertPath:           path.Join(fixturesPath, "metron", "client.crt"),
+			KeyPath:            path.Join(fixturesPath, "metron", "client.key"),
 		},
 	}
 
