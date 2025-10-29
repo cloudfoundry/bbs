@@ -421,7 +421,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 				Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
 				Expect(fakeActualLRPDB.ActualLRPsCallCount()).To(Equal(1))
 
-				_, _, _, _, _, internalRoutesArgument, metricTagsArgument, routableArgument, availabilityZoneArgument := fakeActualLRPDB.StartActualLRPArgsForCall(0)
+				_, _, _, _, _, internalRoutesArgument, metricTagsArgument, routableArgument, availabilityZoneArgument, _ := fakeActualLRPDB.StartActualLRPArgsForCall(0)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(internalRoutesArgument).To(Equal(internalRoutes))
@@ -532,11 +532,23 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					createdEvent := event.(*models.ActualLRPInstanceCreatedEvent)
 					Expect(createdEvent.ActualLrp).To(Equal(afterActualLRP))
 				})
+				It("tells the db that a previous instance didn't exist", func() {
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
+					_, _, _, _, _, _, _, _, _, isRunning := fakeActualLRPDB.StartActualLRPArgsForCall(0)
+					Expect(isRunning).To(BeFalse())
+				})
 			})
 
 			Context("when the actual lrp was updated", func() {
+				JustBeforeEach(func() {
+					actualLRP.State = models.ActualLRPStateRunning
+					fakeActualLRPDB.ActualLRPsReturns([]*models.ActualLRP{actualLRP}, nil)
+				})
 				It("emits a change event to the hub", func() {
-					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &beforeInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
 					Eventually(actualHub.EmitCallCount).Should(Equal(1))
 					event := actualHub.EmitArgsForCall(0)
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
@@ -546,6 +558,14 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Expect(changedEvent.Before).To(Equal(actualLRP.ToActualLRPGroup()))
 					//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
 					Expect(changedEvent.After).To(Equal(afterActualLRP.ToActualLRPGroup()))
+				})
+				It("tells the db that a previous instance exists", func() {
+					err = controller.StartActualLRP(ctx, logger, &actualLRPKey, &afterInstanceKey, &netInfo, internalRoutes, metricTags, routable, availabilityZone)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeActualLRPDB.StartActualLRPCallCount()).To(Equal(1))
+					_, _, _, _, _, _, _, _, _, isRunning := fakeActualLRPDB.StartActualLRPArgsForCall(0)
+					Expect(isRunning).To(BeTrue())
 				})
 			})
 

@@ -81,7 +81,7 @@ var _ = BeforeEach(func() {
 	serializer = format.NewSerializer(cryptor)
 
 	helperDB := helpers.NewMonitoredDB(db, monitor.New())
-	sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, helpers.MySQL, fakeMetronClient)
+	sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, helpers.MySQL, fakeMetronClient, false)
 
 	ctx = context.Background()
 })

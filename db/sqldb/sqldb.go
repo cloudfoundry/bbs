@@ -14,17 +14,18 @@ import (
 )
 
 type SQLDB struct {
-	db                     helpers.QueryableDB
-	convergenceWorkersSize int
-	updateWorkersSize      int
-	clock                  clock.Clock
-	guidProvider           guidprovider.GUIDProvider
-	serializer             format.Serializer
-	cryptor                encryption.Cryptor
-	encoder                format.Encoder
-	flavor                 string
-	helper                 helpers.SQLHelper
-	metronClient           loggingclient.IngressClient
+	db                            helpers.QueryableDB
+	convergenceWorkersSize        int
+	updateWorkersSize             int
+	clock                         clock.Clock
+	guidProvider                  guidprovider.GUIDProvider
+	serializer                    format.Serializer
+	cryptor                       encryption.Cryptor
+	encoder                       format.Encoder
+	flavor                        string
+	helper                        helpers.SQLHelper
+	metronClient                  loggingclient.IngressClient
+	debugStartActualLRPHeartbeats bool
 }
 
 func NewSQLDB(
@@ -36,20 +37,22 @@ func NewSQLDB(
 	clock clock.Clock,
 	flavor string,
 	metronClient loggingclient.IngressClient,
+	debugStartActualLRPHeartbeats bool,
 ) *SQLDB {
 	helper := helpers.NewSQLHelper(flavor)
 	return &SQLDB{
-		db:                     db,
-		convergenceWorkersSize: convergenceWorkersSize,
-		updateWorkersSize:      updateWorkersSize,
-		clock:                  clock,
-		guidProvider:           guidProvider,
-		serializer:             format.NewSerializer(cryptor),
-		cryptor:                cryptor,
-		encoder:                format.NewEncoder(cryptor),
-		flavor:                 flavor,
-		helper:                 helper,
-		metronClient:           metronClient,
+		db:                            db,
+		convergenceWorkersSize:        convergenceWorkersSize,
+		updateWorkersSize:             updateWorkersSize,
+		clock:                         clock,
+		guidProvider:                  guidProvider,
+		serializer:                    format.NewSerializer(cryptor),
+		cryptor:                       cryptor,
+		encoder:                       format.NewEncoder(cryptor),
+		flavor:                        flavor,
+		helper:                        helper,
+		metronClient:                  metronClient,
+		debugStartActualLRPHeartbeats: debugStartActualLRPHeartbeats,
 	}
 }
 

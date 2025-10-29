@@ -24,6 +24,7 @@ type ActualLRPDB interface {
 		metricTags map[string]string,
 		routable bool,
 		availabilityZone string,
+		isCurrentlyRunning bool,
 	) (before *models.ActualLRP, after *models.ActualLRP, err error)
 	CrashActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, instanceKey *models.ActualLRPInstanceKey, crashReason string) (before *models.ActualLRP, after *models.ActualLRP, shouldRestart bool, err error)
 	FailActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey, placementError string) (before *models.ActualLRP, after *models.ActualLRP, err error)

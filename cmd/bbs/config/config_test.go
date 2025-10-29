@@ -40,6 +40,7 @@ var _ = Describe("BBSConfig", func() {
 			"database_connection_string": "",
 			"database_driver": "postgres",
 			"debug_address": "127.0.0.1:17017",
+			"debug_lrp_start_heartbeats":true,
 			"desired_lrp_creation_timeout": "1m0s",
 			"encryption_keys": {"label": "key"},
 			"expire_completed_task_duration": "2m0s",
@@ -137,6 +138,7 @@ var _ = Describe("BBSConfig", func() {
 			DebugServerConfig: debugserver.DebugServerConfig{
 				DebugAddress: "127.0.0.1:17017",
 			},
+			DebugLRPStartHeartbeats:   true,
 			DesiredLRPCreationTimeout: durationjson.Duration(1 * time.Minute),
 			EncryptionConfig: encryption.EncryptionConfig{
 				ActiveKeyLabel: "label",

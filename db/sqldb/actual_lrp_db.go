@@ -324,10 +324,16 @@ func (db *SQLDB) StartActualLRP(
 	metricTags map[string]string,
 	routable bool,
 	availabilityZone string,
+	isCurrentlyRunning bool,
 ) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.Session("db-start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo, "routable": routable})
-	logger.Info("starting")
-	defer logger.Info("complete")
+	if db.debugStartActualLRPHeartbeats && isCurrentlyRunning {
+		logger.Debug("heartbeating-lrp")
+		defer logger.Debug("heartbeat-complete")
+	} else {
+		logger.Info("starting")
+		defer logger.Info("complete")
+	}
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP

@@ -38,6 +38,7 @@ type BBSConfig struct {
 	ConvergenceWorkers            int                   `json:"convergence_workers,omitempty"`
 	DatabaseConnectionString      string                `json:"database_connection_string"`
 	DatabaseDriver                string                `json:"database_driver,omitempty"`
+	DebugLRPStartHeartbeats       bool                  `json:"debug_lrp_start_heartbeats,omitempty"`
 	DesiredLRPCreationTimeout     durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
 	ExpireCompletedTaskDuration   durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration     durationjson.Duration `json:"expire_pending_task_duration,omitempty"`

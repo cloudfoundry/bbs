@@ -74,6 +74,7 @@ var _ = Describe("Context", func() {
 			fakeClock,
 			sqlRunner.DriverName(),
 			fakeMetronClient,
+			false,
 		)
 		err = sqlDB.CreateConfigurationsTable(context.Background(), logger)
 		Expect(err).NotTo(HaveOccurred())
