@@ -343,6 +343,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
+		Context("when filtering by volume mount driver", func() {
+			BeforeEach(func() {
+				requestBody = &models.DesiredLRPsRequest{VolumeMountDriver: "test-driver"}
+			})
+
+			It("passes the volume mount driver filter to the DB", func() {
+				Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
+				_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+				Expect(filter.VolumeMountDriver).To(Equal("test-driver"))
+			})
+		})
+
 		Context("when the DB returns no desired lrps", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, nil)
@@ -698,6 +710,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
 					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
 					Expect(filter.ProcessGuids).To(Equal([]string{"guid-1", "guid-2"}))
+				})
+			})
+
+			Context("when filtering by volume mount driver", func() {
+				BeforeEach(func() {
+					requestBody = &models.DesiredLRPsRequest{VolumeMountDriver: "test-driver"}
+				})
+
+				It("passes the volume mount driver filter to the DB", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					Expect(filter.VolumeMountDriver).To(Equal("test-driver"))
 				})
 			})
 		})

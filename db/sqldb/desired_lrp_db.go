@@ -125,6 +125,11 @@ func (db *SQLDB) DesiredLRPs(ctx context.Context, logger lager.Logger, filter mo
 		values = append(values, filter.Domain)
 	}
 
+	if filter.VolumeMountDriver != "" {
+		wheres = append(wheres, "run_info LIKE ?")
+		values = append(values, "%\"Driver\"%\"%"+filter.VolumeMountDriver+"\"%")
+	}
+
 	if len(filter.ProcessGuids) > 0 {
 		wheres = append(wheres, whereClauseForProcessGuids(filter.ProcessGuids))
 

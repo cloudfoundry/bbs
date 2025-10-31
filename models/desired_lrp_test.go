@@ -1692,3 +1692,17 @@ func newValidLRPKey() models.DesiredLRPKey {
 func newValidResource() models.DesiredLRPResource {
 	return models.NewDesiredLRPResource(256, 256, 256, "preloaded://linux64")
 }
+
+var _ = Describe("DesiredLRPFilter", func() {
+	It("supports VolumeMountDriver field", func() {
+		filter := models.DesiredLRPFilter{
+			Domain:            "test-domain",
+			ProcessGuids:      []string{"guid-1", "guid-2"},
+			VolumeMountDriver: "test-driver",
+		}
+
+		Expect(filter.Domain).To(Equal("test-domain"))
+		Expect(filter.ProcessGuids).To(Equal([]string{"guid-1", "guid-2"}))
+		Expect(filter.VolumeMountDriver).To(Equal("test-driver"))
+	})
+})
