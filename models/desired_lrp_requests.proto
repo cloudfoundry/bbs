@@ -18,6 +18,7 @@ message DesiredLRPsResponse {
 message DesiredLRPsRequest {
   string domain = 1 [(gogoproto.jsontag) = "domain"];
   repeated string process_guids = 2;
+  string volume_mount_driver = 3 [(gogoproto.jsontag) = "volume_mount_driver"];
 }
 
 message DesiredLRPResponse {

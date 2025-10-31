@@ -24,8 +24,9 @@ type DesiredLRPChange struct {
 }
 
 type DesiredLRPFilter struct {
-	Domain       string
-	ProcessGuids []string
+	Domain            string
+	ProcessGuids      []string
+	VolumeMountDriver string
 }
 
 func PreloadedRootFS(stack string) string {
