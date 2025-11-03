@@ -261,7 +261,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		It("unclaims and reauctions the lrp", func() {
 			Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-			_, _, key := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
+			_, _, _, key := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
 			Expect(key).To(Equal(lrpKey))
 
 			Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidCallCount()).To(Equal(1))
@@ -1143,7 +1143,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 				It("unclaims the lrp and requests an auction", func() {
 					Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-					_, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
+					_, _, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
 					Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
 					Expect(lrpKey.Index).To(Equal(actual.Index))
 
