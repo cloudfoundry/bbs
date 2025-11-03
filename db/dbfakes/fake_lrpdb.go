@@ -317,12 +317,13 @@ type FakeLRPDB struct {
 		result2 *models.ActualLRP
 		result3 error
 	}
-	UnclaimActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)
+	UnclaimActualLRPStub        func(context.Context, lager.Logger, bool, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)
 	unclaimActualLRPMutex       sync.RWMutex
 	unclaimActualLRPArgsForCall []struct {
 		arg1 context.Context
 		arg2 lager.Logger
-		arg3 *models.ActualLRPKey
+		arg3 bool
+		arg4 *models.ActualLRPKey
 	}
 	unclaimActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -1638,20 +1639,21 @@ func (fake *FakeLRPDB) StartActualLRPReturnsOnCall(i int, result1 *models.Actual
 	}{result1, result2, result3}
 }
 
-func (fake *FakeLRPDB) UnclaimActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
+func (fake *FakeLRPDB) UnclaimActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 bool, arg4 *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
 	fake.unclaimActualLRPMutex.Lock()
 	ret, specificReturn := fake.unclaimActualLRPReturnsOnCall[len(fake.unclaimActualLRPArgsForCall)]
 	fake.unclaimActualLRPArgsForCall = append(fake.unclaimActualLRPArgsForCall, struct {
 		arg1 context.Context
 		arg2 lager.Logger
-		arg3 *models.ActualLRPKey
-	}{arg1, arg2, arg3})
+		arg3 bool
+		arg4 *models.ActualLRPKey
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.UnclaimActualLRPStub
 	fakeReturns := fake.unclaimActualLRPReturns
-	fake.recordInvocation("UnclaimActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("UnclaimActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.unclaimActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
@@ -1665,17 +1667,17 @@ func (fake *FakeLRPDB) UnclaimActualLRPCallCount() int {
 	return len(fake.unclaimActualLRPArgsForCall)
 }
 
-func (fake *FakeLRPDB) UnclaimActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)) {
+func (fake *FakeLRPDB) UnclaimActualLRPCalls(stub func(context.Context, lager.Logger, bool, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)) {
 	fake.unclaimActualLRPMutex.Lock()
 	defer fake.unclaimActualLRPMutex.Unlock()
 	fake.UnclaimActualLRPStub = stub
 }
 
-func (fake *FakeLRPDB) UnclaimActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey) {
+func (fake *FakeLRPDB) UnclaimActualLRPArgsForCall(i int) (context.Context, lager.Logger, bool, *models.ActualLRPKey) {
 	fake.unclaimActualLRPMutex.RLock()
 	defer fake.unclaimActualLRPMutex.RUnlock()
 	argsForCall := fake.unclaimActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeLRPDB) UnclaimActualLRPReturns(result1 *models.ActualLRP, result2 *models.ActualLRP, result3 error) {
@@ -1777,48 +1779,6 @@ func (fake *FakeLRPDB) UpdateDesiredLRPReturnsOnCall(i int, result1 *models.Desi
 func (fake *FakeLRPDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.actualLRPsMutex.RLock()
-	defer fake.actualLRPsMutex.RUnlock()
-	fake.actualLRPsByProcessGuidsMutex.RLock()
-	defer fake.actualLRPsByProcessGuidsMutex.RUnlock()
-	fake.changeActualLRPPresenceMutex.RLock()
-	defer fake.changeActualLRPPresenceMutex.RUnlock()
-	fake.claimActualLRPMutex.RLock()
-	defer fake.claimActualLRPMutex.RUnlock()
-	fake.convergeLRPsMutex.RLock()
-	defer fake.convergeLRPsMutex.RUnlock()
-	fake.countActualLRPsByStateMutex.RLock()
-	defer fake.countActualLRPsByStateMutex.RUnlock()
-	fake.countDesiredInstancesMutex.RLock()
-	defer fake.countDesiredInstancesMutex.RUnlock()
-	fake.crashActualLRPMutex.RLock()
-	defer fake.crashActualLRPMutex.RUnlock()
-	fake.createUnclaimedActualLRPMutex.RLock()
-	defer fake.createUnclaimedActualLRPMutex.RUnlock()
-	fake.desireLRPMutex.RLock()
-	defer fake.desireLRPMutex.RUnlock()
-	fake.desiredLRPByProcessGuidMutex.RLock()
-	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
-	fake.desiredLRPRoutingInfosMutex.RLock()
-	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
-	fake.desiredLRPSchedulingInfoByProcessGuidMutex.RLock()
-	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.RUnlock()
-	fake.desiredLRPSchedulingInfosMutex.RLock()
-	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
-	fake.desiredLRPsMutex.RLock()
-	defer fake.desiredLRPsMutex.RUnlock()
-	fake.failActualLRPMutex.RLock()
-	defer fake.failActualLRPMutex.RUnlock()
-	fake.removeActualLRPMutex.RLock()
-	defer fake.removeActualLRPMutex.RUnlock()
-	fake.removeDesiredLRPMutex.RLock()
-	defer fake.removeDesiredLRPMutex.RUnlock()
-	fake.startActualLRPMutex.RLock()
-	defer fake.startActualLRPMutex.RUnlock()
-	fake.unclaimActualLRPMutex.RLock()
-	defer fake.unclaimActualLRPMutex.RUnlock()
-	fake.updateDesiredLRPMutex.RLock()
-	defer fake.updateDesiredLRPMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

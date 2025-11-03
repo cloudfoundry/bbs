@@ -273,7 +273,7 @@ var _ = Describe("Deadlocks", func() {
 
 	Context("UnclaimActualLRP", func() {
 		It("retries on deadlocks", func() {
-			_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, &models.ActualLRPKey{})
+			_, _, err := sqlDB.UnclaimActualLRP(ctx, logger, false, &models.ActualLRPKey{})
 			Expect(err).To(HaveOccurred())
 			Expect(fakeConn.BeginCallCount()).To(Equal(3))
 		})
