@@ -52,6 +52,7 @@ type BBSConfig struct {
 	DBReadTimeout                 durationjson.Duration `json:"db_read_timeout,omitempty"`
 	DBWriteTimeout                durationjson.Duration `json:"db_write_timeout,omitempty"`
 	MaxOpenDatabaseConnections    int                   `json:"max_open_database_connections,omitempty"`
+	MaxDatabaseConnectionLifetime durationjson.Duration `json:"max_database_connection_lifetime,omitempty"`
 	MaxTaskRetries                int                   `json:"max_task_retries,omitempty"`
 	RepCACert                     string                `json:"rep_ca_cert,omitempty"`
 	RepClientCert                 string                `json:"rep_client_cert,omitempty"`

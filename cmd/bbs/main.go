@@ -120,6 +120,7 @@ func main() {
 
 	sqlConn.SetMaxOpenConns(bbsConfig.MaxOpenDatabaseConnections)
 	sqlConn.SetMaxIdleConns(bbsConfig.MaxIdleDatabaseConnections)
+	sqlConn.SetConnMaxLifetime(time.Duration(bbsConfig.MaxDatabaseConnectionLifetime))
 
 	err = sqlConn.Ping()
 	if err != nil {
