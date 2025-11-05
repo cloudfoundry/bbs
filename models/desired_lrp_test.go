@@ -1696,13 +1696,13 @@ func newValidResource() models.DesiredLRPResource {
 var _ = Describe("DesiredLRPFilter", func() {
 	It("supports VolumeMountDriver field", func() {
 		filter := models.DesiredLRPFilter{
-			Domain:            "test-domain",
-			ProcessGuids:      []string{"guid-1", "guid-2"},
-			VolumeMountDriver: "test-driver",
+			Domain:       "test-domain",
+			ProcessGuids: []string{"guid-1", "guid-2"},
+			AppGuids:     []string{"app-guid-1", "app-guid-2"},
 		}
 
 		Expect(filter.Domain).To(Equal("test-domain"))
 		Expect(filter.ProcessGuids).To(Equal([]string{"guid-1", "guid-2"}))
-		Expect(filter.VolumeMountDriver).To(Equal("test-driver"))
+		Expect(filter.AppGuids).To(Equal([]string{"app-guid-1", "app-guid-2"}))
 	})
 })

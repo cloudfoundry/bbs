@@ -343,15 +343,15 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
-		Context("when filtering by volume mount driver", func() {
+		Context("when filtering by app guids", func() {
 			BeforeEach(func() {
-				requestBody = &models.DesiredLRPsRequest{VolumeMountDriver: "test-driver"}
+				requestBody = &models.DesiredLRPsRequest{AppGuids: []string{"app-guid-1"}}
 			})
 
-			It("passes the volume mount driver filter to the DB", func() {
+			It("passes the app guid filter to the DB", func() {
 				Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
 				_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
-				Expect(filter.VolumeMountDriver).To(Equal("test-driver"))
+				Expect(filter.AppGuids).To(Equal([]string{"app-guid-1"}))
 			})
 		})
 
@@ -713,15 +713,15 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				})
 			})
 
-			Context("when filtering by volume mount driver", func() {
+			Context("when filtering by appids", func() {
 				BeforeEach(func() {
-					requestBody = &models.DesiredLRPsRequest{VolumeMountDriver: "test-driver"}
+					requestBody = &models.DesiredLRPsRequest{AppGuids: []string{"appid-1"}}
 				})
 
-				It("passes the volume mount driver filter to the DB", func() {
+				It("passes the appids to the DB", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
 					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
-					Expect(filter.VolumeMountDriver).To(Equal("test-driver"))
+					Expect(filter.AppGuids).To(Equal([]string{"appid-1"}))
 				})
 			})
 		})

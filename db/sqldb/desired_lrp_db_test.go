@@ -132,38 +132,10 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		BeforeEach(func() {
 			expectedDesiredLRPs = []*models.DesiredLRP{}
-			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-1"))
-			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-2"))
-			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("d-3"))
-			// Create LRP with multiple volume mounts (one matching, one not)
-			expectedDesiredLRPs[1].VolumeMounts = []*models.VolumeMount{
-				{
-					Driver:       "other-driver",
-					ContainerDir: "/mnt/other",
-					Mode:         "r",
-					Shared: &models.SharedDevice{
-						VolumeId: "vol-id-3",
-					},
-				},
-				{
-					Driver:       "test-driver",
-					ContainerDir: "/mnt/test2",
-					Mode:         "rw",
-					Shared: &models.SharedDevice{
-						VolumeId: "vol-id-4",
-					},
-				},
-				{
-					Driver:       "third-driver",
-					ContainerDir: "/mnt/third",
-					Mode:         "r",
-					Shared: &models.SharedDevice{
-						VolumeId: "vol-id-5",
-					},
-				},
-			}
-			// Create LRP with no volume mounts
-			expectedDesiredLRPs[2].VolumeMounts = []*models.VolumeMount{}
+			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("app-1-d-1"))
+			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("app-2-d-2"))
+			expectedDesiredLRPs = append(expectedDesiredLRPs, model_helpers.NewValidDesiredLRP("app-3-d-3"))
+
 			for i, expectedDesiredLRP := range expectedDesiredLRPs {
 				expectedDesiredLRP.Domain = fmt.Sprintf("domain-%d", i+1)
 				Expect(sqlDB.DesireLRP(ctx, logger, expectedDesiredLRP)).To(Succeed())
@@ -238,7 +210,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by process guids", func() {
 			It("returns the filtered desired lrps", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}})
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{ProcessGuids: []string{"app-1-d-1", "app-3-d-3"}})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(2))
@@ -247,54 +219,44 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 		})
 
-		Context("when filtering by volume mount driver", func() {
-			FIt("returns LRPs that have a volume mount with matching driver", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "my-driver"})
+		Context("when filtering by app guids", func() {
+			It("returns LRPs that have matching app-guids", func() {
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{AppGuids: []string{"app-1"}})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(1))
 				processGuids := []string{desiredLRPs[0].ProcessGuid}
-				Expect(processGuids).To(ContainElements("d-1"))
-			})
-
-			FIt("finds LRPs with matching driver among multiple volume mounts", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "third-driver"})
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(desiredLRPs).To(HaveLen(1))
-				Expect(desiredLRPs[0].ProcessGuid).To(Equal("d-2"))
-				Expect(desiredLRPs[0].VolumeMounts).To(HaveLen(3))
-			})
-
-			It("returns empty list when no LRPs have matching volume mount driver", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "non-existent-driver"})
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(desiredLRPs).To(HaveLen(0))
-			})
-
-			It("excludes LRPs with no volume mounts", func() {
-				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{VolumeMountDriver: "test-driver"})
-				Expect(err).NotTo(HaveOccurred())
-
-				processGuids := make([]string, len(desiredLRPs))
-				for i, lrp := range desiredLRPs {
-					processGuids[i] = lrp.ProcessGuid
+				drivers := []string{}
+				for _, m := range desiredLRPs[0].VolumeMounts {
+					drivers = append(drivers, m.Driver)
 				}
-				Expect(processGuids).NotTo(ContainElement("d-3"))
+				Expect(drivers).To(ContainElements("my-driver"))
+				Expect(processGuids).To(ContainElements("app-1-d-1"))
 			})
-
-			It("can combine volume mount driver filter with domain filter", func() {
+			It("combines app guids, process guids, and domain filters", func() {
 				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{
-					Domain:            "domain-1",
-					VolumeMountDriver: "my-driver",
+					AppGuids:     []string{"app-1", "app-2"},
+					Domain:       "domain-1",
+					ProcessGuids: []string{"app-1-d-1"},
 				})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(desiredLRPs).To(HaveLen(1))
-				for _, lrp := range desiredLRPs {
-					Expect(lrp.Domain).To(Equal("domain-1"))
+				processGuids := []string{desiredLRPs[0].ProcessGuid}
+				domain := []string{desiredLRPs[0].Domain}
+				drivers := []string{}
+				for _, m := range desiredLRPs[0].VolumeMounts {
+					drivers = append(drivers, m.Driver)
 				}
+				Expect(drivers).To(ContainElements("my-driver"))
+				Expect(processGuids).To(ContainElements("app-1-d-1"))
+				Expect(domain).To(ContainElements("domain-1"))
+
+			})
+			It("returns empty list when no LRPs have matching app guids", func() {
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{AppGuids: []string{"app-6", "app-8"}})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(desiredLRPs).To(HaveLen(0))
 			})
 		})
 
@@ -346,9 +308,9 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			expectedDesiredLRPs = []*models.DesiredLRP{}
 			expectedDesiredLRPSchedulingInfos = []*models.DesiredLRPSchedulingInfo{}
-			desiredLRP1 := model_helpers.NewValidDesiredLRP("d-1")
-			desiredLRP2 := model_helpers.NewValidDesiredLRP("d-2")
-			desiredLRP3 := model_helpers.NewValidDesiredLRP("d-3")
+			desiredLRP1 := model_helpers.NewValidDesiredLRP("app-1-d-1")
+			desiredLRP2 := model_helpers.NewValidDesiredLRP("app-2-d-2")
+			desiredLRP3 := model_helpers.NewValidDesiredLRP("app-3-d-3")
 
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP1)
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP2)
@@ -379,7 +341,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by process guids", func() {
 			It("returns the filtered schedulig infos", func() {
-				filter := models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}}
+				filter := models.DesiredLRPFilter{ProcessGuids: []string{"app-1-d-1", "app-3-d-3"}}
 				desiredLRPSchedulingInfos, err := sqlDB.DesiredLRPSchedulingInfos(ctx, logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPSchedulingInfos).To(HaveLen(2))
@@ -468,9 +430,9 @@ var _ = Describe("DesiredLRPDB", func() {
 		BeforeEach(func() {
 			expectedDesiredLRPs = []*models.DesiredLRP{}
 			expectedDesiredLRPRoutingInfos = []*models.DesiredLRP{}
-			desiredLRP1 := model_helpers.NewValidDesiredLRP("d-1")
-			desiredLRP2 := model_helpers.NewValidDesiredLRP("d-2")
-			desiredLRP3 := model_helpers.NewValidDesiredLRP("d-3")
+			desiredLRP1 := model_helpers.NewValidDesiredLRP("app-1-d-1")
+			desiredLRP2 := model_helpers.NewValidDesiredLRP("app-2-d-2")
+			desiredLRP3 := model_helpers.NewValidDesiredLRP("app-3-d-3")
 
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP1)
 			expectedDesiredLRPs = append(expectedDesiredLRPs, desiredLRP2)
@@ -493,7 +455,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 		Context("when filtering by process guids", func() {
 			It("returns the filtered routing infos", func() {
-				filter := models.DesiredLRPFilter{ProcessGuids: []string{"d-1", "d-3"}}
+				filter := models.DesiredLRPFilter{ProcessGuids: []string{"app-1-d-1", "app-3-d-3"}}
 				desiredLRPRoutingInfos, err := sqlDB.DesiredLRPRoutingInfos(ctx, logger, filter)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(desiredLRPRoutingInfos).To(HaveLen(2))
