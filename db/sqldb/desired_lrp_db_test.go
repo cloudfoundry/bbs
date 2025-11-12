@@ -233,6 +233,23 @@ var _ = Describe("DesiredLRPDB", func() {
 				Expect(drivers).To(ContainElements("my-driver"))
 				Expect(processGuids).To(ContainElements("app-1-d-1"))
 			})
+			It("combines app guids, process guids filters", func() {
+				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{
+					AppGuids:     []string{"app-1"},
+					ProcessGuids: []string{"app-1-d-1"},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(desiredLRPs).To(HaveLen(1))
+				processGuids := []string{desiredLRPs[0].ProcessGuid}
+				drivers := []string{}
+				for _, m := range desiredLRPs[0].VolumeMounts {
+					drivers = append(drivers, m.Driver)
+				}
+				Expect(drivers).To(ContainElements("my-driver"))
+				Expect(processGuids).To(ContainElements("app-1-d-1"))
+
+			})
 			It("combines app guids, process guids, and domain filters", func() {
 				desiredLRPs, err := sqlDB.DesiredLRPs(ctx, logger, models.DesiredLRPFilter{
 					AppGuids:     []string{"app-1", "app-2"},

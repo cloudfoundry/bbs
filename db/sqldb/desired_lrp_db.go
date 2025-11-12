@@ -120,43 +120,30 @@ func (db *SQLDB) DesiredLRPs(ctx context.Context, logger lager.Logger, filter mo
 	var wheres []string
 	var values []interface{}
 
+	if len(filter.AppGuids) > 0 {
+		var appGuidWheres []string
+		for _, g := range filter.AppGuids {
+			appGuidWheres = append(appGuidWheres, "process_guid LIKE ?")
+			values = append(values, g+"%")
+		}
+		if len(filter.AppGuids) == 1 {
+			wheres = append(wheres, appGuidWheres[0])
+		} else {
+			wheres = append(wheres, "("+strings.Join(appGuidWheres, " OR ")+")")
+		}
+	}
+
 	if filter.Domain != "" {
 		wheres = append(wheres, "domain = ?")
 		values = append(values, filter.Domain)
 	}
 
-	var appGuidConditions []string
-	if len(filter.AppGuids) > 0 {
-		for _, g := range filter.AppGuids {
-			appGuidConditions = append(appGuidConditions, "process_guid LIKE ?")
-			values = append(values, g+"%")
-		}
-	}
-
 	if len(filter.ProcessGuids) > 0 {
-		if len(appGuidConditions) > 0 {
-			appGuidsClause := "(" + strings.Join(appGuidConditions, " OR ") + ")"
-			processGuidsClause := whereClauseForProcessGuids(filter.ProcessGuids)
-			wheres = append(wheres, "("+appGuidsClause+" AND "+processGuidsClause+")")
-		} else {
-			wheres = append(wheres, whereClauseForProcessGuids(filter.ProcessGuids))
-		}
+		wheres = append(wheres, whereClauseForProcessGuids(filter.ProcessGuids))
 
 		for _, guid := range filter.ProcessGuids {
 			values = append(values, guid)
 		}
-	} else if len(appGuidConditions) > 0 {
-
-		if len(appGuidConditions) == 1 {
-			wheres = append(wheres, appGuidConditions[0])
-		} else {
-			wheres = append(wheres, "("+strings.Join(appGuidConditions, " OR ")+")")
-		}
-	}
-
-	var whereClause string
-	if len(wheres) > 0 {
-		whereClause = strings.Join(wheres, " AND ")
 	}
 
 	results := []*models.DesiredLRP{}
@@ -164,7 +151,7 @@ func (db *SQLDB) DesiredLRPs(ctx context.Context, logger lager.Logger, filter mo
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		rows, err := db.all(ctx, logger, tx, desiredLRPsTable,
 			desiredLRPColumns, helpers.NoLockRow,
-			whereClause, values...,
+			strings.Join(wheres, " AND "), values...,
 		)
 		if err != nil {
 			logger.Error("failed-query", err)
