@@ -18,6 +18,7 @@ message DesiredLRPsResponse {
 message DesiredLRPsRequest {
   string domain = 1 [(gogoproto.jsontag) = "domain"];
   repeated string process_guids = 2;
+  repeated string app_guids = 3;
 }
 
 message DesiredLRPResponse {

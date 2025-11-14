@@ -343,6 +343,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 			})
 		})
 
+		Context("when filtering by app guids", func() {
+			BeforeEach(func() {
+				requestBody = &models.DesiredLRPsRequest{AppGuids: []string{"app-guid-1"}}
+			})
+
+			It("passes the app guid filter to the DB", func() {
+				Expect(fakeDesiredLRPDB.DesiredLRPsCallCount()).To(Equal(1))
+				_, _, filter := fakeDesiredLRPDB.DesiredLRPsArgsForCall(0)
+				Expect(filter.AppGuids).To(Equal([]string{"app-guid-1"}))
+			})
+		})
+
 		Context("when the DB returns no desired lrps", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPsReturns([]*models.DesiredLRP{}, nil)
@@ -698,6 +710,18 @@ var _ = Describe("DesiredLRP Handlers", func() {
 					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
 					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
 					Expect(filter.ProcessGuids).To(Equal([]string{"guid-1", "guid-2"}))
+				})
+			})
+
+			Context("when filtering by appids", func() {
+				BeforeEach(func() {
+					requestBody = &models.DesiredLRPsRequest{AppGuids: []string{"appid-1"}}
+				})
+
+				It("passes the appids to the DB", func() {
+					Expect(fakeDesiredLRPDB.DesiredLRPSchedulingInfosCallCount()).To(Equal(1))
+					_, _, filter := fakeDesiredLRPDB.DesiredLRPSchedulingInfosArgsForCall(0)
+					Expect(filter.AppGuids).To(Equal([]string{"appid-1"}))
 				})
 			})
 		})

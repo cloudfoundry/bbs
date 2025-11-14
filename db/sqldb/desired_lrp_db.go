@@ -120,6 +120,19 @@ func (db *SQLDB) DesiredLRPs(ctx context.Context, logger lager.Logger, filter mo
 	var wheres []string
 	var values []interface{}
 
+	if len(filter.AppGuids) > 0 {
+		var appGuidWheres []string
+		for _, g := range filter.AppGuids {
+			appGuidWheres = append(appGuidWheres, "process_guid LIKE ?")
+			values = append(values, g+"%")
+		}
+		if len(filter.AppGuids) == 1 {
+			wheres = append(wheres, appGuidWheres[0])
+		} else {
+			wheres = append(wheres, "("+strings.Join(appGuidWheres, " OR ")+")")
+		}
+	}
+
 	if filter.Domain != "" {
 		wheres = append(wheres, "domain = ?")
 		values = append(values, filter.Domain)
