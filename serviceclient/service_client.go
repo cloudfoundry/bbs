@@ -7,10 +7,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"context"
+
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/v3"
 	locketmodels "code.cloudfoundry.org/locket/models"
-	"golang.org/x/net/context"
 )
 
 const BBSLockSchemaKey = "bbs_lock"
