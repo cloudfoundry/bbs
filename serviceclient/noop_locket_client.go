@@ -1,8 +1,9 @@
 package serviceclient
 
 import (
+	"context"
+
 	locketmodels "code.cloudfoundry.org/locket/models"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
