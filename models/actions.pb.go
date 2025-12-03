@@ -771,11 +771,9 @@ func (m *CodependentAction) GetLogSource() string {
 
 type ResourceLimits struct {
 	// Types that are valid to be assigned to OptionalNofile:
-	//
 	//	*ResourceLimits_Nofile
 	OptionalNofile isResourceLimits_OptionalNofile `protobuf_oneof:"optional_nofile"`
 	// Types that are valid to be assigned to OptionalNproc:
-	//
 	//	*ResourceLimits_Nproc
 	OptionalNproc isResourceLimits_OptionalNproc `protobuf_oneof:"optional_nproc"`
 }
