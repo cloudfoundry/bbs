@@ -18,6 +18,8 @@ import "sidecar.proto";
 import "log_rate_limit.proto";
 import "file.proto";
 
+option (gogoproto.goproto_enum_prefix_all) = true;
+
 message DesiredLRPSchedulingInfo {
   DesiredLRPKey desired_lrp_key = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "", (gogoproto.embed) = true];
 
@@ -150,4 +152,9 @@ message DesiredLRP {
   repeated Sidecar sidecars = 36;
   LogRateLimit log_rate_limit = 37;
   repeated File volume_mounted_files = 38 [(gogoproto.jsontag) = "volume_mounted_files"];
+  enum UpdateStrategy {
+    ROLLING   = 0 [(gogoproto.enumvalue_customname) = "Rolling"];
+    RECREATE = 1 [(gogoproto.enumvalue_customname) = "Recreate"];
+  }
+  UpdateStrategy update_strategy = 39 [(gogoproto.jsontag) = "update_strategy"];
 }
