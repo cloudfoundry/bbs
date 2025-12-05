@@ -574,7 +574,8 @@ func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scann
 
 func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.RowScanner) (*models.DesiredLRP, string, error) {
 	var runInfoData, metricTagsData []byte
-	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData, &metricTagsData)
+	var updateStrategy models.DesiredLRP_UpdateStrategy
+	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData, &metricTagsData, &updateStrategy)
 	if err != nil {
 		return nil, "", err
 	}
@@ -598,7 +599,7 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 		logger.Error("failed-parsing-metric-tags", err)
 		return nil, "", err
 	}
-	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo, metricTags)
+	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo, metricTags, updateStrategy)
 	return &desiredLRP, "", nil
 }
 
