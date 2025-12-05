@@ -133,6 +133,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 		MetricTags: map[string]*models.MetricTagValue{
 			"source_id": {Static: "some-metrics-guid"},
 		},
+		UpdateStrategy: models.DesiredLRP_Rolling,
 	}
 
 	desiredLRP.VolumeMountedFiles = append(desiredLRP.VolumeMountedFiles, &models.File{
