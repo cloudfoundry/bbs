@@ -37,7 +37,7 @@ func PreloadedRootFS(stack string) string {
 	}).String()
 }
 
-func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo, metricTags map[string]*MetricTagValue) DesiredLRP {
+func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo, metricTags map[string]*MetricTagValue, updateStrategy DesiredLRP_UpdateStrategy) DesiredLRP {
 	environmentVariables := make([]*EnvironmentVariable, len(runInfo.EnvironmentVariables))
 	for i := range runInfo.EnvironmentVariables {
 		environmentVariables[i] = &runInfo.EnvironmentVariables[i]
@@ -89,6 +89,7 @@ func NewDesiredLRP(schedInfo DesiredLRPSchedulingInfo, runInfo DesiredLRPRunInfo
 		Sidecars:                      runInfo.Sidecars,
 		LogRateLimit:                  runInfo.LogRateLimit,
 		VolumeMountedFiles:            volumeMountedFiles,
+		UpdateStrategy:                updateStrategy,
 	}
 }
 
