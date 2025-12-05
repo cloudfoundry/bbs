@@ -51,6 +51,7 @@ var (
 	desiredLRPColumns = append(schedulingInfoColumns,
 		desiredLRPsTable+".run_info",
 		desiredLRPsTable+".metric_tags",
+		desiredLRPsTable+".update_strategy",
 	)
 
 	taskColumns = helpers.ColumnList{
