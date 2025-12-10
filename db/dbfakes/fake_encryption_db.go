@@ -246,6 +246,12 @@ func (fake *FakeEncryptionDB) SetEncryptionKeyLabelReturnsOnCall(i int, result1 
 func (fake *FakeEncryptionDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.encryptionKeyLabelMutex.RLock()
+	defer fake.encryptionKeyLabelMutex.RUnlock()
+	fake.performEncryptionMutex.RLock()
+	defer fake.performEncryptionMutex.RUnlock()
+	fake.setEncryptionKeyLabelMutex.RLock()
+	defer fake.setEncryptionKeyLabelMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

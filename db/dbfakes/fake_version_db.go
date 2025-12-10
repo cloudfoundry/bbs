@@ -178,6 +178,10 @@ func (fake *FakeVersionDB) VersionReturnsOnCall(i int, result1 *models.Version, 
 func (fake *FakeVersionDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.setVersionMutex.RLock()
+	defer fake.setVersionMutex.RUnlock()
+	fake.versionMutex.RLock()
+	defer fake.versionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -174,6 +174,10 @@ func (fake *FakeDomainDB) UpsertDomainReturnsOnCall(i int, result1 error) {
 func (fake *FakeDomainDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.freshDomainsMutex.RLock()
+	defer fake.freshDomainsMutex.RUnlock()
+	fake.upsertDomainMutex.RLock()
+	defer fake.upsertDomainMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

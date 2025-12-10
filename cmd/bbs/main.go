@@ -161,6 +161,8 @@ func main() {
 		metronClient,
 	)
 
+	dbHealthCheckRunner := NewDBHealthCheckRunner(logger, sqlDB, clock, bbsConfig.HealthCheckFailureThreshold, time.Duration(bbsConfig.HealthCheckTimeout), time.Duration(bbsConfig.HealthCheckInterval), migrationsDone)
+
 	desiredHub := events.NewHub(logger)
 	actualHub := events.NewHub(logger)
 	actualLRPInstanceHub := events.NewHub(logger)
@@ -371,6 +373,10 @@ func main() {
 		{Name: "lrp-stat-metron-notifier", Runner: lrpStatMetronNotifier},
 		{Name: "task-stat-metron-notifier", Runner: taskStatMetronNotifier},
 		{Name: "db-stat-metron-notifier", Runner: dbStatMetronNotifier},
+	}
+
+	if bbsConfig.EnableDBHealthCheck {
+		members = append(grouper.Members{{Name: "db-healthcheck", Runner: dbHealthCheckRunner}}, members...)
 	}
 
 	if bbsConfig.DebugAddress != "" {

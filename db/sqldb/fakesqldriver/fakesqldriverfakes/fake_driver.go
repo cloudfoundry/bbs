@@ -93,6 +93,8 @@ func (fake *FakeDriver) OpenReturnsOnCall(i int, result1 driver.Conn, result2 er
 func (fake *FakeDriver) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.openMutex.RLock()
+	defer fake.openMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

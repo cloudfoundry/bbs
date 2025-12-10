@@ -43,6 +43,10 @@ type BBSConfig struct {
 	ExpireCompletedTaskDuration   durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration     durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
 	HealthAddress                 string                `json:"health_address,omitempty"`
+	HealthCheckTimeout            durationjson.Duration `json:"health_check_timeout,omitempty"`
+	HealthCheckFailureThreshold   int                   `json:"health_check_failure_threshold,omitempty"`
+	HealthCheckInterval           durationjson.Duration `json:"health_check_interval,omitempty"`
+	EnableDBHealthCheck           bool                  `json:"enable_db_health_check,omitempty"`
 	KeyFile                       string                `json:"key_file,omitempty"`
 	KickTaskDuration              durationjson.Duration `json:"kick_task_duration,omitempty"`
 	ListenAddress                 string                `json:"listen_address,omitempty"`

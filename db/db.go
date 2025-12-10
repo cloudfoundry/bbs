@@ -12,4 +12,5 @@ type DB interface {
 	TaskDB
 	VersionDB
 	SuspectDB
+	BBSHealthCheckDB
 }

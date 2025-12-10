@@ -460,6 +460,18 @@ func (fake *FakeTx) RollbackReturnsOnCall(i int, result1 error) {
 func (fake *FakeTx) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.commitMutex.RLock()
+	defer fake.commitMutex.RUnlock()
+	fake.execContextMutex.RLock()
+	defer fake.execContextMutex.RUnlock()
+	fake.prepareContextMutex.RLock()
+	defer fake.prepareContextMutex.RUnlock()
+	fake.queryContextMutex.RLock()
+	defer fake.queryContextMutex.RUnlock()
+	fake.queryRowContextMutex.RLock()
+	defer fake.queryRowContextMutex.RUnlock()
+	fake.rollbackMutex.RLock()
+	defer fake.rollbackMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

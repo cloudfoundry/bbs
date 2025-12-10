@@ -403,6 +403,18 @@ func (fake *FakeMonitor) TotalReturnsOnCall(i int, result1 int64) {
 func (fake *FakeMonitor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.failedMutex.RLock()
+	defer fake.failedMutex.RUnlock()
+	fake.monitorMutex.RLock()
+	defer fake.monitorMutex.RUnlock()
+	fake.readAndResetDurationMaxMutex.RLock()
+	defer fake.readAndResetDurationMaxMutex.RUnlock()
+	fake.readAndResetInFlightMaxMutex.RLock()
+	defer fake.readAndResetInFlightMaxMutex.RUnlock()
+	fake.succeededMutex.RLock()
+	defer fake.succeededMutex.RUnlock()
+	fake.totalMutex.RLock()
+	defer fake.totalMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
