@@ -658,6 +658,22 @@ func (fake *FakeDesiredLRPDB) UpdateDesiredLRPReturnsOnCall(i int, result1 *mode
 func (fake *FakeDesiredLRPDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.RLock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.RUnlock()
+	fake.desiredLRPSchedulingInfosMutex.RLock()
+	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
+	fake.desiredLRPsMutex.RLock()
+	defer fake.desiredLRPsMutex.RUnlock()
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

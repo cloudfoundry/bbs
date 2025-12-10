@@ -603,6 +603,22 @@ func (fake *FakeQueryableDB) WaitDurationReturnsOnCall(i int, result1 time.Durat
 func (fake *FakeQueryableDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.beginTxMutex.RLock()
+	defer fake.beginTxMutex.RUnlock()
+	fake.execContextMutex.RLock()
+	defer fake.execContextMutex.RUnlock()
+	fake.openConnectionsMutex.RLock()
+	defer fake.openConnectionsMutex.RUnlock()
+	fake.prepareContextMutex.RLock()
+	defer fake.prepareContextMutex.RUnlock()
+	fake.queryContextMutex.RLock()
+	defer fake.queryContextMutex.RUnlock()
+	fake.queryRowContextMutex.RLock()
+	defer fake.queryRowContextMutex.RUnlock()
+	fake.waitCountMutex.RLock()
+	defer fake.waitCountMutex.RUnlock()
+	fake.waitDurationMutex.RLock()
+	defer fake.waitDurationMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

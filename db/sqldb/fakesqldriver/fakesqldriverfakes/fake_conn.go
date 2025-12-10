@@ -224,6 +224,12 @@ func (fake *FakeConn) PrepareReturnsOnCall(i int, result1 driver.Stmt, result2 e
 func (fake *FakeConn) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.beginMutex.RLock()
+	defer fake.beginMutex.RUnlock()
+	fake.closeMutex.RLock()
+	defer fake.closeMutex.RUnlock()
+	fake.prepareMutex.RLock()
+	defer fake.prepareMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -423,6 +423,19 @@ type FakeDB struct {
 		result1 []string
 		result2 error
 	}
+	PerformBBSHealthCheckStub        func(context.Context, lager.Logger, time.Time) error
+	performBBSHealthCheckMutex       sync.RWMutex
+	performBBSHealthCheckArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 time.Time
+	}
+	performBBSHealthCheckReturns struct {
+		result1 error
+	}
+	performBBSHealthCheckReturnsOnCall map[int]struct {
+		result1 error
+	}
 	PerformEncryptionStub        func(context.Context, lager.Logger) error
 	performEncryptionMutex       sync.RWMutex
 	performEncryptionArgsForCall []struct {
@@ -2413,6 +2426,69 @@ func (fake *FakeDB) FreshDomainsReturnsOnCall(i int, result1 []string, result2 e
 	}{result1, result2}
 }
 
+func (fake *FakeDB) PerformBBSHealthCheck(arg1 context.Context, arg2 lager.Logger, arg3 time.Time) error {
+	fake.performBBSHealthCheckMutex.Lock()
+	ret, specificReturn := fake.performBBSHealthCheckReturnsOnCall[len(fake.performBBSHealthCheckArgsForCall)]
+	fake.performBBSHealthCheckArgsForCall = append(fake.performBBSHealthCheckArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 time.Time
+	}{arg1, arg2, arg3})
+	stub := fake.PerformBBSHealthCheckStub
+	fakeReturns := fake.performBBSHealthCheckReturns
+	fake.recordInvocation("PerformBBSHealthCheck", []interface{}{arg1, arg2, arg3})
+	fake.performBBSHealthCheckMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeDB) PerformBBSHealthCheckCallCount() int {
+	fake.performBBSHealthCheckMutex.RLock()
+	defer fake.performBBSHealthCheckMutex.RUnlock()
+	return len(fake.performBBSHealthCheckArgsForCall)
+}
+
+func (fake *FakeDB) PerformBBSHealthCheckCalls(stub func(context.Context, lager.Logger, time.Time) error) {
+	fake.performBBSHealthCheckMutex.Lock()
+	defer fake.performBBSHealthCheckMutex.Unlock()
+	fake.PerformBBSHealthCheckStub = stub
+}
+
+func (fake *FakeDB) PerformBBSHealthCheckArgsForCall(i int) (context.Context, lager.Logger, time.Time) {
+	fake.performBBSHealthCheckMutex.RLock()
+	defer fake.performBBSHealthCheckMutex.RUnlock()
+	argsForCall := fake.performBBSHealthCheckArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeDB) PerformBBSHealthCheckReturns(result1 error) {
+	fake.performBBSHealthCheckMutex.Lock()
+	defer fake.performBBSHealthCheckMutex.Unlock()
+	fake.PerformBBSHealthCheckStub = nil
+	fake.performBBSHealthCheckReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeDB) PerformBBSHealthCheckReturnsOnCall(i int, result1 error) {
+	fake.performBBSHealthCheckMutex.Lock()
+	defer fake.performBBSHealthCheckMutex.Unlock()
+	fake.PerformBBSHealthCheckStub = nil
+	if fake.performBBSHealthCheckReturnsOnCall == nil {
+		fake.performBBSHealthCheckReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.performBBSHealthCheckReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeDB) PerformEncryption(arg1 context.Context, arg2 lager.Logger) error {
 	fake.performEncryptionMutex.Lock()
 	ret, specificReturn := fake.performEncryptionReturnsOnCall[len(fake.performEncryptionArgsForCall)]
@@ -3628,6 +3704,94 @@ func (fake *FakeDB) VersionReturnsOnCall(i int, result1 *models.Version, result2
 func (fake *FakeDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.actualLRPsMutex.RLock()
+	defer fake.actualLRPsMutex.RUnlock()
+	fake.actualLRPsByProcessGuidsMutex.RLock()
+	defer fake.actualLRPsByProcessGuidsMutex.RUnlock()
+	fake.cancelTaskMutex.RLock()
+	defer fake.cancelTaskMutex.RUnlock()
+	fake.changeActualLRPPresenceMutex.RLock()
+	defer fake.changeActualLRPPresenceMutex.RUnlock()
+	fake.claimActualLRPMutex.RLock()
+	defer fake.claimActualLRPMutex.RUnlock()
+	fake.completeTaskMutex.RLock()
+	defer fake.completeTaskMutex.RUnlock()
+	fake.convergeLRPsMutex.RLock()
+	defer fake.convergeLRPsMutex.RUnlock()
+	fake.convergeTasksMutex.RLock()
+	defer fake.convergeTasksMutex.RUnlock()
+	fake.countActualLRPsByStateMutex.RLock()
+	defer fake.countActualLRPsByStateMutex.RUnlock()
+	fake.countDesiredInstancesMutex.RLock()
+	defer fake.countDesiredInstancesMutex.RUnlock()
+	fake.crashActualLRPMutex.RLock()
+	defer fake.crashActualLRPMutex.RUnlock()
+	fake.createUnclaimedActualLRPMutex.RLock()
+	defer fake.createUnclaimedActualLRPMutex.RUnlock()
+	fake.deleteTaskMutex.RLock()
+	defer fake.deleteTaskMutex.RUnlock()
+	fake.desireLRPMutex.RLock()
+	defer fake.desireLRPMutex.RUnlock()
+	fake.desireTaskMutex.RLock()
+	defer fake.desireTaskMutex.RUnlock()
+	fake.desiredLRPByProcessGuidMutex.RLock()
+	defer fake.desiredLRPByProcessGuidMutex.RUnlock()
+	fake.desiredLRPRoutingInfosMutex.RLock()
+	defer fake.desiredLRPRoutingInfosMutex.RUnlock()
+	fake.desiredLRPSchedulingInfoByProcessGuidMutex.RLock()
+	defer fake.desiredLRPSchedulingInfoByProcessGuidMutex.RUnlock()
+	fake.desiredLRPSchedulingInfosMutex.RLock()
+	defer fake.desiredLRPSchedulingInfosMutex.RUnlock()
+	fake.desiredLRPsMutex.RLock()
+	defer fake.desiredLRPsMutex.RUnlock()
+	fake.encryptionKeyLabelMutex.RLock()
+	defer fake.encryptionKeyLabelMutex.RUnlock()
+	fake.evacuateActualLRPMutex.RLock()
+	defer fake.evacuateActualLRPMutex.RUnlock()
+	fake.failActualLRPMutex.RLock()
+	defer fake.failActualLRPMutex.RUnlock()
+	fake.failTaskMutex.RLock()
+	defer fake.failTaskMutex.RUnlock()
+	fake.freshDomainsMutex.RLock()
+	defer fake.freshDomainsMutex.RUnlock()
+	fake.performBBSHealthCheckMutex.RLock()
+	defer fake.performBBSHealthCheckMutex.RUnlock()
+	fake.performEncryptionMutex.RLock()
+	defer fake.performEncryptionMutex.RUnlock()
+	fake.promoteSuspectActualLRPMutex.RLock()
+	defer fake.promoteSuspectActualLRPMutex.RUnlock()
+	fake.rejectTaskMutex.RLock()
+	defer fake.rejectTaskMutex.RUnlock()
+	fake.removeActualLRPMutex.RLock()
+	defer fake.removeActualLRPMutex.RUnlock()
+	fake.removeDesiredLRPMutex.RLock()
+	defer fake.removeDesiredLRPMutex.RUnlock()
+	fake.removeEvacuatingActualLRPMutex.RLock()
+	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
+	fake.removeSuspectActualLRPMutex.RLock()
+	defer fake.removeSuspectActualLRPMutex.RUnlock()
+	fake.resolvingTaskMutex.RLock()
+	defer fake.resolvingTaskMutex.RUnlock()
+	fake.setEncryptionKeyLabelMutex.RLock()
+	defer fake.setEncryptionKeyLabelMutex.RUnlock()
+	fake.setVersionMutex.RLock()
+	defer fake.setVersionMutex.RUnlock()
+	fake.startActualLRPMutex.RLock()
+	defer fake.startActualLRPMutex.RUnlock()
+	fake.startTaskMutex.RLock()
+	defer fake.startTaskMutex.RUnlock()
+	fake.taskByGuidMutex.RLock()
+	defer fake.taskByGuidMutex.RUnlock()
+	fake.tasksMutex.RLock()
+	defer fake.tasksMutex.RUnlock()
+	fake.unclaimActualLRPMutex.RLock()
+	defer fake.unclaimActualLRPMutex.RUnlock()
+	fake.updateDesiredLRPMutex.RLock()
+	defer fake.updateDesiredLRPMutex.RUnlock()
+	fake.upsertDomainMutex.RLock()
+	defer fake.upsertDomainMutex.RUnlock()
+	fake.versionMutex.RLock()
+	defer fake.versionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
