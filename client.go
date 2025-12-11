@@ -140,6 +140,9 @@ type ExternalActualLRPClient interface {
 	// Returns all ActualLRPs matching the given ActualLRPFilter
 	ActualLRPs(lager.Logger, string, models.ActualLRPFilter) ([]*models.ActualLRP, error)
 
+	// Returns all ActualLRPs matching the given process GUIDs
+	ActualLRPsByProcessGuids(logger lager.Logger, traceID string, processGuids []string) ([]*models.ActualLRP, error)
+
 	// Returns all ActualLRPGroups matching the given ActualLRPFilter
 	//lint:ignore SA1019 - deprecated function returning deprecated data
 	// Deprecated: use ActualLRPs instead
@@ -367,6 +370,19 @@ func (c *client) ActualLRPs(logger lager.Logger, traceID string, filter models.A
 	}
 	response := models.ActualLRPsResponse{}
 	err := c.doRequest(logger, traceID, ActualLRPsRoute_r0, nil, nil, &request, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ActualLrps, response.Error.ToError()
+}
+
+func (c *client) ActualLRPsByProcessGuids(logger lager.Logger, traceID string, processGuids []string) ([]*models.ActualLRP, error) {
+	request := models.ActualLRPsByProcessGuidsRequest{
+		ProcessGuids: processGuids,
+	}
+	response := models.ActualLRPsByProcessGuidsResponse{}
+	err := c.doRequest(logger, traceID, ActualLRPsByProcessGuidsRoute_r0, nil, nil, &request, &response)
 	if err != nil {
 		return nil, err
 	}

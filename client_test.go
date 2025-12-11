@@ -418,6 +418,149 @@ var _ = Describe("Client", func() {
 
 	})
 
+	Context("ActualLRPsByProcessGuids", func() {
+		var (
+			processGuids []string
+			actualLRPs   []*models.ActualLRP
+		)
+
+		BeforeEach(func() {
+			processGuids = []string{"process-guid-1", "process-guid-2"}
+			actualLRPs = []*models.ActualLRP{
+				{
+					ActualLRPKey: models.ActualLRPKey{
+						ProcessGuid: "process-guid-1",
+						Index:       0,
+						Domain:      "domain-1",
+					},
+					State: models.ActualLRPStateRunning,
+				},
+				{
+					ActualLRPKey: models.ActualLRPKey{
+						ProcessGuid: "process-guid-2",
+						Index:       1,
+						Domain:      "domain-2",
+					},
+					State: models.ActualLRPStateRunning,
+				},
+			}
+		})
+
+		Context("when the server responds successfully", func() {
+			JustBeforeEach(func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
+						ghttp.VerifyProtoRepresenting(&models.ActualLRPsByProcessGuidsRequest{
+							ProcessGuids: processGuids,
+						}),
+						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
+							ActualLrps: actualLRPs,
+							Error:      nil,
+						}),
+					),
+				)
+			})
+
+			It("returns the actual lrps for the given process GUIDs", func() {
+				result, err := client.ActualLRPsByProcessGuids(logger, "some-trace-id", processGuids)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(Equal(actualLRPs))
+			})
+		})
+
+		Context("when the server responds with an empty list", func() {
+			JustBeforeEach(func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
+						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
+							ActualLrps: []*models.ActualLRP{},
+							Error:      nil,
+						}),
+					),
+				)
+			})
+
+			It("returns an empty list", func() {
+				result, err := client.ActualLRPsByProcessGuids(logger, "some-trace-id", processGuids)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(BeEmpty())
+			})
+		})
+
+		Context("when the server responds with a 500", func() {
+			JustBeforeEach(func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
+						ghttp.RespondWith(500, nil),
+					),
+				)
+			})
+
+			It("returns the error", func() {
+				_, err := client.ActualLRPsByProcessGuids(logger, "some-trace-id", processGuids)
+				Expect(err).To(HaveOccurred())
+				responseError := err.(*models.Error)
+				Expect(responseError.Type).To(Equal(models.Error_InvalidResponse))
+			})
+		})
+
+		Context("when the server responds with an error in the response", func() {
+			JustBeforeEach(func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
+						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
+							ActualLrps: []*models.ActualLRP{},
+							Error:      models.NewError(models.Error_UnknownError, "some error"),
+						}),
+					),
+				)
+			})
+
+			It("returns the error", func() {
+				_, err := client.ActualLRPsByProcessGuids(logger, "some-trace-id", processGuids)
+				Expect(err).To(HaveOccurred())
+				responseError := err.(*models.Error)
+				Expect(responseError.Type).To(Equal(models.Error_UnknownError))
+			})
+		})
+
+		Context("when processGuids is empty", func() {
+			BeforeEach(func() {
+				processGuids = []string{}
+			})
+
+			JustBeforeEach(func() {
+				bbsServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
+						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
+						ghttp.VerifyProtoRepresenting(&models.ActualLRPsByProcessGuidsRequest{
+							ProcessGuids: []string{},
+						}),
+						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
+							ActualLrps: []*models.ActualLRP{},
+							Error:      nil,
+						}),
+					),
+				)
+			})
+
+			It("sends an empty process GUIDs list", func() {
+				result, err := client.ActualLRPsByProcessGuids(logger, "some-trace-id", processGuids)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).To(BeEmpty())
+			})
+		})
+	})
+
 	Context("when subscribing to an event stream that fails", func() {
 		JustBeforeEach(func() {
 			bbsServer.HTTPTestServer.Listener.Close()
