@@ -105,7 +105,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 			"process_guid = ?", processGuid,
 		)
 
-		desiredLRP, err = db.fetchDesiredLRP(ctx, logger, row, tx)
+		beforeDesiredLRP, originalRunInfo, err = db.fetchDesiredLRP(ctx, logger, row, tx)
 		return err
 	})
 
@@ -300,13 +300,14 @@ func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, proc
 	defer logger.Info("complete")
 
 	var beforeDesiredLRP *models.DesiredLRP
+	var originalRunInfo *models.DesiredLRPRunInfo
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
 		row := db.one(ctx, logger, tx, desiredLRPsTable,
 			desiredLRPColumns, helpers.LockRow,
 			"process_guid = ?", processGuid,
 		)
-		beforeDesiredLRP, err = db.fetchDesiredLRP(ctx, logger, row, tx)
+		beforeDesiredLRP, originalRunInfo, err = db.fetchDesiredLRP(ctx, logger, row, tx)
 
 		if err != nil {
 			logger.Error("failed-lock-desired", err)
@@ -337,6 +338,24 @@ func (db *SQLDB) UpdateDesiredLRP(ctx context.Context, logger lager.Logger, proc
 				return err
 			}
 			updateAttributes["metric_tags"] = encodedData
+		}
+
+		if update.ImageUsernameExists() || update.ImagePasswordExists() {
+			runInfo := *originalRunInfo
+
+			if update.ImageUsernameExists() {
+				runInfo.ImageUsername = update.GetImageUsername()
+			}
+			if update.ImagePasswordExists() {
+				runInfo.ImagePassword = update.GetImagePassword()
+			}
+
+			updatedRunInfoData, err := db.serializeModel(logger, &runInfo)
+			if err != nil {
+				logger.Error("failed-serializing-run-info", err)
+				return err
+			}
+			updateAttributes["run_info"] = updatedRunInfoData
 		}
 
 		_, err = db.update(ctx, logger, tx, desiredLRPsTable, updateAttributes, `process_guid = ?`, processGuid)
@@ -561,28 +580,29 @@ func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows
 	return lrps, nil
 }
 
-func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.DesiredLRP, error) {
-	lrp, guid, err := db.fetchDesiredLRPInternal(logger, scanner)
+
+func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.DesiredLRP, *models.DesiredLRPRunInfo, error) {
+	lrp, runInfo, guid, err := db.fetchDesiredLRPInternalWithRunInfo(logger, scanner)
 	if err == models.ErrDeserialize {
 		deleteErr := db.deleteInvalidLRPs(ctx, logger, queryable, guid)
 		if deleteErr != nil {
 			logger.Error("failed-to-delete-invalid-lrp", deleteErr, lager.Data{"guid": guid})
 		}
 	}
-	return lrp, err
+	return lrp, runInfo, err
 }
 
-func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.RowScanner) (*models.DesiredLRP, string, error) {
+func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.RowScanner) (*models.DesiredLRP, *models.DesiredLRPRunInfo, string, error) {
 	var runInfoData, metricTagsData []byte
 	schedulingInfo, err := db.fetchDesiredLRPSchedulingInfoAndMore(logger, scanner, &runInfoData, &metricTagsData)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, "", err
 	}
 
 	var runInfo models.DesiredLRPRunInfo
 	err = db.deserializeModel(logger, runInfoData, &runInfo)
 	if err != nil {
-		return nil, schedulingInfo.ProcessGuid, models.ErrDeserialize
+		return nil, nil, schedulingInfo.ProcessGuid, models.ErrDeserialize
 	}
 	// dedup the ports
 	runInfo.Ports = dedupSlice(runInfo.Ports)
@@ -591,15 +611,15 @@ func (db *SQLDB) fetchDesiredLRPInternal(logger lager.Logger, scanner helpers.Ro
 	encodedData, err := db.encoder.Decode(metricTagsData)
 	if err != nil {
 		logger.Error("failed-decrypting-metric-tags", err)
-		return nil, "", err
+		return nil, nil, "", err
 	}
 	err = json.Unmarshal(encodedData, &metricTags)
 	if err != nil {
 		logger.Error("failed-parsing-metric-tags", err)
-		return nil, "", err
+		return nil, nil, "", err
 	}
 	desiredLRP := models.NewDesiredLRP(*schedulingInfo, runInfo, metricTags)
-	return &desiredLRP, "", nil
+	return &desiredLRP, &runInfo, "", nil
 }
 
 func (db *SQLDB) deleteInvalidLRPs(ctx context.Context, logger lager.Logger, queryable helpers.Queryable, guids ...string) error {

@@ -427,6 +427,16 @@ func (desired *DesiredLRPUpdate) Validate() error {
 		validationError = validationError.Append(err)
 	}
 
+	// Validate that image_username and image_password are provided together
+	usernameExists := desired.ImageUsernameExists()
+	passwordExists := desired.ImagePasswordExists()
+	if usernameExists && !passwordExists {
+		validationError = validationError.Append(ErrInvalidField{"image_password"})
+	}
+	if !usernameExists && passwordExists {
+		validationError = validationError.Append(ErrInvalidField{"image_username"})
+	}
+
 	return validationError.ToError()
 }
 
@@ -490,6 +500,46 @@ func (desired DesiredLRPUpdate) IsMetricTagsUpdated(existingTags map[string]*Met
 			return true
 		}
 	}
+	return false
+}
+
+func (desired *DesiredLRPUpdate) SetImageUsername(imageUsername string) {
+	desired.OptionalImageUsername = &DesiredLRPUpdate_ImageUsername{
+		ImageUsername: imageUsername,
+	}
+}
+
+func (desired DesiredLRPUpdate) ImageUsernameExists() bool {
+	_, ok := desired.GetOptionalImageUsername().(*DesiredLRPUpdate_ImageUsername)
+	return ok
+}
+
+func (desired *DesiredLRPUpdate) SetImagePassword(imagePassword string) {
+	desired.OptionalImagePassword = &DesiredLRPUpdate_ImagePassword{
+		ImagePassword: imagePassword,
+	}
+}
+
+func (desired DesiredLRPUpdate) ImagePasswordExists() bool {
+	_, ok := desired.GetOptionalImagePassword().(*DesiredLRPUpdate_ImagePassword)
+	return ok
+}
+
+func (desired DesiredLRPUpdate) IsImageCredentialsUpdated(existingLRP *DesiredLRP) bool {
+	updateUsername := desired.ImageUsernameExists()
+	updatePassword := desired.ImagePasswordExists()
+
+	if !updateUsername && !updatePassword {
+		return false
+	}
+
+	existingUsername := existingLRP.GetImageUsername()
+	existingPassword := existingLRP.GetImagePassword()
+
+	if updateUsername && updatePassword {
+		return desired.GetImageUsername() != existingUsername || desired.GetImagePassword() != existingPassword
+	}
+
 	return false
 }
 

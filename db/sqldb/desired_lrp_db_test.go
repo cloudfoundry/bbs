@@ -596,6 +596,41 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 		})
 
+		Context("when updating image credentials", func() {
+			BeforeEach(func() {
+				expectedDesiredLRP.ImageUsername = "original-username"
+				expectedDesiredLRP.ImagePassword = "original-password"
+			})
+
+			It("updates both image username and password in run_info and maintains other fields", func() {
+				originalCreatedAt := expectedDesiredLRP.CreatedAt
+				originalAction := expectedDesiredLRP.Action
+				originalMonitor := expectedDesiredLRP.Monitor
+				originalStartTimeout := expectedDesiredLRP.StartTimeout
+				update = &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username")
+				update.SetImagePassword("new-password")
+
+				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
+				Expect(err).NotTo(HaveOccurred())
+
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(desiredLRP.ImageUsername).To(Equal("new-username"))
+				Expect(desiredLRP.ImagePassword).To(Equal("new-password"))
+				expectedDesiredLRP.ImageUsername = "new-username"
+				expectedDesiredLRP.ImagePassword = "new-password"
+				expectedDesiredLRP.ModificationTag.Increment()
+
+				Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
+				Expect(desiredLRP.CreatedAt).To(Equal(originalCreatedAt))
+				Expect(desiredLRP.Action).To(Equal(originalAction))
+				Expect(desiredLRP.Monitor).To(Equal(originalMonitor))
+				Expect(desiredLRP.StartTimeout).To(Equal(originalStartTimeout))
+			})
+		})
+
 		Context("when routes param is invalid", func() {
 			It("returns a bad request error", func() {
 				routeContent := []byte("bad json")
