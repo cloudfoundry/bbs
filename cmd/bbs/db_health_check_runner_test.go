@@ -34,16 +34,18 @@ var _ = Describe("DBHealthCheckRunner", func() {
 		fakeDB = &dbfakes.FakeBBSHealthCheckDB{}
 		readyChan = make(chan struct{})
 		close(readyChan)
-		runner = bbs.NewDBHealthCheckRunner(fakeLogger, fakeDB, fakeClock, 4, 100*time.Millisecond, 1, readyChan)
+		runner = bbs.NewDBHealthCheckRunner(fakeLogger, fakeDB, fakeClock, 4, 100*time.Millisecond, 200*time.Millisecond, readyChan)
 	})
 	JustBeforeEach(func() {
 		process = ginkgomon.Invoke(runner)
 	})
 	AfterEach(func() {
 		ginkgomon.Kill(process)
+		waitCh := process.Wait()
+		Eventually(waitCh).Should(Receive())
 	})
 
-	Context("when using empty values for healthcheck settings", func() {
+	Context("when using empty values for health check settings", func() {
 		BeforeEach(func() {
 			runner = bbs.NewDBHealthCheckRunner(fakeLogger, fakeDB, fakeClock, 0, 0, 0, readyChan)
 		})
@@ -63,9 +65,9 @@ var _ = Describe("DBHealthCheckRunner", func() {
 
 	It("queries PerformBBSHealthCheck() every interval", func() {
 		callCount := fakeDB.PerformBBSHealthCheckCallCount()
-		fakeClock.IncrementBySeconds(2)
+		fakeClock.Increment(200 * time.Millisecond)
 		Eventually(fakeDB.PerformBBSHealthCheckCallCount).Should(BeNumerically(">", callCount))
-		fakeClock.IncrementBySeconds(2)
+		fakeClock.Increment(200 * time.Millisecond)
 		Eventually(fakeDB.PerformBBSHealthCheckCallCount).Should(BeNumerically(">", callCount+1))
 	})
 	Context("when signaled", func() {
@@ -76,7 +78,36 @@ var _ = Describe("DBHealthCheckRunner", func() {
 				err := <-waitCh
 				g.Expect(err).ToNot(HaveOccurred())
 			}).Should(Succeed())
-			Consistently(fakeLogger).ShouldNot(gbytes.Say("catastrophic-database-failure-detected"))
+			Consistently(fakeLogger).ShouldNot(gbytes.Say("database-failure-detected-restarting-bbs"))
+		})
+	})
+	Context("and the health check is hanging up to the timeout", func() {
+		BeforeEach(func() {
+			runner.HealthCheckTimeout = 200 * time.Millisecond
+			runner.HealthCheckInterval = 100 * time.Millisecond
+			fakeDB.PerformBBSHealthCheckCalls(func(ctx context.Context, logger lager.Logger, t time.Time) error {
+				time.Sleep(200 * time.Second)
+				return nil
+			})
+		})
+		It("only runs one health check at a time", func() {
+			waitCh := process.Wait()
+			fakeClock.Increment(100 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
+			fakeClock.Increment(100 * time.Millisecond)
+			Consistently(waitCh, "300ms").ShouldNot(Receive())
+			Expect(fakeDB.PerformBBSHealthCheckCallCount()).To(Equal(1))
+		})
+		Context("and it is signalled", func() {
+			It("processes the signal immediately", func() {
+				ginkgomon.Interrupt(process)
+				waitCh := process.Wait()
+				Eventually(func(g Gomega) {
+					err := <-waitCh
+					g.Expect(err).ToNot(HaveOccurred())
+				}, "100ms").Should(Succeed())
+
+			})
 		})
 	})
 	Context("ExecuteTimedHealthCheckWithRetries()", func() {
@@ -89,7 +120,7 @@ var _ = Describe("DBHealthCheckRunner", func() {
 					fakeClock.IncrementBySeconds(2)
 					waitCh := process.Wait()
 					Eventually(waitCh).Should(Receive(MatchError("meow\nmeow\nmeow\nmeow")))
-					Eventually(fakeLogger).Should(gbytes.Say("catastrophic-database-failure-detected"))
+					Eventually(fakeLogger).Should(gbytes.Say("database-failure-detected-restarting-bbs"))
 					Expect(fakeDB.PerformBBSHealthCheckCallCount()).To(Equal(4))
 
 				})
