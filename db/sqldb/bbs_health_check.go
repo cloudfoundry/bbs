@@ -17,7 +17,7 @@ func (db *SQLDB) PerformBBSHealthCheck(ctx context.Context, logger lager.Logger,
 	logger.Debug("upserting-time", lager.Data{"time": t})
 	_, err := db.upsert(ctx, logger, db.db, "bbs_health_check", helpers.SQLAttributes{"id": 1, "time": t.UnixNano()}, "id = ?", 1)
 	if err != nil {
-		return fmt.Errorf("failed upserting healthcheck time: %s", err)
+		return fmt.Errorf("failed upserting health check time: %s", err)
 	}
 
 	logger.Debug("retrieving-upserted-time")
@@ -25,7 +25,7 @@ func (db *SQLDB) PerformBBSHealthCheck(ctx context.Context, logger lager.Logger,
 	var insertedTime int64
 	err = scanner.Scan(&insertedTime)
 	if err != nil {
-		return fmt.Errorf("failed querying for healthcheck time: %s", err)
+		return fmt.Errorf("failed querying for health check time: %s", err)
 	}
 	logger.Debug("upserted-and-retrieved-time")
 	return nil

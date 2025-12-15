@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"code.cloudfoundry.org/bbs/db"
@@ -16,6 +17,7 @@ type DBHealthCheckRunner struct {
 	logger                      lager.Logger
 	sqlDB                       db.BBSHealthCheckDB
 	clock                       clock.Clock
+	lock                        sync.Mutex
 	migrationsDone              chan struct{}
 	HealthCheckFailureThreshold int
 	HealthCheckTimeout          time.Duration
@@ -40,6 +42,7 @@ func NewDBHealthCheckRunner(logger lager.Logger, sqlDB db.BBSHealthCheckDB, cloc
 		HealthCheckTimeout:          timeout,
 		HealthCheckInterval:         interval,
 		migrationsDone:              migrationsDone,
+		lock:                        sync.Mutex{},
 	}
 }
 
@@ -55,42 +58,45 @@ func (runner *DBHealthCheckRunner) Run(signals <-chan os.Signal, ready chan<- st
 	runner.logger.Info("starting")
 	defer runner.logger.Info("exiting")
 	ticker := runner.clock.NewTicker(runner.HealthCheckInterval)
+	healthCheckResults := make(chan error)
 	for {
 		runner.logger.Debug("reentering-run-loop")
 		select {
-		case <-ticker.C():
-			runner.logger.Debug("executing-health-check")
-			err := runner.ExecuteTimedHealthCheckWithRetries()
+		case err := <-healthCheckResults:
 			if err != nil {
-				runner.logger.Error("catastrophic-database-failure-detected", err)
+				runner.logger.Error("database-failure-detected-restarting-bbs", err)
 				return err
 			}
 			runner.logger.Debug("health-check-succeeded")
-
 		case <-signals:
 			runner.logger.Debug("exiting-due-to-signal")
 			return nil
+		case <-ticker.C():
+			runner.logger.Debug("executing-health-check")
+			go runner.ExecuteTimedHealthCheckWithRetries(healthCheckResults)
 		}
 	}
 }
 
-func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheckWithRetries() error {
+func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheckWithRetries(resultChan chan error) {
+	runner.lock.Lock()
+	defer runner.lock.Unlock()
 	var errs []error
-	var i int
-	for i = range runner.HealthCheckFailureThreshold {
+	for i := 1; i <= runner.HealthCheckFailureThreshold; i++ {
 		logger := runner.logger.WithData(lager.Data{"attempt": i})
+		logger.Debug("executing-timed-health-check")
 		err := runner.ExecuteTimedHealthCheck()
 		if err != nil {
-			logger.Error("failed-healthcheck", err)
+			logger.Error("failed-health-check", err)
 			errs = append(errs, err)
 		} else {
-			logger.Debug("succeeded-healthcheck")
-			return nil
+			resultChan <- nil
+			return
 		}
 	}
 	finalErr := errors.Join(errs...)
-	runner.logger.Error("failed-healthcheck-attempts-exceeded", finalErr, lager.Data{"attempts": i, "max-attempts": runner.HealthCheckFailureThreshold})
-	return finalErr
+	runner.logger.Error("health-check-attempts-exceeded", finalErr, lager.Data{"max-attempts": runner.HealthCheckFailureThreshold})
+	resultChan <- finalErr
 }
 
 func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheck() error {
@@ -101,7 +107,6 @@ func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheck() error {
 	select {
 	case err := <-errChan:
 		if err == nil {
-			runner.logger.Debug("health-check-succeeded")
 			return nil
 		} else {
 			return err
@@ -116,5 +121,4 @@ func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheck() error {
 func (runner *DBHealthCheckRunner) runDBHealthCheck(errChan chan error) {
 	err := runner.sqlDB.PerformBBSHealthCheck(context.Background(), runner.logger, time.Now())
 	errChan <- err
-	runner.logger.Debug("runDBHealthCheck-complete")
 }
