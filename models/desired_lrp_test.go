@@ -1399,6 +1399,28 @@ var _ = Describe("DesiredLRPUpdate", func() {
 				Expect(desiredLRPUpdate.Validate()).To(Succeed())
 			})
 		})
+
+		Context("image credentials", func() {
+			It("requires both username and password when updating credentials", func() {
+				desiredLRPUpdate.SetImageUsername("username")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "image_password")
+
+				desiredLRPUpdate = models.DesiredLRPUpdate{}
+				desiredLRPUpdate.SetInstances(2)
+				desiredLRPUpdate.SetImagePassword("password")
+				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "image_username")
+			})
+
+			It("is valid when both username and password are provided", func() {
+				desiredLRPUpdate.SetImageUsername("username")
+				desiredLRPUpdate.SetImagePassword("password")
+				Expect(desiredLRPUpdate.Validate()).To(Succeed())
+			})
+
+			It("is valid when neither username nor password are provided", func() {
+				Expect(desiredLRPUpdate.Validate()).To(Succeed())
+			})
+		})
 	})
 
 	Describe("serialization", func() {
@@ -1468,6 +1490,85 @@ var _ = Describe("DesiredLRPUpdate", func() {
 				existingTags := map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}
 				update := &models.DesiredLRPUpdate{MetricTags: map[string]*models.MetricTagValue{"some-tag": {Static: "some-tag-value"}}}
 				Expect(update.IsMetricTagsUpdated(existingTags)).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("IsImageCredentialsUpdated", func() {
+		var existingLRP *models.DesiredLRP
+
+		BeforeEach(func() {
+			existingLRP = model_helpers.NewValidDesiredLRP("some-guid")
+			existingLRP.ImageUsername = "existing-username"
+			existingLRP.ImagePassword = "existing-password"
+		})
+
+		Context("when the update does not contain image credentials", func() {
+			It("returns false", func() {
+				update := &models.DesiredLRPUpdate{}
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeFalse())
+			})
+		})
+
+		Context("when only username is provided", func() {
+			It("returns false", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeFalse())
+			})
+		})
+
+		Context("when only password is provided", func() {
+			It("returns false", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImagePassword("new-password")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeFalse())
+			})
+		})
+
+		Context("when both username and password are provided and differ", func() {
+			It("returns true when username differs", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username")
+				update.SetImagePassword("existing-password")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeTrue())
+			})
+
+			It("returns true when password differs", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImageUsername("existing-username")
+				update.SetImagePassword("new-password")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeTrue())
+			})
+
+			It("returns true when both differ", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username")
+				update.SetImagePassword("new-password")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeTrue())
+			})
+		})
+
+		Context("when both username and password are provided and are equal", func() {
+			It("returns false", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImageUsername("existing-username")
+				update.SetImagePassword("existing-password")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeFalse())
+			})
+		})
+
+		Context("when existing LRP has no credentials", func() {
+			BeforeEach(func() {
+				existingLRP.ImageUsername = ""
+				existingLRP.ImagePassword = ""
+			})
+
+			It("returns true when new credentials are provided", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username")
+				update.SetImagePassword("new-password")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeTrue())
 			})
 		})
 	})
