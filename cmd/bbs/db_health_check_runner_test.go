@@ -32,12 +32,14 @@ var _ = Describe("DBHealthCheckRunner", func() {
 		fakeClock = fakeclock.NewFakeClock(time.Now())
 		fakeLogger = lagertest.NewTestLogger("test")
 		fakeDB = &dbfakes.FakeBBSHealthCheckDB{}
+		fakeDB.PerformBBSHealthCheckReturns(nil)
 		readyChan = make(chan struct{})
 		close(readyChan)
 		runner = bbs.NewDBHealthCheckRunner(fakeLogger, fakeDB, fakeClock, 4, 100*time.Millisecond, 200*time.Millisecond, readyChan)
 	})
 	JustBeforeEach(func() {
 		process = ginkgomon.Invoke(runner)
+		Eventually(fakeLogger).Should(gbytes.Say("reentering-run-loop"))
 	})
 	AfterEach(func() {
 		ginkgomon.Kill(process)
@@ -65,9 +67,10 @@ var _ = Describe("DBHealthCheckRunner", func() {
 
 	It("queries PerformBBSHealthCheck() every interval", func() {
 		callCount := fakeDB.PerformBBSHealthCheckCallCount()
-		fakeClock.Increment(200 * time.Millisecond)
+		fakeClock.Increment(201 * time.Millisecond)
 		Eventually(fakeDB.PerformBBSHealthCheckCallCount).Should(BeNumerically(">", callCount))
-		fakeClock.Increment(200 * time.Millisecond)
+		Eventually(fakeLogger).Should(gbytes.Say("health-check-succeeded"))
+		fakeClock.Increment(201 * time.Millisecond)
 		Eventually(fakeDB.PerformBBSHealthCheckCallCount).Should(BeNumerically(">", callCount+1))
 	})
 	Context("when signaled", func() {

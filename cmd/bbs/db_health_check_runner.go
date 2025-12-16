@@ -18,6 +18,7 @@ type DBHealthCheckRunner struct {
 	sqlDB                       db.BBSHealthCheckDB
 	clock                       clock.Clock
 	lock                        sync.Mutex
+	isRunning                   bool
 	migrationsDone              chan struct{}
 	HealthCheckFailureThreshold int
 	HealthCheckTimeout          time.Duration
@@ -63,6 +64,9 @@ func (runner *DBHealthCheckRunner) Run(signals <-chan os.Signal, ready chan<- st
 		runner.logger.Debug("reentering-run-loop")
 		select {
 		case err := <-healthCheckResults:
+			runner.lock.Lock()
+			runner.isRunning = false
+			runner.lock.Unlock()
 			if err != nil {
 				runner.logger.Error("database-failure-detected-restarting-bbs", err)
 				return err
@@ -72,15 +76,18 @@ func (runner *DBHealthCheckRunner) Run(signals <-chan os.Signal, ready chan<- st
 			runner.logger.Debug("exiting-due-to-signal")
 			return nil
 		case <-ticker.C():
-			runner.logger.Debug("executing-health-check")
-			go runner.ExecuteTimedHealthCheckWithRetries(healthCheckResults)
+			runner.lock.Lock()
+			if !runner.isRunning {
+				runner.isRunning = true
+				runner.logger.Debug("executing-health-check")
+				go runner.ExecuteTimedHealthCheckWithRetries(healthCheckResults)
+			}
+			runner.lock.Unlock()
 		}
 	}
 }
 
 func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheckWithRetries(resultChan chan error) {
-	runner.lock.Lock()
-	defer runner.lock.Unlock()
 	var errs []error
 	for i := 1; i <= runner.HealthCheckFailureThreshold; i++ {
 		logger := runner.logger.WithData(lager.Data{"attempt": i})
