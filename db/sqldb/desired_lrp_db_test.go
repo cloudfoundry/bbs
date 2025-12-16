@@ -603,10 +603,9 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("updates both image username and password in run_info and maintains other fields", func() {
-				originalCreatedAt := expectedDesiredLRP.CreatedAt
 				originalAction := expectedDesiredLRP.Action
 				originalMonitor := expectedDesiredLRP.Monitor
-				originalStartTimeout := expectedDesiredLRP.StartTimeout
+				originalStartTimeout := expectedDesiredLRP.StartTimeoutMs
 				update = &models.DesiredLRPUpdate{}
 				update.SetImageUsername("new-username")
 				update.SetImagePassword("new-password")
@@ -624,10 +623,9 @@ var _ = Describe("DesiredLRPDB", func() {
 				expectedDesiredLRP.ModificationTag.Increment()
 
 				Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
-				Expect(desiredLRP.CreatedAt).To(Equal(originalCreatedAt))
 				Expect(desiredLRP.Action).To(Equal(originalAction))
 				Expect(desiredLRP.Monitor).To(Equal(originalMonitor))
-				Expect(desiredLRP.StartTimeout).To(Equal(originalStartTimeout))
+				Expect(desiredLRP.StartTimeoutMs).To(Equal(originalStartTimeout))
 			})
 		})
 

@@ -97,6 +97,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 	defer logger.Debug("complete")
 
 	var desiredLRP *models.DesiredLRP
+	var beforeDesiredLRP *models.DesiredLRP
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
@@ -105,7 +106,8 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 			"process_guid = ?", processGuid,
 		)
 
-		beforeDesiredLRP, originalRunInfo, err = db.fetchDesiredLRP(ctx, logger, row, tx)
+		beforeDesiredLRP, _, err = db.fetchDesiredLRP(ctx, logger, row, tx)
+		desiredLRP = beforeDesiredLRP
 		return err
 	})
 
@@ -555,7 +557,7 @@ func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows
 	guids := []string{}
 	lrps := []*models.DesiredLRP{}
 	for rows.Next() {
-		lrp, guid, err := db.fetchDesiredLRPInternal(logger, rows)
+		lrp, _, guid, err := db.fetchDesiredLRPInternal(logger, rows)
 		if err == models.ErrDeserialize {
 			guids = append(guids, guid)
 		}
@@ -582,7 +584,7 @@ func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows
 
 
 func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.DesiredLRP, *models.DesiredLRPRunInfo, error) {
-	lrp, runInfo, guid, err := db.fetchDesiredLRPInternalWithRunInfo(logger, scanner)
+	lrp, runInfo, guid, err := db.fetchDesiredLRPInternal(logger, scanner)
 	if err == models.ErrDeserialize {
 		deleteErr := db.deleteInvalidLRPs(ctx, logger, queryable, guid)
 		if deleteErr != nil {
