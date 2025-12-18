@@ -298,8 +298,67 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 		return keepContainer, err
 	}
 
+	updateStrategy, err := h.desiredLRPDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, guid)
+	if err != nil {
+		if err == models.ErrResourceNotFound {
+			// the desired LRP has been removed, we can remove the evacuating LRP and delete the container
+			removedEvacuating, err := h.removeEvacuating(ctx, logger, targetActualLRP)
+			newLRPs = eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
+			keepContainer := err != nil
+			return keepContainer, err
+		}
+		// database error, tell Rep to keep the container
+		logger.Error("failed-to-get-the-update-strategy", err)
+		return true, err
+	}
+
+	if updateStrategy == models.DesiredLRP_UpdateStrategyRecreate {
+		// With recreate update strategy we should always tell Rep to delete the container
+
+		if targetActualLRP == nil {
+			// Rep still has the LRP that is removed, tell Rep to delete the container
+			return false, nil
+		}
+
+		if targetActualLRP.Presence == models.ActualLRP_Evacuating {
+			// there should not be an evacuating LRP for recreate update strategy
+			removedEvacuating, err := h.removeEvacuating(ctx, logger, targetActualLRP)
+			newLRPs = eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
+			keepContainer := err != nil
+			return keepContainer, err
+		}
+
+		if targetActualLRP.Presence == models.ActualLRP_Suspect {
+			// remove the suspect LRP
+			_, err := h.suspectLRPDB.RemoveSuspectActualLRP(ctx, logger, actualLRPKey)
+			if err != nil {
+				logger.Error("failed-removing-suspect-actual-lrp", err)
+				return true, err
+			}
+			newLRPs = eventCalculator.RecordChange(targetActualLRP, nil, newLRPs)
+			return false, nil
+		}
+
+		if (targetActualLRP.State == models.ActualLRPStateRunning) ||
+			(targetActualLRP.State == models.ActualLRPStateClaimed) {
+			// unclaim the LRP and request auction
+			_, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, false, actualLRPKey)
+			if err != nil {
+				logger.Error("failed-to-unclaim-actual-lrp", err)
+				return true, err
+			}
+			newLRPs = eventCalculator.RecordChange(targetActualLRP, after, newLRPs)
+			h.requestAuction(ctx, logger, actualLRPKey)
+			return false, nil
+		}
+
+		// delete the container
+		return false, nil
+	}
+
 	if targetActualLRP == nil || targetActualLRP.Presence == models.ActualLRP_Evacuating {
 		// Create a new Evacuating LRP or update an existing one
+		// The replacement LRP is either already requested or converger will request it based on instance counts.
 		evacuating := findWithPresence(actualLRPs, models.ActualLRP_Evacuating)
 
 		if evacuating != nil && !evacuating.Equal(targetActualLRP) {
@@ -461,4 +520,11 @@ func (h *EvacuationController) removeEvacuating(ctx context.Context, logger lage
 	}
 
 	return nil, err
+}
+
+func (h *EvacuationController) removeEvacuatingWithRecordChange(ctx context.Context, logger lager.Logger, targetActualLRP *models.ActualLRP, eventCalculator calculator.ActualLRPEventCalculator, newLRPs []*models.ActualLRP) (bool, error) {
+	removedEvacuating, err := h.removeEvacuating(ctx, logger, targetActualLRP)
+	eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
+	keepContainer := err != nil
+	return keepContainer, err
 }

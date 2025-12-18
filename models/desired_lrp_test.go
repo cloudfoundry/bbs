@@ -333,7 +333,8 @@ var _ = Describe("DesiredLRP", func() {
 	"log_rate_limit": {
 	  "bytes_per_second": 2048
 	},
-	"volume_mounted_files": null
+	"volume_mounted_files": null,
+	"update_strategy": 0
   }`
 
 	BeforeEach(func() {
