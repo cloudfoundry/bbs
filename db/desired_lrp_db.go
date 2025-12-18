@@ -15,6 +15,7 @@ type DesiredLRPDB interface {
 
 	DesiredLRPSchedulingInfos(ctx context.Context, logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRPSchedulingInfo, error)
 	DesiredLRPSchedulingInfoByProcessGuid(ctx context.Context, logger lager.Logger, processGuid string) (*models.DesiredLRPSchedulingInfo, error)
+	DesiredLRPUpdateStrategyByProcessGuid(ctx context.Context, logger lager.Logger, processGuid string) (models.DesiredLRP_UpdateStrategy, error)
 
 	DesiredLRPRoutingInfos(ctx context.Context, logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 
