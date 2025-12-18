@@ -1344,6 +1344,8 @@ var _ = Describe("DesiredLRPUpdate", func() {
 
 	BeforeEach(func() {
 		desiredLRPUpdate.SetInstances(2)
+		desiredLRPUpdate.SetImageUsername("testuser")
+		desiredLRPUpdate.SetImagePassword("testpass")
 		desiredLRPUpdate.Routes = &models.Routes{
 			"foo": &json.RawMessage{'"', 'b', 'a', 'r', '"'},
 		}
@@ -1436,7 +1438,9 @@ var _ = Describe("DesiredLRPUpdate", func() {
 				  "some-tag": {
 				    "static": "some-value"
 				  }
-				}
+				},
+				"image_username": "testuser",
+				"image_password": "testpass"
 			}`
 		})
 
