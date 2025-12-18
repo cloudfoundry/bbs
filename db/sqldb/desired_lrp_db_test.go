@@ -440,6 +440,40 @@ var _ = Describe("DesiredLRPDB", func() {
 		})
 	})
 
+	Describe("DesiredLRPUpdateStrategyByProcessGuid", func() {
+		var desiredLRP *models.DesiredLRP
+
+		BeforeEach(func() {
+			desiredLRP = model_helpers.NewValidDesiredLRP("app-1-d-1")
+		})
+
+		Context("when the update strategy is rolling", func() {
+			BeforeEach(func() {
+				desiredLRP.UpdateStrategy = models.DesiredLRP_UpdateStrategyRolling
+				Expect(sqlDB.DesireLRP(ctx, logger, desiredLRP)).To(Succeed())
+			})
+
+			It("returns the desired lrp update strategy", func() {
+				updateStrategy, err := sqlDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, desiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updateStrategy).To(BeEquivalentTo(models.DesiredLRP_UpdateStrategyRolling))
+			})
+		})
+
+		Context("when the update strategy is recreate", func() {
+			BeforeEach(func() {
+				desiredLRP.UpdateStrategy = models.DesiredLRP_UpdateStrategyRecreate
+				Expect(sqlDB.DesireLRP(ctx, logger, desiredLRP)).To(Succeed())
+			})
+
+			It("returns the desired lrp update strategy", func() {
+				updateStrategy, err := sqlDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, desiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updateStrategy).To(BeEquivalentTo(models.DesiredLRP_UpdateStrategyRecreate))
+			})
+		})
+	})
+
 	Describe("DesiredLRPRoutingInfos", func() {
 		var expectedDesiredLRPRoutingInfos []*models.DesiredLRP
 		var expectedDesiredLRPs []*models.DesiredLRP
