@@ -600,6 +600,7 @@ var _ = Describe("DesiredLRPDB", func() {
 			BeforeEach(func() {
 				expectedDesiredLRP.ImageUsername = "original-username"
 				expectedDesiredLRP.ImagePassword = "original-password"
+				expectedDesiredLRP.cpu_weight = 42
 			})
 
 			It("updates both image username and password in run_info and maintains other fields", func() {
@@ -618,6 +619,7 @@ var _ = Describe("DesiredLRPDB", func() {
 
 				Expect(desiredLRP.ImageUsername).To(Equal("new-username"))
 				Expect(desiredLRP.ImagePassword).To(Equal("new-password"))
+				Expect(desiredLRP.CpuWeight).To(Equal(42))
 				expectedDesiredLRP.ImageUsername = "new-username"
 				expectedDesiredLRP.ImagePassword = "new-password"
 				expectedDesiredLRP.ModificationTag.Increment()
