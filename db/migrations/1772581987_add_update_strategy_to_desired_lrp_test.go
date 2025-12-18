@@ -74,7 +74,7 @@ var _ = Describe("Add Update Strategy to Desired LRPs", func() {
 			query := helpers.RebindForFlavor("select update_strategy from desired_lrps limit 1", flavor)
 			row := rawSQLDB.QueryRow(query)
 			Expect(row.Scan(&fetchedUpdateStrategy)).NotTo(HaveOccurred())
-			Expect(fetchedUpdateStrategy).To(Equal(fmt.Sprintf("%d", models.DesiredLRP_Rolling)))
+			Expect(fetchedUpdateStrategy).To(Equal(fmt.Sprintf("%d", models.DesiredLRP_UpdateStrategyRolling)))
 		})
 
 		Context("when there are desiredLRPs already in the db", func() {
@@ -100,7 +100,7 @@ var _ = Describe("Add Update Strategy to Desired LRPs", func() {
 				query := helpers.RebindForFlavor("select update_strategy from desired_lrps where process_guid = 'meow-guid' limit 1", flavor)
 				row := rawSQLDB.QueryRow(query)
 				Expect(row.Scan(&fetchedUpdateStrategy)).NotTo(HaveOccurred())
-				Expect(fetchedUpdateStrategy).To(Equal(fmt.Sprintf("%d", models.DesiredLRP_Rolling)))
+				Expect(fetchedUpdateStrategy).To(Equal(fmt.Sprintf("%d", models.DesiredLRP_UpdateStrategyRolling)))
 			})
 		})
 

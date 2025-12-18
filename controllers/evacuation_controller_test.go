@@ -768,6 +768,7 @@ var _ = Describe("Evacuation Controller", func() {
 			desiredLRP = model_helpers.NewValidDesiredLRP("the-guid")
 			schedInfo := desiredLRP.DesiredLRPSchedulingInfo()
 			fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(&schedInfo, nil)
+			fakeDesiredLRPDB.DesiredLRPByProcessGuidReturns(desiredLRP, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -776,128 +777,25 @@ var _ = Describe("Evacuation Controller", func() {
 			modelErr = models.ConvertError(err)
 		})
 
-		Context("when the actual LRP instance is already evacuating", func() {
+		Context("when the update stratergy on the desired LRP is rolling", func() {
 			BeforeEach(func() {
-				actualLRPs = []*models.ActualLRP{evacuatingActual}
-				targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
+				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRolling, nil)
 			})
 
-			It("removes the evacuating lrp and does not keep the container", func() {
-				Expect(keepContainer).To(BeFalse())
-				Expect(err).To(BeNil())
-
-				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-				_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
-				Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
-			})
-
-			It("emits events to the hub", func() {
-				Eventually(actualHub.EmitCallCount).Should(Equal(1))
-
-				event := actualHub.EmitArgsForCall(0)
-				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
-				Expect(ok).To(BeTrue())
-
-				//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-				Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
-			})
-
-			It("emits ActualLRPInstanceRemoved events to the hub", func() {
-				Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-
-				event := actualLRPInstanceHub.EmitArgsForCall(0)
-				removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
-				Expect(ok).To(BeTrue())
-
-				Expect(removeEvent.ActualLrp).To(Equal(evacuatingActual))
-			})
-
-			Context("when the evacuating lrp cannot be removed", func() {
+			Context("when the actual LRP instance is already evacuating", func() {
 				BeforeEach(func() {
-					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
+					actualLRPs = []*models.ActualLRP{evacuatingActual}
+					targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
 				})
 
-				It("returns no error and removes the container", func() {
+				It("removes the evacuating lrp and does not keep the container", func() {
 					Expect(keepContainer).To(BeFalse())
 					Expect(err).To(BeNil())
-				})
 
-				It("does not emit any events", func() {
-					Consistently(actualHub.EmitCallCount).Should(Equal(0))
-				})
-
-				It("does not emit any instance events", func() {
-					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
-				})
-			})
-
-			Context("when the DB returns an unrecoverable error", func() {
-				BeforeEach(func() {
-					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.NewUnrecoverableError(nil))
-				})
-
-				It("logs and writes to the exit channel", func() {
-					Expect(modelErr.Type).To(Equal(models.Error_Unrecoverable))
-				})
-
-				It("does not emit any events", func() {
-					Consistently(actualHub.EmitCallCount).Should(Equal(0))
-				})
-
-				It("does not emit any instance events", func() {
-					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
-				})
-			})
-
-			Context("when removing the evacuating lrp fails for a different reason", func() {
-				BeforeEach(func() {
-					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("didnt work"))
-				})
-
-				It("returns an error and keeps the container", func() {
-					Expect(keepContainer).To(BeTrue())
-					Expect(err).NotTo(BeNil())
-					Expect(err.Error()).To(Equal("didnt work"))
-				})
-
-				It("does not emit any events", func() {
-					Consistently(actualHub.EmitCallCount).Should(Equal(0))
-				})
-
-				It("does not emit any instance events", func() {
-					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
-				})
-			})
-		})
-
-		Context("when the instance is unclaimed", func() {
-			BeforeEach(func() {
-				actual.State = models.ActualLRPStateUnclaimed
-				actual.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
-				actualLRPs = []*models.ActualLRP{actual}
-			})
-
-			Context("without a placement error", func() {
-				BeforeEach(func() {
-					actual.PlacementError = ""
-					fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
-				})
-
-				It("evacuates the LRP", func() {
-					Expect(keepContainer).To(BeTrue())
-					Expect(err).To(BeNil())
-
-					Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-					_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
-					Expect(*actualLRPKey).To(Equal(targetKey))
-					Expect(*actualLRPInstanceKey).To(Equal(targetInstanceKey))
-					Expect(*actualLrpNetInfo).To(Equal(netInfo))
-					Expect(actualLRPInternalRoutes).To(Equal(internalRoutes))
-					Expect(actualLRPMetricTags).To(Equal(metricTags))
-					Expect(actualRoutable).To(Equal(false))
-					Expect(actualAvailabilityZone).To(Equal(availabilityZone))
+					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
+					_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+					Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
+					Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
 				})
 
 				It("emits events to the hub", func() {
@@ -905,36 +803,63 @@ var _ = Describe("Evacuation Controller", func() {
 
 					event := actualHub.EmitArgsForCall(0)
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
+					Expect(ok).To(BeTrue())
+
 					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					ce := event.(*models.ActualLRPCreatedEvent)
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
 				})
 
-				It("emits instance events to the hub", func() {
+				It("emits ActualLRPInstanceRemoved events to the hub", func() {
 					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
 
 					event := actualLRPInstanceHub.EmitArgsForCall(0)
-					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
-					ce := event.(*models.ActualLRPInstanceCreatedEvent)
-					Expect(ce.ActualLrp).To(Equal(afterActual))
+					removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+
+					Expect(removeEvent.ActualLrp).To(Equal(evacuatingActual))
 				})
 
-				Context("when there's an existing evacuating on another cell", func() {
+				Context("when the evacuating lrp cannot be removed", func() {
 					BeforeEach(func() {
-						actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
+						fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
 					})
 
-					It("does not error and does not keep the container", func() {
+					It("returns no error and removes the container", func() {
 						Expect(keepContainer).To(BeFalse())
 						Expect(err).To(BeNil())
 					})
+
+					It("does not emit any events", func() {
+						Consistently(actualHub.EmitCallCount).Should(Equal(0))
+					})
+
+					It("does not emit any instance events", func() {
+						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+					})
 				})
 
-				Context("when evacuating the actual lrp fails for some other reason", func() {
+				Context("when the DB returns an unrecoverable error", func() {
 					BeforeEach(func() {
-						fakeEvacuationDB.EvacuateActualLRPReturns(nil, errors.New("didnt work"))
+						fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.NewUnrecoverableError(nil))
+					})
+
+					It("logs and writes to the exit channel", func() {
+						Expect(modelErr.Type).To(Equal(models.Error_Unrecoverable))
+					})
+
+					It("does not emit any events", func() {
+						Consistently(actualHub.EmitCallCount).Should(Equal(0))
+					})
+
+					It("does not emit any instance events", func() {
+						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+					})
+				})
+
+				Context("when removing the evacuating lrp fails for a different reason", func() {
+					BeforeEach(func() {
+						fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("didnt work"))
 					})
 
 					It("returns an error and keeps the container", func() {
@@ -942,44 +867,67 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(err).NotTo(BeNil())
 						Expect(err.Error()).To(Equal("didnt work"))
 					})
-				})
-			})
 
-			Context("with a placement error", func() {
-				BeforeEach(func() {
-					actual.PlacementError = "jim kinda likes cats, but loves kittens"
-				})
-
-				It("does not remove the evacuating LRP", func() {
-					Expect(keepContainer).To(BeTrue())
-					Expect(err).To(BeNil())
-
-					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(0))
-				})
-
-				It("does not emit events to the hub", func() {
-					Consistently(actualHub.EmitCallCount).Should(Equal(0))
-				})
-
-				It("does not emit events to the hub", func() {
-					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
-				})
-			})
-		})
-
-		Context("when the instance is claimed", func() {
-			BeforeEach(func() {
-				actual.State = models.ActualLRPStateClaimed
-				actualLRPs = []*models.ActualLRP{actual}
-			})
-
-			Context("and the evacuate request came", func() {
-				Context("from a different cell than where the instance is claimed", func() {
-					BeforeEach(func() {
-						targetInstanceKey.CellId = "some-other-cell"
+					It("does not emit any events", func() {
+						Consistently(actualHub.EmitCallCount).Should(Equal(0))
 					})
 
-					Context("and there's an existing evacuating on a different cell than where the evacuate request came from", func() {
+					It("does not emit any instance events", func() {
+						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+					})
+				})
+			})
+
+			Context("when the instance is unclaimed", func() {
+				BeforeEach(func() {
+					actual.State = models.ActualLRPStateUnclaimed
+					actual.ActualLRPInstanceKey = models.ActualLRPInstanceKey{}
+					actualLRPs = []*models.ActualLRP{actual}
+				})
+
+				Context("without a placement error", func() {
+					BeforeEach(func() {
+						actual.PlacementError = ""
+						fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
+					})
+
+					It("evacuates the LRP", func() {
+						Expect(keepContainer).To(BeTrue())
+						Expect(err).To(BeNil())
+
+						Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
+						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+						Expect(*actualLRPKey).To(Equal(targetKey))
+						Expect(*actualLRPInstanceKey).To(Equal(targetInstanceKey))
+						Expect(*actualLrpNetInfo).To(Equal(netInfo))
+						Expect(actualLRPInternalRoutes).To(Equal(internalRoutes))
+						Expect(actualLRPMetricTags).To(Equal(metricTags))
+						Expect(actualRoutable).To(Equal(false))
+						Expect(actualAvailabilityZone).To(Equal(availabilityZone))
+					})
+
+					It("emits events to the hub", func() {
+						Eventually(actualHub.EmitCallCount).Should(Equal(1))
+
+						event := actualHub.EmitArgsForCall(0)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+						ce := event.(*models.ActualLRPCreatedEvent)
+						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+					})
+
+					It("emits instance events to the hub", func() {
+						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPInstanceCreatedEvent{}))
+						ce := event.(*models.ActualLRPInstanceCreatedEvent)
+						Expect(ce.ActualLrp).To(Equal(afterActual))
+					})
+
+					Context("when there's an existing evacuating on another cell", func() {
 						BeforeEach(func() {
 							actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 						})
@@ -990,20 +938,7 @@ var _ = Describe("Evacuation Controller", func() {
 						})
 					})
 
-					Context("when there's an existing evacuating instance on the cell the request came from", func() {
-						BeforeEach(func() {
-							evacuatingActual.CellId = "some-other-cell"
-							actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
-							fakeEvacuationDB.EvacuateActualLRPReturns(nil, models.ErrResourceExists)
-						})
-
-						It("does not error and keeps the container", func() {
-							Expect(keepContainer).To(BeTrue())
-							Expect(err).To(BeNil())
-						})
-					})
-
-					Context("when evacuating the actual lrp fails", func() {
+					Context("when evacuating the actual lrp fails for some other reason", func() {
 						BeforeEach(func() {
 							fakeEvacuationDB.EvacuateActualLRPReturns(nil, errors.New("didnt work"))
 						})
@@ -1016,12 +951,188 @@ var _ = Describe("Evacuation Controller", func() {
 					})
 				})
 
-				Context("by the same cell", func() {
+				Context("with a placement error", func() {
+					BeforeEach(func() {
+						actual.PlacementError = "jim kinda likes cats, but loves kittens"
+					})
+
+					It("does not remove the evacuating LRP", func() {
+						Expect(keepContainer).To(BeTrue())
+						Expect(err).To(BeNil())
+
+						Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(0))
+					})
+
+					It("does not emit events to the hub", func() {
+						Consistently(actualHub.EmitCallCount).Should(Equal(0))
+					})
+
+					It("does not emit events to the hub", func() {
+						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+					})
+				})
+			})
+
+			Context("when the instance is claimed", func() {
+				BeforeEach(func() {
+					actual.State = models.ActualLRPStateClaimed
+					actualLRPs = []*models.ActualLRP{actual}
+				})
+
+				Context("and the evacuate request came", func() {
+					Context("from a different cell than where the instance is claimed", func() {
+						BeforeEach(func() {
+							targetInstanceKey.CellId = "some-other-cell"
+						})
+
+						Context("and there's an existing evacuating on a different cell than where the evacuate request came from", func() {
+							BeforeEach(func() {
+								actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
+							})
+
+							It("does not error and does not keep the container", func() {
+								Expect(keepContainer).To(BeFalse())
+								Expect(err).To(BeNil())
+							})
+						})
+
+						Context("when there's an existing evacuating instance on the cell the request came from", func() {
+							BeforeEach(func() {
+								evacuatingActual.CellId = "some-other-cell"
+								actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
+								fakeEvacuationDB.EvacuateActualLRPReturns(nil, models.ErrResourceExists)
+							})
+
+							It("does not error and keeps the container", func() {
+								Expect(keepContainer).To(BeTrue())
+								Expect(err).To(BeNil())
+							})
+						})
+
+						Context("when evacuating the actual lrp fails", func() {
+							BeforeEach(func() {
+								fakeEvacuationDB.EvacuateActualLRPReturns(nil, errors.New("didnt work"))
+							})
+
+							It("returns an error and keeps the container", func() {
+								Expect(keepContainer).To(BeTrue())
+								Expect(err).NotTo(BeNil())
+								Expect(err.Error()).To(Equal("didnt work"))
+							})
+						})
+					})
+
+					Context("by the same cell", func() {
+						BeforeEach(func() {
+							fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
+						})
+
+						It("evacuates the lrp", func() {
+							Expect(keepContainer).To(BeTrue())
+							Expect(err).To(BeNil())
+
+							Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
+							_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+							Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
+							Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
+							Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
+							Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
+							Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
+							Expect(actualRoutable).To(Equal(false))
+							Expect(actualAvailabilityZone).To(Equal(actual.AvailabilityZone))
+						})
+
+						It("unclaims the lrp and requests an auction", func() {
+							Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+							_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
+							Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
+							Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
+							Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
+							Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
+							Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
+							Expect(actualRoutable).To(Equal(false))
+							Expect(actualAvailabilityZone).To(Equal(actual.AvailabilityZone))
+
+							schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+							expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+
+							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+							_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+							Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+							Expect(actualTraceId).To(Equal(traceId))
+						})
+
+						It("emits events to the hub", func() {
+							Eventually(actualHub.EmitCallCount).Should(Equal(2))
+
+							event := actualHub.EmitArgsForCall(0)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							ce := event.(*models.ActualLRPCreatedEvent)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+
+							event = actualHub.EmitArgsForCall(1)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							che := event.(*models.ActualLRPChangedEvent)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
+						})
+
+						It("emits instance events to the hub", func() {
+							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+
+							event := actualLRPInstanceHub.EmitArgsForCall(0)
+							Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId)))
+
+							event = actualLRPInstanceHub.EmitArgsForCall(1)
+							Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
+						})
+
+						Context("when evacuating fails", func() {
+							BeforeEach(func() {
+								fakeEvacuationDB.EvacuateActualLRPReturns(nil, errors.New("this is a disaster"))
+							})
+
+							It("returns an error and keep the container", func() {
+								Expect(keepContainer).To(BeTrue())
+								Expect(err).NotTo(BeNil())
+								Expect(err.Error()).To(Equal("this is a disaster"))
+							})
+						})
+
+						Context("when unclaiming fails", func() {
+							BeforeEach(func() {
+								fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("unclaiming failed"))
+							})
+
+							It("returns an error and keeps the contianer", func() {
+								Expect(keepContainer).To(BeTrue())
+								Expect(err).NotTo(BeNil())
+								Expect(err.Error()).To(Equal("unclaiming failed"))
+							})
+						})
+					})
+				})
+			})
+
+			Context("when the instance is running", func() {
+				BeforeEach(func() {
+					actual.State = models.ActualLRPStateRunning
+					actualLRPs = []*models.ActualLRP{actual}
+				})
+
+				Context("on this cell", func() {
 					BeforeEach(func() {
 						fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
 					})
 
-					It("evacuates the lrp", func() {
+					It("evacuates the lrp and keeps the container", func() {
 						Expect(keepContainer).To(BeTrue())
 						Expect(err).To(BeNil())
 
@@ -1038,14 +1149,9 @@ var _ = Describe("Evacuation Controller", func() {
 
 					It("unclaims the lrp and requests an auction", func() {
 						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-						_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
-						Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-						Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-						Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
-						Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
-						Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
-						Expect(actualRoutable).To(Equal(false))
-						Expect(actualAvailabilityZone).To(Equal(actual.AvailabilityZone))
+						_, _, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
+						Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+						Expect(lrpKey.Index).To(Equal(actual.Index))
 
 						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
 						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
@@ -1056,7 +1162,143 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(actualTraceId).To(Equal(traceId))
 					})
 
-					It("emits events to the hub", func() {
+					Context("when the instance is suspect", func() {
+						var (
+							ordinary *models.ActualLRP
+						)
+
+						BeforeEach(func() {
+							ordinary = model_helpers.NewValidActualLRP("the-guid", 1)
+							ordinary.State = models.ActualLRPStateUnclaimed
+							ordinary.ActualLRPInstanceKey = models.ActualLRPInstanceKey{
+								InstanceGuid: "replacement-guid",
+								CellId:       "replacement-cell",
+							}
+							actual.Presence = models.ActualLRP_Suspect
+							actualLRPs = []*models.ActualLRP{ordinary, actual}
+							fakeSuspectDB.RemoveSuspectActualLRPReturns(actual, nil)
+						})
+
+						It("removes the suspect LRP", func() {
+							Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+							_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+							Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+							Expect(lrpKey.Index).To(Equal(actual.Index))
+						})
+
+						It("does not unclaim the LRP", func() {
+							Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+						})
+
+						It("emits a LRPCreated and then LRPChanged event", func() {
+							Eventually(actualHub.EmitCallCount).Should(Equal(2))
+							Consistently(actualHub.EmitCallCount).Should(Equal(2))
+
+							event := actualHub.EmitArgsForCall(0)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							ce := event.(*models.ActualLRPCreatedEvent)
+							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+							Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+
+							event = actualHub.EmitArgsForCall(1)
+							//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
+							Expect(event).To(Equal(models.NewActualLRPChangedEvent(
+								//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
+								actual.ToActualLRPGroup(),
+								//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
+								ordinary.ToActualLRPGroup(),
+							)))
+						})
+
+						It("emits a LRPInstaceChanged event", func() {
+							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+							Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
+								models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId),
+							))
+						})
+
+						Context("when there is an ordinary claimed replacement LRP", func() {
+							var replacementActual *models.ActualLRP
+
+							BeforeEach(func() {
+								replacementActual = model_helpers.NewValidActualLRP("the-guid", 1)
+								replacementActual.State = models.ActualLRPStateClaimed
+								replacementActual.CellId = "other-cell"
+								replacementActual.InstanceGuid = "other-guid"
+								actualLRPs = append(actualLRPs, replacementActual)
+							})
+
+							It("emits two LRPCreated events and then a LRPRemoved event", func() {
+								Eventually(actualHub.EmitCallCount).Should(Equal(3))
+								Consistently(actualHub.EmitCallCount).Should(Equal(3))
+
+								event := actualHub.EmitArgsForCall(0)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								ce := event.(*models.ActualLRPCreatedEvent)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
+
+								event = actualHub.EmitArgsForCall(1)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								ce = event.(*models.ActualLRPCreatedEvent)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: replacementActual}))
+
+								event = actualHub.EmitArgsForCall(2)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								re := event.(*models.ActualLRPRemovedEvent)
+								//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
+								Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+							})
+
+							It("emits LRPInstanceChanged event", func() {
+								Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+								Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+								Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId)))
+							})
+						})
+
+						Context("when removing the suspect lrp fails", func() {
+							BeforeEach(func() {
+								fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("didnt work"))
+							})
+
+							It("logs the failure", func() {
+								Eventually(logger).Should(gbytes.Say("failed-removing-suspect-actual-lrp"))
+							})
+
+							It("keeps the container", func() {
+								Expect(keepContainer).To(BeTrue())
+							})
+						})
+
+						Context("when removing the suspect LRP fails with an unrecoverable error", func() {
+							BeforeEach(func() {
+								fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, models.NewUnrecoverableError(nil))
+							})
+
+							It("logs and writes to the exit channel", func() {
+								Expect(modelErr.Type).To(Equal(models.Error_Unrecoverable))
+							})
+
+							It("keeps the container", func() {
+								Expect(keepContainer).To(BeTrue())
+							})
+						})
+					})
+
+					It("emits an LRPCreated event and then an LRPChanged event to the hub", func() {
 						Eventually(actualHub.EmitCallCount).Should(Equal(2))
 
 						event := actualHub.EmitArgsForCall(0)
@@ -1078,7 +1320,7 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
 					})
 
-					It("emits instance events to the hub", func() {
+					It("emits two LRPInstanceChanged and ActualLRPInstanceCreatedEvent event", func() {
 						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
 
 						event := actualLRPInstanceHub.EmitArgsForCall(0)
@@ -1105,256 +1347,100 @@ var _ = Describe("Evacuation Controller", func() {
 							fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("unclaiming failed"))
 						})
 
-						It("returns an error and keeps the contianer", func() {
+						It("returns an error and keeps the container", func() {
 							Expect(keepContainer).To(BeTrue())
 							Expect(err).NotTo(BeNil())
 							Expect(err.Error()).To(Equal("unclaiming failed"))
 						})
 					})
-				})
-			})
-		})
 
-		Context("when the instance is running", func() {
-			BeforeEach(func() {
-				actual.State = models.ActualLRPStateRunning
-				actualLRPs = []*models.ActualLRP{actual}
-			})
+					Context("when fetching the desired lrp scheduling info fails", func() {
+						BeforeEach(func() {
+							fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, errors.New("jolly rancher beer :/"))
+						})
 
-			Context("on this cell", func() {
-				BeforeEach(func() {
-					fakeEvacuationDB.EvacuateActualLRPReturns(afterActual, nil)
+						It("does not return an error and keeps the container", func() {
+							Expect(keepContainer).To(BeTrue())
+							Expect(err).To(BeNil())
+						})
+					})
 				})
 
-				It("evacuates the lrp and keeps the container", func() {
-					Expect(keepContainer).To(BeTrue())
-					Expect(err).To(BeNil())
-
-					Expect(fakeEvacuationDB.EvacuateActualLRPCallCount()).To(Equal(1))
-					_, _, actualLRPKey, actualLRPInstanceKey, actualLrpNetInfo, actualLRPInternalRoutes, actualLRPMetricTags, actualRoutable, actualAvailabilityZone := fakeEvacuationDB.EvacuateActualLRPArgsForCall(0)
-					Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
-					Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
-					Expect(*actualLrpNetInfo).To(Equal(actual.ActualLRPNetInfo))
-					Expect(actualLRPInternalRoutes).To(Equal(actual.ActualLrpInternalRoutes))
-					Expect(actualLRPMetricTags).To(Equal(actual.MetricTags))
-					Expect(actualRoutable).To(Equal(false))
-					Expect(actualAvailabilityZone).To(Equal(actual.AvailabilityZone))
-				})
-
-				It("unclaims the lrp and requests an auction", func() {
-					Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-					_, _, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
-					Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-					Expect(lrpKey.Index).To(Equal(actual.Index))
-
-					schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
-
-					Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-					_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-					Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
-					Expect(actualTraceId).To(Equal(traceId))
-				})
-
-				Context("when the instance is suspect", func() {
-					var (
-						ordinary *models.ActualLRP
-					)
-
+				Context("on another cell with an evacuating instance on the cell where the request comes from", func() {
 					BeforeEach(func() {
-						ordinary = model_helpers.NewValidActualLRP("the-guid", 1)
-						ordinary.State = models.ActualLRPStateUnclaimed
-						ordinary.ActualLRPInstanceKey = models.ActualLRPInstanceKey{
-							InstanceGuid: "replacement-guid",
-							CellId:       "replacement-cell",
-						}
-						actual.Presence = models.ActualLRP_Suspect
-						actualLRPs = []*models.ActualLRP{ordinary, actual}
-						fakeSuspectDB.RemoveSuspectActualLRPReturns(actual, nil)
+						targetInstanceKey.CellId = "some-evacuating-cell"
+						actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 					})
 
-					It("removes the suspect LRP", func() {
-						Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
-						_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
-						Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-						Expect(lrpKey.Index).To(Equal(actual.Index))
+					It("removes the evacuating LRP", func() {
+						Expect(keepContainer).To(BeFalse())
+						Expect(err).To(BeNil())
+
+						Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
+						_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+						Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
+						Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
 					})
 
-					It("does not unclaim the LRP", func() {
-						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
-					})
-
-					It("emits a LRPCreated and then LRPChanged event", func() {
-						Eventually(actualHub.EmitCallCount).Should(Equal(2))
-						Consistently(actualHub.EmitCallCount).Should(Equal(2))
-
+					It("emits events to the hub", func() {
+						Eventually(actualHub.EmitCallCount).Should(Equal(1))
 						event := actualHub.EmitArgsForCall(0)
 						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-						Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
+						removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
+						Expect(ok).To(BeTrue())
 						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-						ce := event.(*models.ActualLRPCreatedEvent)
-						//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-						Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
-
-						event = actualHub.EmitArgsForCall(1)
-						//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
-						Expect(event).To(Equal(models.NewActualLRPChangedEvent(
-							//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
-							actual.ToActualLRPGroup(),
-							//lint:ignore SA1019 - still need to emit these events until the ActaulLRPGroup api is deleted
-							ordinary.ToActualLRPGroup(),
-						)))
+						Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
 					})
 
-					It("emits a LRPInstaceChanged event", func() {
+					It("emits instance events to the hub", func() {
 						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-						Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-
-						Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(
-							models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId),
-						))
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+						Expect(ok).To(BeTrue())
+						Expect(removeEvent.ActualLrp).To(Equal(evacuatingActual))
 					})
 
-					Context("when there is an ordinary claimed replacement LRP", func() {
-						var replacementActual *models.ActualLRP
-
+					Context("when removing the evacuating LRP fails", func() {
 						BeforeEach(func() {
-							replacementActual = model_helpers.NewValidActualLRP("the-guid", 1)
-							replacementActual.State = models.ActualLRPStateClaimed
-							replacementActual.CellId = "other-cell"
-							replacementActual.InstanceGuid = "other-guid"
-							actualLRPs = append(actualLRPs, replacementActual)
+							fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("boom!"))
 						})
 
-						It("emits two LRPCreated events and then a LRPRemoved event", func() {
-							Eventually(actualHub.EmitCallCount).Should(Equal(3))
-							Consistently(actualHub.EmitCallCount).Should(Equal(3))
-
-							event := actualHub.EmitArgsForCall(0)
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							ce := event.(*models.ActualLRPCreatedEvent)
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
-
-							event = actualHub.EmitArgsForCall(1)
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							ce = event.(*models.ActualLRPCreatedEvent)
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: replacementActual}))
-
-							event = actualHub.EmitArgsForCall(2)
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPRemovedEvent{}))
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							re := event.(*models.ActualLRPRemovedEvent)
-							//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-							Expect(re.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Instance: actual}))
+						It("returns an error and does keep the container", func() {
+							Expect(keepContainer).To(BeTrue())
+							Expect(err).NotTo(BeNil())
+							Expect(err.Error()).To(Equal("boom!"))
 						})
 
-						It("emits LRPInstanceChanged event", func() {
-							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-							Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+						Context("when the error is a ErrActualLRPCannotBeRemoved", func() {
+							BeforeEach(func() {
+								fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
+							})
 
-							Expect(actualLRPInstanceHub.EmitArgsForCall(0)).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId)))
+							It("does not return an error or keep the container", func() {
+								Expect(keepContainer).To(BeFalse())
+								Expect(err).To(BeNil())
+							})
 						})
 					})
 
-					Context("when removing the suspect lrp fails", func() {
+					Context("and there is no evacuating lrp", func() {
 						BeforeEach(func() {
-							fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("didnt work"))
+							actualLRPs = []*models.ActualLRP{actual}
 						})
 
-						It("logs the failure", func() {
-							Eventually(logger).Should(gbytes.Say("failed-removing-suspect-actual-lrp"))
+						It("responds with KeepContainer set to false", func() {
+							Expect(keepContainer).To(BeFalse())
+							Expect(err).To(BeNil())
 						})
-					})
-
-					Context("when removing the suspect LRP fails with an unrecoverable error", func() {
-						BeforeEach(func() {
-							fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, models.NewUnrecoverableError(nil))
-						})
-
-						It("logs and writes to the exit channel", func() {
-							Expect(modelErr.Type).To(Equal(models.Error_Unrecoverable))
-						})
-					})
-				})
-
-				It("emits an LRPCreated event and then an LRPChanged event to the hub", func() {
-					Eventually(actualHub.EmitCallCount).Should(Equal(2))
-
-					event := actualHub.EmitArgsForCall(0)
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPCreatedEvent{}))
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					ce := event.(*models.ActualLRPCreatedEvent)
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(ce.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: afterActual}))
-
-					event = actualHub.EmitArgsForCall(1)
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(event).To(BeAssignableToTypeOf(&models.ActualLRPChangedEvent{}))
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					che := event.(*models.ActualLRPChangedEvent)
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(che.Before).To(Equal(&models.ActualLRPGroup{Instance: actual}))
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(che.After).To(Equal(&models.ActualLRPGroup{Instance: unclaimedActualLRP}))
-				})
-
-				It("emits two LRPInstanceChanged and ActualLRPInstanceCreatedEvent event", func() {
-					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
-
-					event := actualLRPInstanceHub.EmitArgsForCall(0)
-					Expect(event).To(Equal(models.NewActualLRPInstanceChangedEvent(actual, afterActual, traceId)))
-
-					event = actualLRPInstanceHub.EmitArgsForCall(1)
-					Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
-				})
-
-				Context("when evacuating fails", func() {
-					BeforeEach(func() {
-						fakeEvacuationDB.EvacuateActualLRPReturns(nil, errors.New("this is a disaster"))
-					})
-
-					It("returns an error and keep the container", func() {
-						Expect(keepContainer).To(BeTrue())
-						Expect(err).NotTo(BeNil())
-						Expect(err.Error()).To(Equal("this is a disaster"))
-					})
-				})
-
-				Context("when unclaiming fails", func() {
-					BeforeEach(func() {
-						fakeActualLRPDB.UnclaimActualLRPReturns(nil, nil, errors.New("unclaiming failed"))
-					})
-
-					It("returns an error and keeps the container", func() {
-						Expect(keepContainer).To(BeTrue())
-						Expect(err).NotTo(BeNil())
-						Expect(err.Error()).To(Equal("unclaiming failed"))
-					})
-				})
-
-				Context("when fetching the desired lrp scheduling info fails", func() {
-					BeforeEach(func() {
-						fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidReturns(nil, errors.New("jolly rancher beer :/"))
-					})
-
-					It("does not return an error and keeps the container", func() {
-						Expect(keepContainer).To(BeTrue())
-						Expect(err).To(BeNil())
 					})
 				})
 			})
 
-			Context("on another cell with an evacuating instance on the cell where the request comes from", func() {
+			Context("when the instance is crashed", func() {
 				BeforeEach(func() {
-					targetInstanceKey.CellId = "some-evacuating-cell"
+					actual.State = models.ActualLRPStateCrashed
+					targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
+					targetKey = evacuatingActual.ActualLRPKey
 					actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 				})
 
@@ -1366,24 +1452,6 @@ var _ = Describe("Evacuation Controller", func() {
 					_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
 					Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
 					Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
-				})
-
-				It("emits events to the hub", func() {
-					Eventually(actualHub.EmitCallCount).Should(Equal(1))
-					event := actualHub.EmitArgsForCall(0)
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					removeEvent, ok := event.(*models.ActualLRPRemovedEvent)
-					Expect(ok).To(BeTrue())
-					//lint:ignore SA1019 - calling deprecated model while unit testing deprecated method
-					Expect(removeEvent.ActualLrpGroup).To(Equal(&models.ActualLRPGroup{Evacuating: evacuatingActual}))
-				})
-
-				It("emits instance events to the hub", func() {
-					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
-					event := actualLRPInstanceHub.EmitArgsForCall(0)
-					removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
-					Expect(ok).To(BeTrue())
-					Expect(removeEvent.ActualLrp).To(Equal(evacuatingActual))
 				})
 
 				Context("when removing the evacuating LRP fails", func() {
@@ -1408,70 +1476,210 @@ var _ = Describe("Evacuation Controller", func() {
 						})
 					})
 				})
+			})
 
-				Context("and there is no evacuating lrp", func() {
+			Context("when the actual lrps do not exist", func() {
+				BeforeEach(func() {
+					actualLRPs = []*models.ActualLRP{}
+				})
+
+				It("does not return an error or keep the container", func() {
+					Expect(keepContainer).To(BeFalse())
+					Expect(err).To(BeNil())
+				})
+			})
+		})
+
+		Context("when the update stratergy on the desired LRP is recreate", func() {
+			BeforeEach(func() {
+				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRecreate, nil)
+			})
+
+			Context("when the actual LRP is ordinary", func() {
+				BeforeEach(func() {
+					actual.Presence = models.ActualLRP_Ordinary
+					actualLRPs = []*models.ActualLRP{actual}
+				})
+
+				Context("when the actual LRP state is running", func() {
 					BeforeEach(func() {
+						actual.State = models.ActualLRPStateRunning
 						actualLRPs = []*models.ActualLRP{actual}
 					})
 
-					It("responds with KeepContainer set to false", func() {
-						Expect(keepContainer).To(BeFalse())
+					It("requests an auction and deletes the container", func() {
 						Expect(err).To(BeNil())
+						Expect(keepContainer).To(BeFalse())
+
+						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+						_, _, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
+						Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+						Expect(lrpKey.Index).To(Equal(actual.Index))
+
+						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+						_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+						Expect(actualTraceId).To(Equal(traceId))
+
+						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
+						event = actualLRPInstanceHub.EmitArgsForCall(1)
+						Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
+					})
+				})
+
+				Context("when the actual LRP state is claimed", func() {
+					BeforeEach(func() {
+						actual.State = models.ActualLRPStateClaimed
+						actualLRPs = []*models.ActualLRP{actual}
+					})
+
+					It("requests an auction and deletes the container", func() {
+						Expect(err).To(BeNil())
+						Expect(keepContainer).To(BeFalse())
+
+						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+						_, _, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
+						Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+						Expect(lrpKey.Index).To(Equal(actual.Index))
+
+						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+
+						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+						_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+						Expect(actualTraceId).To(Equal(traceId))
+
+						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+						event := actualLRPInstanceHub.EmitArgsForCall(0)
+						Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
+						event = actualLRPInstanceHub.EmitArgsForCall(1)
+						Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
 					})
 				})
 			})
-		})
 
-		Context("when the instance is crashed", func() {
-			BeforeEach(func() {
-				actual.State = models.ActualLRPStateCrashed
-				targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
-				targetKey = evacuatingActual.ActualLRPKey
-				actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
-			})
-
-			It("removes the evacuating LRP", func() {
-				Expect(keepContainer).To(BeFalse())
-				Expect(err).To(BeNil())
-
-				Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
-				_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
-				Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
-				Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
-			})
-
-			Context("when removing the evacuating LRP fails", func() {
+			Context("when the actual LRP is evacuating", func() {
 				BeforeEach(func() {
-					fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(errors.New("boom!"))
+					targetInstanceKey = evacuatingActual.ActualLRPInstanceKey
+					actualLRPs = []*models.ActualLRP{actual, evacuatingActual}
 				})
 
-				It("returns an error and does keep the container", func() {
+				It("deletes the evacuating LRP and the container", func() {
+					Expect(err).To(BeNil())
+					Expect(keepContainer).To(BeFalse())
+
+					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
+					_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+					Expect(*actualLRPKey).To(Equal(evacuatingActual.ActualLRPKey))
+					Expect(*actualLRPInstanceKey).To(Equal(evacuatingActual.ActualLRPInstanceKey))
+
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(removeEvent.ActualLrp).To(Equal(evacuatingActual))
+				})
+			})
+
+			Context("when the actual LRP is suspect", func() {
+				var ordinary *models.ActualLRP
+				BeforeEach(func() {
+					ordinary = model_helpers.NewValidActualLRP("the-guid", 1)
+					ordinary.State = models.ActualLRPStateUnclaimed
+					ordinary.ActualLRPInstanceKey = models.ActualLRPInstanceKey{
+						InstanceGuid: "replacement-guid",
+						CellId:       "replacement-cell",
+					}
+					actual.Presence = models.ActualLRP_Suspect
+					actualLRPs = []*models.ActualLRP{ordinary, actual}
+				})
+
+				It("removes the suspect LRP", func() {
+					Expect(fakeSuspectDB.RemoveSuspectActualLRPCallCount()).To(Equal(1))
+					_, _, lrpKey := fakeSuspectDB.RemoveSuspectActualLRPArgsForCall(0)
+					Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+					Expect(lrpKey.Index).To(Equal(actual.Index))
+				})
+
+				It("does not unclaim the LRP", func() {
+					Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(0))
+				})
+
+				It("emits a LRPInstaceRemoved event", func() {
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+					Consistently(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
+				})
+
+				Context("when removing the suspect lrp fails", func() {
+					BeforeEach(func() {
+						fakeSuspectDB.RemoveSuspectActualLRPReturns(nil, errors.New("didnt work"))
+					})
+
+					It("keeps the container", func() {
+						Expect(keepContainer).To(BeTrue())
+						Expect(err).NotTo(BeNil())
+						Expect(err.Error()).To(ContainSubstring("didnt work"))
+					})
+				})
+			})
+
+			Context("when the actual LRP does not exist", func() {
+				BeforeEach(func() {
+					actualLRPs = []*models.ActualLRP{}
+				})
+
+				It("deletes the container", func() {
+					Expect(err).To(BeNil())
+					Expect(keepContainer).To(BeFalse())
+
+					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(0))
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(0))
+				})
+			})
+
+			Context("when getting the update strategy returns not found error", func() {
+				BeforeEach(func() {
+					fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(0, models.ErrResourceNotFound)
+					actualLRPs = []*models.ActualLRP{actual}
+				})
+
+				It("does not return an error and deletes the container", func() {
+					Expect(err).To(BeNil())
+					Expect(keepContainer).To(BeFalse())
+
+					Expect(fakeEvacuationDB.RemoveEvacuatingActualLRPCallCount()).To(Equal(1))
+					_, _, actualLRPKey, actualLRPInstanceKey := fakeEvacuationDB.RemoveEvacuatingActualLRPArgsForCall(0)
+					Expect(*actualLRPKey).To(Equal(actual.ActualLRPKey))
+					Expect(*actualLRPInstanceKey).To(Equal(actual.ActualLRPInstanceKey))
+
+					Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(1))
+					event := actualLRPInstanceHub.EmitArgsForCall(0)
+					removeEvent, ok := event.(*models.ActualLRPInstanceRemovedEvent)
+					Expect(ok).To(BeTrue())
+					Expect(removeEvent.ActualLrp).To(Equal(actual))
+				})
+			})
+
+			Context("when getting the update strategy returns other error", func() {
+				BeforeEach(func() {
+					fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(0, errors.New("some-other-error"))
+					actualLRPs = []*models.ActualLRP{actual}
+				})
+
+				It("does not return an error and deletes the container", func() {
 					Expect(keepContainer).To(BeTrue())
 					Expect(err).NotTo(BeNil())
-					Expect(err.Error()).To(Equal("boom!"))
+					Expect(err.Error()).To(ContainSubstring("some-other-error"))
 				})
-
-				Context("when the error is a ErrActualLRPCannotBeRemoved", func() {
-					BeforeEach(func() {
-						fakeEvacuationDB.RemoveEvacuatingActualLRPReturns(models.ErrActualLRPCannotBeRemoved)
-					})
-
-					It("does not return an error or keep the container", func() {
-						Expect(keepContainer).To(BeFalse())
-						Expect(err).To(BeNil())
-					})
-				})
-			})
-		})
-
-		Context("when the actual lrps do not exist", func() {
-			BeforeEach(func() {
-				actualLRPs = []*models.ActualLRP{}
-			})
-
-			It("does not return an error or keep the container", func() {
-				Expect(keepContainer).To(BeFalse())
-				Expect(err).To(BeNil())
 			})
 		})
 	})
