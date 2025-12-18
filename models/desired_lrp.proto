@@ -161,8 +161,8 @@ message DesiredLRP {
   LogRateLimit log_rate_limit = 37;
   repeated File volume_mounted_files = 38 [(gogoproto.jsontag) = "volume_mounted_files"];
   enum UpdateStrategy {
-    ROLLING   = 0 [(gogoproto.enumvalue_customname) = "Rolling"];
-    RECREATE = 1 [(gogoproto.enumvalue_customname) = "Recreate"];
+    ROLLING  = 0 [(gogoproto.enumvalue_customname) = "UpdateStrategyRolling"];
+    RECREATE = 1 [(gogoproto.enumvalue_customname) = "UpdateStrategyRecreate"];
   }
   UpdateStrategy update_strategy = 39 [(gogoproto.jsontag) = "update_strategy"];
 }
