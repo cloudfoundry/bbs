@@ -544,10 +544,12 @@ func (desired DesiredLRPUpdate) IsImageCredentialsUpdated(existingLRP *DesiredLR
 }
 
 type internalDesiredLRPUpdate struct {
-	Instances  *int32                     `json:"instances,omitempty"`
-	Routes     *Routes                    `json:"routes,omitempty"`
-	Annotation *string                    `json:"annotation,omitempty"`
-	MetricTags map[string]*MetricTagValue `json:"metric_tags,omitempty"`
+	Instances     *int32                     `json:"instances,omitempty"`
+	Routes        *Routes                    `json:"routes,omitempty"`
+	Annotation    *string                    `json:"annotation,omitempty"`
+	MetricTags    map[string]*MetricTagValue `json:"metric_tags,omitempty"`
+	ImageUsername *string                    `json:"image_username,omitempty"`
+	ImagePassword *string                    `json:"image_password,omitempty"`
 }
 
 func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
@@ -564,6 +566,12 @@ func (desired *DesiredLRPUpdate) UnmarshalJSON(data []byte) error {
 		desired.SetAnnotation(*update.Annotation)
 	}
 	desired.MetricTags = update.MetricTags
+	if update.ImageUsername != nil {
+		desired.SetImageUsername(*update.ImageUsername)
+	}
+	if update.ImagePassword != nil {
+		desired.SetImagePassword(*update.ImagePassword)
+	}
 
 	return nil
 }
@@ -580,6 +588,14 @@ func (desired DesiredLRPUpdate) MarshalJSON() ([]byte, error) {
 		update.Annotation = &a
 	}
 	update.MetricTags = desired.MetricTags
+	if desired.ImageUsernameExists() {
+		username := desired.GetImageUsername()
+		update.ImageUsername = &username
+	}
+	if desired.ImagePasswordExists() {
+		password := desired.GetImagePassword()
+		update.ImagePassword = &password
+	}
 	return json.Marshal(update)
 }
 
