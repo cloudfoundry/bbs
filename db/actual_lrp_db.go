@@ -34,4 +34,5 @@ type ActualLRPDB interface {
 
 	CountActualLRPsByState(ctx context.Context, logger lager.Logger) (int, int, int, int, int)
 	CountDesiredInstances(ctx context.Context, logger lager.Logger) int
+	CountActualLRPsForProcessGuidAndState(ctx context.Context, logger lager.Logger, processGuid string, state string, presence models.ActualLRP_Presence) (int, error)
 }

@@ -99,6 +99,23 @@ type FakeActualLRPDB struct {
 		result4 int
 		result5 int
 	}
+	CountActualLRPsForProcessGuidAndStateStub        func(context.Context, lager.Logger, string, string, models.ActualLRP_Presence) (int, error)
+	countActualLRPsForProcessGuidAndStateMutex       sync.RWMutex
+	countActualLRPsForProcessGuidAndStateArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+		arg5 models.ActualLRP_Presence
+	}
+	countActualLRPsForProcessGuidAndStateReturns struct {
+		result1 int
+		result2 error
+	}
+	countActualLRPsForProcessGuidAndStateReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	CountDesiredInstancesStub        func(context.Context, lager.Logger) int
 	countDesiredInstancesMutex       sync.RWMutex
 	countDesiredInstancesArgsForCall []struct {
@@ -572,6 +589,74 @@ func (fake *FakeActualLRPDB) CountActualLRPsByStateReturnsOnCall(i int, result1 
 		result4 int
 		result5 int
 	}{result1, result2, result3, result4, result5}
+}
+
+func (fake *FakeActualLRPDB) CountActualLRPsForProcessGuidAndState(arg1 context.Context, arg2 lager.Logger, arg3 string, arg4 string, arg5 models.ActualLRP_Presence) (int, error) {
+	fake.countActualLRPsForProcessGuidAndStateMutex.Lock()
+	ret, specificReturn := fake.countActualLRPsForProcessGuidAndStateReturnsOnCall[len(fake.countActualLRPsForProcessGuidAndStateArgsForCall)]
+	fake.countActualLRPsForProcessGuidAndStateArgsForCall = append(fake.countActualLRPsForProcessGuidAndStateArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 string
+		arg4 string
+		arg5 models.ActualLRP_Presence
+	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.CountActualLRPsForProcessGuidAndStateStub
+	fakeReturns := fake.countActualLRPsForProcessGuidAndStateReturns
+	fake.recordInvocation("CountActualLRPsForProcessGuidAndState", []interface{}{arg1, arg2, arg3, arg4, arg5})
+	fake.countActualLRPsForProcessGuidAndStateMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeActualLRPDB) CountActualLRPsForProcessGuidAndStateCallCount() int {
+	fake.countActualLRPsForProcessGuidAndStateMutex.RLock()
+	defer fake.countActualLRPsForProcessGuidAndStateMutex.RUnlock()
+	return len(fake.countActualLRPsForProcessGuidAndStateArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) CountActualLRPsForProcessGuidAndStateCalls(stub func(context.Context, lager.Logger, string, string, models.ActualLRP_Presence) (int, error)) {
+	fake.countActualLRPsForProcessGuidAndStateMutex.Lock()
+	defer fake.countActualLRPsForProcessGuidAndStateMutex.Unlock()
+	fake.CountActualLRPsForProcessGuidAndStateStub = stub
+}
+
+func (fake *FakeActualLRPDB) CountActualLRPsForProcessGuidAndStateArgsForCall(i int) (context.Context, lager.Logger, string, string, models.ActualLRP_Presence) {
+	fake.countActualLRPsForProcessGuidAndStateMutex.RLock()
+	defer fake.countActualLRPsForProcessGuidAndStateMutex.RUnlock()
+	argsForCall := fake.countActualLRPsForProcessGuidAndStateArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
+}
+
+func (fake *FakeActualLRPDB) CountActualLRPsForProcessGuidAndStateReturns(result1 int, result2 error) {
+	fake.countActualLRPsForProcessGuidAndStateMutex.Lock()
+	defer fake.countActualLRPsForProcessGuidAndStateMutex.Unlock()
+	fake.CountActualLRPsForProcessGuidAndStateStub = nil
+	fake.countActualLRPsForProcessGuidAndStateReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) CountActualLRPsForProcessGuidAndStateReturnsOnCall(i int, result1 int, result2 error) {
+	fake.countActualLRPsForProcessGuidAndStateMutex.Lock()
+	defer fake.countActualLRPsForProcessGuidAndStateMutex.Unlock()
+	fake.CountActualLRPsForProcessGuidAndStateStub = nil
+	if fake.countActualLRPsForProcessGuidAndStateReturnsOnCall == nil {
+		fake.countActualLRPsForProcessGuidAndStateReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.countActualLRPsForProcessGuidAndStateReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeActualLRPDB) CountDesiredInstances(arg1 context.Context, arg2 lager.Logger) int {
@@ -1075,6 +1160,8 @@ func (fake *FakeActualLRPDB) Invocations() map[string][][]interface{} {
 	defer fake.claimActualLRPMutex.RUnlock()
 	fake.countActualLRPsByStateMutex.RLock()
 	defer fake.countActualLRPsByStateMutex.RUnlock()
+	fake.countActualLRPsForProcessGuidAndStateMutex.RLock()
+	defer fake.countActualLRPsForProcessGuidAndStateMutex.RUnlock()
 	fake.countDesiredInstancesMutex.RLock()
 	defer fake.countDesiredInstancesMutex.RUnlock()
 	fake.crashActualLRPMutex.RLock()
