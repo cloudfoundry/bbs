@@ -246,18 +246,19 @@ func (db *SQLDB) DesiredLRPSchedulingInfoByProcessGuid(ctx context.Context, logg
 	return desiredLRPSchedulingInfo, err
 }
 
-func (db *SQLDB) DesiredLRPUpdateStrategyByProcessGuid(ctx context.Context, logger lager.Logger, processGuid string) (models.DesiredLRP_UpdateStrategy, error) {
+func (db *SQLDB) DesiredLRPUpdateStrategyByProcessGuid(ctx context.Context, logger lager.Logger, processGuid string) (models.DesiredLRP_UpdateStrategy, int32, error) {
 	logger = logger.Session("db-desired-lrp-update-strategy-by-process-guid", lager.Data{"process_guid": processGuid})
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
 	var updateStrategy models.DesiredLRP_UpdateStrategy
+	var instances int32
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		row := db.one(ctx, logger, tx, desiredLRPsTable,
-			helpers.ColumnList{"update_strategy"}, helpers.NoLockRow,
+			helpers.ColumnList{"update_strategy", "instances"}, helpers.NoLockRow,
 			"process_guid = ?", processGuid,
 		)
-		err := row.Scan(&updateStrategy)
+		err := row.Scan(&updateStrategy, &instances)
 		if err != nil {
 			logger.Error("failed-scanning-row", err)
 			return db.convertSQLError(err)
@@ -265,7 +266,7 @@ func (db *SQLDB) DesiredLRPUpdateStrategyByProcessGuid(ctx context.Context, logg
 		return nil
 	})
 
-	return updateStrategy, err
+	return updateStrategy, instances, err
 }
 
 func (db *SQLDB) DesiredLRPRoutingInfos(ctx context.Context, logger lager.Logger, filter models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

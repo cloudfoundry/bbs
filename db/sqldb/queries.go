@@ -315,6 +315,23 @@ func (db *SQLDB) selectLRPsWithMetricTags(ctx context.Context, logger lager.Logg
 	return q.QueryContext(ctx, db.helper.Rebind(query), models.ActualLRPStateRunning, models.ActualLRP_Ordinary)
 }
 
+func (db *SQLDB) countActualLRPsForProcessGuidAndState(ctx context.Context, logger lager.Logger, processGuid string, state string, presence models.ActualLRP_Presence, q helpers.Queryable) (int, error) {
+	query := `
+		SELECT COUNT(*) AS actual_instances
+			FROM actual_lrps
+			WHERE actual_lrps.process_guid = ? AND actual_lrps.state = ? AND actual_lrps.presence = ?
+	`
+
+	var actualInstances int
+	row := q.QueryRowContext(ctx, db.helper.Rebind(query), processGuid, state, presence)
+	err := row.Scan(&actualInstances)
+	if err != nil {
+		logger.Error("failed-actual-lrp-for-process-guid-query", err)
+		return 0, err
+	}
+	return actualInstances, nil
+}
+
 func (db *SQLDB) CountDesiredInstances(ctx context.Context, logger lager.Logger) int {
 	query := `
 		SELECT COALESCE(SUM(desired_lrps.instances), 0) AS desired_instances

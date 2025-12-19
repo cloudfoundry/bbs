@@ -279,6 +279,14 @@ var _ = Describe("Deadlocks", func() {
 		})
 	})
 
+	Context("UnclaimActualLRPIfAllRunning", func() {
+		It("retries on deadlocks", func() {
+			_, _, err := sqlDB.UnclaimActualLRPIfAllRunning(ctx, logger, false, &models.ActualLRPKey{}, 0)
+			Expect(err).To(HaveOccurred())
+			Expect(fakeConn.BeginCallCount()).To(Equal(3))
+		})
+	})
+
 	Context("UpdateDesiredLRP", func() {
 		It("retries on deadlocks", func() {
 			_, err := sqlDB.UpdateDesiredLRP(ctx, logger, "", &models.DesiredLRPUpdate{})
