@@ -106,8 +106,7 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 			"process_guid = ?", processGuid,
 		)
 
-		beforeDesiredLRP, _, err = db.fetchDesiredLRP(ctx, logger, row, tx)
-		desiredLRP = beforeDesiredLRP
+		desiredLRP, _, err = db.fetchDesiredLRP(ctx, logger, row, tx)
 		return err
 	})
 
@@ -581,7 +580,6 @@ func (db *SQLDB) fetchDesiredLRPs(ctx context.Context, logger lager.Logger, rows
 
 	return lrps, nil
 }
-
 
 func (db *SQLDB) fetchDesiredLRP(ctx context.Context, logger lager.Logger, scanner helpers.RowScanner, queryable helpers.Queryable) (*models.DesiredLRP, *models.DesiredLRPRunInfo, error) {
 	lrp, runInfo, guid, err := db.fetchDesiredLRPInternal(logger, scanner)
