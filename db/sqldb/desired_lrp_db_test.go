@@ -454,9 +454,10 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns the desired lrp update strategy", func() {
-				updateStrategy, err := sqlDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, desiredLRP.ProcessGuid)
+				updateStrategy, instances, err := sqlDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, desiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(updateStrategy).To(BeEquivalentTo(models.DesiredLRP_UpdateStrategyRolling))
+				Expect(instances).To(BeEquivalentTo(desiredLRP.Instances))
 			})
 		})
 
@@ -467,9 +468,10 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 
 			It("returns the desired lrp update strategy", func() {
-				updateStrategy, err := sqlDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, desiredLRP.ProcessGuid)
+				updateStrategy, instances, err := sqlDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, desiredLRP.ProcessGuid)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(updateStrategy).To(BeEquivalentTo(models.DesiredLRP_UpdateStrategyRecreate))
+				Expect(instances).To(BeEquivalentTo(desiredLRP.Instances))
 			})
 		})
 	})

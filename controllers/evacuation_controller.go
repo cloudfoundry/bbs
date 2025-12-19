@@ -298,7 +298,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 		return keepContainer, err
 	}
 
-	updateStrategy, err := h.desiredLRPDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, guid)
+	updateStrategy, desiredInstances, err := h.desiredLRPDB.DesiredLRPUpdateStrategyByProcessGuid(ctx, logger, guid)
 	if err != nil {
 		if err == models.ErrResourceNotFound {
 			// the desired LRP has been removed, we can remove the evacuating LRP and delete the container
@@ -341,9 +341,13 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 
 		if (targetActualLRP.State == models.ActualLRPStateRunning) ||
 			(targetActualLRP.State == models.ActualLRPStateClaimed) {
-			// unclaim the LRP and request auction
-			_, after, err := h.actualLRPDB.UnclaimActualLRP(ctx, logger, false, actualLRPKey)
+			_, after, err := h.actualLRPDB.UnclaimActualLRPIfAllRunning(ctx, logger, false, actualLRPKey, desiredInstances)
 			if err != nil {
+				if err == models.ErrActualLRPCannotBeUnclaimed {
+					// With recreate update strategy we only evacuate 1 instance at a time
+					// keep the container
+					return true, nil
+				}
 				logger.Error("failed-to-unclaim-actual-lrp", err)
 				return true, err
 			}

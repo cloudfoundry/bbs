@@ -779,7 +779,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		Context("when the update stratergy on the desired LRP is rolling", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRolling, nil)
+				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRolling, 1, nil)
 			})
 
 			Context("when the actual LRP instance is already evacuating", func() {
@@ -1492,7 +1492,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 		Context("when the update stratergy on the desired LRP is recreate", func() {
 			BeforeEach(func() {
-				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRecreate, nil)
+				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRecreate, 2, nil)
 			})
 
 			Context("when the actual LRP is ordinary", func() {
@@ -1507,28 +1507,46 @@ var _ = Describe("Evacuation Controller", func() {
 						actualLRPs = []*models.ActualLRP{actual}
 					})
 
-					It("requests an auction and deletes the container", func() {
-						Expect(err).To(BeNil())
-						Expect(keepContainer).To(BeFalse())
+					Context("when unclaiming fails", func() {
+						BeforeEach(func() {
+							fakeActualLRPDB.UnclaimActualLRPIfAllRunningReturns(nil, nil, models.ErrActualLRPCannotBeUnclaimed)
+						})
 
-						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-						_, _, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
-						Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-						Expect(lrpKey.Index).To(Equal(actual.Index))
+						It("keeps the container", func() {
+							Expect(keepContainer).To(BeTrue())
 
-						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+						})
+					})
 
-						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
-						Expect(actualTraceId).To(Equal(traceId))
+					Context("when unclaiming succeeds", func() {
+						BeforeEach(func() {
+							fakeActualLRPDB.UnclaimActualLRPIfAllRunningReturns(actual, unclaimedActualLRP, nil)
+						})
 
-						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
-						event := actualLRPInstanceHub.EmitArgsForCall(0)
-						Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
-						event = actualLRPInstanceHub.EmitArgsForCall(1)
-						Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
+						It("requests an auction and deletes the container", func() {
+							Expect(err).To(BeNil())
+							Expect(keepContainer).To(BeFalse())
+
+							Expect(fakeActualLRPDB.UnclaimActualLRPIfAllRunningCallCount()).To(Equal(1))
+							_, _, _, lrpKey, _ := fakeActualLRPDB.UnclaimActualLRPIfAllRunningArgsForCall(0)
+							Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+							Expect(lrpKey.Index).To(Equal(actual.Index))
+
+							schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+							expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+
+							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+							_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+							Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+							Expect(actualTraceId).To(Equal(traceId))
+
+							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+							event := actualLRPInstanceHub.EmitArgsForCall(0)
+							Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
+							event = actualLRPInstanceHub.EmitArgsForCall(1)
+							Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
+						})
 					})
 				})
 
@@ -1538,28 +1556,45 @@ var _ = Describe("Evacuation Controller", func() {
 						actualLRPs = []*models.ActualLRP{actual}
 					})
 
-					It("requests an auction and deletes the container", func() {
-						Expect(err).To(BeNil())
-						Expect(keepContainer).To(BeFalse())
+					Context("when unclaiming fails", func() {
+						BeforeEach(func() {
+							fakeActualLRPDB.UnclaimActualLRPIfAllRunningReturns(nil, nil, models.ErrActualLRPCannotBeUnclaimed)
+						})
 
-						Expect(fakeActualLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
-						_, _, _, lrpKey := fakeActualLRPDB.UnclaimActualLRPArgsForCall(0)
-						Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
-						Expect(lrpKey.Index).To(Equal(actual.Index))
+						It("keeps the container", func() {
+							Expect(keepContainer).To(BeTrue())
+							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(0))
+						})
+					})
 
-						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+					Context("when unclaiming succeeds", func() {
+						BeforeEach(func() {
+							fakeActualLRPDB.UnclaimActualLRPIfAllRunningReturns(actual, unclaimedActualLRP, nil)
+						})
 
-						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
-						_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
-						Expect(actualTraceId).To(Equal(traceId))
+						It("requests an auction and deletes the container", func() {
+							Expect(err).To(BeNil())
+							Expect(keepContainer).To(BeFalse())
 
-						Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
-						event := actualLRPInstanceHub.EmitArgsForCall(0)
-						Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
-						event = actualLRPInstanceHub.EmitArgsForCall(1)
-						Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
+							Expect(fakeActualLRPDB.UnclaimActualLRPIfAllRunningCallCount()).To(Equal(1))
+							_, _, _, lrpKey, _ := fakeActualLRPDB.UnclaimActualLRPIfAllRunningArgsForCall(0)
+							Expect(lrpKey.ProcessGuid).To(Equal(actual.ProcessGuid))
+							Expect(lrpKey.Index).To(Equal(actual.Index))
+
+							schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
+							expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+
+							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+							_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+							Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+							Expect(actualTraceId).To(Equal(traceId))
+
+							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
+							event := actualLRPInstanceHub.EmitArgsForCall(0)
+							Expect(event).To(Equal(models.NewActualLRPInstanceCreatedEvent(unclaimedActualLRP, traceId)))
+							event = actualLRPInstanceHub.EmitArgsForCall(1)
+							Expect(event).To(Equal(models.NewActualLRPInstanceRemovedEvent(actual, traceId)))
+						})
 					})
 				})
 			})
@@ -1648,7 +1683,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 			Context("when getting the update strategy returns not found error", func() {
 				BeforeEach(func() {
-					fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(0, models.ErrResourceNotFound)
+					fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(0, 0, models.ErrResourceNotFound)
 					actualLRPs = []*models.ActualLRP{actual}
 				})
 
@@ -1671,7 +1706,7 @@ var _ = Describe("Evacuation Controller", func() {
 
 			Context("when getting the update strategy returns other error", func() {
 				BeforeEach(func() {
-					fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(0, errors.New("some-other-error"))
+					fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(0, 0, errors.New("some-other-error"))
 					actualLRPs = []*models.ActualLRP{actual}
 				})
 

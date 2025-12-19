@@ -14,6 +14,8 @@ type ActualLRPDB interface {
 	ActualLRPsByProcessGuids(ctx context.Context, logger lager.Logger, filter models.ActualLRPsByProcessGuidsFilter) ([]*models.ActualLRP, error)
 	CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (after *models.ActualLRP, err error)
 	UnclaimActualLRP(ctx context.Context, logger lager.Logger, isStale bool, key *models.ActualLRPKey) (before *models.ActualLRP, after *models.ActualLRP, err error)
+	UnclaimActualLRPIfAllRunning(ctx context.Context, logger lager.Logger, isStale bool, key *models.ActualLRPKey, desiredInstances int32) (before *models.ActualLRP, after *models.ActualLRP, err error)
+
 	ClaimActualLRP(ctx context.Context, logger lager.Logger, processGuid string, index int32, instanceKey *models.ActualLRPInstanceKey) (before *models.ActualLRP, after *models.ActualLRP, err error)
 	StartActualLRP(ctx context.Context,
 		logger lager.Logger,

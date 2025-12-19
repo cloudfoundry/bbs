@@ -84,7 +84,7 @@ type FakeDesiredLRPDB struct {
 		result1 []*models.DesiredLRPSchedulingInfo
 		result2 error
 	}
-	DesiredLRPUpdateStrategyByProcessGuidStub        func(context.Context, lager.Logger, string) (models.DesiredLRP_UpdateStrategy, error)
+	DesiredLRPUpdateStrategyByProcessGuidStub        func(context.Context, lager.Logger, string) (models.DesiredLRP_UpdateStrategy, int32, error)
 	desiredLRPUpdateStrategyByProcessGuidMutex       sync.RWMutex
 	desiredLRPUpdateStrategyByProcessGuidArgsForCall []struct {
 		arg1 context.Context
@@ -93,11 +93,13 @@ type FakeDesiredLRPDB struct {
 	}
 	desiredLRPUpdateStrategyByProcessGuidReturns struct {
 		result1 models.DesiredLRP_UpdateStrategy
-		result2 error
+		result2 int32
+		result3 error
 	}
 	desiredLRPUpdateStrategyByProcessGuidReturnsOnCall map[int]struct {
 		result1 models.DesiredLRP_UpdateStrategy
-		result2 error
+		result2 int32
+		result3 error
 	}
 	DesiredLRPsStub        func(context.Context, lager.Logger, models.DesiredLRPFilter) ([]*models.DesiredLRP, error)
 	desiredLRPsMutex       sync.RWMutex
@@ -474,7 +476,7 @@ func (fake *FakeDesiredLRPDB) DesiredLRPSchedulingInfosReturnsOnCall(i int, resu
 	}{result1, result2}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuid(arg1 context.Context, arg2 lager.Logger, arg3 string) (models.DesiredLRP_UpdateStrategy, error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuid(arg1 context.Context, arg2 lager.Logger, arg3 string) (models.DesiredLRP_UpdateStrategy, int32, error) {
 	fake.desiredLRPUpdateStrategyByProcessGuidMutex.Lock()
 	ret, specificReturn := fake.desiredLRPUpdateStrategyByProcessGuidReturnsOnCall[len(fake.desiredLRPUpdateStrategyByProcessGuidArgsForCall)]
 	fake.desiredLRPUpdateStrategyByProcessGuidArgsForCall = append(fake.desiredLRPUpdateStrategyByProcessGuidArgsForCall, struct {
@@ -490,9 +492,9 @@ func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuid(arg1 context
 		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fakeReturns.result1, fakeReturns.result2
+	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidCallCount() int {
@@ -501,7 +503,7 @@ func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidCallCount() i
 	return len(fake.desiredLRPUpdateStrategyByProcessGuidArgsForCall)
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidCalls(stub func(context.Context, lager.Logger, string) (models.DesiredLRP_UpdateStrategy, error)) {
+func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidCalls(stub func(context.Context, lager.Logger, string) (models.DesiredLRP_UpdateStrategy, int32, error)) {
 	fake.desiredLRPUpdateStrategyByProcessGuidMutex.Lock()
 	defer fake.desiredLRPUpdateStrategyByProcessGuidMutex.Unlock()
 	fake.DesiredLRPUpdateStrategyByProcessGuidStub = stub
@@ -514,30 +516,33 @@ func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidArgsForCall(i
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidReturns(result1 models.DesiredLRP_UpdateStrategy, result2 error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidReturns(result1 models.DesiredLRP_UpdateStrategy, result2 int32, result3 error) {
 	fake.desiredLRPUpdateStrategyByProcessGuidMutex.Lock()
 	defer fake.desiredLRPUpdateStrategyByProcessGuidMutex.Unlock()
 	fake.DesiredLRPUpdateStrategyByProcessGuidStub = nil
 	fake.desiredLRPUpdateStrategyByProcessGuidReturns = struct {
 		result1 models.DesiredLRP_UpdateStrategy
-		result2 error
-	}{result1, result2}
+		result2 int32
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidReturnsOnCall(i int, result1 models.DesiredLRP_UpdateStrategy, result2 error) {
+func (fake *FakeDesiredLRPDB) DesiredLRPUpdateStrategyByProcessGuidReturnsOnCall(i int, result1 models.DesiredLRP_UpdateStrategy, result2 int32, result3 error) {
 	fake.desiredLRPUpdateStrategyByProcessGuidMutex.Lock()
 	defer fake.desiredLRPUpdateStrategyByProcessGuidMutex.Unlock()
 	fake.DesiredLRPUpdateStrategyByProcessGuidStub = nil
 	if fake.desiredLRPUpdateStrategyByProcessGuidReturnsOnCall == nil {
 		fake.desiredLRPUpdateStrategyByProcessGuidReturnsOnCall = make(map[int]struct {
 			result1 models.DesiredLRP_UpdateStrategy
-			result2 error
+			result2 int32
+			result3 error
 		})
 	}
 	fake.desiredLRPUpdateStrategyByProcessGuidReturnsOnCall[i] = struct {
 		result1 models.DesiredLRP_UpdateStrategy
-		result2 error
-	}{result1, result2}
+		result2 int32
+		result3 error
+	}{result1, result2, result3}
 }
 
 func (fake *FakeDesiredLRPDB) DesiredLRPs(arg1 context.Context, arg2 lager.Logger, arg3 models.DesiredLRPFilter) ([]*models.DesiredLRP, error) {

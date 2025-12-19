@@ -2335,4 +2335,169 @@ var _ = Describe("ActualLRPDB", func() {
 			})
 		})
 	})
+
+	Describe("UnclaimActualLRPIfAllRunning", func() {
+		var (
+			actualLRP *models.ActualLRP
+			guid      = "the-guid"
+			index     = int32(1)
+
+			actualLRPKey = &models.ActualLRPKey{
+				ProcessGuid: guid,
+				Index:       index,
+				Domain:      "the-domain",
+			}
+		)
+
+		Context("when the actual LRP exists", func() {
+			BeforeEach(func() {
+				err := sqlDB.DesireLRP(ctx, logger, &models.DesiredLRP{
+					ProcessGuid: guid,
+					Domain:      "the-domain",
+					Instances:   1,
+				})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("When the actual LRP is claimed", func() {
+				var beforeActualLRP, afterActualLRP *models.ActualLRP
+
+				BeforeEach(func() {
+					actualLRP = &models.ActualLRP{
+						ActualLRPKey: *actualLRPKey,
+					}
+
+					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("all desired instances are running", func() {
+					BeforeEach(func() {
+						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, &actualLRP.ActualLRPInstanceKey, &models.ActualLRPNetInfo{}, []*models.ActualLRPInternalRoute{}, map[string]string{}, false, "", true)
+						Expect(err).NotTo(HaveOccurred())
+					})
+
+					JustBeforeEach(func() {
+						var err error
+						beforeActualLRP, afterActualLRP, err = sqlDB.UnclaimActualLRPIfAllRunning(ctx, logger, false, actualLRPKey, 1)
+						Expect(err).ToNot(HaveOccurred())
+					})
+
+					It("unclaims the actual LRP", func() {
+						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+						Expect(err).ToNot(HaveOccurred())
+						Expect(actualLRPs).To(HaveLen(1))
+						Expect(actualLRPs[0].State).To(Equal(models.ActualLRPStateUnclaimed))
+					})
+
+					It("it removes the net info from the actualLRP", func() {
+						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+						Expect(err).ToNot(HaveOccurred())
+						Expect(actualLRPs).To(HaveLen(1))
+						Expect(actualLRPs[0].ActualLRPNetInfo).To(Equal(models.ActualLRPNetInfo{}))
+					})
+
+					It("it increments the modification tag on the actualLRP", func() {
+						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+						Expect(err).ToNot(HaveOccurred())
+						// +3 because of claim, start AND unclaim
+						Expect(actualLRPs).To(HaveLen(1))
+						Expect(actualLRPs[0].ModificationTag.Index).To(Equal(actualLRP.ModificationTag.Index + uint32(3)))
+					})
+
+					It("it clears the actualLRP's instance key", func() {
+						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+						Expect(err).ToNot(HaveOccurred())
+						Expect(actualLRPs).To(HaveLen(1))
+						Expect(actualLRPs[0].ActualLRPInstanceKey).To(Equal(models.ActualLRPInstanceKey{}))
+					})
+
+					It("it updates the actualLRP's update at timestamp", func() {
+						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+						Expect(err).ToNot(HaveOccurred())
+						Expect(actualLRPs).To(HaveLen(1))
+						Expect(actualLRPs[0].Since).To(BeNumerically(">", actualLRP.Since))
+					})
+
+					It("returns the previous and current actual lrp", func() {
+						expectedActualLRP := *actualLRP
+						expectedActualLRP.State = models.ActualLRPStateRunning
+						expectedActualLRP.Since = fakeClock.Now().UnixNano()
+						expectedActualLRP.ModificationTag = models.ModificationTag{
+							Epoch: "my-awesome-guid",
+							Index: 2,
+						}
+						expectedActualLRP.ActualLrpInternalRoutes = []*models.ActualLRPInternalRoute{}
+						expectedActualLRP.MetricTags = map[string]string{}
+						expectedActualLRP.SetRoutable(false)
+
+						Expect(beforeActualLRP).To(BeEquivalentTo(&expectedActualLRP))
+
+						actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+						Expect(err).ToNot(HaveOccurred())
+						Expect(actualLRPs).To(ConsistOf(afterActualLRP))
+					})
+				})
+
+				Context("all desired instances are not running", func() {
+					It("returns an error", func() {
+						_, _, err := sqlDB.UnclaimActualLRPIfAllRunning(ctx, logger, false, actualLRPKey, 1)
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(Equal(models.ErrActualLRPCannotBeUnclaimed))
+					})
+				})
+			})
+
+			Context("When the actual LRP is unclaimed", func() {
+				BeforeEach(func() {
+					actualLRP = &models.ActualLRP{
+						ActualLRPKey: *actualLRPKey,
+					}
+
+					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns an error", func() {
+					_, _, err := sqlDB.UnclaimActualLRPIfAllRunning(ctx, logger, false, actualLRPKey, 1)
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrActualLRPCannotBeUnclaimed))
+				})
+			})
+
+			Context("When the actual LRP is claimed and isStale is true", func() {
+				BeforeEach(func() {
+					actualLRP = &models.ActualLRP{
+						ActualLRPKey: *actualLRPKey,
+					}
+
+					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+					Expect(err).NotTo(HaveOccurred())
+					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns an error and retains claimed state", func() {
+					_, _, err := sqlDB.UnclaimActualLRPIfAllRunning(ctx, logger, true, actualLRPKey, 1)
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(models.ErrActualLRPCannotBeUnclaimed))
+
+					actualLRPs, err := sqlDB.ActualLRPs(ctx, logger, models.ActualLRPFilter{ProcessGuid: guid, Index: &index})
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actualLRPs).To(HaveLen(1))
+					Expect(actualLRPs[0].State).To(Equal(models.ActualLRPStateClaimed))
+				})
+			})
+		})
+
+		Context("when the actual LRP doesn't exist", func() {
+			It("returns a resource not found error", func() {
+				_, _, err := sqlDB.UnclaimActualLRPIfAllRunning(ctx, logger, false, actualLRPKey, 1)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrResourceNotFound))
+			})
+		})
+	})
 })
