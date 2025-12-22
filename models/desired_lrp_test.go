@@ -1451,6 +1451,58 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			Expect(json.Unmarshal([]byte(expectedJSON), &testV)).To(Succeed())
 			Expect(testV).To(Equal(desiredLRPUpdate))
 		})
+
+		Context("with image credentials", func() {
+			var updateWithCredentials models.DesiredLRPUpdate
+			var expectedJSONWithCredentials string
+
+			BeforeEach(func() {
+				updateWithCredentials.SetInstances(2)
+				updateWithCredentials.SetImageUsername("testuser")
+				updateWithCredentials.SetImagePassword("testpass")
+				expectedJSONWithCredentials = `{
+					"instances": 2,
+					"image_username": "testuser",
+					"image_password": "testpass"
+				}`
+			})
+
+			It("can marshal image credentials to JSON", func() {
+				jsonBytes, err := json.Marshal(updateWithCredentials)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(jsonBytes).To(MatchJSON(expectedJSONWithCredentials))
+			})
+
+			It("can unmarshal image credentials from JSON", func() {
+				var testV models.DesiredLRPUpdate
+				Expect(json.Unmarshal([]byte(expectedJSONWithCredentials), &testV)).To(Succeed())
+				Expect(testV.ImageUsernameExists()).To(BeTrue())
+				Expect(testV.GetImageUsername()).To(Equal("testuser"))
+				Expect(testV.ImagePasswordExists()).To(BeTrue())
+				Expect(testV.GetImagePassword()).To(Equal("testpass"))
+			})
+
+			It("can round-trip image credentials through JSON", func() {
+				jsonBytes, err := json.Marshal(updateWithCredentials)
+				Expect(err).NotTo(HaveOccurred())
+
+				var testV models.DesiredLRPUpdate
+				Expect(json.Unmarshal(jsonBytes, &testV)).To(Succeed())
+				Expect(testV.ImageUsernameExists()).To(BeTrue())
+				Expect(testV.GetImageUsername()).To(Equal("testuser"))
+				Expect(testV.ImagePasswordExists()).To(BeTrue())
+				Expect(testV.GetImagePassword()).To(Equal("testpass"))
+			})
+
+			It("omits image credentials from JSON when not set", func() {
+				updateWithoutCredentials := models.DesiredLRPUpdate{}
+				updateWithoutCredentials.SetInstances(2)
+				jsonBytes, err := json.Marshal(updateWithoutCredentials)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(jsonBytes)).NotTo(ContainSubstring("image_username"))
+				Expect(string(jsonBytes)).NotTo(ContainSubstring("image_password"))
+			})
+		})
 	})
 
 	Describe("IsMetricTagsUpdated", func() {
@@ -1566,6 +1618,23 @@ var _ = Describe("DesiredLRPUpdate", func() {
 			BeforeEach(func() {
 				existingLRP.ImageUsername = ""
 				existingLRP.ImagePassword = ""
+			})
+
+			It("returns false when no credentials are provided in update", func() {
+				update := &models.DesiredLRPUpdate{}
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeFalse())
+			})
+
+			It("returns false when only username is provided in update", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeFalse())
+			})
+
+			It("returns false when only password is provided in update", func() {
+				update := &models.DesiredLRPUpdate{}
+				update.SetImagePassword("new-password")
+				Expect(update.IsImageCredentialsUpdated(existingLRP)).To(BeFalse())
 			})
 
 			It("returns true when new credentials are provided", func() {
