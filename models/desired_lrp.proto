@@ -88,6 +88,14 @@ message DesiredLRPUpdate {
     string annotation = 3;
   }
   map<string, MetricTagValue> metric_tags = 4;
+
+  oneof optional_image_username {
+    string image_username = 5;
+  }
+  
+  oneof optional_image_password {
+    string image_password = 6;
+  }
 }
 
 message DesiredLRPKey {

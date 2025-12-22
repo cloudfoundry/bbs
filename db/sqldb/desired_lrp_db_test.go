@@ -596,6 +596,87 @@ var _ = Describe("DesiredLRPDB", func() {
 			})
 		})
 
+		Context("when updating image credentials", func() {
+			BeforeEach(func() {
+				expectedDesiredLRP.ImageUsername = "original-username"
+				expectedDesiredLRP.ImagePassword = "original-password"
+				expectedDesiredLRP.CpuWeight = 42
+			})
+
+			It("updates both image username and password in run_info and maintains other fields", func() {
+				originalAction := expectedDesiredLRP.Action
+				originalMonitor := expectedDesiredLRP.Monitor
+				originalStartTimeout := expectedDesiredLRP.StartTimeoutMs
+				update = &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username")
+				update.SetImagePassword("new-password")
+
+				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
+				Expect(err).NotTo(HaveOccurred())
+
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(desiredLRP.ImageUsername).To(Equal("new-username"))
+				Expect(desiredLRP.ImagePassword).To(Equal("new-password"))
+				Expect(desiredLRP.CpuWeight).To(Equal(uint32(42)))
+				expectedDesiredLRP.ImageUsername = "new-username"
+				expectedDesiredLRP.ImagePassword = "new-password"
+				expectedDesiredLRP.ModificationTag.Increment()
+
+				Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
+				Expect(desiredLRP.Action).To(Equal(originalAction))
+				Expect(desiredLRP.Monitor).To(Equal(originalMonitor))
+				Expect(desiredLRP.StartTimeoutMs).To(Equal(originalStartTimeout))
+			})
+
+			It("updates only image username and preserves password", func() {
+				originalAction := expectedDesiredLRP.Action
+				originalMonitor := expectedDesiredLRP.Monitor
+				update = &models.DesiredLRPUpdate{}
+				update.SetImageUsername("new-username-only")
+
+				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
+				Expect(err).NotTo(HaveOccurred())
+
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(desiredLRP.ImageUsername).To(Equal("new-username-only"))
+				Expect(desiredLRP.ImagePassword).To(Equal("original-password"))
+				Expect(desiredLRP.CpuWeight).To(Equal(uint32(42)))
+				expectedDesiredLRP.ImageUsername = "new-username-only"
+				expectedDesiredLRP.ModificationTag.Increment()
+
+				Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
+				Expect(desiredLRP.Action).To(Equal(originalAction))
+				Expect(desiredLRP.Monitor).To(Equal(originalMonitor))
+			})
+
+			It("updates only image password and preserves username", func() {
+				originalAction := expectedDesiredLRP.Action
+				originalMonitor := expectedDesiredLRP.Monitor
+				update = &models.DesiredLRPUpdate{}
+				update.SetImagePassword("new-password-only")
+
+				_, err := sqlDB.UpdateDesiredLRP(ctx, logger, expectedDesiredLRP.ProcessGuid, update)
+				Expect(err).NotTo(HaveOccurred())
+
+				desiredLRP, err := sqlDB.DesiredLRPByProcessGuid(ctx, logger, expectedDesiredLRP.ProcessGuid)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(desiredLRP.ImageUsername).To(Equal("original-username"))
+				Expect(desiredLRP.ImagePassword).To(Equal("new-password-only"))
+				Expect(desiredLRP.CpuWeight).To(Equal(uint32(42)))
+				expectedDesiredLRP.ImagePassword = "new-password-only"
+				expectedDesiredLRP.ModificationTag.Increment()
+
+				Expect(desiredLRP).To(BeEquivalentTo(expectedDesiredLRP))
+				Expect(desiredLRP.Action).To(Equal(originalAction))
+				Expect(desiredLRP.Monitor).To(Equal(originalMonitor))
+			})
+		})
+
 		Context("when routes param is invalid", func() {
 			It("returns a bad request error", func() {
 				routeContent := []byte("bad json")
