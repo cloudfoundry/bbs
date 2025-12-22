@@ -97,7 +97,6 @@ func (db *SQLDB) DesiredLRPByProcessGuid(ctx context.Context, logger lager.Logge
 	defer logger.Debug("complete")
 
 	var desiredLRP *models.DesiredLRP
-	var beforeDesiredLRP *models.DesiredLRP
 
 	err := db.transact(ctx, logger, func(logger lager.Logger, tx helpers.Tx) error {
 		var err error
