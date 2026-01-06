@@ -676,7 +676,7 @@ var _ = Describe("ActualLRP API", func() {
 				locketPort, err := portAllocator.ClaimPorts(1)
 				Expect(err).NotTo(HaveOccurred())
 
-				locketAddress := fmt.Sprintf("localhost:%d", locketPort)
+				locketAddress := fmt.Sprintf("127.0.0.1:%d", locketPort)
 
 				locketRunner := locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
 					cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
