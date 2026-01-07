@@ -1358,8 +1358,8 @@ var _ = Describe("DesiredLRPUpdate", func() {
 	Describe("Validate", func() {
 		var assertDesiredLRPValidationFailsWithMessage = func(lrp models.DesiredLRPUpdate, substring string) {
 			validationErr := lrp.Validate()
-			Expect(validationErr).To(HaveOccurred())
-			Expect(validationErr.Error()).To(ContainSubstring(substring))
+			ExpectWithOffset(1, validationErr).To(HaveOccurred())
+			ExpectWithOffset(1, validationErr.Error()).To(ContainSubstring(substring))
 		}
 
 		It("requires a positive nonzero number of instances", func() {
@@ -1403,12 +1403,16 @@ var _ = Describe("DesiredLRPUpdate", func() {
 		})
 
 		Context("image credentials", func() {
+			BeforeEach(func() {
+				desiredLRPUpdate = models.DesiredLRPUpdate{}
+			})
 			It("requires both username and password when updating credentials", func() {
+				By("validating image_password updates")
 				desiredLRPUpdate.SetImageUsername("username")
 				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "image_password")
 
+				By("validating image_username updates")
 				desiredLRPUpdate = models.DesiredLRPUpdate{}
-				desiredLRPUpdate.SetInstances(2)
 				desiredLRPUpdate.SetImagePassword("password")
 				assertDesiredLRPValidationFailsWithMessage(desiredLRPUpdate, "image_username")
 			})
