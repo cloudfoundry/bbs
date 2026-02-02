@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	TCPProtocol  = "tcp"
-	UDPProtocol  = "udp"
-	ICMPProtocol = "icmp"
-	AllProtocol  = "all"
+	TCPProtocol    = "tcp"
+	UDPProtocol    = "udp"
+	ICMPProtocol   = "icmp"
+	ICMPv6Protocol = "icmpv6"
+	AllProtocol    = "all"
 )
 
 var errInvalidIP = errors.New("Invalid IP")
@@ -38,6 +39,16 @@ func (rule SecurityGroupRule) Validate() error {
 		}
 		if rule.IcmpInfo == nil {
 			validationError = validationError.Append(ErrInvalidField{"icmp_info"})
+		}
+	case ICMPv6Protocol:
+		if rule.PortRange != nil {
+			validationError = validationError.Append(ErrInvalidField{"port_range"})
+		}
+		if rule.Ports != nil {
+			validationError = validationError.Append(ErrInvalidField{"ports"})
+		}
+		if rule.IcmpInfo == nil {
+			validationError = validationError.Append(ErrInvalidField{"icmpv6_info"})
 		}
 	case AllProtocol:
 		if rule.PortRange != nil {

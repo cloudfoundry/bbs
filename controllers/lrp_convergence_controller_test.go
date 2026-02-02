@@ -262,8 +262,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		It("transition the LRP to UNCLAIMED state", func() {
 			Eventually(fakeLRPDB.UnclaimActualLRPCallCount).Should(Equal(1))
-			_, _, actualKey := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
+			_, _, isStale, actualKey := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
 			Expect(actualKey).To(Equal(key))
+			Expect(isStale).To(BeTrue())
 		})
 
 		It("emits an LRPChanged event", func() {
@@ -310,6 +311,36 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				Expect(actualTraceId).To(Equal(traceId))
 				request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 				Expect(startAuctions).To(ContainElement(&request))
+			})
+
+			It("does not emit LRP changed event", func() {
+				Consistently(actualHub.EmitCallCount).Should(BeZero())
+			})
+
+			It("does not emit any instance events", func() {
+				Consistently(actualLRPInstanceHub.EmitCallCount).Should(BeZero())
+			})
+		})
+
+		Context("when the LRP cannot be unclaimed because it is stale and already claimed", func() {
+			BeforeEach(func() {
+				fakeLRPDB.UnclaimActualLRPReturns(nil, nil, models.ErrActualLRPCannotBeUnclaimed)
+			})
+
+			It("retains the claimed state and still auctions off the returned keys", func() {
+				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
+
+				_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
+				Expect(startAuctions).To(HaveLen(1))
+				Expect(actualTraceId).To(Equal(traceId))
+				request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
+				Expect(startAuctions).To(ContainElement(&request))
+			})
+
+			It("calls UnclaimActualLRP with isStaleUnclaimed=true", func() {
+				Expect(fakeLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+				_, _, isStaleUnclaimed, _ := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
+				Expect(isStaleUnclaimed).To(BeTrue())
 			})
 
 			It("does not emit LRP changed event", func() {
@@ -511,6 +542,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 			It("unclaims the suspect replacement lrp", func() {
 				Expect(fakeLRPDB.UnclaimActualLRPCallCount()).To(Equal(1))
+				_, _, isStale, _ := fakeLRPDB.UnclaimActualLRPArgsForCall(0)
+				Expect(isStale).To(BeFalse())
 			})
 
 			It("does not emit change events", func() {

@@ -49,10 +49,17 @@ var _ = BeforeSuite(func() {
 	sqlRunner = test_helpers.NewSQLRunner(dbName)
 	sqlProcess = ginkgomon.Invoke(sqlRunner)
 
+	dbParams := &helpers.BBSDBParam{
+		DriverName:                    sqlRunner.DriverName(),
+		DatabaseConnectionString:      sqlRunner.ConnectionString(),
+		SqlCACertFile:                 "",
+		SqlEnableIdentityVerification: false,
+	}
+
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
 	var err error
-	rawSQLDB, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
+	rawSQLDB, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawSQLDB.Ping()).NotTo(HaveOccurred())
 

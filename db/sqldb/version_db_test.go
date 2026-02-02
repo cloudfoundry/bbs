@@ -124,10 +124,16 @@ var _ = Describe("Version", func() {
 
 			BeforeEach(func() {
 				var err error
-				db, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString+"invalid-db", "", false)
+				dbParams := &helpers.BBSDBParam{
+					DriverName:                    dbDriverName,
+					DatabaseConnectionString:      dbBaseConnectionString,
+					SqlCACertFile:                 "",
+					SqlEnableIdentityVerification: false,
+				}
+				db, err = helpers.Connect(logger, dbParams)
 				Expect(err).NotTo(HaveOccurred())
 				helperDB = helpers.NewMonitoredDB(db, monitor.New())
-				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+				sqlDB = sqldb.NewSQLDB(helperDB, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 			})
 
 			AfterEach(func() {

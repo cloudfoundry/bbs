@@ -45,6 +45,17 @@ func (request ActualLRPsRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(internalRequest)
 }
 
+func (request *ProtoActualLRPsByProcessGuidsRequest) Validate() error {
+	return request.FromProto().Validate()
+}
+
+func (request *ActualLRPsByProcessGuidsRequest) Validate() error {
+	if len(request.ProcessGuids) == 0 {
+		return NewError(Error_InvalidRequest, "process_guids must not be empty")
+	}
+	return nil
+}
+
 func (request *ProtoActualLRPGroupsRequest) Validate() error {
 	return request.FromProto().Validate()
 }

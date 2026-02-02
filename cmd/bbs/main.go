@@ -100,12 +100,18 @@ func main() {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
+	params := &helpers.BBSDBParam{
+		DriverName:                    bbsConfig.DatabaseDriver,
+		DatabaseConnectionString:      bbsConfig.DatabaseConnectionString,
+		SqlCACertFile:                 bbsConfig.SQLCACertFile,
+		SqlEnableIdentityVerification: bbsConfig.SQLEnableIdentityVerification,
+		ConnectionTimeout:             time.Duration(bbsConfig.DBConnectionTimeout),
+		ReadTimeout:                   time.Duration(bbsConfig.DBReadTimeout),
+		WriteTimeout:                  time.Duration(bbsConfig.DBWriteTimeout),
+	}
 	sqlConn, err := helpers.Connect(
 		logger,
-		bbsConfig.DatabaseDriver,
-		bbsConfig.DatabaseConnectionString,
-		bbsConfig.SQLCACertFile,
-		bbsConfig.SQLEnableIdentityVerification,
+		params,
 	)
 	if err != nil {
 		logger.Fatal("failed-to-open-sql", err)
@@ -114,6 +120,7 @@ func main() {
 
 	sqlConn.SetMaxOpenConns(bbsConfig.MaxOpenDatabaseConnections)
 	sqlConn.SetMaxIdleConns(bbsConfig.MaxIdleDatabaseConnections)
+	sqlConn.SetConnMaxLifetime(time.Duration(bbsConfig.MaxDatabaseConnectionLifetime))
 
 	err = sqlConn.Ping()
 	if err != nil {
@@ -131,6 +138,7 @@ func main() {
 		clock,
 		bbsConfig.DatabaseDriver,
 		metronClient,
+		bbsConfig.DebugLRPStartHeartbeats,
 	)
 	err = sqlDB.CreateConfigurationsTable(context.Background(), logger)
 	if err != nil {
@@ -230,9 +238,9 @@ func main() {
 		logger,
 		locketClient,
 		lockIdentifier,
-		locket.DefaultSessionTTLInSeconds,
+		int64(time.Duration(bbsConfig.LockTTL)/time.Second),
 		clock,
-		locket.SQLRetryInterval,
+		time.Duration(bbsConfig.LockRetryInterval),
 	)})
 
 	var lock ifrit.Runner
@@ -245,7 +253,7 @@ func main() {
 		lock = jointlock.NewJointLock(clock, 2*time.Second, locks...)
 	}
 
-	serviceClient := serviceclient.NewServiceClient(locketClient)
+	serviceClient := serviceclient.NewServiceClient(locketClient, time.Duration(bbsConfig.DBConnectionTimeout))
 
 	logger.Info("report-interval", lager.Data{"value": bbsConfig.ReportInterval})
 	fileDescriptorTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
@@ -454,10 +462,8 @@ func initializeMetron(logger lager.Logger, bbsConfig config.BBSConfig) (loggingc
 		return nil, err
 	}
 
-	if bbsConfig.LoggregatorConfig.UseV2API {
-		emitter := runtimeemitter.NewV1(client)
-		go emitter.Run()
-	}
+	emitter := runtimeemitter.NewV1(client)
+	go emitter.Run()
 
 	return client, nil
 }

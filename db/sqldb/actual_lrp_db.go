@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -102,6 +103,31 @@ func (db *SQLDB) ActualLRPs(ctx context.Context, logger lager.Logger, filter mod
 	return lrps, nil
 }
 
+func (db *SQLDB) ActualLRPsByProcessGuids(ctx context.Context, logger lager.Logger, filter models.ActualLRPsByProcessGuidsFilter) ([]*models.ActualLRP, error) {
+	logger = logger.Session("db-multiple-actual-lrps", lager.Data{"filter": filter})
+	logger.Debug("starting")
+	defer logger.Debug("complete")
+
+	var wheres []string
+	var values []interface{}
+
+	if len(filter.ProcessGuids) > 0 {
+		placeholders := make([]string, len(filter.ProcessGuids))
+		for i, guid := range filter.ProcessGuids {
+			placeholders[i] = "?"
+			values = append(values, guid)
+		}
+		wheres = append(wheres, fmt.Sprintf("process_guid IN (%s)", strings.Join(placeholders, ",")))
+	}
+
+	lrps, err := db.getActualLRPs(ctx, logger, strings.Join(wheres, " AND "), values...)
+	if err != nil {
+		return nil, err
+	}
+
+	return lrps, nil
+}
+
 func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, error) {
 	logger = logger.Session("db-create-unclaimed-actual-lrps", lager.Data{"key": key})
 	logger.Info("starting")
@@ -151,7 +177,6 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 
 		return err
 	})
-
 	if err != nil {
 		logger.Error("failed-to-create-unclaimed-actual-lrp", err)
 		return nil, err
@@ -169,7 +194,7 @@ func (db *SQLDB) CreateUnclaimedActualLRP(ctx context.Context, logger lager.Logg
 	return lrp, nil
 }
 
-func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
+func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, isStale bool, key *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.Session("db-unclaim-actual-lrp", lager.Data{"key": key})
 	logger.Info("starting")
 	defer logger.Info("complete")
@@ -189,7 +214,11 @@ func (db *SQLDB) UnclaimActualLRP(ctx context.Context, logger lager.Logger, key 
 		beforeActualLRP = *actualLRP
 
 		if actualLRP.State == models.ActualLRPStateUnclaimed {
-			logger.Debug("already-unclaimed")
+			logger.Debug("already-" + actualLRP.State)
+			return models.ErrActualLRPCannotBeUnclaimed
+		}
+		if isStale && actualLRP.State == models.ActualLRPStateClaimed {
+			logger.Debug("a stale unstarted claim already-" + actualLRP.State + " by another cell.")
 			return models.ErrActualLRPCannotBeUnclaimed
 		}
 
@@ -300,10 +329,16 @@ func (db *SQLDB) StartActualLRP(
 	metricTags map[string]string,
 	routable bool,
 	availabilityZone string,
+	isCurrentlyRunning bool,
 ) (*models.ActualLRP, *models.ActualLRP, error) {
 	logger = logger.Session("db-start-actual-lrp", lager.Data{"actual_lrp_key": key, "actual_lrp_instance_key": instanceKey, "net_info": netInfo, "routable": routable})
-	logger.Info("starting")
-	defer logger.Info("complete")
+	if db.debugStartActualLRPHeartbeats && isCurrentlyRunning {
+		logger.Debug("heartbeating-lrp")
+		defer logger.Debug("heartbeat-complete")
+	} else {
+		logger.Info("starting")
+		defer logger.Info("complete")
+	}
 
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
@@ -412,7 +447,7 @@ func (db *SQLDB) CrashActualLRP(ctx context.Context, logger lager.Logger, key *m
 	logger.Info("starting")
 	defer logger.Info("complete")
 
-	var immediateRestart = false
+	immediateRestart := false
 	var beforeActualLRP models.ActualLRP
 	var actualLRP *models.ActualLRP
 

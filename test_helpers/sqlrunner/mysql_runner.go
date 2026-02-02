@@ -47,7 +47,13 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	baseConnString := fmt.Sprintf("%s:%s@/", user, password)
 
 	var err error
-	m.db, err = helpers.Connect(logger, "mysql", baseConnString, "", false)
+	dbParams := &helpers.BBSDBParam{
+		DriverName:                    "mysql",
+		DatabaseConnectionString:      baseConnString,
+		SqlCACertFile:                 "",
+		SqlEnableIdentityVerification: false,
+	}
+	m.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).To(Succeed())
 
@@ -60,7 +66,8 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	Expect(m.db.Close()).To(Succeed())
 
 	connStringWithDB := fmt.Sprintf("%s%s", baseConnString, m.sqlDBName)
-	m.db, err = helpers.Connect(logger, "mysql", connStringWithDB, "", false)
+	dbParams.DatabaseConnectionString = connStringWithDB
+	m.db, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(m.db.Ping()).NotTo(HaveOccurred())
 

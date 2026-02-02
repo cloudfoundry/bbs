@@ -44,6 +44,7 @@ var (
 	dbDriverName, dbBaseConnectionString string
 	dbFlavor                             string
 	fakeMetronClient                     *mfakes.FakeIngressClient
+	dbParams                             *helpers.BBSDBParam
 )
 
 func TestSql(t *testing.T) {
@@ -88,7 +89,13 @@ var _ = BeforeSuite(func() {
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release .
-	rawDB, err = helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	dbParams = &helpers.BBSDBParam{
+		DriverName:                    dbDriverName,
+		DatabaseConnectionString:      dbBaseConnectionString,
+		SqlCACertFile:                 "",
+		SqlEnableIdentityVerification: false,
+	}
+	rawDB, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
@@ -102,7 +109,8 @@ var _ = BeforeSuite(func() {
 	Expect(rawDB.Close()).To(Succeed())
 
 	connStringWithDB := fmt.Sprintf("%sdiego_%d", dbBaseConnectionString, GinkgoParallelProcess())
-	rawDB, err = helpers.Connect(logger, dbDriverName, connStringWithDB, "", false)
+	dbParams.DatabaseConnectionString = connStringWithDB
+	rawDB, err = helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 
@@ -116,7 +124,7 @@ var _ = BeforeSuite(func() {
 	db = helpers.NewMonitoredDB(rawDB, monitor.New())
 	ctx = context.Background()
 
-	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 	err = sqlDB.CreateConfigurationsTable(ctx, logger)
 	if err != nil {
 		logger.Fatal("sql-failed-create-configurations-table", err)
@@ -131,7 +139,7 @@ var _ = BeforeEach(func() {
 
 	fakeMetronClient = new(mfakes.FakeIngressClient)
 	migrationMetronClient := new(mfakes.FakeIngressClient)
-	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient)
+	sqlDB = sqldb.NewSQLDB(db, 5, 5, cryptor, fakeGUIDProvider, fakeClock, dbFlavor, fakeMetronClient, false)
 
 	migrationsDone := make(chan struct{})
 
@@ -168,7 +176,8 @@ var _ = AfterSuite(func() {
 	}
 
 	Expect(rawDB.Close()).NotTo(HaveOccurred())
-	rawDB, err := helpers.Connect(logger, dbDriverName, dbBaseConnectionString, "", false)
+	dbParams.DatabaseConnectionString = dbBaseConnectionString
+	rawDB, err := helpers.Connect(logger, dbParams)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(rawDB.Ping()).NotTo(HaveOccurred())
 	_, err = rawDB.Exec(fmt.Sprintf("DROP DATABASE diego_%d", GinkgoParallelProcess()))

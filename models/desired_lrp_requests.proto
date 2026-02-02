@@ -19,6 +19,7 @@ message ProtoDesiredLRPsResponse {
 message ProtoDesiredLRPsRequest {
   string domain                 = 1 [json_name = "domain", (bbs.bbs_json_always_emit) = true];
   repeated string process_guids = 2 [json_name = "process_guids"];
+  repeated string app_guids = 3 [json_name = "app_guids"];
 }
 
 message ProtoDesiredLRPResponse {

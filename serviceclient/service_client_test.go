@@ -3,6 +3,7 @@ package serviceclient_test
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/serviceclient"
@@ -55,7 +56,7 @@ var _ = Describe("ServiceClient", func() {
 			RepAddress: "cell-3-address",
 		}
 
-		serviceClient = serviceclient.NewServiceClient(locketClient)
+		serviceClient = serviceclient.NewServiceClient(locketClient, time.Duration(30)*time.Second)
 	})
 
 	Context("Cells", func() {
@@ -167,7 +168,7 @@ var _ = Describe("ServiceClient", func() {
 
 		Context("when the cell presence client is nil", func() {
 			BeforeEach(func() {
-				serviceClient = serviceclient.NewServiceClient(locketClient)
+				serviceClient = serviceclient.NewServiceClient(locketClient, time.Duration(30)*time.Second)
 			})
 
 			It("fetches the cell presence from ", func() {
@@ -196,7 +197,7 @@ var _ = Describe("ServiceClient", func() {
 
 	Context("CellEvents", func() {
 		BeforeEach(func() {
-			serviceClient = serviceclient.NewServiceClient(locketClient)
+			serviceClient = serviceclient.NewServiceClient(locketClient, time.Duration(30)*time.Second)
 		})
 
 		It("returns nil", func() {

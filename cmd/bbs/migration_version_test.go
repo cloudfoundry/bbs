@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
@@ -60,7 +61,16 @@ var _ = Describe("Migration Version", func() {
 		)
 
 		BeforeEach(func() {
-			sqlConn, err = helpers.Connect(logger, sqlRunner.DriverName(), sqlRunner.ConnectionString(), "", false)
+			dbParams := &helpers.BBSDBParam{
+				DriverName:                    sqlRunner.DriverName(),
+				DatabaseConnectionString:      sqlRunner.ConnectionString(),
+				SqlCACertFile:                 "",
+				SqlEnableIdentityVerification: false,
+				ConnectionTimeout:             time.Duration(bbsConfig.DBConnectionTimeout),
+				ReadTimeout:                   time.Duration(bbsConfig.DBReadTimeout),
+				WriteTimeout:                  time.Duration(bbsConfig.DBWriteTimeout),
+			}
+			sqlConn, err = helpers.Connect(logger, dbParams)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

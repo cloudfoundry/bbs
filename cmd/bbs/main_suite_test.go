@@ -64,6 +64,9 @@ var (
 	signalMetricsChan chan struct{}
 	sqlProcess        ifrit.Process
 	sqlRunner         sqlrunner.SQLRunner
+
+	metronCAFile, metronServerCertFile, metronServerKeyFile string
+	metricsPort                                             int
 )
 
 func TestBBS(t *testing.T) {
@@ -113,6 +116,22 @@ var _ = BeforeEach(func() {
 	ctx = context.Background()
 	fixturesPath := "fixtures"
 
+	metronCAFile = path.Join(fixturesPath, "metron", "CA.crt")
+	metronServerCertFile = path.Join(fixturesPath, "metron", "metron.crt")
+	metronServerKeyFile = path.Join(fixturesPath, "metron", "metron.key")
+
+	testIngressServer, err = testhelpers.NewTestIngressServer(metronServerCertFile, metronServerKeyFile, metronCAFile)
+	Expect(err).NotTo(HaveOccurred())
+
+	testIngressServer.Start()
+
+	metricsPort, err = strconv.Atoi(strings.TrimPrefix(testIngressServer.Addr(), "127.0.0.1:"))
+	Expect(err).NotTo(HaveOccurred())
+
+	receiversChan := testIngressServer.Receivers()
+
+	testMetricsChan, signalMetricsChan = testhelpers.TestMetricChan(receiversChan)
+
 	locketPort, err := portAllocator.ClaimPorts(1)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -122,14 +141,12 @@ var _ = BeforeEach(func() {
 		cfg.DatabaseConnectionString = sqlRunner.ConnectionString()
 		cfg.DatabaseDriver = sqlRunner.DriverName()
 		cfg.ListenAddress = locketAddress
+		cfg.LoggregatorConfig.APIPort = metricsPort
+		cfg.LoggregatorConfig.CACertPath = metronCAFile
+		cfg.LoggregatorConfig.CertPath = metronServerCertFile
+		cfg.LoggregatorConfig.KeyPath = metronServerKeyFile
 	})
 	locketProcess = ginkgomon.Invoke(locketRunner)
-
-	metronCAFile := path.Join(fixturesPath, "metron", "CA.crt")
-	metronClientCertFile := path.Join(fixturesPath, "metron", "client.crt")
-	metronClientKeyFile := path.Join(fixturesPath, "metron", "client.key")
-	metronServerCertFile := path.Join(fixturesPath, "metron", "metron.crt")
-	metronServerKeyFile := path.Join(fixturesPath, "metron", "metron.key")
 
 	auctioneerServer = ghttp.NewServer()
 	auctioneerServer.UnhandledRequestStatusCode = http.StatusAccepted
@@ -148,18 +165,6 @@ var _ = BeforeEach(func() {
 		Host:   bbsAddress,
 	}
 
-	testIngressServer, err = testhelpers.NewTestIngressServer(metronServerCertFile, metronServerKeyFile, metronCAFile)
-	Expect(err).NotTo(HaveOccurred())
-
-	testIngressServer.Start()
-
-	metricsPort, err := strconv.Atoi(strings.TrimPrefix(testIngressServer.Addr(), "127.0.0.1:"))
-	Expect(err).NotTo(HaveOccurred())
-
-	receiversChan := testIngressServer.Receivers()
-
-	testMetricsChan, signalMetricsChan = testhelpers.TestMetricChan(receiversChan)
-
 	serverCaFile := path.Join(fixturesPath, "green-certs", "server-ca.crt")
 	clientCertFile := path.Join(fixturesPath, "green-certs", "client.crt")
 	clientKeyFile := path.Join(fixturesPath, "green-certs", "client.key")
@@ -174,8 +179,8 @@ var _ = BeforeEach(func() {
 		ExpireCompletedTaskDuration: durationjson.Duration(2 * time.Minute),
 		ExpirePendingTaskDuration:   durationjson.Duration(30 * time.Minute),
 		KickTaskDuration:            durationjson.Duration(30 * time.Second),
-		LockTTL:                     durationjson.Duration(1 * time.Second),
-		LockRetryInterval:           durationjson.Duration(locket.RetryInterval),
+		LockTTL:                     durationjson.Duration(5 * time.Second),
+		LockRetryInterval:           durationjson.Duration(1 * time.Second),
 		ConvergenceWorkers:          20,
 		UpdateWorkers:               1000,
 		TaskCallbackWorkers:         1000,
@@ -190,6 +195,9 @@ var _ = BeforeEach(func() {
 
 		DatabaseDriver:           sqlRunner.DriverName(),
 		DatabaseConnectionString: sqlRunner.ConnectionString(),
+		DBConnectionTimeout:      durationjson.Duration(600 * time.Second),
+		DBReadTimeout:            durationjson.Duration(600 * time.Second),
+		DBWriteTimeout:           durationjson.Duration(600 * time.Second),
 		ReportInterval:           durationjson.Duration(time.Second / 2),
 		HealthAddress:            bbsHealthAddress,
 
@@ -209,19 +217,18 @@ var _ = BeforeEach(func() {
 		LagerConfig: lagerflags.LagerConfig{
 			LogLevel: lagerflags.DEBUG,
 		},
-
 		LoggregatorConfig: diego_logging_client.Config{
 			BatchFlushInterval: 10 * time.Millisecond,
 			BatchMaxSize:       1,
-			UseV2API:           true,
 			APIPort:            metricsPort,
-			CACertPath:         metronCAFile,
-			KeyPath:            metronClientKeyFile,
-			CertPath:           metronClientCertFile,
+			CACertPath:         path.Join(fixturesPath, "metron", "CA.crt"),
+			CertPath:           path.Join(fixturesPath, "metron", "client.crt"),
+			KeyPath:            path.Join(fixturesPath, "metron", "client.key"),
 		},
 	}
 
 	bbsConfig.ClientLocketConfig.LocketAddress = locketAddress
+
 	locketClient, err := locket.NewClient(logger, bbsConfig.ClientLocketConfig)
 	Expect(err).NotTo(HaveOccurred())
 	locketHelper = test_helpers.NewLocketHelper(logger, locketClient)

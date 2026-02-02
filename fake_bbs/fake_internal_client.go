@@ -73,6 +73,21 @@ type FakeInternalClient struct {
 		result1 []*models.ActualLRP
 		result2 error
 	}
+	ActualLRPsByProcessGuidsStub        func(lager.Logger, string, []string) ([]*models.ActualLRP, error)
+	actualLRPsByProcessGuidsMutex       sync.RWMutex
+	actualLRPsByProcessGuidsArgsForCall []struct {
+		arg1 lager.Logger
+		arg2 string
+		arg3 []string
+	}
+	actualLRPsByProcessGuidsReturns struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}
+	actualLRPsByProcessGuidsReturnsOnCall map[int]struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}
 	CancelTaskStub        func(lager.Logger, string, string) error
 	cancelTaskMutex       sync.RWMutex
 	cancelTaskArgsForCall []struct {
@@ -935,6 +950,77 @@ func (fake *FakeInternalClient) ActualLRPsReturnsOnCall(i int, result1 []*models
 		})
 	}
 	fake.actualLRPsReturnsOnCall[i] = struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeInternalClient) ActualLRPsByProcessGuids(arg1 lager.Logger, arg2 string, arg3 []string) ([]*models.ActualLRP, error) {
+	var arg3Copy []string
+	if arg3 != nil {
+		arg3Copy = make([]string, len(arg3))
+		copy(arg3Copy, arg3)
+	}
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	ret, specificReturn := fake.actualLRPsByProcessGuidsReturnsOnCall[len(fake.actualLRPsByProcessGuidsArgsForCall)]
+	fake.actualLRPsByProcessGuidsArgsForCall = append(fake.actualLRPsByProcessGuidsArgsForCall, struct {
+		arg1 lager.Logger
+		arg2 string
+		arg3 []string
+	}{arg1, arg2, arg3Copy})
+	stub := fake.ActualLRPsByProcessGuidsStub
+	fakeReturns := fake.actualLRPsByProcessGuidsReturns
+	fake.recordInvocation("ActualLRPsByProcessGuids", []interface{}{arg1, arg2, arg3Copy})
+	fake.actualLRPsByProcessGuidsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeInternalClient) ActualLRPsByProcessGuidsCallCount() int {
+	fake.actualLRPsByProcessGuidsMutex.RLock()
+	defer fake.actualLRPsByProcessGuidsMutex.RUnlock()
+	return len(fake.actualLRPsByProcessGuidsArgsForCall)
+}
+
+func (fake *FakeInternalClient) ActualLRPsByProcessGuidsCalls(stub func(lager.Logger, string, []string) ([]*models.ActualLRP, error)) {
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	defer fake.actualLRPsByProcessGuidsMutex.Unlock()
+	fake.ActualLRPsByProcessGuidsStub = stub
+}
+
+func (fake *FakeInternalClient) ActualLRPsByProcessGuidsArgsForCall(i int) (lager.Logger, string, []string) {
+	fake.actualLRPsByProcessGuidsMutex.RLock()
+	defer fake.actualLRPsByProcessGuidsMutex.RUnlock()
+	argsForCall := fake.actualLRPsByProcessGuidsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeInternalClient) ActualLRPsByProcessGuidsReturns(result1 []*models.ActualLRP, result2 error) {
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	defer fake.actualLRPsByProcessGuidsMutex.Unlock()
+	fake.ActualLRPsByProcessGuidsStub = nil
+	fake.actualLRPsByProcessGuidsReturns = struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeInternalClient) ActualLRPsByProcessGuidsReturnsOnCall(i int, result1 []*models.ActualLRP, result2 error) {
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	defer fake.actualLRPsByProcessGuidsMutex.Unlock()
+	fake.ActualLRPsByProcessGuidsStub = nil
+	if fake.actualLRPsByProcessGuidsReturnsOnCall == nil {
+		fake.actualLRPsByProcessGuidsReturnsOnCall = make(map[int]struct {
+			result1 []*models.ActualLRP
+			result2 error
+		})
+	}
+	fake.actualLRPsByProcessGuidsReturnsOnCall[i] = struct {
 		result1 []*models.ActualLRP
 		result2 error
 	}{result1, result2}
@@ -3631,6 +3717,8 @@ func (fake *FakeInternalClient) Invocations() map[string][][]interface{} {
 	defer fake.actualLRPGroupsByProcessGuidMutex.RUnlock()
 	fake.actualLRPsMutex.RLock()
 	defer fake.actualLRPsMutex.RUnlock()
+	fake.actualLRPsByProcessGuidsMutex.RLock()
+	defer fake.actualLRPsByProcessGuidsMutex.RUnlock()
 	fake.cancelTaskMutex.RLock()
 	defer fake.cancelTaskMutex.RUnlock()
 	fake.cellsMutex.RLock()

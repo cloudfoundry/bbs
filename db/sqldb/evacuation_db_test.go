@@ -33,7 +33,7 @@ var _ = Describe("Evacuation", func() {
 		Expect(err).NotTo(HaveOccurred())
 		_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLrpInstanceKey)
 		Expect(err).NotTo(HaveOccurred())
-		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), *actualLRP.GetRoutable(), actualLRP.AvailabilityZone)
+		_, _, err = sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLrpKey, &actualLRP.ActualLrpInstanceKey, &actualLRP.ActualLrpNetInfo, model_helpers.NewActualLRPInternalRoutes(), model_helpers.NewActualLRPMetricTags(), *actualLRP.GetRoutable(), actualLRP.AvailabilityZone, false)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

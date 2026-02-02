@@ -89,3 +89,11 @@ message ProtoActualLRPsRequest {
   optional int32 index  = 4 [json_name = "index", (bbs.bbs_json_always_emit) = true];
 }
 
+message ProtoActualLRPsByProcessGuidsResponse {
+  ProtoError error = 1;
+  repeated ProtoActualLRP actual_lrps = 2;
+}
+
+message ProtoActualLRPsByProcessGuidsRequest {
+  repeated string process_guids = 1 [json_name = "process_guids"];
+}

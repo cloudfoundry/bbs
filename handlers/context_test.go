@@ -46,12 +46,15 @@ var _ = Describe("Context", func() {
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
 		var err error
+		dbParams := &helpers.BBSDBParam{
+			DriverName:                    sqlRunner.DriverName(),
+			DatabaseConnectionString:      sqlRunner.ConnectionString(),
+			SqlCACertFile:                 "",
+			SqlEnableIdentityVerification: false,
+		}
 		sqlConn, err = helpers.Connect(
 			logger,
-			sqlRunner.DriverName(),
-			sqlRunner.ConnectionString(),
-			"",
-			false,
+			dbParams,
 		)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -72,6 +75,7 @@ var _ = Describe("Context", func() {
 			fakeClock,
 			sqlRunner.DriverName(),
 			fakeMetronClient,
+			false,
 		)
 		err = sqlDB.CreateConfigurationsTable(context.Background(), logger)
 		Expect(err).NotTo(HaveOccurred())

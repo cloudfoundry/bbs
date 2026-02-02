@@ -26,6 +26,21 @@ type FakeActualLRPDB struct {
 		result1 []*models.ActualLRP
 		result2 error
 	}
+	ActualLRPsByProcessGuidsStub        func(context.Context, lager.Logger, models.ActualLRPsByProcessGuidsFilter) ([]*models.ActualLRP, error)
+	actualLRPsByProcessGuidsMutex       sync.RWMutex
+	actualLRPsByProcessGuidsArgsForCall []struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 models.ActualLRPsByProcessGuidsFilter
+	}
+	actualLRPsByProcessGuidsReturns struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}
+	actualLRPsByProcessGuidsReturnsOnCall map[int]struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}
 	ChangeActualLRPPresenceStub        func(context.Context, lager.Logger, *models.ActualLRPKey, models.ActualLRP_Presence, models.ActualLRP_Presence) (*models.ActualLRP, *models.ActualLRP, error)
 	changeActualLRPPresenceMutex       sync.RWMutex
 	changeActualLRPPresenceArgsForCall []struct {
@@ -165,18 +180,19 @@ type FakeActualLRPDB struct {
 	removeActualLRPReturnsOnCall map[int]struct {
 		result1 error
 	}
-	StartActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string) (*models.ActualLRP, *models.ActualLRP, error)
+	StartActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string, bool) (*models.ActualLRP, *models.ActualLRP, error)
 	startActualLRPMutex       sync.RWMutex
 	startActualLRPArgsForCall []struct {
-		arg1 context.Context
-		arg2 lager.Logger
-		arg3 *models.ActualLRPKey
-		arg4 *models.ActualLRPInstanceKey
-		arg5 *models.ActualLRPNetInfo
-		arg6 []*models.ActualLRPInternalRoute
-		arg7 map[string]string
-		arg8 bool
-		arg9 string
+		arg1  context.Context
+		arg2  lager.Logger
+		arg3  *models.ActualLRPKey
+		arg4  *models.ActualLRPInstanceKey
+		arg5  *models.ActualLRPNetInfo
+		arg6  []*models.ActualLRPInternalRoute
+		arg7  map[string]string
+		arg8  bool
+		arg9  string
+		arg10 bool
 	}
 	startActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -188,12 +204,13 @@ type FakeActualLRPDB struct {
 		result2 *models.ActualLRP
 		result3 error
 	}
-	UnclaimActualLRPStub        func(context.Context, lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)
+	UnclaimActualLRPStub        func(context.Context, lager.Logger, bool, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)
 	unclaimActualLRPMutex       sync.RWMutex
 	unclaimActualLRPArgsForCall []struct {
 		arg1 context.Context
 		arg2 lager.Logger
-		arg3 *models.ActualLRPKey
+		arg3 bool
+		arg4 *models.ActualLRPKey
 	}
 	unclaimActualLRPReturns struct {
 		result1 *models.ActualLRP
@@ -270,6 +287,72 @@ func (fake *FakeActualLRPDB) ActualLRPsReturnsOnCall(i int, result1 []*models.Ac
 		})
 	}
 	fake.actualLRPsReturnsOnCall[i] = struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuids(arg1 context.Context, arg2 lager.Logger, arg3 models.ActualLRPsByProcessGuidsFilter) ([]*models.ActualLRP, error) {
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	ret, specificReturn := fake.actualLRPsByProcessGuidsReturnsOnCall[len(fake.actualLRPsByProcessGuidsArgsForCall)]
+	fake.actualLRPsByProcessGuidsArgsForCall = append(fake.actualLRPsByProcessGuidsArgsForCall, struct {
+		arg1 context.Context
+		arg2 lager.Logger
+		arg3 models.ActualLRPsByProcessGuidsFilter
+	}{arg1, arg2, arg3})
+	stub := fake.ActualLRPsByProcessGuidsStub
+	fakeReturns := fake.actualLRPsByProcessGuidsReturns
+	fake.recordInvocation("ActualLRPsByProcessGuids", []interface{}{arg1, arg2, arg3})
+	fake.actualLRPsByProcessGuidsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidsCallCount() int {
+	fake.actualLRPsByProcessGuidsMutex.RLock()
+	defer fake.actualLRPsByProcessGuidsMutex.RUnlock()
+	return len(fake.actualLRPsByProcessGuidsArgsForCall)
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidsCalls(stub func(context.Context, lager.Logger, models.ActualLRPsByProcessGuidsFilter) ([]*models.ActualLRP, error)) {
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	defer fake.actualLRPsByProcessGuidsMutex.Unlock()
+	fake.ActualLRPsByProcessGuidsStub = stub
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidsArgsForCall(i int) (context.Context, lager.Logger, models.ActualLRPsByProcessGuidsFilter) {
+	fake.actualLRPsByProcessGuidsMutex.RLock()
+	defer fake.actualLRPsByProcessGuidsMutex.RUnlock()
+	argsForCall := fake.actualLRPsByProcessGuidsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidsReturns(result1 []*models.ActualLRP, result2 error) {
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	defer fake.actualLRPsByProcessGuidsMutex.Unlock()
+	fake.ActualLRPsByProcessGuidsStub = nil
+	fake.actualLRPsByProcessGuidsReturns = struct {
+		result1 []*models.ActualLRP
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeActualLRPDB) ActualLRPsByProcessGuidsReturnsOnCall(i int, result1 []*models.ActualLRP, result2 error) {
+	fake.actualLRPsByProcessGuidsMutex.Lock()
+	defer fake.actualLRPsByProcessGuidsMutex.Unlock()
+	fake.ActualLRPsByProcessGuidsStub = nil
+	if fake.actualLRPsByProcessGuidsReturnsOnCall == nil {
+		fake.actualLRPsByProcessGuidsReturnsOnCall = make(map[int]struct {
+			result1 []*models.ActualLRP
+			result2 error
+		})
+	}
+	fake.actualLRPsByProcessGuidsReturnsOnCall[i] = struct {
 		result1 []*models.ActualLRP
 		result2 error
 	}{result1, result2}
@@ -828,7 +911,7 @@ func (fake *FakeActualLRPDB) RemoveActualLRPReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeActualLRPDB) StartActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute, arg7 map[string]string, arg8 bool, arg9 string) (*models.ActualLRP, *models.ActualLRP, error) {
+func (fake *FakeActualLRPDB) StartActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey, arg4 *models.ActualLRPInstanceKey, arg5 *models.ActualLRPNetInfo, arg6 []*models.ActualLRPInternalRoute, arg7 map[string]string, arg8 bool, arg9 string, arg10 bool) (*models.ActualLRP, *models.ActualLRP, error) {
 	var arg6Copy []*models.ActualLRPInternalRoute
 	if arg6 != nil {
 		arg6Copy = make([]*models.ActualLRPInternalRoute, len(arg6))
@@ -837,22 +920,23 @@ func (fake *FakeActualLRPDB) StartActualLRP(arg1 context.Context, arg2 lager.Log
 	fake.startActualLRPMutex.Lock()
 	ret, specificReturn := fake.startActualLRPReturnsOnCall[len(fake.startActualLRPArgsForCall)]
 	fake.startActualLRPArgsForCall = append(fake.startActualLRPArgsForCall, struct {
-		arg1 context.Context
-		arg2 lager.Logger
-		arg3 *models.ActualLRPKey
-		arg4 *models.ActualLRPInstanceKey
-		arg5 *models.ActualLRPNetInfo
-		arg6 []*models.ActualLRPInternalRoute
-		arg7 map[string]string
-		arg8 bool
-		arg9 string
-	}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8, arg9})
+		arg1  context.Context
+		arg2  lager.Logger
+		arg3  *models.ActualLRPKey
+		arg4  *models.ActualLRPInstanceKey
+		arg5  *models.ActualLRPNetInfo
+		arg6  []*models.ActualLRPInternalRoute
+		arg7  map[string]string
+		arg8  bool
+		arg9  string
+		arg10 bool
+	}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8, arg9, arg10})
 	stub := fake.StartActualLRPStub
 	fakeReturns := fake.startActualLRPReturns
-	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8, arg9})
+	fake.recordInvocation("StartActualLRP", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6Copy, arg7, arg8, arg9, arg10})
 	fake.startActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
@@ -866,17 +950,17 @@ func (fake *FakeActualLRPDB) StartActualLRPCallCount() int {
 	return len(fake.startActualLRPArgsForCall)
 }
 
-func (fake *FakeActualLRPDB) StartActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string) (*models.ActualLRP, *models.ActualLRP, error)) {
+func (fake *FakeActualLRPDB) StartActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string, bool) (*models.ActualLRP, *models.ActualLRP, error)) {
 	fake.startActualLRPMutex.Lock()
 	defer fake.startActualLRPMutex.Unlock()
 	fake.StartActualLRPStub = stub
 }
 
-func (fake *FakeActualLRPDB) StartActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string) {
+func (fake *FakeActualLRPDB) StartActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey, *models.ActualLRPInstanceKey, *models.ActualLRPNetInfo, []*models.ActualLRPInternalRoute, map[string]string, bool, string, bool) {
 	fake.startActualLRPMutex.RLock()
 	defer fake.startActualLRPMutex.RUnlock()
 	argsForCall := fake.startActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7, argsForCall.arg8, argsForCall.arg9
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7, argsForCall.arg8, argsForCall.arg9, argsForCall.arg10
 }
 
 func (fake *FakeActualLRPDB) StartActualLRPReturns(result1 *models.ActualLRP, result2 *models.ActualLRP, result3 error) {
@@ -908,20 +992,21 @@ func (fake *FakeActualLRPDB) StartActualLRPReturnsOnCall(i int, result1 *models.
 	}{result1, result2, result3}
 }
 
-func (fake *FakeActualLRPDB) UnclaimActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
+func (fake *FakeActualLRPDB) UnclaimActualLRP(arg1 context.Context, arg2 lager.Logger, arg3 bool, arg4 *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error) {
 	fake.unclaimActualLRPMutex.Lock()
 	ret, specificReturn := fake.unclaimActualLRPReturnsOnCall[len(fake.unclaimActualLRPArgsForCall)]
 	fake.unclaimActualLRPArgsForCall = append(fake.unclaimActualLRPArgsForCall, struct {
 		arg1 context.Context
 		arg2 lager.Logger
-		arg3 *models.ActualLRPKey
-	}{arg1, arg2, arg3})
+		arg3 bool
+		arg4 *models.ActualLRPKey
+	}{arg1, arg2, arg3, arg4})
 	stub := fake.UnclaimActualLRPStub
 	fakeReturns := fake.unclaimActualLRPReturns
-	fake.recordInvocation("UnclaimActualLRP", []interface{}{arg1, arg2, arg3})
+	fake.recordInvocation("UnclaimActualLRP", []interface{}{arg1, arg2, arg3, arg4})
 	fake.unclaimActualLRPMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
@@ -935,17 +1020,17 @@ func (fake *FakeActualLRPDB) UnclaimActualLRPCallCount() int {
 	return len(fake.unclaimActualLRPArgsForCall)
 }
 
-func (fake *FakeActualLRPDB) UnclaimActualLRPCalls(stub func(context.Context, lager.Logger, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)) {
+func (fake *FakeActualLRPDB) UnclaimActualLRPCalls(stub func(context.Context, lager.Logger, bool, *models.ActualLRPKey) (*models.ActualLRP, *models.ActualLRP, error)) {
 	fake.unclaimActualLRPMutex.Lock()
 	defer fake.unclaimActualLRPMutex.Unlock()
 	fake.UnclaimActualLRPStub = stub
 }
 
-func (fake *FakeActualLRPDB) UnclaimActualLRPArgsForCall(i int) (context.Context, lager.Logger, *models.ActualLRPKey) {
+func (fake *FakeActualLRPDB) UnclaimActualLRPArgsForCall(i int) (context.Context, lager.Logger, bool, *models.ActualLRPKey) {
 	fake.unclaimActualLRPMutex.RLock()
 	defer fake.unclaimActualLRPMutex.RUnlock()
 	argsForCall := fake.unclaimActualLRPArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeActualLRPDB) UnclaimActualLRPReturns(result1 *models.ActualLRP, result2 *models.ActualLRP, result3 error) {
@@ -980,28 +1065,6 @@ func (fake *FakeActualLRPDB) UnclaimActualLRPReturnsOnCall(i int, result1 *model
 func (fake *FakeActualLRPDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.actualLRPsMutex.RLock()
-	defer fake.actualLRPsMutex.RUnlock()
-	fake.changeActualLRPPresenceMutex.RLock()
-	defer fake.changeActualLRPPresenceMutex.RUnlock()
-	fake.claimActualLRPMutex.RLock()
-	defer fake.claimActualLRPMutex.RUnlock()
-	fake.countActualLRPsByStateMutex.RLock()
-	defer fake.countActualLRPsByStateMutex.RUnlock()
-	fake.countDesiredInstancesMutex.RLock()
-	defer fake.countDesiredInstancesMutex.RUnlock()
-	fake.crashActualLRPMutex.RLock()
-	defer fake.crashActualLRPMutex.RUnlock()
-	fake.createUnclaimedActualLRPMutex.RLock()
-	defer fake.createUnclaimedActualLRPMutex.RUnlock()
-	fake.failActualLRPMutex.RLock()
-	defer fake.failActualLRPMutex.RUnlock()
-	fake.removeActualLRPMutex.RLock()
-	defer fake.removeActualLRPMutex.RUnlock()
-	fake.startActualLRPMutex.RLock()
-	defer fake.startActualLRPMutex.RUnlock()
-	fake.unclaimActualLRPMutex.RLock()
-	defer fake.unclaimActualLRPMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

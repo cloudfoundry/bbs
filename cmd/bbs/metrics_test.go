@@ -115,9 +115,9 @@ var _ = Describe("Metrics", func() {
 				),
 			))
 		})
-
+		// This is infra monitoring rather than a metric held by bbs like Convergence. So this will be emitted by all instances regardless of lock state.
 		It("does not emit db metrics", func() {
-			Consistently(testMetricsChan, 70*time.Second).ShouldNot(Receive(
+			Eventually(testMetricsChan, 70*time.Second).Should(Receive(
 				testhelpers.MatchV2Metric(
 					testhelpers.MetricAndValue{Name: "DBOpenConnections"},
 				),

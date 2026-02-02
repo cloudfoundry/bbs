@@ -38,6 +38,7 @@ type BBSConfig struct {
 	ConvergenceWorkers            int                   `json:"convergence_workers,omitempty"`
 	DatabaseConnectionString      string                `json:"database_connection_string"`
 	DatabaseDriver                string                `json:"database_driver,omitempty"`
+	DebugLRPStartHeartbeats       bool                  `json:"debug_lrp_start_heartbeats,omitempty"`
 	DesiredLRPCreationTimeout     durationjson.Duration `json:"desired_lrp_creation_timeout,omitempty"`
 	ExpireCompletedTaskDuration   durationjson.Duration `json:"expire_completed_task_duration,omitempty"`
 	ExpirePendingTaskDuration     durationjson.Duration `json:"expire_pending_task_duration,omitempty"`
@@ -48,7 +49,11 @@ type BBSConfig struct {
 	LockRetryInterval             durationjson.Duration `json:"lock_retry_interval,omitempty"`
 	LockTTL                       durationjson.Duration `json:"lock_ttl,omitempty"`
 	MaxIdleDatabaseConnections    int                   `json:"max_idle_database_connections,omitempty"`
+	DBConnectionTimeout           durationjson.Duration `json:"db_connection_timeout,omitempty"`
+	DBReadTimeout                 durationjson.Duration `json:"db_read_timeout,omitempty"`
+	DBWriteTimeout                durationjson.Duration `json:"db_write_timeout,omitempty"`
 	MaxOpenDatabaseConnections    int                   `json:"max_open_database_connections,omitempty"`
+	MaxDatabaseConnectionLifetime durationjson.Duration `json:"max_database_connection_lifetime,omitempty"`
 	MaxTaskRetries                int                   `json:"max_task_retries,omitempty"`
 	RepCACert                     string                `json:"rep_ca_cert,omitempty"`
 	RepClientCert                 string                `json:"rep_client_cert,omitempty"`
