@@ -287,7 +287,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 			BeforeEach(func() {
 				actualLRPs = []*models.ActualLRP{
 					{
-						ActualLRPKey: models.ActualLRPKey{
+						ActualLrpKey: models.ActualLRPKey{
 							ProcessGuid: "guid1",
 							Index:       0,
 							Domain:      "domain",
@@ -295,7 +295,7 @@ var _ = Describe("ActualLRP Handlers", func() {
 						State: models.ActualLRPStateRunning,
 					},
 					{
-						ActualLRPKey: models.ActualLRPKey{
+						ActualLrpKey: models.ActualLRPKey{
 							ProcessGuid: "guid2",
 							Index:       1,
 							Domain:      "domain",
@@ -308,8 +308,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("returns a list of actual lrps", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPsByProcessGuidsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsByProcessGuidsResponse
+				var protoResponse models.ProtoActualLRPsByProcessGuidsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -330,8 +332,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("returns an empty list", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPsByProcessGuidsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsByProcessGuidsResponse
+				var protoResponse models.ProtoActualLRPsByProcessGuidsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(BeNil())
@@ -354,8 +358,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("returns a validation error", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPsByProcessGuidsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsByProcessGuidsResponse
+				var protoResponse models.ProtoActualLRPsByProcessGuidsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).NotTo(BeNil())
@@ -382,8 +388,10 @@ var _ = Describe("ActualLRP Handlers", func() {
 
 			It("provides relevant error information", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := &models.ActualLRPsByProcessGuidsResponse{}
-				err := response.Unmarshal(responseRecorder.Body.Bytes())
+				var response models.ActualLRPsByProcessGuidsResponse
+				var protoResponse models.ProtoActualLRPsByProcessGuidsResponse
+				err := proto.Unmarshal(responseRecorder.Body.Bytes(), &protoResponse)
+				response = *protoResponse.FromProto()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Error).To(Equal(models.ErrUnknownError))

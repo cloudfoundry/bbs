@@ -54,10 +54,11 @@ func (h *ActualLRPHandler) ActualLRPsByProcessGuids(logger lager.Logger, w http.
 	logger.Debug("starting")
 	defer logger.Debug("complete")
 
-	request := &models.ActualLRPsByProcessGuidsRequest{}
+	var request *models.ActualLRPsByProcessGuidsRequest
+	protoRequest := &models.ProtoActualLRPsByProcessGuidsRequest{}
 	response := &models.ActualLRPsByProcessGuidsResponse{}
 
-	err = parseRequest(logger, req, request)
+	err = parseRequest(logger, req, protoRequest)
 	if err == nil {
 		filter := models.ActualLRPsByProcessGuidsFilter{ProcessGuids: request.ProcessGuids}
 		response.ActualLrps, err = h.db.ActualLRPsByProcessGuids(req.Context(), logger, filter)
@@ -65,7 +66,7 @@ func (h *ActualLRPHandler) ActualLRPsByProcessGuids(logger lager.Logger, w http.
 
 	response.Error = models.ConvertError(err)
 
-	writeResponse(w, response)
+	writeResponse(w, response.ToProto())
 	exitIfUnrecoverable(logger, h.exitChan, response.Error)
 }
 

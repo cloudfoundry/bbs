@@ -440,7 +440,7 @@ var _ = Describe("Client", func() {
 			processGuids = []string{"process-guid-1", "process-guid-2"}
 			actualLRPs = []*models.ActualLRP{
 				{
-					ActualLRPKey: models.ActualLRPKey{
+					ActualLrpKey: models.ActualLRPKey{
 						ProcessGuid: "process-guid-1",
 						Index:       0,
 						Domain:      "domain-1",
@@ -448,7 +448,7 @@ var _ = Describe("Client", func() {
 					State: models.ActualLRPStateRunning,
 				},
 				{
-					ActualLRPKey: models.ActualLRPKey{
+					ActualLrpKey: models.ActualLRPKey{
 						ProcessGuid: "process-guid-2",
 						Index:       1,
 						Domain:      "domain-2",
@@ -460,17 +460,14 @@ var _ = Describe("Client", func() {
 
 		Context("when the server responds successfully", func() {
 			JustBeforeEach(func() {
+				request := &models.ActualLRPsByProcessGuidsRequest{ProcessGuids: processGuids}
+				response := &models.ActualLRPsByProcessGuidsResponse{ActualLrps: actualLRPs, Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.VerifyProtoRepresenting(&models.ActualLRPsByProcessGuidsRequest{
-							ProcessGuids: processGuids,
-						}),
-						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
-							ActualLrps: actualLRPs,
-							Error:      nil,
-						}),
+						ghttp.VerifyProtoRepresenting(request.ToProto()),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 			})
@@ -484,14 +481,12 @@ var _ = Describe("Client", func() {
 
 		Context("when the server responds with an empty list", func() {
 			JustBeforeEach(func() {
+				response := &models.ActualLRPsByProcessGuidsResponse{ActualLrps: []*models.ActualLRP{}, Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
-							ActualLrps: []*models.ActualLRP{},
-							Error:      nil,
-						}),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 			})
@@ -524,14 +519,15 @@ var _ = Describe("Client", func() {
 
 		Context("when the server responds with an error in the response", func() {
 			JustBeforeEach(func() {
+				response := &models.ActualLRPsByProcessGuidsResponse{
+					ActualLrps: []*models.ActualLRP{},
+					Error:      models.NewError(models.Error_UnknownError, "some error"),
+				}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
-							ActualLrps: []*models.ActualLRP{},
-							Error:      models.NewError(models.Error_UnknownError, "some error"),
-						}),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 			})
@@ -550,17 +546,14 @@ var _ = Describe("Client", func() {
 			})
 
 			JustBeforeEach(func() {
+				request := &models.ActualLRPsByProcessGuidsRequest{ProcessGuids: []string{}}
+				response := &models.ActualLRPsByProcessGuidsResponse{ActualLrps: []*models.ActualLRP{}, Error: nil}
 				bbsServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/v1/actual_lrps/list_by_process_guids"),
 						ghttp.VerifyHeader(http.Header{"X-Vcap-Request-Id": []string{"some-trace-id"}}),
-						ghttp.VerifyProtoRepresenting(&models.ActualLRPsByProcessGuidsRequest{
-							ProcessGuids: []string{},
-						}),
-						ghttp.RespondWithProto(200, &models.ActualLRPsByProcessGuidsResponse{
-							ActualLrps: []*models.ActualLRP{},
-							Error:      nil,
-						}),
+						ghttp.VerifyProtoRepresenting(request.ToProto()),
+						ghttp.RespondWithProto(200, response.ToProto()),
 					),
 				)
 			})

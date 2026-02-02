@@ -609,7 +609,7 @@ var _ = Describe("ActualLRPDB", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				lrp := &models.ActualLRP{
-					ActualLRPKey: *key,
+					ActualLrpKey: *key,
 					State:        models.ActualLRPStateUnclaimed,
 					Since:        fakeClock.Now().UnixNano(),
 					ModificationTag: models.ModificationTag{
@@ -618,8 +618,9 @@ var _ = Describe("ActualLRPDB", func() {
 					},
 					ActualLrpInternalRoutes: []*models.ActualLRPInternalRoute{},
 					MetricTags:              map[string]string{},
-					OptionalRoutable:        &models.ActualLRP_Routable{Routable: false},
 				}
+				routable := false
+				lrp.SetRoutable(&routable)
 				allActualLRPs = append(allActualLRPs, lrp)
 			}
 		})
@@ -633,7 +634,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 			var guids []string
 			for _, lrp := range lrps {
-				guids = append(guids, lrp.ProcessGuid)
+				guids = append(guids, lrp.ActualLrpKey.ProcessGuid)
 			}
 			Expect(guids).To(ConsistOf("guid1", "guid3"))
 		})
@@ -1533,7 +1534,7 @@ var _ = Describe("ActualLRPDB", func() {
 				internalRoutes = model_helpers.NewActualLRPInternalRoutes()
 				metricTags = model_helpers.NewActualLRPMetricTags()
 				actualLRP = &models.ActualLRP{
-					ActualLRPKey: models.ActualLRPKey{
+					ActualLrpKey: models.ActualLRPKey{
 						ProcessGuid: "the-guid",
 						Index:       1,
 						Domain:      "the-domain",
@@ -1547,7 +1548,7 @@ var _ = Describe("ActualLRPDB", func() {
 				})
 				Context("and the StartActualLRP call is called with a container already running", func() {
 					It("logs a special debug message for heartbeat StartActualLRP calls", func() {
-						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, true)
+						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLrpKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, true)
 						Expect(err).ToNot(HaveOccurred())
 						Eventually(logger).Should(gbytes.Say(`db.start-actual-lrp.heartbeating-lrp","log_level":0`))
 						Eventually(logger).Should(gbytes.Say(`db.start-actual-lrp.heartbeat-complete","log_level":0`))
@@ -1556,7 +1557,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("and the StartActualLRP call is called without a container already running", func() {
 					It("logs the normal info log message for StartActualLRP calls", func() {
-						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, false)
+						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLrpKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, false)
 						Expect(err).ToNot(HaveOccurred())
 						Eventually(logger).Should(gbytes.Say(`db-start-actual-lrp.starting","log_level":1`))
 						Eventually(logger).Should(gbytes.Say(`db.start-actual-lrp.complete","log_level":1`))
@@ -1566,7 +1567,7 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("when db.debugStartActualLRPHeartbeat is disabled", func() {
 				Context("and the StartActualLRP call is called with a container already running", func() {
 					It("logs the normal info log message for StartActualLRP calls", func() {
-						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, true)
+						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLrpKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, true)
 						Expect(err).ToNot(HaveOccurred())
 						Eventually(logger).Should(gbytes.Say(`db-start-actual-lrp.starting","log_level":1`))
 						Eventually(logger).Should(gbytes.Say(`db.start-actual-lrp.complete","log_level":1`))
@@ -1575,7 +1576,7 @@ var _ = Describe("ActualLRPDB", func() {
 
 				Context("and the StartActualLRP call is called without a container already running", func() {
 					It("logs the normal info log message for StartActualLRP calls", func() {
-						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLRPKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, false)
+						_, _, err := sqlDB.StartActualLRP(ctx, logger, &actualLRP.ActualLrpKey, instanceKey, netInfo, internalRoutes, metricTags, false, availabilityZone, false)
 						Expect(err).ToNot(HaveOccurred())
 						Eventually(logger).Should(gbytes.Say(`db-start-actual-lrp.starting","log_level":1`))
 						Eventually(logger).Should(gbytes.Say(`db.start-actual-lrp.complete","log_level":1`))
@@ -2333,12 +2334,12 @@ var _ = Describe("ActualLRPDB", func() {
 			Context("When the actual LRP is claimed and isStale is true", func() {
 				BeforeEach(func() {
 					actualLRP = &models.ActualLRP{
-						ActualLRPKey: *actualLRPKey,
+						ActualLrpKey: *actualLRPKey,
 					}
 
-					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLRPKey)
+					_, err := sqlDB.CreateUnclaimedActualLRP(ctx, logger, &actualLRP.ActualLrpKey)
 					Expect(err).NotTo(HaveOccurred())
-					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLRPInstanceKey)
+					_, _, err = sqlDB.ClaimActualLRP(ctx, logger, guid, index, &actualLRP.ActualLrpInstanceKey)
 					Expect(err).NotTo(HaveOccurred())
 				})
 

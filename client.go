@@ -384,12 +384,13 @@ func (c *client) ActualLRPsByProcessGuids(logger lager.Logger, traceID string, p
 	request := models.ActualLRPsByProcessGuidsRequest{
 		ProcessGuids: processGuids,
 	}
-	response := models.ActualLRPsByProcessGuidsResponse{}
-	err := c.doRequest(logger, traceID, ActualLRPsByProcessGuidsRoute_r0, nil, nil, &request, &response)
+	protoResponse := models.ProtoActualLRPsByProcessGuidsResponse{}
+	err := c.doRequest(logger, traceID, ActualLRPsByProcessGuidsRoute_r0, nil, nil, request.ToProto(), &protoResponse)
 	if err != nil {
 		return nil, err
 	}
 
+	response := protoResponse.FromProto()
 	return response.ActualLrps, response.Error.ToError()
 }
 
