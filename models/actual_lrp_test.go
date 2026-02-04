@@ -331,6 +331,24 @@ var _ = Describe("ActualLRP", func() {
 				})
 			})
 
+			Describe("NewActualLRPNetInfoWithIPv6", func() {
+				It("returns a net info with the IPv6 address set", func() {
+					netInfo := models.NewActualLRPNetInfoWithIPv6(
+						"1.2.3.4",
+						"10.0.0.1",
+						"fd00::1",
+						models.ActualLRPNetInfo_PreferredAddressInstance,
+						models.NewPortMapping(5678, 8080),
+					)
+
+					Expect(netInfo.GetAddress()).To(Equal("1.2.3.4"))
+					Expect(netInfo.GetInstanceAddress()).To(Equal("10.0.0.1"))
+					Expect(netInfo.GetInstanceIpv6Address()).To(Equal("fd00::1"))
+					Expect(netInfo.GetPreferredAddress()).To(Equal(models.ActualLRPNetInfo_PreferredAddressInstance))
+					Expect(netInfo.GetPorts()).To(HaveLen(1))
+				})
+			})
+
 			Describe("ActualLRPNetInfo_PreferredAddress", func() {
 				Describe("serialization", func() {
 					DescribeTable("marshals and unmarshals between the value and the expected JSON output",

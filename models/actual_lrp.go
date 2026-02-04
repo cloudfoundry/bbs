@@ -53,7 +53,22 @@ func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstan
 }
 
 func NewActualLRPNetInfo(address string, instanceAddress string, preferredAddress ActualLRPNetInfo_PreferredAddress, ports ...*PortMapping) ActualLRPNetInfo {
-	return ActualLRPNetInfo{address, ports, instanceAddress, preferredAddress}
+	return ActualLRPNetInfo{
+		Address:          address,
+		Ports:            ports,
+		InstanceAddress:  instanceAddress,
+		PreferredAddress: preferredAddress,
+	}
+}
+
+func NewActualLRPNetInfoWithIPv6(address, instanceAddress, instanceIPv6Address string, preferredAddress ActualLRPNetInfo_PreferredAddress, ports ...*PortMapping) ActualLRPNetInfo {
+	return ActualLRPNetInfo{
+		Address:             address,
+		Ports:               ports,
+		InstanceAddress:     instanceAddress,
+		PreferredAddress:    preferredAddress,
+		InstanceIpv6Address: instanceIPv6Address,
+	}
 }
 
 func EmptyActualLRPNetInfo() ActualLRPNetInfo {
