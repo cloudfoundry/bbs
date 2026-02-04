@@ -70,7 +70,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeServiceClient.CellByIdReturns(nil, errors.New("hi"))
 		fakeLRPStatMetronNotifier = new(mfakes.FakeLRPStatMetronNotifier)
 
-		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+		cellPresence := models.NewCellPresence("cell-id", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil, nil)
 		cellSet = models.CellSet{"cell-id": &cellPresence}
 		fakeServiceClient.CellsReturns(cellSet, nil)
 
@@ -189,8 +189,8 @@ var _ = Describe("LRP Convergence Controllers", func() {
 
 		Context("when there are multiple cells", func() {
 			BeforeEach(func() {
-				presentCellPresence1 := models.NewCellPresence("cell-id-1", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
-				presentCellPresence2 := models.NewCellPresence("cell-id-2", "1.1.1.2", "", "z1", models.CellCapacity{}, nil, nil, nil, nil)
+				presentCellPresence1 := models.NewCellPresence("cell-id-1", "1.1.1.1", "", "z1", models.CellCapacity{}, nil, nil, nil, nil, nil)
+				presentCellPresence2 := models.NewCellPresence("cell-id-2", "1.1.1.2", "", "z1", models.CellCapacity{}, nil, nil, nil, nil, nil)
 				cellSet = models.CellSet{"cell-id-1": &presentCellPresence1, "cell-id-2": &presentCellPresence2}
 				fakeServiceClient.CellsReturns(cellSet, nil)
 			})
@@ -825,9 +825,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				KeysWithInternalRouteChanges: []*db.ActualLRPKeyWithInternalRoutes{&actualLRPKeyWithInternalRoutes1, &actualLRPKeyWithInternalRoutes2, &actualLRPKeyWithInternalRoutes3},
 			})
-			cell1Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
-			cell2Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
-			cell3Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
+			cell1Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil, nil)
+			cell2Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil, nil)
+			cell3Presence = models.NewCellPresence(actualLRPKeyWithInternalRoutes3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil, nil)
 			fakeServiceClient.CellByIdCalls(func(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 				switch cellId {
 				case "cell-id-1":
@@ -972,9 +972,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			fakeLRPDB.ConvergeLRPsReturns(db.ConvergenceResult{
 				KeysWithMetricTagChanges: []*db.ActualLRPKeyWithMetricTags{&actualLRPKeyWithMetricTags1, &actualLRPKeyWithMetricTags2, &actualLRPKeyWithMetricTags3},
 			})
-			cell1Presence = models.NewCellPresence(actualLRPKeyWithMetricTags1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil)
-			cell2Presence = models.NewCellPresence(actualLRPKeyWithMetricTags2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil)
-			cell3Presence = models.NewCellPresence(actualLRPKeyWithMetricTags3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil)
+			cell1Presence = models.NewCellPresence(actualLRPKeyWithMetricTags1.InstanceKey.CellId, "1.1.1.1", "rep-1.service.internal", "z1", models.CellCapacity{}, nil, nil, nil, nil, nil)
+			cell2Presence = models.NewCellPresence(actualLRPKeyWithMetricTags2.InstanceKey.CellId, "1.1.1.2", "rep-2.service.internal", "z2", models.CellCapacity{}, nil, nil, nil, nil, nil)
+			cell3Presence = models.NewCellPresence(actualLRPKeyWithMetricTags3.InstanceKey.CellId, "1.1.1.3", "rep-3.service.internal", "z3", models.CellCapacity{}, nil, nil, nil, nil, nil)
 			fakeServiceClient.CellByIdCalls(func(logger lager.Logger, cellId string) (*models.CellPresence, error) {
 				switch cellId {
 				case "cell-id-1":

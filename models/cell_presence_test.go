@@ -16,13 +16,15 @@ var _ = Describe("CellPresence", func() {
 	BeforeEach(func() {
 		capacity = models.NewCellCapacity(128, 1024, 3)
 		rootfsProviders := []string{"provider-1"}
-		preloadedRootFSes := []string{"provider-2", "provider-3"}
+		preloadedRootFSes := []string{"provider-2@1.2.3", "provider-3"}
+		extraRootFSes := []string{"provider-4@4.5.6", "provider-5"}
 		placementTags := []string{"tag-1", "tag-2"}
 		optionalPlacementTags := []string{"optional-tag-1", "optional-tag-2"}
-		cellPresence = models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone", capacity, rootfsProviders, preloadedRootFSes, placementTags, optionalPlacementTags)
+		cellPresence = models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone", capacity, rootfsProviders, preloadedRootFSes, extraRootFSes, placementTags, optionalPlacementTags)
 		expectedProviderList = []*models.Provider{
-			&models.Provider{"preloaded", []string{"provider-2", "provider-3"}},
-			&models.Provider{"preloaded+layer", []string{"provider-2", "provider-3"}},
+			&models.Provider{"preloaded", []string{"provider-2@1.2.3", "provider-3"}},
+			&models.Provider{"preloaded+layer", []string{"provider-2@1.2.3", "provider-3"}},
+			&models.Provider{"extra", []string{"provider-4@4.5.6", "provider-5"}},
 			&models.Provider{"provider-1", []string{}},
 		}
 	})

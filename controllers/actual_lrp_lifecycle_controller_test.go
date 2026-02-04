@@ -1543,6 +1543,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 							[]string{},
 							[]string{},
 							[]string{},
+							[]string{},
 						)
 
 						fakeServiceClient.CellByIdReturns(&cellPresence, nil)
@@ -1582,6 +1583,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 								"http://cell1.addr",
 								"the-zone",
 								models.NewCellCapacity(128, 1024, 6),
+								[]string{},
 								[]string{},
 								[]string{},
 								[]string{},

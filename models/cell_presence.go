@@ -72,13 +72,12 @@ func (cap CellCapacity) Validate() error {
 func NewCellPresence(
 	cellID, repAddress, repUrl, zone string,
 	capacity CellCapacity,
-	rootFSProviders, preloadedRootFSes, placementTags, optionalPlacementTags []string,
+	rootFSProviders, preloadedRootFSes, extraRootFSes, placementTags, optionalPlacementTags []string,
 ) CellPresence {
 	var providers []*Provider
-	var pProviders []string
-	pProviders = append(pProviders, preloadedRootFSes...)
-	providers = append(providers, &Provider{PreloadedRootFSScheme, pProviders})
-	providers = append(providers, &Provider{PreloadedOCIRootFSScheme, pProviders})
+	providers = append(providers, &Provider{PreloadedRootFSScheme, preloadedRootFSes})
+	providers = append(providers, &Provider{PreloadedOCIRootFSScheme, preloadedRootFSes})
+	providers = append(providers, &Provider{ExtraRootFSScheme, extraRootFSes})
 
 	for _, prov := range rootFSProviders {
 		providers = append(providers, &Provider{prov, []string{}})
