@@ -45,6 +45,7 @@ var _ = Describe("Convergence API", func() {
 				[]string{},
 				[]string{},
 				[]string{},
+				[]string{},
 			)
 			locketHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
@@ -129,6 +130,7 @@ var _ = Describe("Convergence API", func() {
 							"http://cell.example.com",
 							"the-zone",
 							models.NewCellCapacity(128, 1024, 6),
+							[]string{},
 							[]string{},
 							[]string{},
 							[]string{},
