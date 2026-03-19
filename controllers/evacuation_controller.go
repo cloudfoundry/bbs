@@ -525,10 +525,3 @@ func (h *EvacuationController) removeEvacuating(ctx context.Context, logger lage
 
 	return nil, err
 }
-
-func (h *EvacuationController) removeEvacuatingWithRecordChange(ctx context.Context, logger lager.Logger, targetActualLRP *models.ActualLRP, eventCalculator calculator.ActualLRPEventCalculator, newLRPs []*models.ActualLRP) (bool, error) {
-	removedEvacuating, err := h.removeEvacuating(ctx, logger, targetActualLRP)
-	eventCalculator.RecordChange(removedEvacuating, nil, newLRPs)
-	keepContainer := err != nil
-	return keepContainer, err
-}

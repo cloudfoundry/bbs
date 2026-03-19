@@ -777,7 +777,7 @@ var _ = Describe("Evacuation Controller", func() {
 			modelErr = models.ConvertError(err)
 		})
 
-		Context("when the update stratergy on the desired LRP is rolling", func() {
+		Context("when the update strategy on the desired LRP is rolling", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRolling, 1, nil)
 			})
@@ -1490,7 +1490,7 @@ var _ = Describe("Evacuation Controller", func() {
 			})
 		})
 
-		Context("when the update stratergy on the desired LRP is recreate", func() {
+		Context("when the update strategy on the desired LRP is recreate", func() {
 			BeforeEach(func() {
 				fakeDesiredLRPDB.DesiredLRPUpdateStrategyByProcessGuidReturns(models.DesiredLRP_UpdateStrategyRecreate, 2, nil)
 			})
