@@ -1,3 +1,8 @@
+// @AI-Generated
+// Generated in whole or in part by Cursor with a mix of different LLM models (Auto select mode)
+// Description:
+// 2026-03-23: Cancel DB health check context on timeout to release row locks
+
 package main
 
 import (
@@ -108,8 +113,10 @@ func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheckWithRetries(resultChan
 
 func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheck() error {
 	timer := runner.clock.NewTimer(runner.HealthCheckTimeout)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	errChan := make(chan error)
-	go runner.runDBHealthCheck(errChan)
+	go runner.runDBHealthCheck(ctx, errChan)
 
 	select {
 	case err := <-errChan:
@@ -119,13 +126,14 @@ func (runner *DBHealthCheckRunner) ExecuteTimedHealthCheck() error {
 			return err
 		}
 	case <-timer.C():
+		cancel()
 		err := fmt.Errorf("timed out after %s while executing DB health check", runner.HealthCheckTimeout)
 		runner.logger.Error("health-check-timed-out", err)
 		return err
 	}
 }
 
-func (runner *DBHealthCheckRunner) runDBHealthCheck(errChan chan error) {
-	err := runner.sqlDB.PerformBBSHealthCheck(context.Background(), runner.logger, time.Now())
+func (runner *DBHealthCheckRunner) runDBHealthCheck(ctx context.Context, errChan chan error) {
+	err := runner.sqlDB.PerformBBSHealthCheck(ctx, runner.logger, time.Now())
 	errChan <- err
 }

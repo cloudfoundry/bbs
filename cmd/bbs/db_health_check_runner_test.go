@@ -1,3 +1,8 @@
+// @AI-Generated
+// Generated in whole or in part by Cursor with a mix of different LLM models (Auto select mode)
+// Description:
+// 2026-03-23: Add test verifying context cancellation on health check timeout
+
 package main_test
 
 import (
@@ -174,6 +179,22 @@ var _ = Describe("DBHealthCheckRunner", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("timed out after 100ms while executing DB health check"))
 
+			})
+			It("cancels the context passed to PerformBBSHealthCheck", func() {
+				capturedCtx := make(chan context.Context, 1)
+				fakeDB.PerformBBSHealthCheckCalls(func(ctx context.Context, logger lager.Logger, t time.Time) error {
+					capturedCtx <- ctx
+					fakeClock.Increment(200 * time.Millisecond)
+					<-ctx.Done()
+					return ctx.Err()
+				})
+
+				err := runner.ExecuteTimedHealthCheck()
+				Expect(err).To(HaveOccurred())
+
+				var ctx context.Context
+				Eventually(capturedCtx).Should(Receive(&ctx))
+				Expect(ctx.Err()).To(Equal(context.Canceled))
 			})
 			Context("when using the default timeout", func() {
 				BeforeEach(func() {
