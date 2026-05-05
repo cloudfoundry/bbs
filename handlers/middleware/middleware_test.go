@@ -2,6 +2,9 @@ package middleware_test
 
 import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"net/http"
 	"time"
 
@@ -307,6 +310,42 @@ var _ = Describe("Test Middleware", func() {
 				Expect(accessLogger.Buffer()).To(gbytes.Say("method\":\"GET\""))
 				Expect(accessLogger.Buffer()).To(gbytes.Say("remote_addr\":\"127.0.0.1:8080\""))
 				Expect(accessLogger.Buffer()).To(gbytes.Say("request\":\"http://example.com\""))
+			})
+
+			When("request has TLS peer certificates", func() {
+				BeforeEach(func() {
+					handler := middleware.LogWrap(logger, accessLogger, loggableHandlerFunc)
+					req, err := http.NewRequest("GET", "http://example.com", nil)
+					Expect(err).NotTo(HaveOccurred())
+					req.RemoteAddr = "127.0.0.1:8080"
+					req.TLS = &tls.ConnectionState{
+						PeerCertificates: []*x509.Certificate{
+							{
+								Subject: pkix.Name{
+									CommonName:         "subject-cn",
+									OrganizationalUnit: []string{"subject-ou"},
+									Organization:       []string{"subject-o"},
+								},
+								Issuer: pkix.Name{
+									CommonName:         "issuer-cn",
+									OrganizationalUnit: []string{"issuer-ou"},
+									Organization:       []string{"issuer-o"},
+								},
+							},
+						},
+					}
+
+					handler.ServeHTTP(nil, req)
+				})
+
+				It("logs peer certificate information", func() {
+					Expect(logger.Buffer()).To(gbytes.Say("peer_cert_subject_common_name\":\"subject-cn\""))
+					Expect(logger.Buffer()).To(gbytes.Say("peer_cert_subject_organization\":\\[\"subject-o\"\\]"))
+					Expect(logger.Buffer()).To(gbytes.Say("peer_cert_subject_organizational_unit\":\\[\"subject-ou\"\\]"))
+					Expect(logger.Buffer()).To(gbytes.Say("peer_cert_issuer_common_name\":\"issuer-cn\""))
+					Expect(logger.Buffer()).To(gbytes.Say("peer_cert_issuer_organization\":\\[\"issuer-o\"\\]"))
+					Expect(logger.Buffer()).To(gbytes.Say("peer_cert_issuer_organizational_unit\":\\[\"issuer-ou\"\\]"))
+				})
 			})
 		})
 	})

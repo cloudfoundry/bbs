@@ -21,11 +21,26 @@ type Emitter interface {
 
 func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
 	lagerDataFromReq := func(r *http.Request) lager.Data {
-		return lager.Data{
+		lagerData := lager.Data{
 			"method":      r.Method,
 			"remote_addr": r.RemoteAddr,
 			"request":     r.URL.String(),
 		}
+
+		if r.TLS != nil && len(r.TLS.PeerCertificates) > 0 {
+			indexLeafCertConnectionIsVerifiedAgainst := 0 // see also https://github.com/golang/go/blob/e929fb78e47dc191a402d34ca949d2e0c67e31b8/src/crypto/tls/common.go#L281-L282
+			cert := r.TLS.PeerCertificates[indexLeafCertConnectionIsVerifiedAgainst]
+
+			lagerData["peer_cert_subject_common_name"] = cert.Subject.CommonName
+			lagerData["peer_cert_subject_organizational_unit"] = cert.Subject.OrganizationalUnit
+			lagerData["peer_cert_subject_organization"] = cert.Subject.Organization
+
+			lagerData["peer_cert_issuer_common_name"] = cert.Issuer.CommonName
+			lagerData["peer_cert_issuer_organizational_unit"] = cert.Issuer.OrganizationalUnit
+			lagerData["peer_cert_issuer_organization"] = cert.Issuer.Organization
+		}
+
+		return lagerData
 	}
 
 	if accessLogger != nil {
