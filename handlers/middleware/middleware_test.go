@@ -315,7 +315,7 @@ var _ = Describe("Test Middleware", func() {
 			When("request has TLS peer certificates", func() {
 				BeforeEach(func() {
 					accessLogger = lagertest.NewTestLogger("")
-					accessLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
+					accessLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO)) // peer cert information should be logged at INFO level
 
 					handler := middleware.LogWrap(logger, accessLogger, loggableHandlerFunc)
 					req, err := http.NewRequest("", "", nil)
