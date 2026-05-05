@@ -314,10 +314,12 @@ var _ = Describe("Test Middleware", func() {
 
 			When("request has TLS peer certificates", func() {
 				BeforeEach(func() {
+					accessLogger = lagertest.NewTestLogger("")
+					accessLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
+
 					handler := middleware.LogWrap(logger, accessLogger, loggableHandlerFunc)
-					req, err := http.NewRequest("GET", "http://example.com", nil)
+					req, err := http.NewRequest("", "", nil)
 					Expect(err).NotTo(HaveOccurred())
-					req.RemoteAddr = "127.0.0.1:8080"
 					req.TLS = &tls.ConnectionState{
 						PeerCertificates: []*x509.Certificate{
 							{
