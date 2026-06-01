@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
+	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 )
 
 var _ = Describe("BBS main test", func() {
@@ -29,9 +30,12 @@ var _ = Describe("BBS main test", func() {
 			testIngressServer.Stop()
 		})
 
-		It("exit with non-zero status code", func() {
-			bbsProcess = ifrit.Background(bbsRunner)
-			Eventually(bbsProcess.Wait()).Should(Receive(HaveOccurred()))
+		// diego-logging-client now dials loggregator non-blocking (lazy). bbs
+		// starts successfully and retries the connection in the background, so
+		// it must NOT exit when metron is temporarily unavailable.
+		It("starts successfully and does not exit", func() {
+			bbsProcess = ginkgomon.Invoke(bbsRunner)
+			Consistently(bbsProcess.Wait()).ShouldNot(Receive())
 		})
 	})
 })
