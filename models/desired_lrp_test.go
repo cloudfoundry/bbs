@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/bbs/format"
@@ -1009,10 +1010,7 @@ var _ = Describe("DesiredLRP", func() {
 		})
 
 		It("fails when service binding files exceed 1MB", func() {
-			var exceedSize string
-			for range (1024 * 1024) + 100 {
-				exceedSize += "a"
-			}
+			exceedSize := strings.Repeat("a", (1024*1024)+100)
 
 			var InvalidVolumeMountedFiles = []*models.File{
 				{Path: "/redis/username", Content: exceedSize},
@@ -1024,16 +1022,9 @@ var _ = Describe("DesiredLRP", func() {
 		})
 
 		It("fails when total size of service binding files exceeds 1MB", func() {
-			var smallFileContent, mediumFileContent, largeFileContent string
-			for i := 0; i < 1024*100; i++ {
-				smallFileContent += "a"
-			}
-			for i := 0; i < 1024*500; i++ {
-				mediumFileContent += "b"
-			}
-			for i := 0; i < 1024*500+100; i++ {
-				largeFileContent += "c"
-			}
+			smallFileContent := strings.Repeat("a", 1024*100)     // 100 KB
+			mediumFileContent := strings.Repeat("b", 1024*500)    // 500 KB
+			largeFileContent := strings.Repeat("c", 1024*500+100) // 500 KB + 100 bytes
 
 			var InvalidVolumeMountedFiles = []*models.File{
 				{Path: "/redis/small", Content: smallFileContent},
@@ -1816,16 +1807,10 @@ var _ = Describe("DesiredLRPRunInfo", func() {
 
 	var smallFileContent, mediumFileContent, largeFileContent string
 
-	// Create files of different sizes
-	for i := 0; i < 1024*100; i++ { // 100 KB
-		smallFileContent += "a"
-	}
-	for i := 0; i < 1024*500; i++ { // 500 KB
-		mediumFileContent += "b"
-	}
-	for i := 0; i < 1024*500+100; i++ { // 500 KB + 100 bytes
-		largeFileContent += "c"
-	}
+	// Create files of different sizes using efficient string building
+	smallFileContent = strings.Repeat("a", 1024*100)     // 100 KB
+	mediumFileContent = strings.Repeat("b", 1024*500)    // 500 KB
+	largeFileContent = strings.Repeat("c", 1024*500+100) // 500 KB + 100 bytes
 
 	var InvalidVolumeMountedFiles = []*models.File{
 		{Path: "/redis/small", Content: smallFileContent},
