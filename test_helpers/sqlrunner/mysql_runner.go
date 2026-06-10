@@ -13,6 +13,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
+type BBSDBParam = helpers.ConnectParams
+
 // MySQLRunner is responsible for creating and tearing down a test database in
 // a local MySQL instance. This runner assumes mysql is already running
 // locally, and does not start or stop the mysql service.  mysql must be set up
@@ -47,7 +50,7 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	baseConnString := fmt.Sprintf("%s:%s@/", user, password)
 
 	var err error
-	dbParams := &helpers.BBSDBParam{
+	dbParams := &BBSDBParam{
 		DriverName:                    "mysql",
 		DatabaseConnectionString:      baseConnString,
 		SqlCACertFile:                 "",

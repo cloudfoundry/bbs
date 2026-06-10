@@ -25,6 +25,9 @@ import (
 	"testing"
 )
 
+// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
+type BBSDBParam = helpers.ConnectParams
+
 var (
 	flavor string
 
@@ -49,7 +52,7 @@ var _ = BeforeSuite(func() {
 	sqlRunner = test_helpers.NewSQLRunner(dbName)
 	sqlProcess = ginkgomon.Invoke(sqlRunner)
 
-	dbParams := &helpers.BBSDBParam{
+	dbParams := &BBSDBParam{
 		DriverName:                    sqlRunner.DriverName(),
 		DatabaseConnectionString:      sqlRunner.ConnectionString(),
 		SqlCACertFile:                 "",

@@ -124,7 +124,7 @@ var _ = Describe("Version", func() {
 
 			BeforeEach(func() {
 				var err error
-				dbParams := &helpers.BBSDBParam{
+				dbParams := &helpers.ConnectParams{
 					DriverName:                    dbDriverName,
 					DatabaseConnectionString:      dbBaseConnectionString,
 					SqlCACertFile:                 "",

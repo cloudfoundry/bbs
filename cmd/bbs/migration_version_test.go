@@ -61,7 +61,7 @@ var _ = Describe("Migration Version", func() {
 		)
 
 		BeforeEach(func() {
-			dbParams := &helpers.BBSDBParam{
+			dbParams := &helpers.ConnectParams{
 				DriverName:                    sqlRunner.DriverName(),
 				DatabaseConnectionString:      sqlRunner.ConnectionString(),
 				SqlCACertFile:                 "",

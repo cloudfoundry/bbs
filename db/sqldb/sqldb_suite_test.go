@@ -30,6 +30,9 @@ import (
 	"testing"
 )
 
+// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
+type BBSDBParam = helpers.ConnectParams
+
 var (
 	rawDB                                *sql.DB
 	db                                   helpers.QueryableDB
@@ -44,7 +47,7 @@ var (
 	dbDriverName, dbBaseConnectionString string
 	dbFlavor                             string
 	fakeMetronClient                     *mfakes.FakeIngressClient
-	dbParams                             *helpers.BBSDBParam
+	dbParams                             *BBSDBParam
 )
 
 func TestSql(t *testing.T) {
@@ -89,7 +92,7 @@ var _ = BeforeSuite(func() {
 
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release .
-	dbParams = &helpers.BBSDBParam{
+	dbParams = &BBSDBParam{
 		DriverName:                    dbDriverName,
 		DatabaseConnectionString:      dbBaseConnectionString,
 		SqlCACertFile:                 "",

@@ -58,6 +58,9 @@ const (
 	bbsLockKey = "bbs"
 )
 
+// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
+type BBSDBParam = helpers.ConnectParams
+
 func main() {
 	flag.Parse()
 
@@ -100,7 +103,7 @@ func main() {
 		logger.Fatal("no-database-configured", errors.New("no database configured"))
 	}
 
-	params := &helpers.BBSDBParam{
+	params := &BBSDBParam{
 		DriverName:                    bbsConfig.DatabaseDriver,
 		DatabaseConnectionString:      bbsConfig.DatabaseConnectionString,
 		SqlCACertFile:                 bbsConfig.SQLCACertFile,

@@ -693,7 +693,7 @@ var _ = Describe("Convergence API", func() {
 
 				BeforeEach(func() {
 					Expect(client.UpsertDomain(logger, "some-trace-id", "some-domain", 0)).To(Succeed())
-					dbParams := &helpers.BBSDBParam{
+					dbParams := &helpers.ConnectParams{
 						DriverName:                    sqlRunner.DriverName(),
 						DatabaseConnectionString:      sqlRunner.ConnectionString(),
 						SqlCACertFile:                 "",

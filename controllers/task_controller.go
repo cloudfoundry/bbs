@@ -294,7 +294,7 @@ func (c *TaskController) ConvergeTasks(
 		if err != nil {
 			taskGuids := make([]string, len(taskConvergenceResult.TasksToAuction))
 			for i, task := range taskConvergenceResult.TasksToAuction {
-				taskGuids[i] = task.TaskGuid
+				taskGuids[i] = task.Task.TaskGuid
 			}
 			logger.Error("failed-to-request-auctions-for-pending-tasks", err,
 				lager.Data{"task_guids": taskGuids})

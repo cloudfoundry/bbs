@@ -47,7 +47,7 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	baseConnString := fmt.Sprintf("postgres://%s:%s@localhost/", user, password)
 
 	var err error
-	dbParams := &helpers.BBSDBParam{
+	dbParams := &BBSDBParam{
 		DriverName:                    "postgres",
 		DatabaseConnectionString:      baseConnString,
 		SqlCACertFile:                 "",

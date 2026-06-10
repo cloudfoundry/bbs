@@ -219,7 +219,7 @@ var _ = Describe("TimeoutConn - Unit Tests (No Database Required)", Label("no-db
 
 	Describe("BBSDBParam", func() {
 		It("should have all required fields", func() {
-			param := &helpers.BBSDBParam{
+			param := &helpers.ConnectParams{
 				DriverName:                    "postgres",
 				DatabaseConnectionString:      "postgres://localhost",
 				SqlCACertFile:                 "/path/to/ca.crt",
