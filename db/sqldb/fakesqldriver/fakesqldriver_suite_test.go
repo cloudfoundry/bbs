@@ -9,8 +9,8 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/sqldb"
 	"code.cloudfoundry.org/bbs/db/sqldb/fakesqldriver/fakesqldriverfakes"
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers/monitor"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/guidprovider/guidproviderfakes"

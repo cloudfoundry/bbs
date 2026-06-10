@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers/monitor"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers/monitor"
 )
 
 type FakeMonitor struct {

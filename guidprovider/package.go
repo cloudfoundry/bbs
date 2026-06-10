@@ -1,1 +1,1 @@
-package guidprovider // import "code.cloudfoundry.org/db-helpers/guidprovider"
+package guidprovider // import "code.cloudfoundry.org/diego-db-helpers/guidprovider"

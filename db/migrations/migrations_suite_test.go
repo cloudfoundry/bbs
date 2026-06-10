@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/db-helpers/testhelpers/sqlrunner"
+	"code.cloudfoundry.org/diego-db-helpers/testhelpers/sqlrunner"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
