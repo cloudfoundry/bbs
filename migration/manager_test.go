@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/dbfakes"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
 	"code.cloudfoundry.org/bbs/migration"

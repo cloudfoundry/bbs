@@ -1,1 +1,1 @@
-package guidprovider // import "code.cloudfoundry.org/bbs/guidprovider"
+package guidprovider // import "code.cloudfoundry.org/db-helpers/guidprovider"

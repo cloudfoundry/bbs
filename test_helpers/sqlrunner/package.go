@@ -1,1 +1,1 @@
-package sqlrunner // import "code.cloudfoundry.org/bbs/test_helpers/sqlrunner"
+package sqlrunner // import "code.cloudfoundry.org/db-helpers/testhelpers/sqlrunner"

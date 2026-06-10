@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers/monitor"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

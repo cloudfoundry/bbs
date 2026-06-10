@@ -1,1 +1,1 @@
-package monitor // import "code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
+package monitor // import "code.cloudfoundry.org/db-helpers/sqldb/helpers/monitor"

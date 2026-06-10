@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
 )
 
 type FakeQueryableDB struct {

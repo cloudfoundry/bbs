@@ -9,10 +9,10 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/migrations"
 	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
-	"code.cloudfoundry.org/bbs/guidprovider"
+	"code.cloudfoundry.org/db-helpers/guidprovider"
 	"code.cloudfoundry.org/bbs/handlers"
 	"code.cloudfoundry.org/bbs/migration"
 	"code.cloudfoundry.org/bbs/models"

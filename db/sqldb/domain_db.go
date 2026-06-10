@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
 )
 

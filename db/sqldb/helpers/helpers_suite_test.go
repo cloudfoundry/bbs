@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/lager/v3"
 	. "github.com/onsi/ginkgo/v2"

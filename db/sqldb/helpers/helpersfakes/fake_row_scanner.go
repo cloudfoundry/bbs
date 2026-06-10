@@ -4,7 +4,7 @@ package helpersfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
 )
 
 type FakeRowScanner struct {

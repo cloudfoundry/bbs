@@ -1,1 +1,1 @@
-package helpers // import "code.cloudfoundry.org/bbs/db/sqldb/helpers"
+package helpers // import "code.cloudfoundry.org/db-helpers/sqldb/helpers"

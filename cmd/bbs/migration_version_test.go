@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
+	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
