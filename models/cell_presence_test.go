@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"encoding/json"
+
 	"code.cloudfoundry.org/bbs/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -20,7 +22,7 @@ var _ = Describe("CellPresence", func() {
 		extraRootFSes := []string{"provider-4@4.5.6", "provider-5"}
 		placementTags := []string{"tag-1", "tag-2"}
 		optionalPlacementTags := []string{"optional-tag-1", "optional-tag-2"}
-		cellPresence = models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone", capacity, rootfsProviders, preloadedRootFSes, extraRootFSes, placementTags, optionalPlacementTags)
+		cellPresence = models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone", capacity, rootfsProviders, preloadedRootFSes, extraRootFSes, placementTags, optionalPlacementTags, nil)
 		expectedProviderList = []*models.Provider{
 			&models.Provider{"preloaded", []string{"provider-2@1.2.3", "provider-3"}},
 			&models.Provider{"preloaded+layer", []string{"provider-2@1.2.3", "provider-3"}},
@@ -142,6 +144,81 @@ var _ = Describe("CellPresence", func() {
 						Expect(err.Error()).To(ContainSubstring("disk_mb"))
 					})
 				})
+			})
+
+			Context("when annotations are invalid", func() {
+				Context("when an annotation key is empty", func() {
+					BeforeEach(func() {
+						cellPresence.Annotations = map[string]string{"": "some-value"}
+					})
+					It("returns an error", func() {
+						err := cellPresence.Validate()
+						Expect(err).To(HaveOccurred())
+						Expect(err.Error()).To(ContainSubstring("annotations"))
+					})
+				})
+
+				Context("when an annotation value is empty", func() {
+					BeforeEach(func() {
+						cellPresence.Annotations = map[string]string{"some-key": ""}
+					})
+					It("returns an error", func() {
+						err := cellPresence.Validate()
+						Expect(err).To(HaveOccurred())
+						Expect(err.Error()).To(ContainSubstring("annotations"))
+					})
+				})
+			})
+
+			Context("when annotations are valid", func() {
+				BeforeEach(func() {
+					cellPresence.Annotations = map[string]string{"pool": "gpu", "dc": "us-east-1"}
+				})
+				It("does not return an error", func() {
+					Expect(cellPresence.Validate()).NotTo(HaveOccurred())
+				})
+			})
+		})
+	})
+
+	Describe("NewCellPresence", func() {
+		Context("when annotations is nil", func() {
+			It("initializes annotations to an empty map", func() {
+				cp := models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone",
+					models.NewCellCapacity(128, 1024, 3), nil, nil, nil, nil, nil, nil)
+				Expect(cp.Annotations).NotTo(BeNil())
+				Expect(cp.Annotations).To(BeEmpty())
+			})
+
+			It("serializes annotations as an empty object in JSON", func() {
+				cp := models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone",
+					models.NewCellCapacity(128, 1024, 3), nil, nil, nil, nil, nil, nil)
+				data, err := json.Marshal(cp)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring(`"annotations":{}`))
+			})
+		})
+
+		Context("when a CellPresence is deserialized from JSON without annotations (e.g. old Locket data)", func() {
+			It("serializes annotations as an empty object", func() {
+				cp := models.CellPresence{
+					CellId:     "old-cell",
+					RepAddress: "1.2.3.4",
+					Capacity:   &models.CellCapacity{MemoryMb: 128, DiskMb: 1024, Containers: 3},
+				}
+				data, err := json.Marshal(cp)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(data)).To(ContainSubstring(`"annotations":{}`))
+				Expect(string(data)).NotTo(ContainSubstring(`"annotations":null`))
+			})
+		})
+
+		Context("when annotations are provided", func() {
+			It("preserves them", func() {
+				cp := models.NewCellPresence("some-id", "some-address", "http://some-url", "some-zone",
+					models.NewCellCapacity(128, 1024, 3), nil, nil, nil, nil, nil,
+					map[string]string{"pool": "gpu"})
+				Expect(cp.Annotations).To(Equal(map[string]string{"pool": "gpu"}))
 			})
 		})
 	})

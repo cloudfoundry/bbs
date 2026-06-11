@@ -20,6 +20,7 @@ message CellPresence {
   repeated string placement_tags = 6;
   repeated string optional_placement_tags = 7;
   string rep_url = 8 [(gogoproto.jsontag) = "rep_url"];
+  map<string, string> annotations = 9 [(gogoproto.jsontag) = "annotations"];
 }
 
 message Provider {
