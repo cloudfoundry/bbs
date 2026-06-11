@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db"
-	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	lager "code.cloudfoundry.org/lager/v3"
 )
 

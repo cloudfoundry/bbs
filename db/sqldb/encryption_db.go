@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/format"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
 )
 

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/cmd/bbs/testrunner"
-	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/models"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"

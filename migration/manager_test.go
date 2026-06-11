@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/db/dbfakes"
-	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
 	"code.cloudfoundry.org/bbs/migration"
@@ -16,6 +15,7 @@ import (
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"

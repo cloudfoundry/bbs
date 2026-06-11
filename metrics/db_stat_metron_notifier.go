@@ -4,8 +4,8 @@ import (
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers/monitor"
 	logging "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager/v3"
 	"github.com/tedsuo/ifrit"
