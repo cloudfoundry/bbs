@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/go-sql-driver/mysql"

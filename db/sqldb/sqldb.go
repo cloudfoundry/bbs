@@ -3,10 +3,10 @@ package sqldb
 import (
 	"context"
 
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
-	"code.cloudfoundry.org/db-helpers/guidprovider"
+	"code.cloudfoundry.org/diego-db-helpers/guidprovider"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/clock"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"

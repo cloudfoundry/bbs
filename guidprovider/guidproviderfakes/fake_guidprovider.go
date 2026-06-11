@@ -4,7 +4,7 @@ package guidproviderfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/db-helpers/guidprovider"
+	"code.cloudfoundry.org/diego-db-helpers/guidprovider"
 )
 
 type FakeGUIDProvider struct {

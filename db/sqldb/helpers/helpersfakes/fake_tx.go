@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"sync"
 
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 )
 
 type FakeTx struct {

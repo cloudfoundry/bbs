@@ -17,7 +17,7 @@ import (
 	bbsconfig "code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/db-helpers/testhelpers/sqlrunner"
+	"code.cloudfoundry.org/diego-db-helpers/testhelpers/sqlrunner"
 	diego_logging_client "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/durationjson"

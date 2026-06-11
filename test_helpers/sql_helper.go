@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"code.cloudfoundry.org/db-helpers/testhelpers/sqlrunner"
+	"code.cloudfoundry.org/diego-db-helpers/testhelpers/sqlrunner"
 )
 
 const (

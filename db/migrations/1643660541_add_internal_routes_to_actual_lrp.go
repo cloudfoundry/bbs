@@ -3,7 +3,7 @@ package migrations
 import (
 	"database/sql"
 
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/format"
 	"code.cloudfoundry.org/bbs/migration"

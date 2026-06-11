@@ -3,7 +3,7 @@ package sqldb_test
 import (
 	"time"
 
-	"code.cloudfoundry.org/db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
