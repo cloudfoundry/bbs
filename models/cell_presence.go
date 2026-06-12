@@ -1,6 +1,9 @@
 package models
 
-import "strings"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type CellSet map[string]*CellPresence
 
@@ -73,6 +76,7 @@ func NewCellPresence(
 	cellID, repAddress, repUrl, zone string,
 	capacity CellCapacity,
 	rootFSProviders, preloadedRootFSes, extraRootFSes, placementTags, optionalPlacementTags []string,
+	annotations map[string]string,
 ) CellPresence {
 	var providers []*Provider
 	providers = append(providers, &Provider{PreloadedRootFSScheme, preloadedRootFSes})
@@ -81,6 +85,10 @@ func NewCellPresence(
 
 	for _, prov := range rootFSProviders {
 		providers = append(providers, &Provider{prov, []string{}})
+	}
+
+	if annotations == nil {
+		annotations = map[string]string{}
 	}
 
 	return CellPresence{
@@ -92,6 +100,7 @@ func NewCellPresence(
 		RootfsProviders:       providers,
 		PlacementTags:         placementTags,
 		OptionalPlacementTags: optionalPlacementTags,
+		Annotations:           annotations,
 	}
 }
 
@@ -112,6 +121,13 @@ func (c CellPresence) Validate() error {
 
 	if err := c.Capacity.Validate(); err != nil {
 		validationError = validationError.Append(err)
+	}
+
+	for k, v := range c.Annotations {
+		if k == "" || v == "" {
+			validationError = validationError.Append(ErrInvalidField{"annotations"})
+			break
+		}
 	}
 
 	if !validationError.Empty() {
@@ -149,4 +165,12 @@ func (e CellDisappearedEvent) CellIDs() []string {
 func (c *CellPresence) Copy() *CellPresence {
 	newCellPresense := *c
 	return &newCellPresense
+}
+
+func (c CellPresence) MarshalJSON() ([]byte, error) {
+	if c.Annotations == nil {
+		c.Annotations = map[string]string{}
+	}
+	type cellPresenceAlias CellPresence
+	return json.Marshal(cellPresenceAlias(c))
 }

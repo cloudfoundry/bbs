@@ -46,6 +46,7 @@ var _ = Describe("Convergence API", func() {
 				[]string{},
 				[]string{},
 				[]string{},
+				nil,
 			)
 			locketHelper.RegisterCell(&cellPresence)
 			processGuid = "some-process-guid"
@@ -135,6 +136,7 @@ var _ = Describe("Convergence API", func() {
 							[]string{},
 							[]string{},
 							[]string{},
+							nil,
 						)
 						locketHelper.RegisterCell(&cellPresence)
 					})
