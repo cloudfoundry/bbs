@@ -44,16 +44,19 @@ var _ = Describe("ServiceClient", func() {
 		locketClient = &modelsfakes.FakeLocketClient{}
 
 		cellPresence1 = &models.CellPresence{
-			CellId:     "cell-1",
-			RepAddress: "cell-1-address",
+			CellId:      "cell-1",
+			RepAddress:  "cell-1-address",
+			Annotations: map[string]string{},
 		}
 		cellPresence2 = &models.CellPresence{
-			CellId:     "cell-2",
-			RepAddress: "cell-2-address",
+			CellId:      "cell-2",
+			RepAddress:  "cell-2-address",
+			Annotations: map[string]string{},
 		}
 		cellPresence3 = &models.CellPresence{
-			CellId:     "cell-3",
-			RepAddress: "cell-3-address",
+			CellId:      "cell-3",
+			RepAddress:  "cell-3-address",
+			Annotations: map[string]string{},
 		}
 
 		serviceClient = serviceclient.NewServiceClient(locketClient, time.Duration(30)*time.Second)
