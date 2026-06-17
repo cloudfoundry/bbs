@@ -1095,7 +1095,7 @@ var _ = Describe("Task Controller", func() {
 					_, traceId, requestedTasks := fakeAuctioneerClient.RequestTaskAuctionsArgsForCall(0)
 					Expect(traceId).NotTo(BeNil())
 					Expect(requestedTasks).To(HaveLen(2))
-					Expect([]string{requestedTasks[0].TaskGuid, requestedTasks[1].TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
+					Expect([]string{requestedTasks[0].Task.TaskGuid, requestedTasks[1].Task.TaskGuid}).To(ConsistOf(taskGuid1, taskGuid2))
 				})
 
 				Context("when requesting an auction is unsuccessful", func() {
