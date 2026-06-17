@@ -4,6 +4,10 @@ go 1.26.0
 
 replace code.cloudfoundry.org/bbs/models => ./models
 
+replace code.cloudfoundry.org/rep => /Users/gf009738/workspace/diego-release/src/code.cloudfoundry.org/rep
+
+replace code.cloudfoundry.org/executor => /Users/gf009738/workspace/diego-release/src/code.cloudfoundry.org/executor
+
 require (
 	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
 	code.cloudfoundry.org/bbs/models v0.0.0-00010101000000-000000000000
@@ -38,6 +42,7 @@ require (
 require (
 	code.cloudfoundry.org/ecrhelper v0.0.0-20230612152651-56a9cdc53d60 // indirect
 	code.cloudfoundry.org/executor v0.1442.0 // indirect
+	code.cloudfoundry.org/garden v0.0.0-20260617020226-a9e754564bb5 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260615142411-472d6bcdb3c6 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
