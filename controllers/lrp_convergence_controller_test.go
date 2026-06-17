@@ -894,7 +894,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				updates[i] = update
 			}
 
-			internalRoutes := internalroutes.InternalRoutes{internalroutes.InternalRoute{Hostname: "some-internal-route.apps.internal"}}
+			internalRoutes := rep.InternalRoutes{rep.InternalRoute{Hostname: "some-internal-route.apps.internal"}}
 			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes1.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes1.Key, internalRoutes, nil)
 			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes2.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes2.Key, internalRoutes, nil)
 			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes3.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes3.Key, internalRoutes, nil)
