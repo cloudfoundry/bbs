@@ -14,7 +14,6 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
-	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
 
@@ -308,9 +307,9 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 
-			var internalRoutes internalroutes.InternalRoutes
+			var internalRoutes rep.InternalRoutes
 			for _, ir := range dereferencedLRPKey.DesiredInternalRoutes {
-				internalRoutes = append(internalRoutes, internalroutes.InternalRoute{Hostname: ir.Hostname})
+				internalRoutes = append(internalRoutes, rep.InternalRoute{Hostname: ir.Hostname})
 			}
 			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes, nil)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)

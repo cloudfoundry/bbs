@@ -496,7 +496,11 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				}
 			}
 
-			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes, metricTags)
+			var bbsInternalRoutes rep.InternalRoutes
+			for _, r := range internalRoutes {
+				bbsInternalRoutes = append(bbsInternalRoutes, rep.InternalRoute{Hostname: r.Hostname})
+			}
+			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, bbsInternalRoutes, metricTags)
 			go func() {
 				err := repClient.UpdateLRPInstance(logger, lrpUpdate)
 				if err != nil {
