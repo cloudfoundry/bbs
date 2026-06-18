@@ -620,6 +620,8 @@ code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815 h1:f3kRw+Gb7E8422
 code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815/go.mod h1:1ZB1JCh2FAp+SqX79ve6dc8YREvbsziULEOncAilX4Q=
 code.cloudfoundry.org/lager/v3 v3.74.0 h1:gRJj1CAI4hjfPYmynLKADvVTnlIbAz0W+YGRQqPQuRs=
 code.cloudfoundry.org/lager/v3 v3.74.0/go.mod h1:LXtRzpY16oMUJ46zxyRgB/touvG7Ltklt1tWbV4VwzI=
+code.cloudfoundry.org/locket v1.0.0 h1:Svve6E2VXGaFY7XPa0POWjMdF5NjE1kcBpbPqqS1LiM=
+code.cloudfoundry.org/locket v1.0.0/go.mod h1:adDIs5I3anU4DuYJa5nF/Ztx4+fdDGGApYyEpWaU4B0=
 code.cloudfoundry.org/rep v0.1442.0 h1:ebo7437a+ucvxBVPmlgy8x5soz2OdOzq3NSOPPW2yQg=
 code.cloudfoundry.org/rep v0.1442.0/go.mod h1:U4WUmaegv1waFzgaBtWoFOmPrFIvYL8rJYfB6sC9vLg=
 code.cloudfoundry.org/routing-info v0.1.0 h1:BaH10yIoFIvK+ZD69eZ5wpjcEDySnAUyDiYEC/lXvfo=
@@ -1675,8 +1677,8 @@ google.golang.org/genproto v0.0.0-20230323212658-478b75c54725/go.mod h1:UUQDJDOl
 google.golang.org/genproto v0.0.0-20230330154414-c0448cd141ea/go.mod h1:UUQDJDOlWu4KYeJZffbWgBkS1YFobzKbLVfK69pe0Ak=
 google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633/go.mod h1:UUQDJDOlWu4KYeJZffbWgBkS1YFobzKbLVfK69pe0Ak=
 google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1/go.mod h1:nKE/iIaLqn2bQwXBg8f1g2Ylh6r5MN5CmZvuzZCgsCU=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 h1:9HZDLIdYBJXAnaFOr9WHrKVycfpY+75s9HGadC0305A=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 h1:phvBWCAQMGN1945mp5fjCXP6jEF0+a0+4TjokS4sxNY=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=

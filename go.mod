@@ -2,9 +2,7 @@ module code.cloudfoundry.org/bbs
 
 go 1.26.0
 
-replace (
-	code.cloudfoundry.org/bbs/models => ./models
-)
+replace code.cloudfoundry.org/bbs/models => ./models
 
 require (
 	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
@@ -18,7 +16,7 @@ require (
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
 	code.cloudfoundry.org/lager/v3 v3.74.0
-	code.cloudfoundry.org/locket v0.1.0
+	code.cloudfoundry.org/locket v1.0.0
 	code.cloudfoundry.org/rep v0.1442.0
 	code.cloudfoundry.org/routing-info v0.1.0
 	code.cloudfoundry.org/tlsconfig v0.60.0
@@ -84,6 +82,6 @@ require (
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.46.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
