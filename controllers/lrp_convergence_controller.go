@@ -307,9 +307,9 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 
-			var internalRoutes rep.InternalRoutes
+			var internalRoutes models.InternalRoutes
 			for _, ir := range dereferencedLRPKey.DesiredInternalRoutes {
-				internalRoutes = append(internalRoutes, rep.InternalRoute{Hostname: ir.Hostname})
+				internalRoutes = append(internalRoutes, models.InternalRoute{Hostname: ir.Hostname})
 			}
 			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes, nil)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
