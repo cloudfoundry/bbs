@@ -81,7 +81,7 @@ func (m Manager) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 	if version > maxMigrationVersion {
 		return fmt.Errorf(
-			"Existing DB version (%d) exceeds bbs version (%d)",
+			"existing DB version (%d) exceeds bbs version (%d)",
 			version,
 			maxMigrationVersion,
 		)

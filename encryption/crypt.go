@@ -48,13 +48,13 @@ func (c *cryptor) Encrypt(plaintext []byte) (Encrypted, error) {
 
 	aead, err := cipher.NewGCM(key.Block())
 	if err != nil {
-		return Encrypted{}, fmt.Errorf("Unable to create GCM-wrapped cipher: %q", err)
+		return Encrypted{}, fmt.Errorf("unable to create GCM-wrapped cipher: %q", err)
 	}
 
 	nonce := make([]byte, aead.NonceSize())
 	_, err = io.ReadFull(c.prng, nonce)
 	if err != nil {
-		return Encrypted{}, fmt.Errorf("Unable to generate random nonce: %q", err)
+		return Encrypted{}, fmt.Errorf("unable to generate random nonce: %q", err)
 	}
 
 	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
@@ -69,7 +69,7 @@ func (d *cryptor) Decrypt(encrypted Encrypted) ([]byte, error) {
 
 	aead, err := cipher.NewGCM(key.Block())
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create GCM-wrapped cipher: %q", err)
+		return nil, fmt.Errorf("unable to create GCM-wrapped cipher: %q", err)
 	}
 
 	// #nosec G407 - G407 is incorrectly flagging Decrypt calls that use the nonce provided in the encrypted data. we randomize this for encryption, which is where it matters. https://github.com/securego/gosec/issues/1209

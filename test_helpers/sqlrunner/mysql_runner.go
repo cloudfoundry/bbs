@@ -9,8 +9,8 @@ import (
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/go-sql-driver/mysql"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 )
 
 // BBSDBParam is a backward-compatible alias for helpers.ConnectParams
@@ -34,7 +34,7 @@ func NewMySQLRunner(sqlDBName string) *MySQLRunner {
 }
 
 func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	defer GinkgoRecover()
+	defer ginkgo.GinkgoRecover()
 	logger := m.logger.Session("run")
 	logger.Info("starting")
 	defer logger.Info("completed")
@@ -57,22 +57,22 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 		SqlEnableIdentityVerification: false,
 	}
 	m.db, err = helpers.Connect(logger, dbParams)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(m.db.Ping()).To(Succeed())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(m.db.Ping()).To(gomega.Succeed())
 
 	_, err = m.db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", m.sqlDBName))
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	_, err = m.db.Exec(fmt.Sprintf("CREATE DATABASE %s", m.sqlDBName))
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	Expect(m.db.Close()).To(Succeed())
+	gomega.Expect(m.db.Close()).To(gomega.Succeed())
 
 	connStringWithDB := fmt.Sprintf("%s%s", baseConnString, m.sqlDBName)
 	dbParams.DatabaseConnectionString = connStringWithDB
 	m.db, err = helpers.Connect(logger, dbParams)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(m.db.Ping()).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(m.db.Ping()).NotTo(gomega.HaveOccurred())
 
 	close(ready)
 
@@ -81,10 +81,10 @@ func (m *MySQLRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error
 	logger.Info("signaled")
 
 	_, err = m.db.Exec(fmt.Sprintf("DROP DATABASE %s", m.sqlDBName))
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	logger.Info("closing-connection")
-	Expect(m.db.Close()).To(Succeed())
+	gomega.Expect(m.db.Close()).To(gomega.Succeed())
 	m.db = nil
 
 	return nil
@@ -150,8 +150,8 @@ func (m *MySQLRunner) ResetTables(tables []string) {
 			}
 		}
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		gomega.Expect(result.RowsAffected()).To(gomega.BeEquivalentTo(0))
 	}
 }
 

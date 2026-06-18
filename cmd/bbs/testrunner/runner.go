@@ -9,7 +9,7 @@ import (
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/durationjson"
 
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 )
 
@@ -19,10 +19,10 @@ func New(binPath string, bbsConfig config.BBSConfig) *ginkgomon.Runner {
 	}
 
 	f, err := os.CreateTemp("", "bbs.config")
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	err = json.NewEncoder(f).Encode(bbsConfig)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	return ginkgomon.New(ginkgomon.Config{
 		Name:              "bbs",

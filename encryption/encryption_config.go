@@ -9,11 +9,11 @@ type EncryptionConfig struct {
 
 func (ef *EncryptionConfig) Parse() (Key, []Key, error) {
 	if len(ef.EncryptionKeys) == 0 {
-		return nil, nil, errors.New("Must have at least one encryption key set")
+		return nil, nil, errors.New("must have at least one encryption key set")
 	}
 
 	if len(ef.ActiveKeyLabel) == 0 {
-		return nil, nil, errors.New("Must select an active encryption key")
+		return nil, nil, errors.New("must select an active encryption key")
 	}
 
 	var encryptionKey Key
@@ -30,7 +30,7 @@ func (ef *EncryptionConfig) Parse() (Key, []Key, error) {
 
 	encryptionKey, ok := labelsToKeys[ef.ActiveKeyLabel]
 	if !ok {
-		return nil, nil, errors.New("The selected active key must be listed on the encryption keys flag")
+		return nil, nil, errors.New("the selected active key must be listed on the encryption keys flag")
 	}
 
 	keys := []Key{}

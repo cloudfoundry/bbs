@@ -281,7 +281,7 @@ func newSecureClient(cfg ClientConfig) (InternalClient, error) {
 		return nil, err
 	}
 	if bbsURL.Scheme != "https" {
-		return nil, errors.New("Expected https URL")
+		return nil, errors.New("expected https URL")
 	}
 
 	var clientOpts []tlsconfig.ClientOption

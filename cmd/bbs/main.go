@@ -248,7 +248,7 @@ func main() {
 	var lock ifrit.Runner
 	switch len(locks) {
 	case 0:
-		logger.Fatal("no-locks-configured", errors.New("Lock configuration must be provided"))
+		logger.Fatal("no-locks-configured", errors.New("lock configuration must be provided"))
 	case 1:
 		lock = locks[0]
 	default:

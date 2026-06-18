@@ -19,7 +19,7 @@ func NewKeyManager(encryptionKey Key, decryptionKeys []Key) (KeyManager, error) 
 
 	for _, key := range decryptionKeys {
 		if existingKey, ok := decryptionKeyMap[key.Label()]; ok && key != existingKey {
-			return nil, fmt.Errorf("Multiple keys with the same label: %q", key.Label())
+			return nil, fmt.Errorf("multiple keys with the same label: %q", key.Label())
 		}
 		decryptionKeyMap[key.Label()] = key
 	}

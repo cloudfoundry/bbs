@@ -9,8 +9,8 @@ import (
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/jackc/pgx/v5/pgconn"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 )
 
 // PostgresRunner is responsible for creating and tearing down a test database in
@@ -31,7 +31,7 @@ func NewPostgresRunner(sqlDBName string) *PostgresRunner {
 }
 
 func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	defer GinkgoRecover()
+	defer ginkgo.GinkgoRecover()
 	logger := p.logger.Session("run")
 	logger.Info("starting")
 	defer logger.Info("completed")
@@ -54,22 +54,22 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 		SqlEnableIdentityVerification: false,
 	}
 	p.db, err = helpers.Connect(logger, dbParams)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(p.db.Ping()).To(Succeed())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(p.db.Ping()).To(gomega.Succeed())
 
 	_, err = p.db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", p.sqlDBName))
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	_, err = p.db.Exec(fmt.Sprintf("CREATE DATABASE %s", p.sqlDBName))
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	Expect(p.db.Close()).To(Succeed())
+	gomega.Expect(p.db.Close()).To(gomega.Succeed())
 
 	connStringWithDB := fmt.Sprintf("%s/%s", baseConnString, p.sqlDBName)
 	dbParams.DatabaseConnectionString = connStringWithDB
 	p.db, err = helpers.Connect(logger, dbParams)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(p.db.Ping()).To(Succeed())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(p.db.Ping()).To(gomega.Succeed())
 
 	close(ready)
 
@@ -78,19 +78,19 @@ func (p *PostgresRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) er
 	logger.Info("signaled")
 
 	// We need to close the connection to the database we want to drop before dropping it.
-	Expect(p.db.Close()).To(Succeed())
+	gomega.Expect(p.db.Close()).To(gomega.Succeed())
 
 	logger.Info("openning-connection-to-database")
 	dbParams.DatabaseConnectionString = baseConnString
 	p.db, err = helpers.Connect(logger, dbParams)
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	logger.Info("dropping-database")
 	_, err = p.db.Exec(fmt.Sprintf("DROP DATABASE %s", p.sqlDBName))
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	logger.Info("closing-connection")
-	Expect(p.db.Close()).To(Succeed())
+	gomega.Expect(p.db.Close()).To(gomega.Succeed())
 
 	return nil
 }
@@ -156,8 +156,8 @@ func (p *PostgresRunner) ResetTables(tables []string) {
 			}
 		}
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(result.RowsAffected()).To(BeEquivalentTo(0))
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		gomega.Expect(result.RowsAffected()).To(gomega.BeEquivalentTo(0))
 	}
 }
 

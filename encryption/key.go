@@ -21,7 +21,7 @@ type key struct {
 
 func NewKey(label, phrase string) (Key, error) {
 	if label == "" {
-		return nil, errors.New("A key label is required")
+		return nil, errors.New("a key label is required")
 	}
 
 	if len(label) > 127 {

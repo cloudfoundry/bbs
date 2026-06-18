@@ -47,7 +47,7 @@ func (e *encoder) Decode(payload []byte) ([]byte, error) {
 		}
 		return e.decrypt(encrypted)
 	default:
-		return nil, fmt.Errorf("Unknown encoding: %v", encoding)
+		return nil, fmt.Errorf("unknown encoding: %v", encoding)
 	}
 }
 
