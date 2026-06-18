@@ -39,7 +39,7 @@ var _ = Describe("Key", func() {
 		Context("when a key label is not specified", func() {
 			It("returns a meaningful error", func() {
 				_, err := encryption.NewKey("", "phrase")
-				Expect(err).To(MatchError("A key label is required"))
+				Expect(err).To(MatchError("a key label is required"))
 			})
 		})
 

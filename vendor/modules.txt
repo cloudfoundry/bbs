@@ -57,8 +57,8 @@ code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerctx
 code.cloudfoundry.org/lager/v3/lagerflags
 code.cloudfoundry.org/lager/v3/lagertest
-# code.cloudfoundry.org/locket v0.1.0
-## explicit; go 1.26
+# code.cloudfoundry.org/locket v0.1.0 => ../locket
+## explicit; go 1.26.0
 code.cloudfoundry.org/locket
 code.cloudfoundry.org/locket/cmd/locket/certauthority
 code.cloudfoundry.org/locket/cmd/locket/config
@@ -599,3 +599,4 @@ google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
 # code.cloudfoundry.org/bbs/models => ./models
+# code.cloudfoundry.org/locket => ../locket

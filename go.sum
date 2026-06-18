@@ -620,8 +620,6 @@ code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815 h1:f3kRw+Gb7E8422
 code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815/go.mod h1:1ZB1JCh2FAp+SqX79ve6dc8YREvbsziULEOncAilX4Q=
 code.cloudfoundry.org/lager/v3 v3.74.0 h1:gRJj1CAI4hjfPYmynLKADvVTnlIbAz0W+YGRQqPQuRs=
 code.cloudfoundry.org/lager/v3 v3.74.0/go.mod h1:LXtRzpY16oMUJ46zxyRgB/touvG7Ltklt1tWbV4VwzI=
-code.cloudfoundry.org/locket v0.1.0 h1:m/rClHRORvlmbbhGNsAx3Tq+4ZDqrfRrgTRqnCzXI5s=
-code.cloudfoundry.org/locket v0.1.0/go.mod h1:WK2FjCWfxxPtlHkeLwzTLvDTB/////GdeiCVbENklvc=
 code.cloudfoundry.org/rep v0.1442.0 h1:ebo7437a+ucvxBVPmlgy8x5soz2OdOzq3NSOPPW2yQg=
 code.cloudfoundry.org/rep v0.1442.0/go.mod h1:U4WUmaegv1waFzgaBtWoFOmPrFIvYL8rJYfB6sC9vLg=
 code.cloudfoundry.org/routing-info v0.1.0 h1:BaH10yIoFIvK+ZD69eZ5wpjcEDySnAUyDiYEC/lXvfo=

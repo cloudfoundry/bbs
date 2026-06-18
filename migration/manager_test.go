@@ -162,7 +162,7 @@ var _ = Describe("Migration Manager", func() {
 			It("shuts down without signalling ready", func() {
 				var err error
 				Eventually(migrationProcess.Wait()).Should(Receive(&err))
-				Expect(err).To(MatchError("Existing DB version (100) exceeds bbs version (99)"))
+				Expect(err).To(MatchError("existing DB version (100) exceeds bbs version (99)"))
 				Expect(migrationProcess.Ready()).ToNot(BeClosed())
 				Expect(migrationsDone).NotTo(BeClosed())
 			})
@@ -378,7 +378,7 @@ var _ = Describe("Migration Manager", func() {
 				It("treats the bbs migration version as 0", func() {
 					var err error
 					Eventually(migrationProcess.Wait()).Should(Receive(&err))
-					Expect(err).To(MatchError("Existing DB version (100) exceeds bbs version (0)"))
+					Expect(err).To(MatchError("existing DB version (100) exceeds bbs version (0)"))
 					Expect(migrationProcess.Ready()).ToNot(BeClosed())
 				})
 			})

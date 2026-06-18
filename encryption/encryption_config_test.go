@@ -39,13 +39,13 @@ var _ = Describe("Encryption Flags", func() {
 		It("ensures there's a selected active key", func() {
 			encryptionConfig.EncryptionKeys["label"] = "key"
 			_, _, err := encryptionConfig.Parse()
-			Expect(err).To(MatchError("Must select an active encryption key"))
+			Expect(err).To(MatchError("must select an active encryption key"))
 		})
 
 		It("fails if the active key is not on the list", func() {
 			encryptionConfig.ActiveKeyLabel = "other-label"
 			_, _, err := encryptionConfig.Parse()
-			Expect(err).To(MatchError("Must have at least one encryption key set"))
+			Expect(err).To(MatchError("must have at least one encryption key set"))
 		})
 
 		It("fails if creating a key fails to parse", func() {
@@ -54,7 +54,7 @@ var _ = Describe("Encryption Flags", func() {
 			encryptionConfig.EncryptionKeys[""] = "invalid"
 
 			_, _, err := encryptionConfig.Parse()
-			Expect(err).To(MatchError("A key label is required"))
+			Expect(err).To(MatchError("a key label is required"))
 		})
 
 		It("returns an active key and all the keys", func() {

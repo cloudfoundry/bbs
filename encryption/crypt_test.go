@@ -108,7 +108,7 @@ var _ = Describe("Crypt", func() {
 			input := []byte("some plaintext data")
 
 			_, err := cryptor.Encrypt(input)
-			Expect(err).To(MatchError(`Unable to generate random nonce: "EOF"`))
+			Expect(err).To(MatchError(`unable to generate random nonce: "EOF"`))
 		})
 	})
 
@@ -129,7 +129,7 @@ var _ = Describe("Crypt", func() {
 			input := []byte("some plaintext data")
 
 			_, err := cryptor.Encrypt(input)
-			Expect(err).To(MatchError(HavePrefix("Unable to create GCM-wrapped cipher:")))
+			Expect(err).To(MatchError(HavePrefix("unable to create GCM-wrapped cipher:")))
 		})
 	})
 })

@@ -72,7 +72,7 @@ var _ = Describe("KeyManager", func() {
 		})
 
 		It("returns a multiple key error", func() {
-			Expect(cerr).To(MatchError(`Multiple keys with the same label: "key label"`))
+			Expect(cerr).To(MatchError(`multiple keys with the same label: "key label"`))
 		})
 	})
 
@@ -87,7 +87,7 @@ var _ = Describe("KeyManager", func() {
 		})
 
 		It("returns a multiple key error", func() {
-			Expect(cerr).To(MatchError(`Multiple keys with the same label: "label"`))
+			Expect(cerr).To(MatchError(`multiple keys with the same label: "label"`))
 		})
 	})
 
