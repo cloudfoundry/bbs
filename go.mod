@@ -4,9 +4,9 @@ go 1.26.0
 
 replace code.cloudfoundry.org/bbs/models => ./models
 
-replace code.cloudfoundry.org/rep => /Users/gf009738/workspace/diego-release/src/code.cloudfoundry.org/rep
+replace code.cloudfoundry.org/rep => ../rep
 
-replace code.cloudfoundry.org/executor => /Users/gf009738/workspace/diego-release/src/code.cloudfoundry.org/executor
+replace code.cloudfoundry.org/executor => ../executor
 
 require (
 	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
