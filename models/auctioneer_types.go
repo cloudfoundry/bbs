@@ -100,7 +100,7 @@ func NewLRPStartRequestFromSchedulingInfo(s *DesiredLRPSchedulingInfo, indices .
 func (lrpstart *LRPStartRequest) Validate() error {
 	switch {
 	case lrpstart.ProcessGuid == "":
-		return errors.New("proccess guid is empty")
+		return errors.New("process guid is empty")
 	case lrpstart.Domain == "":
 		return errors.New("domain is empty")
 	case len(lrpstart.Indices) == 0:

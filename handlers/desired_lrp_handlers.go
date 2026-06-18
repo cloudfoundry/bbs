@@ -18,7 +18,6 @@ import (
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/rep"
-	"code.cloudfoundry.org/routing-info/internalroutes"
 	"code.cloudfoundry.org/workpool"
 )
 
@@ -293,7 +292,7 @@ func (h *DesiredLRPHandler) UpdateDesiredLRP(logger lager.Logger, w http.Respons
 		}
 	}
 
-	internalRoutesUpdated := request.Update.IsRoutesGroupUpdated(beforeDesiredLRP.Routes, internalroutes.INTERNAL_ROUTER)
+	internalRoutesUpdated := request.Update.IsRoutesGroupUpdated(beforeDesiredLRP.Routes, models.InternalRouter)
 	metricTagsUpdated := request.Update.IsMetricTagsUpdated(beforeDesiredLRP.MetricTags)
 
 	if internalRoutesUpdated || metricTagsUpdated {
@@ -475,9 +474,9 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 			}
 			logger.Debug("updating-lrp-instance")
 
-			var internalRoutes internalroutes.InternalRoutes
+			var internalRoutes models.InternalRoutes
 			if internalRoutesUpdated {
-				internalRoutes, err = internalroutes.InternalRoutesFromRoutingInfo(*update.Routes)
+				internalRoutes, err = models.InternalRoutesFromRoutingInfo(*update.Routes)
 				if err != nil {
 					logger.Error("getting-internal-routes-failed", err)
 					continue
@@ -496,11 +495,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				}
 			}
 
-			var bbsInternalRoutes rep.InternalRoutes
-			for _, r := range internalRoutes {
-				bbsInternalRoutes = append(bbsInternalRoutes, rep.InternalRoute{Hostname: r.Hostname})
-			}
-			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, bbsInternalRoutes, metricTags)
+			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes, metricTags)
 			go func() {
 				err := repClient.UpdateLRPInstance(logger, lrpUpdate)
 				if err != nil {

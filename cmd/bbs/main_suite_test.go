@@ -17,7 +17,6 @@ import (
 	bbsconfig "code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/test_helpers"
-	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
 	"code.cloudfoundry.org/diego-db-helpers/testhelpers/sqlrunner"
 	diego_logging_client "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/diego-logging-client/testhelpers"
@@ -40,9 +39,6 @@ import (
 	"testing"
 	"time"
 )
-
-// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
-type BBSDBParam = helpers.ConnectParams
 
 var (
 	logger        lager.Logger

@@ -28,9 +28,6 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
-type BBSDBParam = helpers.ConnectParams
-
 var _ = Describe("Context", func() {
 	var (
 		logger           *lagertest.TestLogger
@@ -48,7 +45,7 @@ var _ = Describe("Context", func() {
 		sqlProcess = ginkgomon.Invoke(sqlRunner)
 
 		var err error
-		dbParams := &BBSDBParam{
+		dbParams := &helpers.ConnectParams{
 			DriverName:                    sqlRunner.DriverName(),
 			DatabaseConnectionString:      sqlRunner.ConnectionString(),
 			SqlCACertFile:                 "",

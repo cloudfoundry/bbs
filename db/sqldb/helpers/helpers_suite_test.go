@@ -15,9 +15,6 @@ import (
 	"testing"
 )
 
-// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
-type BBSDBParam = helpers.ConnectParams
-
 func TestHelpers(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Helpers Suite")
@@ -31,7 +28,7 @@ var (
 	dbBaseConnectionString string
 	dbFlavor               string
 	tableName              string
-	dbParams               *BBSDBParam
+	dbParams               *helpers.ConnectParams
 )
 
 var _ = BeforeEach(func() {
@@ -70,7 +67,7 @@ var _ = BeforeEach(func() {
 	// mysql must be set up on localhost as described in the CONTRIBUTING.md doc
 	// in diego-release.
 	var err error
-	dbParams = &BBSDBParam{
+	dbParams = &helpers.ConnectParams{
 		DriverName:                    dbDriverName,
 		DatabaseConnectionString:      dbBaseConnectionString,
 		SqlCACertFile:                 "",

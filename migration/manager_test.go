@@ -25,9 +25,6 @@ import (
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 )
 
-// BBSDBParam is a backward-compatible alias for helpers.ConnectParams
-type BBSDBParam = helpers.ConnectParams
-
 var _ = Describe("Migration Manager", func() {
 	var (
 		manager          ifrit.Runner
@@ -81,7 +78,7 @@ var _ = Describe("Migration Manager", func() {
 			sqlRunner := test_helpers.NewSQLRunner(dbName)
 			sqlProcess = ginkgomon.Invoke(sqlRunner)
 			var err error
-			dbParams := &BBSDBParam{
+			dbParams := &helpers.ConnectParams{
 				DriverName:                    sqlRunner.DriverName(),
 				DatabaseConnectionString:      sqlRunner.ConnectionString(),
 				SqlCACertFile:                 "",
