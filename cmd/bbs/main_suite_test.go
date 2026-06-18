@@ -254,5 +254,12 @@ var _ = AfterEach(func() {
 	testIngressServer.Stop()
 	close(signalMetricsChan)
 
-	sqlRunner.Reset()
+	sqlRunner.ResetTables([]string{
+		"tasks",
+		"desired_lrps",
+		"actual_lrps",
+		"domains",
+		"configurations",
+		"locks",
+	})
 })

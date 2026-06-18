@@ -60,12 +60,19 @@ code.cloudfoundry.org/lager/v3/lagertest
 # code.cloudfoundry.org/locket v0.1.0 => ../locket
 ## explicit; go 1.26.0
 code.cloudfoundry.org/locket
+code.cloudfoundry.org/locket/cmd/locket
 code.cloudfoundry.org/locket/cmd/locket/certauthority
 code.cloudfoundry.org/locket/cmd/locket/config
 code.cloudfoundry.org/locket/cmd/locket/testrunner
+code.cloudfoundry.org/locket/db
+code.cloudfoundry.org/locket/expiration
+code.cloudfoundry.org/locket/grpcserver
+code.cloudfoundry.org/locket/handlers
 code.cloudfoundry.org/locket/jointlock
 code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/lockheldmetrics
+code.cloudfoundry.org/locket/metrics
+code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
 code.cloudfoundry.org/locket/models/modelsfakes
 # code.cloudfoundry.org/rep v0.1442.0

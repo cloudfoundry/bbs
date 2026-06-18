@@ -45,6 +45,12 @@ fi
 
 docker pull "${IMAGE}"
 docker rm -f "${CONTAINER_NAME}" || true
+EXTRA_MOUNTS=()
+LOCKET_PATH="${REPO_PATH}/../locket"
+if [[ -d "${LOCKET_PATH}" ]]; then
+  EXTRA_MOUNTS+=(-v "$(cd "${LOCKET_PATH}" && pwd):/locket")
+fi
+
 docker run \
   --env "DB=${DB}" \
   --env "DB_USER=${DB_USER}" \
@@ -55,6 +61,7 @@ docker run \
   --name "$CONTAINER_NAME" \
   -v "${REPO_PATH}:/repo" \
   -v "${CI}:/ci" \
+  "${EXTRA_MOUNTS[@]}" \
   "${ARGS[@]}" \
   "${IMAGE}" \
   /bin/bash

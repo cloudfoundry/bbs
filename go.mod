@@ -4,7 +4,6 @@ go 1.26.0
 
 replace (
 	code.cloudfoundry.org/bbs/models => ./models
-	code.cloudfoundry.org/locket => ../locket
 )
 
 require (
