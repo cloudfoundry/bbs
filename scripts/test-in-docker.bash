@@ -12,6 +12,6 @@ if [[ ${DB:-empty} == "empty" ]]; then
 fi
 CONTAINER_NAME="$REPO_NAME-$DB-docker-container"
 
-DB="${DB}" "${THIS_FILE_DIR}/create-docker-container.bash" -d
+DB="${DB}" "${THIS_FILE_DIR}/create-docker-container.bash" -td
 
 docker exec $CONTAINER_NAME '/repo/scripts/docker/test.bash' "$@"
