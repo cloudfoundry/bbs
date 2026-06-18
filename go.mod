@@ -2,12 +2,6 @@ module code.cloudfoundry.org/bbs
 
 go 1.26.0
 
-replace code.cloudfoundry.org/bbs/models => ./models
-
-replace code.cloudfoundry.org/rep => ../rep
-
-replace code.cloudfoundry.org/executor => ../executor
-
 require (
 	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
 	code.cloudfoundry.org/bbs/models v0.0.0-00010101000000-000000000000
