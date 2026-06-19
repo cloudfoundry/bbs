@@ -1,11 +1,17 @@
 module code.cloudfoundry.org/bbs
 
-go 1.26.0
+go 1.26.2
 
-replace code.cloudfoundry.org/bbs/models => ./models
+replace (
+	code.cloudfoundry.org/bbs/encryption => ./encryption
+	code.cloudfoundry.org/bbs/format => ./format
+	code.cloudfoundry.org/bbs/models => ./models
+)
 
 require (
 	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
+	code.cloudfoundry.org/bbs/encryption v0.0.0
+	code.cloudfoundry.org/bbs/format v0.0.0
 	code.cloudfoundry.org/bbs/models v0.0.0-20260618205254-dc4b9f8d5bc9
 	code.cloudfoundry.org/cfhttp/v2 v2.82.0
 	code.cloudfoundry.org/clock v1.75.0
