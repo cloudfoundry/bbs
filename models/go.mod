@@ -1,11 +1,16 @@
 module code.cloudfoundry.org/bbs/models
 
-go 1.26.0
+go 1.26.2
 
-replace code.cloudfoundry.org/bbs => ..
+replace (
+	code.cloudfoundry.org/bbs => ..
+	code.cloudfoundry.org/bbs/encryption => ../encryption
+	code.cloudfoundry.org/bbs/format => ../format
+)
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-00010101000000-000000000000
+	code.cloudfoundry.org/bbs/format v0.0.0
 	code.cloudfoundry.org/lager/v3 v3.74.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/onsi/ginkgo/v2 v2.31.0
@@ -13,9 +18,10 @@ require (
 )
 
 require (
+	code.cloudfoundry.org/bbs/encryption v0.0.0 // indirect
 	code.cloudfoundry.org/clock v1.75.0 // indirect
-	code.cloudfoundry.org/diego-db-helpers v0.3.0 // indirect
-	code.cloudfoundry.org/locket v0.1.0 // indirect
+	code.cloudfoundry.org/diego-db-helpers v0.4.0 // indirect
+	code.cloudfoundry.org/locket v1.2.0 // indirect
 	code.cloudfoundry.org/tlsconfig v0.60.0 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
@@ -40,7 +46,7 @@ require (
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.46.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 // indirect
 	google.golang.org/grpc v1.81.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )

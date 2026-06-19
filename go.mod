@@ -5,24 +5,23 @@ go 1.26.2
 replace (
 	code.cloudfoundry.org/bbs/encryption => ./encryption
 	code.cloudfoundry.org/bbs/format => ./format
-	code.cloudfoundry.org/bbs/models => ./models
 )
 
 require (
 	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
 	code.cloudfoundry.org/bbs/encryption v0.0.0
 	code.cloudfoundry.org/bbs/format v0.0.0
-	code.cloudfoundry.org/bbs/models v0.0.0-20260618205254-dc4b9f8d5bc9
+	code.cloudfoundry.org/bbs/models v1.3.0
 	code.cloudfoundry.org/cfhttp/v2 v2.82.0
 	code.cloudfoundry.org/clock v1.75.0
 	code.cloudfoundry.org/debugserver v0.102.0
-	code.cloudfoundry.org/diego-db-helpers v0.3.0
+	code.cloudfoundry.org/diego-db-helpers v0.4.0
 	code.cloudfoundry.org/diego-logging-client v0.112.0
 	code.cloudfoundry.org/durationjson v0.77.0
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
 	code.cloudfoundry.org/lager/v3 v3.74.0
-	code.cloudfoundry.org/locket v1.1.0
+	code.cloudfoundry.org/locket v1.2.0
 	code.cloudfoundry.org/rep v0.1442.0
 	code.cloudfoundry.org/routing-info v0.1.0
 	code.cloudfoundry.org/tlsconfig v0.60.0

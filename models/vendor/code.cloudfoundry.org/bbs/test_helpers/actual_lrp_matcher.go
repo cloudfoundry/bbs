@@ -2,7 +2,7 @@ package test_helpers
 
 import (
 	"code.cloudfoundry.org/bbs/models"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 )
 
@@ -16,5 +16,5 @@ func MatchActualLRP(expected *models.ActualLRP) types.GomegaMatcher {
 	}
 
 	expected = removeUntestedLRPFields(expected)
-	return WithTransform(removeUntestedLRPFields, Equal(expected))
+	return gomega.WithTransform(removeUntestedLRPFields, gomega.Equal(expected))
 }

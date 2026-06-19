@@ -2,7 +2,14 @@
 ## explicit
 code.cloudfoundry.org/auctioneer
 code.cloudfoundry.org/auctioneer/auctioneerfakes
-# code.cloudfoundry.org/bbs/models v0.0.0-20260618205254-dc4b9f8d5bc9 => ./models
+# code.cloudfoundry.org/bbs/encryption v0.0.0 => ./encryption
+## explicit; go 1.26.2
+code.cloudfoundry.org/bbs/encryption
+code.cloudfoundry.org/bbs/encryption/encryptionfakes
+# code.cloudfoundry.org/bbs/format v0.0.0 => ./format
+## explicit; go 1.26.2
+code.cloudfoundry.org/bbs/format
+# code.cloudfoundry.org/bbs/models v1.3.0
 ## explicit; go 1.26.0
 code.cloudfoundry.org/bbs/models
 code.cloudfoundry.org/bbs/models/test/matchers
@@ -17,7 +24,7 @@ code.cloudfoundry.org/clock/fakeclock
 # code.cloudfoundry.org/debugserver v0.102.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-db-helpers v0.3.0
+# code.cloudfoundry.org/diego-db-helpers v0.4.0
 ## explicit; go 1.26.0
 code.cloudfoundry.org/diego-db-helpers/guidprovider
 code.cloudfoundry.org/diego-db-helpers/sqldb/helpers
@@ -57,7 +64,7 @@ code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerctx
 code.cloudfoundry.org/lager/v3/lagerflags
 code.cloudfoundry.org/lager/v3/lagertest
-# code.cloudfoundry.org/locket v1.1.0
+# code.cloudfoundry.org/locket v1.2.0
 ## explicit; go 1.26.0
 code.cloudfoundry.org/locket
 code.cloudfoundry.org/locket/cmd/locket
@@ -605,4 +612,5 @@ google.golang.org/protobuf/runtime/protoimpl
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
-# code.cloudfoundry.org/bbs/models => ./models
+# code.cloudfoundry.org/bbs/encryption => ./encryption
+# code.cloudfoundry.org/bbs/format => ./format
