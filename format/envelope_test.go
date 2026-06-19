@@ -2,10 +2,9 @@ package format_test
 
 import (
 	"code.cloudfoundry.org/bbs/format"
-	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/types"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -18,38 +17,38 @@ var _ = Describe("Envelope", func() {
 	})
 
 	Describe("Marshal", func() {
-		It("can successfully marshal a model object envelope", func() {
-			task := model_helpers.NewValidTask("some-guid")
-			encoded, err := format.MarshalEnvelope(task)
+		It("can successfully marshal a protobuf message envelope", func() {
+			msg := &types.StringValue{Value: "test-message"}
+			encoded, err := format.MarshalEnvelope(msg)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(format.EnvelopeFormat(encoded[0])).To(Equal(format.PROTO))
 
-			var newTask models.Task
-			modelErr := proto.Unmarshal(encoded[2:], &newTask)
+			var newMsg types.StringValue
+			modelErr := proto.Unmarshal(encoded[2:], &newMsg)
 			Expect(modelErr).To(BeNil())
 
-			Expect(*task).To(Equal(newTask))
+			Expect(newMsg.Value).To(Equal(msg.Value))
 		})
 	})
 
 	Describe("Unmarshal", func() {
-		It("can marshal and unmarshal a task without losing data", func() {
-			task := model_helpers.NewValidTask("some-guid")
-			payload, err := format.MarshalEnvelope(task)
+		It("can marshal and unmarshal a protobuf message without losing data", func() {
+			msg := &types.StringValue{Value: "test-message"}
+			payload, err := format.MarshalEnvelope(msg)
 			Expect(err).NotTo(HaveOccurred())
 
-			resultingTask := new(models.Task)
-			err = format.UnmarshalEnvelope(logger, payload, resultingTask)
+			resultingMsg := new(types.StringValue)
+			err = format.UnmarshalEnvelope(logger, payload, resultingMsg)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(*resultingTask).To(BeEquivalentTo(*task))
+			Expect(resultingMsg.Value).To(Equal(msg.Value))
 		})
 
 		It("returns an error when the protobuf payload is invalid", func() {
-			model := model_helpers.NewValidTask("foo")
+			msg := &types.StringValue{Value: "test"}
 			payload := []byte{byte(format.PROTO), byte(format.V0), 'f', 'o', 'o'}
-			err := format.UnmarshalEnvelope(logger, payload, model)
+			err := format.UnmarshalEnvelope(logger, payload, msg)
 			Expect(err).To(HaveOccurred())
 		})
 	})

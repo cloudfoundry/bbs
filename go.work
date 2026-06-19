@@ -3,5 +3,6 @@ go 1.26.2
 use (
 	.
 	./encryption
+	./format
 	./models
 )

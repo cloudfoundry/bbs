@@ -4,14 +4,13 @@ import (
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/types"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"code.cloudfoundry.org/bbs/encryption"
 	"code.cloudfoundry.org/bbs/encryption/encryptionfakes"
 	"code.cloudfoundry.org/bbs/format"
-	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 )
 
 var _ = Describe("Format", func() {
@@ -20,11 +19,11 @@ var _ = Describe("Format", func() {
 		cryptor    *encryptionfakes.FakeCryptor
 		encoder    format.Encoder
 		logger     lager.Logger
-		task       *models.Task
+		msg        *types.StringValue
 	)
 
 	BeforeEach(func() {
-		task = model_helpers.NewValidTask("a-guid")
+		msg = &types.StringValue{Value: "test-message"}
 		logger = lagertest.NewTestLogger("test")
 		cryptor = &encryptionfakes.FakeCryptor{}
 		cryptor.EncryptStub = func(plaintext []byte) (encryption.Encrypted, error) {
@@ -45,17 +44,17 @@ var _ = Describe("Format", func() {
 	Describe("Marshal", func() {
 		Describe("ENCRYPTED_PROTO", func() {
 			It("marshals the data as protobuf with an base64 encoded ciphertext envelope", func() {
-				encoded, err := serializer.Marshal(logger, task)
+				encoded, err := serializer.Marshal(logger, msg)
 				Expect(err).NotTo(HaveOccurred())
 
 				unencoded, err := encoder.Decode(encoded)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(unencoded[0]).To(BeEquivalentTo(format.PROTO))
-				var actualTask models.Task
-				err = proto.Unmarshal(unencoded[2:], &actualTask)
+				var actualMsg types.StringValue
+				err = proto.Unmarshal(unencoded[2:], &actualMsg)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(actualTask).To(Equal(*task))
+				Expect(actualMsg.Value).To(Equal(msg.Value))
 			})
 		})
 	})
@@ -63,13 +62,13 @@ var _ = Describe("Format", func() {
 	Describe("Unmarshal", func() {
 		Describe("ENCRYPTED_PROTO", func() {
 			It("unmarshals the protobuf data from a base64 encoded ciphertext envelope", func() {
-				payload, err := serializer.Marshal(logger, task)
+				payload, err := serializer.Marshal(logger, msg)
 				Expect(err).NotTo(HaveOccurred())
 
-				var decodedTask models.Task
-				err = serializer.Unmarshal(logger, payload, &decodedTask)
+				var decodedMsg types.StringValue
+				err = serializer.Unmarshal(logger, payload, &decodedMsg)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(*task).To(Equal(decodedTask))
+				Expect(decodedMsg.Value).To(Equal(msg.Value))
 			})
 		})
 	})
