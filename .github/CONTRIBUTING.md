@@ -43,29 +43,23 @@ cd ~/workspace
 git clone https://github.com/cloudfoundry/wg-app-platform-runtime-ci.git
 
 # clone repo
-git clone https://github.com/cloudfoundry/diego-release.git --recursive
-cd diego-release
+git clone https://github.com/cloudfoundry/<THIS_REPO>.git --recursive
+cd <THIS_REPO>
 ```
 
 Running Tests
 ---------------
 
-> [!TIP]
-> Running tests for this repo requires a DB flavor. The following scripts will default to mysql DB. Set DB environment variable for alternate DBs. Valid Options: mysql-8.0(or mysql),postgres
 
-- `./scripts/create-docker-container.bash`: This will create a docker container with appropriate mounts. This
-script can be used for interactive development with a long running container. 
+- `./scripts/create-docker-container.bash`: This will create a docker container with appropriate mounts.
 - `./scripts/test-in-docker.bash`: Create docker container and run all tests and setup in a single script.
   - `./scripts/test-in-docker.bash <package> <sub-package>`: For running tests under a specific package and/or sub-package
 
+> [!TIP]
+> If Running tests for this repo requires a DB flavor. The above scripts will default to mysql DB. Set DB environment variable for alternate DBs. Valid Options: mysql-8.0(or mysql),mysql-5.7,postgres
+
 When inside docker container:
 
-- `/repo/scripts/docker/build-binaries.bash`: (REQUIRED) This will build required binaries for running tests.
-- `/repo/scripts/docker/test.bash`: This will run all tests in this repo.
+- `/repo/scripts/docker/test.bash`: This will run all tests in this repo
 - `/repo/scripts/docker/test.bash <package>`: This will only run a package's tests
 - `/repo/scripts/docker/test.bash <package> <sub-package>`: This will only run sub-package tests for package
-- `/repo/scripts/docker/tests-template.bash`: This will test bosh-spec templates.
-- `/repo/scripts/docker/lint.bash`: This will run required linters.
-
-> [!IMPORTANT]
-> If you are about to submit a PR, please make sure to run `./scripts/test-in-docker.bash` for MySQL and Postgres to ensure everything is tested in clean container. If you are developing, you can create create a docker container first, then the only required script to run before testing your specific component is `build-binaries.bash`.
