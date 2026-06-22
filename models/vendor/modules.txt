@@ -1,7 +1,7 @@
-# code.cloudfoundry.org/bbs/encryption v1.4.0 => ../encryption
+# code.cloudfoundry.org/bbs/encryption v1.5.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/encryption
-# code.cloudfoundry.org/bbs/format v0.0.0 => ../format
+# code.cloudfoundry.org/bbs/format v1.5.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/format
 # code.cloudfoundry.org/lager/v3 v3.74.0
@@ -136,5 +136,3 @@ golang.org/x/tools/internal/stdlib
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
-# code.cloudfoundry.org/bbs/encryption => ../encryption
-# code.cloudfoundry.org/bbs/format => ../format
