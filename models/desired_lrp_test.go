@@ -13,7 +13,6 @@ import (
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"github.com/gogo/protobuf/proto"
 
-	. "code.cloudfoundry.org/bbs/test_helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

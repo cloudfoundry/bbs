@@ -3,7 +3,7 @@ module code.cloudfoundry.org/bbs/format
 go 1.26.2
 
 require (
-	code.cloudfoundry.org/bbs/encryption v0.0.0
+	code.cloudfoundry.org/bbs/encryption v1.4.0
 	code.cloudfoundry.org/lager/v3 v3.74.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/onsi/ginkgo/v2 v2.31.0
@@ -25,5 +25,3 @@ require (
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.46.0 // indirect
 )
-
-replace code.cloudfoundry.org/bbs/encryption => ../encryption

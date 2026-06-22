@@ -1,9 +1,9 @@
-package test_helpers
+package models_test
 
 import (
 	"fmt"
 	"math"
-	strings "strings"
+	"strings"
 
 	"github.com/go-test/deep"
 	"github.com/onsi/gomega"
@@ -27,7 +27,6 @@ func (m DeepEqualMatcher) Match(actual interface{}) (success bool, err error) {
 }
 
 func (m DeepEqualMatcher) FailureMessage(actual interface{}) (message string) {
-
 	diffs := deep.Equal(actual, m.val)
 	var messages []string
 	for _, diff := range diffs {

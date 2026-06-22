@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/bbs/encryption v0.0.0 => ../encryption
+# code.cloudfoundry.org/bbs/encryption v1.4.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/encryption
 code.cloudfoundry.org/bbs/encryption/encryptionfakes
@@ -133,4 +133,3 @@ golang.org/x/tools/internal/stdlib
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
-# code.cloudfoundry.org/bbs/encryption => ../encryption

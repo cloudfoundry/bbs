@@ -2,16 +2,11 @@ module code.cloudfoundry.org/bbs
 
 go 1.26.2
 
-replace (
-	code.cloudfoundry.org/bbs/encryption => ./encryption
-	code.cloudfoundry.org/bbs/format => ./format
-)
-
 require (
 	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
-	code.cloudfoundry.org/bbs/encryption v0.0.0
-	code.cloudfoundry.org/bbs/format v0.0.0
-	code.cloudfoundry.org/bbs/models v1.3.0
+	code.cloudfoundry.org/bbs/encryption v1.4.0
+	code.cloudfoundry.org/bbs/format v1.4.0
+	code.cloudfoundry.org/bbs/models v1.4.0
 	code.cloudfoundry.org/cfhttp/v2 v2.82.0
 	code.cloudfoundry.org/clock v1.75.0
 	code.cloudfoundry.org/debugserver v0.102.0
@@ -44,7 +39,7 @@ require (
 	code.cloudfoundry.org/ecrhelper v0.0.0-20250911193847-5bf65e63bab5 // indirect
 	code.cloudfoundry.org/executor v0.1442.0 // indirect
 	code.cloudfoundry.org/garden v0.0.0-20260617020226-a9e754564bb5 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20260615142411-472d6bcdb3c6 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20260622134745-74c0e1643bdd // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect

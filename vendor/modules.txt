@@ -2,15 +2,15 @@
 ## explicit
 code.cloudfoundry.org/auctioneer
 code.cloudfoundry.org/auctioneer/auctioneerfakes
-# code.cloudfoundry.org/bbs/encryption v0.0.0 => ./encryption
+# code.cloudfoundry.org/bbs/encryption v1.4.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/encryption
 code.cloudfoundry.org/bbs/encryption/encryptionfakes
-# code.cloudfoundry.org/bbs/format v0.0.0 => ./format
+# code.cloudfoundry.org/bbs/format v1.4.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/format
-# code.cloudfoundry.org/bbs/models v1.3.0
-## explicit; go 1.26.0
+# code.cloudfoundry.org/bbs/models v1.4.0
+## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/models
 code.cloudfoundry.org/bbs/models/test/matchers
 code.cloudfoundry.org/bbs/models/test/model_helpers
@@ -46,7 +46,7 @@ code.cloudfoundry.org/executor
 code.cloudfoundry.org/executor/containermetrics
 # code.cloudfoundry.org/garden v0.0.0-20260617020226-a9e754564bb5
 ## explicit; go 1.25.0
-# code.cloudfoundry.org/go-diodes v0.0.0-20260615142411-472d6bcdb3c6
+# code.cloudfoundry.org/go-diodes v0.0.0-20260622134745-74c0e1643bdd
 ## explicit; go 1.25.0
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-loggregator/v9 v9.2.1
@@ -612,5 +612,3 @@ google.golang.org/protobuf/runtime/protoimpl
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
-# code.cloudfoundry.org/bbs/encryption => ./encryption
-# code.cloudfoundry.org/bbs/format => ./format
