@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/bbs/models"
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 )
 
 func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
@@ -27,7 +27,7 @@ func NewValidActualLRP(guid string, index int32) *models.ActualLRP {
 	}
 	actualLRP.SetRoutable(false)
 	err := actualLRP.Validate()
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	return actualLRP
 }
@@ -142,7 +142,7 @@ func NewValidDesiredLRP(guid string) *models.DesiredLRP {
 	})
 
 	err := desiredLRP.Validate()
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	return desiredLRP
 }
@@ -152,7 +152,7 @@ func NewValidDesiredLRPWithNoVolumeMountedFiles(guid string) *models.DesiredLRP 
 	desiredLRP.VolumeMountedFiles = []*models.File{}
 
 	err := desiredLRP.Validate()
-	Expect(err).NotTo(HaveOccurred())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 	return desiredLRP
 }

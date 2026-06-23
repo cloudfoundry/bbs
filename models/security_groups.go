@@ -14,7 +14,7 @@ const (
 	AllProtocol    = "all"
 )
 
-var errInvalidIP = errors.New("Invalid IP")
+var errInvalidIP = errors.New("invalid IP")
 
 func (rule SecurityGroupRule) Validate() error {
 	var validationError ValidationError
@@ -79,11 +79,11 @@ func (rule SecurityGroupRule) validatePorts() ValidationError {
 	var validationError ValidationError
 
 	if rule.PortRange == nil && rule.Ports == nil {
-		return validationError.Append(errors.New("Missing required field: ports or port_range"))
+		return validationError.Append(errors.New("missing required field: ports or port_range"))
 	}
 
 	if rule.PortRange != nil && rule.Ports != nil {
-		return validationError.Append(errors.New("Invalid: ports and port_range provided"))
+		return validationError.Append(errors.New("invalid: ports and port_range provided"))
 	}
 
 	if rule.PortRange != nil {
@@ -115,7 +115,7 @@ func (rule SecurityGroupRule) validatePorts() ValidationError {
 
 func (rule SecurityGroupRule) validateDestinations() error {
 	if len(rule.Destinations) == 0 {
-		return errors.New("Must have at least 1 destination")
+		return errors.New("must have at least 1 destination")
 	}
 
 	var validationError ValidationError
