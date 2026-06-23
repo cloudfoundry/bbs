@@ -130,7 +130,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				})
 
 				It("returns an error", func() {
-					Expect(validationErr).To(MatchError(ContainSubstring("Invalid: ports and port_range provided")))
+					Expect(validationErr).To(MatchError(ContainSubstring("invalid: ports and port_range provided")))
 				})
 			})
 
@@ -141,7 +141,7 @@ var _ = Describe("SecurityGroupRule", func() {
 				})
 
 				It("returns an error", func() {
-					Expect(validationErr).To(MatchError(ContainSubstring("Missing required field: ports or port_range")))
+					Expect(validationErr).To(MatchError(ContainSubstring("missing required field: ports or port_range")))
 				})
 			})
 		}
