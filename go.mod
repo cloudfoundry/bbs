@@ -3,7 +3,6 @@ module code.cloudfoundry.org/bbs
 go 1.26.2
 
 require (
-	code.cloudfoundry.org/auctioneer v0.0.0-20250910193354-1ef7d6c9eefe
 	code.cloudfoundry.org/bbs/encryption v1.9.0
 	code.cloudfoundry.org/bbs/format v1.9.0
 	code.cloudfoundry.org/bbs/models v1.7.0
@@ -17,7 +16,6 @@ require (
 	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
 	code.cloudfoundry.org/lager/v3 v3.74.0
 	code.cloudfoundry.org/locket v1.2.0
-	code.cloudfoundry.org/rep v0.1442.0
 	code.cloudfoundry.org/routing-info v0.1.0
 	code.cloudfoundry.org/tlsconfig v0.60.0
 	code.cloudfoundry.org/workpool v0.0.0-20250911194158-1489753f182e
@@ -35,32 +33,14 @@ require (
 	google.golang.org/grpc v1.81.1
 )
 
+replace code.cloudfoundry.org/bbs/models => ./models
+
 require (
-	code.cloudfoundry.org/ecrhelper v0.0.0-20250911193847-5bf65e63bab5 // indirect
-	code.cloudfoundry.org/executor v0.1442.0 // indirect
-	code.cloudfoundry.org/garden v0.0.0-20260617020226-a9e754564bb5 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260622134745-74c0e1643bdd // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
-	github.com/aws/aws-sdk-go v1.55.8 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.42.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.32.25 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.24 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.30 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.58.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.2.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.31.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.43.3 // indirect
-	github.com/aws/smithy-go v1.27.2 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
@@ -68,10 +48,7 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	go.step.sm/crypto v0.83.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect

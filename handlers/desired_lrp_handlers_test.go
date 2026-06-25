@@ -11,8 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
+	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/format"
@@ -23,7 +22,6 @@ import (
 	mfakes "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"code.cloudfoundry.org/rep"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -34,7 +32,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		logger               *lagertest.TestLogger
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeActualLRPDB      *dbfakes.FakeActualLRPDB
-		fakeAuctioneerClient *auctioneerfakes.FakeClient
+		fakeAuctioneerClient *modelsfakes.FakeAuctioneerClient
 		fakeMetronClient     *mfakes.FakeIngressClient
 		desiredHub           *eventfakes.FakeHub
 		actualHub            *eventfakes.FakeHub
@@ -55,7 +53,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 		var err error
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeActualLRPDB = new(dbfakes.FakeActualLRPDB)
-		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeAuctioneerClient = new(modelsfakes.FakeAuctioneerClient)
 		fakeMetronClient = &mfakes.FakeIngressClient{}
 		logger = lagertest.NewTestLogger("test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
@@ -1132,16 +1130,16 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						volumeDrivers = append(volumeDrivers, volumeMount.Driver)
 					}
 
-					expectedStartRequest := auctioneer.LRPStartRequest{
+					expectedStartRequest := models.LRPStartRequest{
 						ProcessGuid: desiredLRP.ProcessGuid,
 						Domain:      desiredLRP.Domain,
 						Indices:     []int{0, 1, 2, 3, 4},
-						Resource: rep.Resource{
+						Resource: models.Resource{
 							MemoryMB: desiredLRP.MemoryMb,
 							DiskMB:   desiredLRP.DiskMb,
 							MaxPids:  desiredLRP.MaxPids,
 						},
-						PlacementConstraint: rep.PlacementConstraint{
+						PlacementConstraint: models.PlacementConstraint{
 							RootFs:        desiredLRP.RootFs,
 							VolumeDrivers: volumeDrivers,
 							PlacementTags: desiredLRP.PlacementTags,
@@ -1494,8 +1492,8 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						startReq := startRequests[0]
 						Expect(startReq.ProcessGuid).To(Equal("some-guid"))
 						Expect(startReq.Domain).To(Equal("some-domain"))
-						Expect(startReq.Resource).To(Equal(rep.Resource{MemoryMB: 128, DiskMB: 512}))
-						Expect(startReq.PlacementConstraint).To(Equal(rep.PlacementConstraint{
+						Expect(startReq.Resource).To(Equal(models.Resource{MemoryMB: 128, DiskMB: 512}))
+						Expect(startReq.PlacementConstraint).To(Equal(models.PlacementConstraint{
 							RootFs:        "some-stack",
 							VolumeDrivers: []string{},
 							PlacementTags: []string{"taggggg"},
@@ -1735,7 +1733,7 @@ var _ = Describe("DesiredLRP Handlers", func() {
 						Context("when updatwing of the LRPs takes some time", func() {
 							var atomicCallCounter int32
 							BeforeEach(func() {
-								fakeRepClient.UpdateLRPInstanceStub = func(lager.Logger, rep.LRPUpdate) error {
+								fakeRepClient.UpdateLRPInstanceStub = func(lager.Logger, models.LRPUpdate) error {
 									atomic.AddInt32(&atomicCallCounter, 1)
 									time.Sleep(1000 * time.Millisecond)
 									atomic.AddInt32(&atomicCallCounter, -1)

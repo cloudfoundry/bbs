@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/controllers/fakes"
 	"code.cloudfoundry.org/bbs/db"
@@ -14,13 +12,13 @@ import (
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	mfakes "code.cloudfoundry.org/bbs/metrics/fakes"
 	"code.cloudfoundry.org/bbs/models"
+	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/routing-info/internalroutes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,7 +37,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		actualHub                 *eventfakes.FakeHub
 		actualLRPInstanceHub      *eventfakes.FakeHub
 		retirer                   *fakes.FakeRetirer
-		fakeAuctioneerClient      *auctioneerfakes.FakeClient
+		fakeAuctioneerClient      *modelsfakes.FakeAuctioneerClient
 		fakeLRPStatMetronNotifier *mfakes.FakeLRPStatMetronNotifier
 
 		keysToRetire         []*models.ActualLRPKey
@@ -59,7 +57,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		fakeLRPDB = new(dbfakes.FakeLRPDB)
 		fakeSuspectDB = new(dbfakes.FakeSuspectDB)
 		fakeDomainDB = new(dbfakes.FakeDomainDB)
-		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeAuctioneerClient = new(modelsfakes.FakeAuctioneerClient)
 		logger = lagertest.NewTestLogger("test")
 
 		desiredLRP1 = model_helpers.NewValidDesiredLRP("to-unclaim-1").DesiredLRPSchedulingInfo()
@@ -256,7 +254,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(1))
 			Expect(actualTraceId).To(Equal(traceId))
-			request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
+			request := models.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 			Expect(startAuctions).To(ContainElement(&request))
 		})
 
@@ -309,7 +307,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
 				Expect(actualTraceId).To(Equal(traceId))
-				request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
+				request := models.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 				Expect(startAuctions).To(ContainElement(&request))
 			})
 
@@ -333,7 +331,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 				_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(HaveLen(1))
 				Expect(actualTraceId).To(Equal(traceId))
-				request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
+				request := models.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 				Expect(startAuctions).To(ContainElement(&request))
 			})
 
@@ -387,7 +385,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 			Expect(startAuctions).To(HaveLen(1))
 			Expect(actualTraceId).To(Equal(traceId))
-			request := auctioneer.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
+			request := models.NewLRPStartRequestFromModel(model_helpers.NewValidDesiredLRP("some-guid"), 0)
 			Expect(startAuctions).To(ContainElement(&request))
 		})
 
@@ -494,9 +492,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			It("auctions new lrps", func() {
 				Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 
-				unclaimedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&desiredLRP1, 0)
+				unclaimedStartRequest := models.NewLRPStartRequestFromSchedulingInfo(&desiredLRP1, 0)
 
-				keysToAuction := []*auctioneer.LRPStartRequest{&unclaimedStartRequest}
+				keysToAuction := []*models.LRPStartRequest{&unclaimedStartRequest}
 
 				_, actualTraceId, startAuctions := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
 				Expect(startAuctions).To(ConsistOf(keysToAuction))
@@ -887,7 +885,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("calls UpdateLRPInstance on the rep client", func() {
 			Eventually(fakeRepClient.UpdateLRPInstanceCallCount()).Should(Equal(3))
 
-			updates := make([]rep.LRPUpdate, 3)
+			updates := make([]models.LRPUpdate, 3)
 
 			for i := 0; i < 3; i++ {
 				_, update := fakeRepClient.UpdateLRPInstanceArgsForCall(i)
@@ -895,9 +893,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			}
 
 			internalRoutes := models.InternalRoutes{models.InternalRoute{Hostname: "some-internal-route.apps.internal"}}
-			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes1.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes1.Key, internalRoutes, nil)
-			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes2.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes2.Key, internalRoutes, nil)
-			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithInternalRoutes3.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes3.Key, internalRoutes, nil)
+			expectedLRP1Update := models.NewLRPUpdate(actualLRPKeyWithInternalRoutes1.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes1.Key, internalRoutes, nil)
+			expectedLRP2Update := models.NewLRPUpdate(actualLRPKeyWithInternalRoutes2.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes2.Key, internalRoutes, nil)
+			expectedLRP3Update := models.NewLRPUpdate(actualLRPKeyWithInternalRoutes3.InstanceKey.InstanceGuid, *actualLRPKeyWithInternalRoutes3.Key, internalRoutes, nil)
 
 			Expect(updates).To(ContainElement(expectedLRP1Update))
 			Expect(updates).To(ContainElement(expectedLRP2Update))
@@ -1034,7 +1032,7 @@ var _ = Describe("LRP Convergence Controllers", func() {
 		It("calls UpdateLRPInstance on the rep client", func() {
 			Eventually(fakeRepClient.UpdateLRPInstanceCallCount()).Should(Equal(3))
 
-			updates := make([]rep.LRPUpdate, 3)
+			updates := make([]models.LRPUpdate, 3)
 
 			for i := 0; i < 3; i++ {
 				_, update := fakeRepClient.UpdateLRPInstanceArgsForCall(i)
@@ -1042,9 +1040,9 @@ var _ = Describe("LRP Convergence Controllers", func() {
 			}
 
 			metricTags := map[string]string{"app_name": "some-app-name"}
-			expectedLRP1Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags1.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags1.Key, nil, metricTags)
-			expectedLRP2Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags2.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags2.Key, nil, metricTags)
-			expectedLRP3Update := rep.NewLRPUpdate(actualLRPKeyWithMetricTags3.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags3.Key, nil, metricTags)
+			expectedLRP1Update := models.NewLRPUpdate(actualLRPKeyWithMetricTags1.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags1.Key, nil, metricTags)
+			expectedLRP2Update := models.NewLRPUpdate(actualLRPKeyWithMetricTags2.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags2.Key, nil, metricTags)
+			expectedLRP3Update := models.NewLRPUpdate(actualLRPKeyWithMetricTags3.InstanceKey.InstanceGuid, *actualLRPKeyWithMetricTags3.Key, nil, metricTags)
 
 			Expect(updates).To(ContainElement(expectedLRP1Update))
 			Expect(updates).To(ContainElement(expectedLRP2Update))

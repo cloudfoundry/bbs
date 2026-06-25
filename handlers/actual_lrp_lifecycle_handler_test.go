@@ -13,7 +13,7 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"code.cloudfoundry.org/rep/repfakes"
+	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -36,8 +36,8 @@ var _ = Describe("ActualLRP Lifecycle Handlers", func() {
 		responseRecorder = httptest.NewRecorder()
 
 		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
-		fakeRepClientFactory = new(repfakes.FakeClientFactory)
-		fakeRepClient = new(repfakes.FakeClient)
+		fakeRepClientFactory = new(modelsfakes.FakeRepClientFactory)
+		fakeRepClient = new(modelsfakes.FakeRepClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 
 		exitCh = make(chan struct{}, 1)

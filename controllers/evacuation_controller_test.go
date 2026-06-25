@@ -4,17 +4,15 @@ import (
 	"context"
 	"errors"
 
-	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/models"
+	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"code.cloudfoundry.org/rep/repfakes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -29,7 +27,7 @@ var _ = Describe("Evacuation Controller", func() {
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeEvacuationDB     *dbfakes.FakeEvacuationDB
 		fakeSuspectDB        *dbfakes.FakeSuspectDB
-		fakeAuctioneerClient *auctioneerfakes.FakeClient
+		fakeAuctioneerClient *modelsfakes.FakeAuctioneerClient
 		actualHub            *eventfakes.FakeHub
 		actualLRPInstanceHub *eventfakes.FakeHub
 
@@ -43,12 +41,12 @@ var _ = Describe("Evacuation Controller", func() {
 		fakeSuspectDB = new(dbfakes.FakeSuspectDB)
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeEvacuationDB = new(dbfakes.FakeEvacuationDB)
-		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeAuctioneerClient = new(modelsfakes.FakeAuctioneerClient)
 		logger = lagertest.NewTestLogger("test")
 
 		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
-		fakeRepClientFactory = new(repfakes.FakeClientFactory)
-		fakeRepClient = new(repfakes.FakeClient)
+		fakeRepClientFactory = new(modelsfakes.FakeRepClientFactory)
+		fakeRepClient = new(modelsfakes.FakeRepClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 
 		actualHub = &eventfakes.FakeHub{}
@@ -268,10 +266,10 @@ var _ = Describe("Evacuation Controller", func() {
 			_, _, guid := fakeDesiredLRPDB.DesiredLRPSchedulingInfoByProcessGuidArgsForCall(0)
 			Expect(guid).To(Equal("process-guid"))
 
-			expectedStartRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.Index))
+			expectedStartRequest := models.NewLRPStartRequestFromModel(desiredLRP, int(actualLRP.Index))
 			Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 			_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-			Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+			Expect(startRequests).To(Equal([]*models.LRPStartRequest{&expectedStartRequest}))
 			Expect(actualTraceId).To(Equal(traceId))
 		})
 
@@ -1054,11 +1052,11 @@ var _ = Describe("Evacuation Controller", func() {
 							Expect(actualAvailabilityZone).To(Equal(actual.AvailabilityZone))
 
 							schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-							expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+							expectedStartRequest := models.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 							_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-							Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+							Expect(startRequests).To(Equal([]*models.LRPStartRequest{&expectedStartRequest}))
 							Expect(actualTraceId).To(Equal(traceId))
 						})
 
@@ -1154,11 +1152,11 @@ var _ = Describe("Evacuation Controller", func() {
 						Expect(lrpKey.Index).To(Equal(actual.Index))
 
 						schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-						expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+						expectedStartRequest := models.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 						Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 						_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-						Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+						Expect(startRequests).To(Equal([]*models.LRPStartRequest{&expectedStartRequest}))
 						Expect(actualTraceId).To(Equal(traceId))
 					})
 
@@ -1534,11 +1532,11 @@ var _ = Describe("Evacuation Controller", func() {
 							Expect(lrpKey.Index).To(Equal(actual.Index))
 
 							schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-							expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+							expectedStartRequest := models.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 							_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-							Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+							Expect(startRequests).To(Equal([]*models.LRPStartRequest{&expectedStartRequest}))
 							Expect(actualTraceId).To(Equal(traceId))
 
 							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))
@@ -1582,11 +1580,11 @@ var _ = Describe("Evacuation Controller", func() {
 							Expect(lrpKey.Index).To(Equal(actual.Index))
 
 							schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-							expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
+							expectedStartRequest := models.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, int(actual.Index))
 
 							Expect(fakeAuctioneerClient.RequestLRPAuctionsCallCount()).To(Equal(1))
 							_, actualTraceId, startRequests := fakeAuctioneerClient.RequestLRPAuctionsArgsForCall(0)
-							Expect(startRequests).To(Equal([]*auctioneer.LRPStartRequest{&expectedStartRequest}))
+							Expect(startRequests).To(Equal([]*models.LRPStartRequest{&expectedStartRequest}))
 							Expect(actualTraceId).To(Equal(traceId))
 
 							Eventually(actualLRPInstanceHub.EmitCallCount).Should(Equal(2))

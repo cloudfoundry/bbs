@@ -5,17 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 
-	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/models"
+	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"code.cloudfoundry.org/rep/repfakes"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -31,7 +29,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeDesiredLRPDB     *dbfakes.FakeDesiredLRPDB
 		fakeEvacuationDB     *dbfakes.FakeEvacuationDB
 		fakeSuspectDB        *dbfakes.FakeSuspectDB
-		fakeAuctioneerClient *auctioneerfakes.FakeClient
+		fakeAuctioneerClient *modelsfakes.FakeAuctioneerClient
 		actualHub            *eventfakes.FakeHub
 		actualLRPInstanceHub *eventfakes.FakeHub
 
@@ -61,12 +59,12 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 		fakeSuspectDB = new(dbfakes.FakeSuspectDB)
 		fakeDesiredLRPDB = new(dbfakes.FakeDesiredLRPDB)
 		fakeEvacuationDB = new(dbfakes.FakeEvacuationDB)
-		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeAuctioneerClient = new(modelsfakes.FakeAuctioneerClient)
 		logger = lagertest.NewTestLogger("test")
 
 		fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
-		fakeRepClientFactory = new(repfakes.FakeClientFactory)
-		fakeRepClient = new(repfakes.FakeClient)
+		fakeRepClientFactory = new(modelsfakes.FakeRepClientFactory)
+		fakeRepClient = new(modelsfakes.FakeRepClient)
 		fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 
 		actualHub = &eventfakes.FakeHub{}
@@ -723,7 +721,7 @@ var _ = Describe("ActualLRP Lifecycle Controller", func() {
 					Expect(startRequests).To(HaveLen(1))
 					Expect(actualTraceId).To(Equal(traceId))
 					schedulingInfo := desiredLRP.DesiredLRPSchedulingInfo()
-					expectedStartRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, 1)
+					expectedStartRequest := models.NewLRPStartRequestFromSchedulingInfo(&schedulingInfo, 1)
 					Expect(startRequests[0]).To(BeEquivalentTo(&expectedStartRequest))
 				})
 

@@ -5,19 +5,17 @@ import (
 	"errors"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/auctioneer/auctioneerfakes"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/db/dbfakes"
 	"code.cloudfoundry.org/bbs/events/eventfakes"
 	"code.cloudfoundry.org/bbs/metrics/fakes"
 	"code.cloudfoundry.org/bbs/models"
+	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
 	"code.cloudfoundry.org/bbs/taskworkpool/taskworkpoolfakes"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3/lagertest"
-	"code.cloudfoundry.org/rep"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -27,7 +25,7 @@ var _ = Describe("Task Controller", func() {
 	var (
 		logger                   *lagertest.TestLogger
 		fakeTaskDB               *dbfakes.FakeTaskDB
-		fakeAuctioneerClient     *auctioneerfakes.FakeClient
+		fakeAuctioneerClient     *modelsfakes.FakeAuctioneerClient
 		fakeTaskCompletionClient *taskworkpoolfakes.FakeTaskCompletionClient
 		taskHub                  *eventfakes.FakeHub
 		maxPlacementRetries      int
@@ -39,7 +37,7 @@ var _ = Describe("Task Controller", func() {
 
 	BeforeEach(func() {
 		fakeTaskDB = new(dbfakes.FakeTaskDB)
-		fakeAuctioneerClient = new(auctioneerfakes.FakeClient)
+		fakeAuctioneerClient = new(modelsfakes.FakeAuctioneerClient)
 		fakeTaskCompletionClient = new(taskworkpoolfakes.FakeTaskCompletionClient)
 		fakeTaskStatNotifier = &fakes.FakeTaskStatMetronNotifier{}
 
@@ -216,16 +214,16 @@ var _ = Describe("Task Controller", func() {
 					volumeMounts = append(volumeMounts, volMount.Driver)
 				}
 
-				expectedStartRequest := auctioneer.TaskStartRequest{
-					Task: rep.Task{
+				expectedStartRequest := models.TaskStartRequest{
+					Task: models.SchedulingTask{
 						TaskGuid: taskGuid,
 						Domain:   domain,
-						Resource: rep.Resource{
+						Resource: models.Resource{
 							MemoryMB: 256,
 							DiskMB:   1024,
 							MaxPids:  1024,
 						},
-						PlacementConstraint: rep.PlacementConstraint{
+						PlacementConstraint: models.PlacementConstraint{
 							RootFs:        "docker:///docker.com/docker",
 							VolumeDrivers: volumeMounts,
 							PlacementTags: taskDef.PlacementTags,
@@ -1079,10 +1077,10 @@ var _ = Describe("Task Controller", func() {
 				const taskGuid2 = "to-auction-2"
 
 				BeforeEach(func() {
-					taskStartRequest1 := auctioneer.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
-					taskStartRequest2 := auctioneer.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
+					taskStartRequest1 := models.NewTaskStartRequestFromModel(taskGuid1, "domain", model_helpers.NewValidTaskDefinition())
+					taskStartRequest2 := models.NewTaskStartRequestFromModel(taskGuid2, "domain", model_helpers.NewValidTaskDefinition())
 					convergenceResult := db.TaskConvergenceResult{
-						TasksToAuction:  []*auctioneer.TaskStartRequest{&taskStartRequest1, &taskStartRequest2},
+						TasksToAuction:  []*models.TaskStartRequest{&taskStartRequest1, &taskStartRequest2},
 						TasksToComplete: nil,
 						Events:          nil,
 					}

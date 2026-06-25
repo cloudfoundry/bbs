@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
-	"code.cloudfoundry.org/rep/repfakes"
+	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,14 +22,14 @@ func TestHandlers(t *testing.T) {
 
 var (
 	fakeServiceClient    *serviceclientfakes.FakeServiceClient
-	fakeRepClient        *repfakes.FakeClient
-	fakeRepClientFactory *repfakes.FakeClientFactory
+	fakeRepClient        *modelsfakes.FakeRepClient
+	fakeRepClientFactory *modelsfakes.FakeRepClientFactory
 )
 
 var _ = BeforeEach(func() {
 	fakeServiceClient = new(serviceclientfakes.FakeServiceClient)
-	fakeRepClientFactory = new(repfakes.FakeClientFactory)
-	fakeRepClient = new(repfakes.FakeClient)
+	fakeRepClientFactory = new(modelsfakes.FakeRepClientFactory)
+	fakeRepClient = new(modelsfakes.FakeRepClient)
 	fakeRepClientFactory.CreateClientReturns(fakeRepClient, nil)
 })
 

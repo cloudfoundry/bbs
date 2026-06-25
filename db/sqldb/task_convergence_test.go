@@ -3,7 +3,6 @@ package sqldb_test
 import (
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
 	dbpkg "code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/models/test/model_helpers"
@@ -101,7 +100,7 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(task.UpdatedAt).To(Equal(fakeClock.Now().UnixNano()))
 				Expect(task.FirstCompletedAt).To(Equal(fakeClock.Now().UnixNano()))
 
-				taskRequest := auctioneer.NewTaskStartRequestFromModel("pending-expired-task", domain, taskDef)
+				taskRequest := models.NewTaskStartRequestFromModel("pending-expired-task", domain, taskDef)
 				Expect(convergenceResult.TasksToAuction).NotTo(ContainElement(&taskRequest))
 			})
 
@@ -126,8 +125,8 @@ var _ = Describe("Convergence of Tasks", func() {
 				Expect(pendingTask.FailureReason).NotTo(Equal("not started within time limit"))
 				Expect(pendingTask.Failed).NotTo(BeTrue())
 
-				pendingTaskRequest := auctioneer.NewTaskStartRequestFromModel("pending-kickable-task", domain, taskDef)
-				taskRequest := auctioneer.NewTaskStartRequestFromModel("pending-task", domain, taskDef)
+				pendingTaskRequest := models.NewTaskStartRequestFromModel("pending-kickable-task", domain, taskDef)
+				taskRequest := models.NewTaskStartRequestFromModel("pending-task", domain, taskDef)
 				Expect(convergenceResult.TasksToAuction).To(ConsistOf(&pendingTaskRequest, &taskRequest))
 			})
 
@@ -185,7 +184,7 @@ var _ = Describe("Convergence of Tasks", func() {
 			})
 
 			It("doesn't do anything when their cells are present", func() {
-				taskRequest := auctioneer.NewTaskStartRequestFromModel("running-task", domain, taskDef)
+				taskRequest := models.NewTaskStartRequestFromModel("running-task", domain, taskDef)
 				Expect(convergenceResult.TasksToAuction).NotTo(ContainElement(taskRequest))
 
 				task, err := sqlDB.TaskByGuid(ctx, logger, "running-task")
