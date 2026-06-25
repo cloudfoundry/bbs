@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
+	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
