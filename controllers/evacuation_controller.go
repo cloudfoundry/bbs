@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/events/calculator"
@@ -17,7 +16,7 @@ type EvacuationController struct {
 	actualLRPDB          db.ActualLRPDB
 	suspectLRPDB         db.SuspectDB
 	desiredLRPDB         db.DesiredLRPDB
-	auctioneerClient     auctioneer.Client
+	auctioneerClient     models.AuctioneerClient
 	actualHub            events.Hub
 	actualLRPInstanceHub events.Hub
 }
@@ -27,7 +26,7 @@ func NewEvacuationController(
 	actualLRPDB db.ActualLRPDB,
 	suspectLRPDB db.SuspectDB,
 	desiredLRPDB db.DesiredLRPDB,
-	auctioneerClient auctioneer.Client,
+	auctioneerClient models.AuctioneerClient,
 	actualHub events.Hub,
 	actualLRPInstanceHub events.Hub,
 ) *EvacuationController {
@@ -453,8 +452,8 @@ func (h *EvacuationController) requestAuction(ctx context.Context, logger lager.
 		return
 	}
 
-	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedInfo, int(lrpKey.Index))
-	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&startRequest})
+	startRequest := models.NewLRPStartRequestFromSchedulingInfo(schedInfo, int(lrpKey.Index))
+	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*models.LRPStartRequest{&startRequest})
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
 	}

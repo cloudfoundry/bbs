@@ -13,6 +13,7 @@ import (
 
 	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
+	bbsmodels "code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/bbs/controllers"
 	"code.cloudfoundry.org/bbs/converger"
 	"code.cloudfoundry.org/bbs/db/migrations"
@@ -440,7 +441,7 @@ func hubMaintainer(logger lager.Logger, desiredHub, actualHub, taskHub events.Hu
 	}
 }
 
-func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig) auctioneer.Client {
+func initializeAuctioneerClient(logger lager.Logger, bbsConfig *config.BBSConfig) bbsmodels.AuctioneerClient {
 	if bbsConfig.AuctioneerAddress == "" {
 		logger.Fatal("auctioneer-address-validation-failed", errors.New("auctioneerAddress is required"))
 	}

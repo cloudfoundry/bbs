@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/metrics"
@@ -13,7 +12,6 @@ import (
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager/v3"
-	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/workpool"
 )
 
@@ -32,9 +30,9 @@ type LRPConvergenceController struct {
 	domainDB               db.DomainDB
 	actualHub              events.Hub
 	actualLRPInstanceHub   events.Hub
-	auctioneerClient       auctioneer.Client
+	auctioneerClient       models.AuctioneerClient
 	serviceClient          serviceclient.ServiceClient
-	repClientFactory       rep.ClientFactory
+	repClientFactory       models.RepClientFactory
 	retirer                Retirer
 	convergenceWorkersSize int
 	lrpStatMetronNotifier  metrics.LRPStatMetronNotifier
@@ -48,9 +46,9 @@ func NewLRPConvergenceController(
 	domainDB db.DomainDB,
 	actualHub events.Hub,
 	actualLRPInstanceHub events.Hub,
-	auctioneerClient auctioneer.Client,
+	auctioneerClient models.AuctioneerClient,
 	serviceClient serviceclient.ServiceClient,
-	repClientFactory rep.ClientFactory,
+	repClientFactory models.RepClientFactory,
 	retirer Retirer,
 	convergenceWorkersSize int,
 	lrpStatMetronNotifier metrics.LRPStatMetronNotifier,
@@ -118,7 +116,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 		})
 	}
 
-	startRequests := []*auctioneer.LRPStartRequest{}
+	startRequests := []*models.LRPStartRequest{}
 	startRequestLock := &sync.Mutex{}
 
 	defer func() {
@@ -168,7 +166,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 			go h.actualHub.Emit(models.NewActualLRPCreatedEvent(lrp.ToActualLRPGroup()))
 			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(lrp, traceId))
 
-			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
+			startRequest := models.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
 			startRequestLock.Lock()
 			startRequests = append(startRequests, &startRequest)
 			startRequestLock.Unlock()
@@ -192,7 +190,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				}()
 			}
 
-			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
+			startRequest := models.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
 			startRequestLock.Lock()
 			startRequests = append(startRequests, &startRequest)
 			startRequestLock.Unlock()
@@ -246,7 +244,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 			}
 			go h.actualLRPInstanceHub.Emit(models.NewActualLRPInstanceCreatedEvent(unclaimed, traceId))
 
-			startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
+			startRequest := models.NewLRPStartRequestFromSchedulingInfo(dereferencedKey.SchedulingInfo, int(dereferencedKey.Key.Index))
 			startRequestLock.Lock()
 			startRequests = append(startRequests, &startRequest)
 			startRequestLock.Unlock()
@@ -311,7 +309,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 			for _, ir := range dereferencedLRPKey.DesiredInternalRoutes {
 				internalRoutes = append(internalRoutes, models.InternalRoute{Hostname: ir.Hostname})
 			}
-			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes, nil)
+			lrpUpdate := models.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, internalRoutes, nil)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)
@@ -334,7 +332,7 @@ func (h *LRPConvergenceController) ConvergeLRPs(ctx context.Context) {
 				return
 			}
 
-			lrpUpdate := rep.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, nil, lrpKey.DesiredMetricTags)
+			lrpUpdate := models.NewLRPUpdate(dereferencedLRPKey.InstanceKey.InstanceGuid, *dereferencedLRPKey.Key, nil, lrpKey.DesiredMetricTags)
 			err = repClient.UpdateLRPInstance(logger, lrpUpdate)
 			if err != nil {
 				logger.Error("updating-lrp-instance", err)

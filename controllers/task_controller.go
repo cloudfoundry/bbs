@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/metrics"
@@ -13,15 +12,14 @@ import (
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
-	"code.cloudfoundry.org/rep"
 )
 
 type TaskController struct {
 	db                     db.TaskDB
 	taskCompletionClient   taskworkpool.TaskCompletionClient
-	auctioneerClient       auctioneer.Client
+	auctioneerClient       models.AuctioneerClient
 	serviceClient          serviceclient.ServiceClient
-	repClientFactory       rep.ClientFactory
+	repClientFactory       models.RepClientFactory
 	taskHub                events.Hub
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier
 	maxRetries             int
@@ -30,9 +28,9 @@ type TaskController struct {
 func NewTaskController(
 	db db.TaskDB,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
-	auctioneerClient auctioneer.Client,
+	auctioneerClient models.AuctioneerClient,
 	serviceClient serviceclient.ServiceClient,
-	repClientFactory rep.ClientFactory,
+	repClientFactory models.RepClientFactory,
 	taskHub events.Hub,
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 	maxRetries int,
@@ -76,8 +74,8 @@ func (c *TaskController) DesireTask(ctx context.Context, logger lager.Logger, ta
 	go c.taskHub.Emit(models.NewTaskCreatedEvent(task))
 
 	logger.Debug("start-task-auction-request")
-	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(taskGUID, domain, taskDefinition)
-	err = c.auctioneerClient.RequestTaskAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.TaskStartRequest{&taskStartRequest})
+	taskStartRequest := models.NewTaskStartRequestFromModel(taskGUID, domain, taskDefinition)
+	err = c.auctioneerClient.RequestTaskAuctions(logger, trace.RequestIdFromContext(ctx), []*models.TaskStartRequest{&taskStartRequest})
 	if err != nil {
 		logger.Error("failed-requesting-task-auction", err)
 		// The creation succeeded, the auction request error can be dropped

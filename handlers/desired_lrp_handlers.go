@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/events/calculator"
@@ -17,7 +16,6 @@ import (
 	"code.cloudfoundry.org/bbs/trace"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager/v3"
-	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/workpool"
 )
 
@@ -29,8 +27,8 @@ type DesiredLRPHandler struct {
 	desiredHub           events.Hub
 	actualHub            events.Hub
 	actualLRPInstanceHub events.Hub
-	auctioneerClient     auctioneer.Client
-	repClientFactory     rep.ClientFactory
+	auctioneerClient     models.AuctioneerClient
+	repClientFactory     models.RepClientFactory
 	serviceClient        serviceclient.ServiceClient
 	updateWorkersCount   int
 	exitChan             chan<- struct{}
@@ -44,8 +42,8 @@ func NewDesiredLRPHandler(
 	desiredHub events.Hub,
 	actualHub events.Hub,
 	actualLRPInstanceHub events.Hub,
-	auctioneerClient auctioneer.Client,
-	repClientFactory rep.ClientFactory,
+	auctioneerClient models.AuctioneerClient,
+	repClientFactory models.RepClientFactory,
 	serviceClient serviceclient.ServiceClient,
 	exitChan chan<- struct{},
 	metronClient loggingclient.IngressClient,
@@ -346,10 +344,10 @@ func (h *DesiredLRPHandler) startInstanceRange(ctx context.Context, logger lager
 	}
 
 	createdIndices := h.createUnclaimedActualLRPs(ctx, logger, keys)
-	start := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
+	start := models.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, createdIndices...)
 
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
-	err := h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&start})
+	err := h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*models.LRPStartRequest{&start})
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
@@ -495,7 +493,7 @@ func (h *DesiredLRPHandler) updateInstances(ctx context.Context, logger lager.Lo
 				}
 			}
 
-			lrpUpdate := rep.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes, metricTags)
+			lrpUpdate := models.NewLRPUpdate(lrp.ActualLRPInstanceKey.InstanceGuid, lrp.ActualLRPKey, internalRoutes, metricTags)
 			go func() {
 				err := repClient.UpdateLRPInstance(logger, lrpUpdate)
 				if err != nil {

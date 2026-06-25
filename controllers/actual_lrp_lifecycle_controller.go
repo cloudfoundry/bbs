@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/events"
 	"code.cloudfoundry.org/bbs/events/calculator"
@@ -11,7 +10,6 @@ import (
 	"code.cloudfoundry.org/bbs/serviceclient"
 	"code.cloudfoundry.org/bbs/trace"
 	"code.cloudfoundry.org/lager/v3"
-	"code.cloudfoundry.org/rep"
 )
 
 type ActualLRPLifecycleController struct {
@@ -19,9 +17,9 @@ type ActualLRPLifecycleController struct {
 	suspectDB            db.SuspectDB
 	evacuationDB         db.EvacuationDB
 	desiredLRPDB         db.DesiredLRPDB
-	auctioneerClient     auctioneer.Client
+	auctioneerClient     models.AuctioneerClient
 	serviceClient        serviceclient.ServiceClient
-	repClientFactory     rep.ClientFactory
+	repClientFactory     models.RepClientFactory
 	actualHub            events.Hub
 	actualLRPInstanceHub events.Hub
 }
@@ -31,9 +29,9 @@ func NewActualLRPLifecycleController(
 	suspectDB db.SuspectDB,
 	evacuationDB db.EvacuationDB,
 	desiredLRPDB db.DesiredLRPDB,
-	auctioneerClient auctioneer.Client,
+	auctioneerClient models.AuctioneerClient,
 	serviceClient serviceclient.ServiceClient,
-	repClientFactory rep.ClientFactory,
+	repClientFactory models.RepClientFactory,
 	actualHub events.Hub,
 	actualLRPInstanceHub events.Hub,
 ) *ActualLRPLifecycleController {
@@ -215,9 +213,9 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 		return err
 	}
 
-	startRequest := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedInfo, int(actualLRPKey.Index))
+	startRequest := models.NewLRPStartRequestFromSchedulingInfo(schedInfo, int(actualLRPKey.Index))
 	logger.Info("start-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
-	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*auctioneer.LRPStartRequest{&startRequest})
+	err = h.auctioneerClient.RequestLRPAuctions(logger, trace.RequestIdFromContext(ctx), []*models.LRPStartRequest{&startRequest})
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedInfo.ProcessGuid, "index": int(actualLRPKey.Index)})
 	if err != nil {
 		logger.Error("failed-requesting-auction", err)
@@ -328,7 +326,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 				return err
 			}
 
-			var client rep.Client
+			var client models.RepClient
 			recordChange()
 			client, err = h.repClientFactory.CreateClient(cell.RepAddress, cell.RepUrl, trace.RequestIdFromContext(ctx))
 			if err != nil {

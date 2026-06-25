@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/db"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
@@ -137,7 +136,7 @@ func (db *SQLDB) failExpiredPendingTasks(ctx context.Context, logger lager.Logge
 	return events, uint64(invalidTasksCount), rowsAffected
 }
 
-func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(ctx context.Context, logger lager.Logger, expirePendingTaskDuration time.Duration) ([]*auctioneer.TaskStartRequest, uint64) {
+func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(ctx context.Context, logger lager.Logger, expirePendingTaskDuration time.Duration) ([]*models.TaskStartRequest, uint64) {
 	logger = logger.Session("get-task-start-requests-for-kickable-pending-tasks")
 
 	rows, err := db.all(ctx, logger, db.db, tasksTable,
@@ -148,19 +147,19 @@ func (db *SQLDB) getTaskStartRequestsForKickablePendingTasks(ctx context.Context
 
 	if err != nil {
 		logger.Error("failed-query", err)
-		return []*auctioneer.TaskStartRequest{}, math.MaxUint64
+		return []*models.TaskStartRequest{}, math.MaxUint64
 	}
 
 	defer rows.Close()
 
-	tasksToAuction := []*auctioneer.TaskStartRequest{}
+	tasksToAuction := []*models.TaskStartRequest{}
 	tasks, _, invalidTasksCount, err := db.fetchTasks(ctx, logger, rows, db.db, false)
 	if err != nil {
 		logger.Error("failed-fetching-some-tasks", err)
 	}
 
 	for _, task := range tasks {
-		taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
+		taskStartRequest := models.NewTaskStartRequestFromModel(task.TaskGuid, task.Domain, task.TaskDefinition)
 		tasksToAuction = append(tasksToAuction, &taskStartRequest)
 	}
 

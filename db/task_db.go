@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs/models"
 	"code.cloudfoundry.org/lager/v3"
 )
@@ -12,7 +11,7 @@ import (
 type CompleteTaskWork func(logger lager.Logger, taskDB TaskDB, task *models.Task) func()
 
 type TaskConvergenceResult struct {
-	TasksToAuction  []*auctioneer.TaskStartRequest
+	TasksToAuction  []*models.TaskStartRequest
 	TasksToComplete []*models.Task
 	Events          []models.Event
 

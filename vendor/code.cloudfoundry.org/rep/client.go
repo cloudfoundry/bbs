@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -18,12 +18,6 @@ import (
 	"code.cloudfoundry.org/tlsconfig"
 	"github.com/tedsuo/rata"
 )
-
-//go:generate counterfeiter -o repfakes/fake_client_factory.go . ClientFactory
-
-type ClientFactory interface {
-	CreateClient(address, url, traceID string) (Client, error)
-}
 
 // capture the behavior described in the comment of this story
 // https://www.pivotaltracker.com/story/show/130664747/comments/152863773
@@ -101,13 +95,20 @@ func (tlsConfig *TLSConfig) modifyTransport(client *http.Client) error {
 	return nil
 }
 
+// ClientFactory, Client, and SimClient are aliases for interfaces defined in bbs/models.
+// Maintained for backward compatibility; vendored bbs code references these types.
+//go:generate counterfeiter -o repfakes/fake_sim_client.go . SimClient
+type ClientFactory = models.RepClientFactory
+type Client        = models.RepClient
+type SimClient     = models.RepSimClient
+
 type clientFactory struct {
 	httpClient  *http.Client
 	stateClient *http.Client
 	tlsConfig   *TLSConfig
 }
 
-func NewClientFactory(httpClient, stateClient *http.Client, tlsConfig *TLSConfig) (ClientFactory, error) {
+func NewClientFactory(httpClient, stateClient *http.Client, tlsConfig *TLSConfig) (models.RepClientFactory, error) {
 	if tlsConfig == nil {
 		// zero values tls config
 		tlsConfig = &TLSConfig{}
@@ -128,32 +129,13 @@ func NewClientFactory(httpClient, stateClient *http.Client, tlsConfig *TLSConfig
 	}, nil
 }
 
-func (factory *clientFactory) CreateClient(address, url, traceID string) (Client, error) {
+func (factory *clientFactory) CreateClient(address, url, traceID string) (models.RepClient, error) {
 	urlToUse, err := factory.tlsConfig.pickURL(address, url)
 	if err != nil {
 		return nil, err
 	}
 
 	return newClient(factory.httpClient, factory.stateClient, urlToUse, traceID), nil
-}
-
-//go:generate counterfeiter -o repfakes/fake_client.go . Client
-
-type Client interface {
-	State(logger lager.Logger) (CellState, error)
-	Perform(logger lager.Logger, work Work) (Work, error)
-	UpdateLRPInstance(logger lager.Logger, update LRPUpdate) error
-	StopLRPInstance(logger lager.Logger, key models.ActualLRPKey, instanceKey models.ActualLRPInstanceKey) error
-	CancelTask(logger lager.Logger, taskGuid string) error
-	SetStateClient(stateClient *http.Client)
-	StateClientTimeout() time.Duration
-}
-
-//go:generate counterfeiter -o repfakes/fake_sim_client.go . SimClient
-
-type SimClient interface {
-	Client
-	Reset() error
 }
 
 type client struct {
@@ -163,7 +145,7 @@ type client struct {
 	requestGenerator *rata.RequestGenerator
 }
 
-func newClient(httpClient, stateClient *http.Client, address string, traceID string) Client {
+func newClient(httpClient, stateClient *http.Client, address string, traceID string) models.RepClient {
 	requestGenerator := rata.NewRequestGenerator(address, Routes)
 	if traceID != "" {
 		requestGenerator.Header.Add(trace.RequestIdHeader, traceID)
@@ -184,60 +166,60 @@ func (c *client) StateClientTimeout() time.Duration {
 	return c.stateClient.Timeout
 }
 
-func (c *client) State(logger lager.Logger) (CellState, error) {
+func (c *client) State(logger lager.Logger) (models.CellState, error) {
 	req, err := c.requestGenerator.CreateRequest(StateRoute, nil, nil)
 	if err != nil {
-		return CellState{}, err
+		return models.CellState{}, err
 	}
 
 	resp, err := c.stateClient.Do(req)
 	if err != nil {
-		return CellState{}, err
+		return models.CellState{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return CellState{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return models.CellState{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var state CellState
-	bs, err := ioutil.ReadAll(resp.Body)
+	var state models.CellState
+	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return CellState{}, err
+		return models.CellState{}, err
 	}
 	err = json.Unmarshal(bs, &state)
 	if err != nil {
-		return CellState{}, err
+		return models.CellState{}, err
 	}
 
 	return state, nil
 }
 
-func (c *client) Perform(logger lager.Logger, work Work) (Work, error) {
+func (c *client) Perform(logger lager.Logger, work models.Work) (models.Work, error) {
 	body, err := json.Marshal(work)
 	if err != nil {
-		return Work{}, err
+		return models.Work{}, err
 	}
 
 	req, err := c.requestGenerator.CreateRequest(PerformRoute, nil, bytes.NewReader(body))
 	if err != nil {
-		return Work{}, err
+		return models.Work{}, err
 	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return Work{}, err
+		return models.Work{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return Work{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return models.Work{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var failedWork Work
+	var failedWork models.Work
 	err = json.NewDecoder(resp.Body).Decode(&failedWork)
 	if err != nil {
-		return Work{}, err
+		return models.Work{}, err
 	}
 
 	return failedWork, nil
@@ -264,7 +246,7 @@ func (c *client) Reset() error {
 
 func (c *client) UpdateLRPInstance(
 	logger lager.Logger,
-	update LRPUpdate,
+	update models.LRPUpdate,
 ) error {
 	start := time.Now()
 	loggerCopy := logger
@@ -324,7 +306,7 @@ func (c *client) UpdateLRPInstance(
 
 func (c *client) updateLRPInstanceRoute_r0(
 	logger lager.Logger,
-	update LRPUpdate) error {
+	update models.LRPUpdate) error {
 	start := time.Now()
 	logger = logger.Session("update-lrp-r0", lager.Data{"process-guid": update.ProcessGuid,
 		"index":         update.Index,

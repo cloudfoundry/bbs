@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"code.cloudfoundry.org/auctioneer"
 	"code.cloudfoundry.org/bbs"
 	"code.cloudfoundry.org/bbs/cmd/bbs/config"
 	"code.cloudfoundry.org/bbs/controllers"
@@ -18,7 +17,6 @@ import (
 	"code.cloudfoundry.org/bbs/taskworkpool"
 	loggingclient "code.cloudfoundry.org/diego-logging-client"
 	"code.cloudfoundry.org/lager/v3"
-	"code.cloudfoundry.org/rep"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
 )
@@ -35,8 +33,8 @@ func New(
 	desiredHub, actualHub, actualLRPInstanceHub, taskHub events.Hub,
 	taskCompletionClient taskworkpool.TaskCompletionClient,
 	serviceClient serviceclient.ServiceClient,
-	auctioneerClient auctioneer.Client,
-	repClientFactory rep.ClientFactory,
+	auctioneerClient models.AuctioneerClient,
+	repClientFactory models.RepClientFactory,
 	taskStatMetronNotifier metrics.TaskStatMetronNotifier,
 	migrationsDone <-chan struct{},
 	exitChan chan struct{},
