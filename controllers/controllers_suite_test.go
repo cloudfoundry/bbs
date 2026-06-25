@@ -3,7 +3,7 @@ package controllers_test
 import (
 	"context"
 
-	modelsfakes "code.cloudfoundry.org/bbs/models/fakes"
+	"code.cloudfoundry.org/bbs/modelsfakes"
 	"code.cloudfoundry.org/bbs/serviceclient/serviceclientfakes"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"

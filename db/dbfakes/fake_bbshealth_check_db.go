@@ -94,8 +94,6 @@ func (fake *FakeBBSHealthCheckDB) PerformBBSHealthCheckReturnsOnCall(i int, resu
 func (fake *FakeBBSHealthCheckDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.performBBSHealthCheckMutex.RLock()
-	defer fake.performBBSHealthCheckMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

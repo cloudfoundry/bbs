@@ -94,10 +94,6 @@ func (fake *FakeEmitter) UpdateLatencyArgsForCall(i int) (time.Duration, string)
 func (fake *FakeEmitter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.incrementRequestCounterMutex.RLock()
-	defer fake.incrementRequestCounterMutex.RUnlock()
-	fake.updateLatencyMutex.RLock()
-	defer fake.updateLatencyMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

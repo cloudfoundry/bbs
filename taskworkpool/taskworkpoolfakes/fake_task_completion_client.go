@@ -59,8 +59,6 @@ func (fake *FakeTaskCompletionClient) SubmitArgsForCall(i int) (db.TaskDB, event
 func (fake *FakeTaskCompletionClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.submitMutex.RLock()
-	defer fake.submitMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -330,18 +330,6 @@ func (fake *FakeMigration) VersionReturnsOnCall(i int, result1 int64) {
 func (fake *FakeMigration) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.setClockMutex.RLock()
-	defer fake.setClockMutex.RUnlock()
-	fake.setCryptorMutex.RLock()
-	defer fake.setCryptorMutex.RUnlock()
-	fake.setDBFlavorMutex.RLock()
-	defer fake.setDBFlavorMutex.RUnlock()
-	fake.stringMutex.RLock()
-	defer fake.stringMutex.RUnlock()
-	fake.upMutex.RLock()
-	defer fake.upMutex.RUnlock()
-	fake.versionMutex.RLock()
-	defer fake.versionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

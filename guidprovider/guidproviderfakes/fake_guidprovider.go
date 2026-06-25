@@ -4,7 +4,7 @@ package guidproviderfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/diego-db-helpers/guidprovider"
+	"code.cloudfoundry.org/bbs/guidprovider"
 )
 
 type FakeGUIDProvider struct {
@@ -83,8 +83,6 @@ func (fake *FakeGUIDProvider) NextGUIDReturnsOnCall(i int, result1 string, resul
 func (fake *FakeGUIDProvider) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.nextGUIDMutex.RLock()
-	defer fake.nextGUIDMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

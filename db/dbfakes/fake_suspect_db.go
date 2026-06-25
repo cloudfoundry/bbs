@@ -192,10 +192,6 @@ func (fake *FakeSuspectDB) RemoveSuspectActualLRPReturnsOnCall(i int, result1 *m
 func (fake *FakeSuspectDB) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.promoteSuspectActualLRPMutex.RLock()
-	defer fake.promoteSuspectActualLRPMutex.RUnlock()
-	fake.removeSuspectActualLRPMutex.RLock()
-	defer fake.removeSuspectActualLRPMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

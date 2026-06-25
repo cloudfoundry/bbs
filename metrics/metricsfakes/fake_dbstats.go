@@ -205,12 +205,6 @@ func (fake *FakeDBStats) WaitDurationReturnsOnCall(i int, result1 time.Duration)
 func (fake *FakeDBStats) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.openConnectionsMutex.RLock()
-	defer fake.openConnectionsMutex.RUnlock()
-	fake.waitCountMutex.RLock()
-	defer fake.waitCountMutex.RUnlock()
-	fake.waitDurationMutex.RLock()
-	defer fake.waitDurationMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

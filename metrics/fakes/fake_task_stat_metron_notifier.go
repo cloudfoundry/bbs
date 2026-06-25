@@ -286,18 +286,6 @@ func (fake *FakeTaskStatMetronNotifier) RunReturnsOnCall(i int, result1 error) {
 func (fake *FakeTaskStatMetronNotifier) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.recordConvergenceDurationMutex.RLock()
-	defer fake.recordConvergenceDurationMutex.RUnlock()
-	fake.recordTaskCountsMutex.RLock()
-	defer fake.recordTaskCountsMutex.RUnlock()
-	fake.recordTaskFailedMutex.RLock()
-	defer fake.recordTaskFailedMutex.RUnlock()
-	fake.recordTaskStartedMutex.RLock()
-	defer fake.recordTaskStartedMutex.RUnlock()
-	fake.recordTaskSucceededMutex.RLock()
-	defer fake.recordTaskSucceededMutex.RUnlock()
-	fake.runMutex.RLock()
-	defer fake.runMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

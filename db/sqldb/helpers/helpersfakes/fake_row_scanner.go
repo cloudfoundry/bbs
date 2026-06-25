@@ -4,7 +4,7 @@ package helpersfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/diego-db-helpers/sqldb/helpers"
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 )
 
 type FakeRowScanner struct {
@@ -87,8 +87,6 @@ func (fake *FakeRowScanner) ScanReturnsOnCall(i int, result1 error) {
 func (fake *FakeRowScanner) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.scanMutex.RLock()
-	defer fake.scanMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -435,16 +435,6 @@ func (fake *FakeEvacuationController) RemoveEvacuatingActualLRPReturnsOnCall(i i
 func (fake *FakeEvacuationController) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.evacuateClaimedActualLRPMutex.RLock()
-	defer fake.evacuateClaimedActualLRPMutex.RUnlock()
-	fake.evacuateCrashedActualLRPMutex.RLock()
-	defer fake.evacuateCrashedActualLRPMutex.RUnlock()
-	fake.evacuateRunningActualLRPMutex.RLock()
-	defer fake.evacuateRunningActualLRPMutex.RUnlock()
-	fake.evacuateStoppedActualLRPMutex.RLock()
-	defer fake.evacuateStoppedActualLRPMutex.RUnlock()
-	fake.removeEvacuatingActualLRPMutex.RLock()
-	defer fake.removeEvacuatingActualLRPMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

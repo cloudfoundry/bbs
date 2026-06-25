@@ -505,18 +505,6 @@ func (fake *FakeActualLRPLifecycleController) StartActualLRPReturnsOnCall(i int,
 func (fake *FakeActualLRPLifecycleController) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.claimActualLRPMutex.RLock()
-	defer fake.claimActualLRPMutex.RUnlock()
-	fake.crashActualLRPMutex.RLock()
-	defer fake.crashActualLRPMutex.RUnlock()
-	fake.failActualLRPMutex.RLock()
-	defer fake.failActualLRPMutex.RUnlock()
-	fake.removeActualLRPMutex.RLock()
-	defer fake.removeActualLRPMutex.RUnlock()
-	fake.retireActualLRPMutex.RLock()
-	defer fake.retireActualLRPMutex.RUnlock()
-	fake.startActualLRPMutex.RLock()
-	defer fake.startActualLRPMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

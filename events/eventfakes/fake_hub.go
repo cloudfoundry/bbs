@@ -249,16 +249,6 @@ func (fake *FakeHub) UnregisterCallbackCalls(stub func()) {
 func (fake *FakeHub) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.closeMutex.RLock()
-	defer fake.closeMutex.RUnlock()
-	fake.emitMutex.RLock()
-	defer fake.emitMutex.RUnlock()
-	fake.registerCallbackMutex.RLock()
-	defer fake.registerCallbackMutex.RUnlock()
-	fake.subscribeMutex.RLock()
-	defer fake.subscribeMutex.RUnlock()
-	fake.unregisterCallbackMutex.RLock()
-	defer fake.unregisterCallbackMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
