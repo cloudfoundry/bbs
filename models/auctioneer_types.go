@@ -4,6 +4,7 @@ package models
 // to break the bbs <-> auctioneer module cycle.
 
 import (
+	"encoding/json"
 	"errors"
 
 	"code.cloudfoundry.org/lager/v3"
@@ -39,6 +40,25 @@ func NewTaskStartRequestFromModel(taskGuid, domain string, taskDef *TaskDefiniti
 			NewPlacementConstraint(taskDef.RootFs, taskDef.PlacementTags, volumeMounts),
 		),
 	}
+}
+
+// MarshalJSON flattens TaskStartRequest to the shape of its wrapped
+// SchedulingTask. Before this type moved here from auctioneer, it
+// anonymously embedded rep.Task, so its fields were promoted to the top
+// level of the JSON object on the wire. Task became a named field in the
+// move, which nested the payload under a "Task" key instead -- silently
+// breaking auctions between an old auctioneer and a new BBS (or vice
+// versa) during a rolling deploy, since the old side never finds its
+// fields and drops every request with an empty-guid validation error.
+// This preserves the pre-move wire format so mixed-version deploys stay
+// compatible.
+func (t TaskStartRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.Task)
+}
+
+// UnmarshalJSON accepts the flat wire format described above.
+func (t *TaskStartRequest) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &t.Task)
 }
 
 func (t *TaskStartRequest) Validate() error {
