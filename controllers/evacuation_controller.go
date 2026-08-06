@@ -48,6 +48,7 @@ func (h *EvacuationController) RemoveEvacuatingActualLRP(ctx context.Context, lo
 	}
 
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -137,6 +138,7 @@ func (h *EvacuationController) removeEvacuatingOrSuspect(
 
 func (h *EvacuationController) EvacuateClaimedActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) (bool, error) {
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -184,6 +186,7 @@ func (h *EvacuationController) EvacuateClaimedActualLRP(ctx context.Context, log
 
 func (h *EvacuationController) EvacuateCrashedActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey, errorMessage string) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -250,6 +253,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 	availabilityZone string,
 ) (bool, error) {
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -404,6 +408,7 @@ func (h *EvacuationController) EvacuateRunningActualLRP(
 
 func (h *EvacuationController) EvacuateStoppedActualLRP(ctx context.Context, logger lager.Logger, actualLRPKey *models.ActualLRPKey, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -462,6 +467,7 @@ func (h *EvacuationController) requestAuction(ctx context.Context, logger lager.
 func (h *EvacuationController) evacuateInstance(ctx context.Context, logger lager.Logger, allLRPs []*models.ActualLRP, actualLRP *models.ActualLRP) error {
 
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}

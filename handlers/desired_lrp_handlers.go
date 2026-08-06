@@ -359,6 +359,7 @@ func (h *DesiredLRPHandler) createUnclaimedActualLRPs(ctx context.Context, logge
 	createdIndicesChan := make(chan int, count)
 
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
