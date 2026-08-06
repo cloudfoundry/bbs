@@ -68,6 +68,7 @@ func lookupLRPInSlice(lrps []*models.ActualLRP, key *models.ActualLRPInstanceKey
 
 func (h *ActualLRPLifecycleController) ClaimActualLRP(ctx context.Context, logger lager.Logger, processGUID string, index int32, actualLRPInstanceKey *models.ActualLRPInstanceKey) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -110,6 +111,7 @@ func (h *ActualLRPLifecycleController) StartActualLRP(ctx context.Context,
 	availabilityZone string,
 ) error {
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -176,6 +178,7 @@ func (h *ActualLRPLifecycleController) CrashActualLRP(ctx context.Context, logge
 	}
 
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -235,6 +238,7 @@ func (h *ActualLRPLifecycleController) FailActualLRP(ctx context.Context, logger
 	}
 
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -262,6 +266,7 @@ func (h *ActualLRPLifecycleController) RemoveActualLRP(ctx context.Context, logg
 	}
 
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
@@ -284,6 +289,7 @@ func (h *ActualLRPLifecycleController) RetireActualLRP(ctx context.Context, logg
 	}
 
 	eventCalculator := calculator.ActualLRPEventCalculator{
+		//lint:ignore SA1019 - still need to emit these events until the ActualLRPGroup api is deleted
 		ActualLRPGroupHub:    h.actualHub,
 		ActualLRPInstanceHub: h.actualLRPInstanceHub,
 	}
