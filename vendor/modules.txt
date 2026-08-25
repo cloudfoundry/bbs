@@ -198,7 +198,7 @@ github.com/pkg/errors
 # github.com/square/certstrap v1.3.0
 ## explicit; go 1.18
 github.com/square/certstrap/pkix
-# github.com/tedsuo/ifrit v0.0.0-20260418191334-846868129986
+# github.com/tedsuo/ifrit v0.0.0-20260418191334-846868129986 => github.com/tedsuo/ifrit v0.0.0-20260418191334-846868129986
 ## explicit; go 1.16
 github.com/tedsuo/ifrit
 github.com/tedsuo/ifrit/ginkgomon_v2
@@ -417,3 +417,4 @@ google.golang.org/protobuf/runtime/protoimpl
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
+# github.com/tedsuo/ifrit => github.com/tedsuo/ifrit v0.0.0-20260418191334-846868129986
