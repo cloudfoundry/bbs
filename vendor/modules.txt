@@ -10,30 +10,30 @@ code.cloudfoundry.org/bbs/format
 code.cloudfoundry.org/bbs/models
 code.cloudfoundry.org/bbs/models/test/matchers
 code.cloudfoundry.org/bbs/models/test/model_helpers
-# code.cloudfoundry.org/cfhttp/v2 v2.83.0
+# code.cloudfoundry.org/cfhttp/v2 v2.93.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/cfhttp/v2
-# code.cloudfoundry.org/clock v1.76.0
+# code.cloudfoundry.org/clock v1.86.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.103.0
+# code.cloudfoundry.org/debugserver v0.113.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-db-helpers v0.5.0
+# code.cloudfoundry.org/diego-db-helpers v0.15.0
 ## explicit; go 1.26.0
 code.cloudfoundry.org/diego-db-helpers/guidprovider
 code.cloudfoundry.org/diego-db-helpers/sqldb/helpers
 code.cloudfoundry.org/diego-db-helpers/sqldb/helpers/monitor
 code.cloudfoundry.org/diego-db-helpers/testhelpers/sqlrunner
-# code.cloudfoundry.org/diego-logging-client v0.113.0
+# code.cloudfoundry.org/diego-logging-client v0.123.0
 ## explicit; go 1.25.8
 code.cloudfoundry.org/diego-logging-client
 code.cloudfoundry.org/diego-logging-client/testhelpers
-# code.cloudfoundry.org/durationjson v0.78.0
+# code.cloudfoundry.org/durationjson v0.88.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/go-diodes v0.0.0-20260622134745-74c0e1643bdd
+# code.cloudfoundry.org/go-diodes v0.0.0-20260831145205-e8366a756183
 ## explicit; go 1.25.0
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-loggregator/v9 v9.2.1
@@ -44,14 +44,14 @@ code.cloudfoundry.org/go-loggregator/v9/runtimeemitter
 # code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
 ## explicit
 code.cloudfoundry.org/inigo/helpers/portauthority
-# code.cloudfoundry.org/lager/v3 v3.75.0
+# code.cloudfoundry.org/lager/v3 v3.85.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerctx
 code.cloudfoundry.org/lager/v3/lagerflags
 code.cloudfoundry.org/lager/v3/lagertest
-# code.cloudfoundry.org/locket v1.3.0
+# code.cloudfoundry.org/locket v1.11.0
 ## explicit; go 1.26.0
 code.cloudfoundry.org/locket
 code.cloudfoundry.org/locket/cmd/locket
@@ -69,10 +69,10 @@ code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
 code.cloudfoundry.org/locket/models/modelsfakes
-# code.cloudfoundry.org/routing-info v1.1.0
+# code.cloudfoundry.org/routing-info v1.12.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/routing-info/internalroutes
-# code.cloudfoundry.org/tlsconfig v0.60.0
+# code.cloudfoundry.org/tlsconfig v0.65.0
 ## explicit; go 1.25.8
 code.cloudfoundry.org/tlsconfig
 # code.cloudfoundry.org/workpool v0.0.0-20250911194158-1489753f182e
@@ -90,11 +90,11 @@ github.com/Masterminds/semver/v3
 github.com/bmizerany/pat
 # github.com/fsnotify/fsnotify v1.7.0
 ## explicit; go 1.17
-# github.com/go-logr/logr v1.4.3
+# github.com/go-logr/logr v1.4.4
 ## explicit; go 1.18
 github.com/go-logr/logr
 github.com/go-logr/logr/funcr
-# github.com/go-sql-driver/mysql v1.10.0
+# github.com/go-sql-driver/mysql v1.10.1
 ## explicit; go 1.24.0
 github.com/go-sql-driver/mysql
 # github.com/go-task/slim-sprig/v3 v3.0.0
@@ -116,8 +116,8 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20260604005048-7023385849c0
-## explicit; go 1.24.0
+# github.com/google/pprof v0.0.0-20260903180319-d6c3cb2f37ec
+## explicit; go 1.25.0
 github.com/google/pprof/profile
 # github.com/jackc/pgpassfile v1.0.0
 ## explicit; go 1.12
@@ -146,7 +146,7 @@ github.com/jackc/puddle/v2/internal/genstack
 # github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 ## explicit
 github.com/nu7hatch/gouuid
-# github.com/onsi/ginkgo/v2 v2.32.0
+# github.com/onsi/ginkgo/v2 v2.32.1
 ## explicit; go 1.25.0
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -170,7 +170,7 @@ github.com/onsi/ginkgo/v2/internal/reporters
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.42.1
+# github.com/onsi/gomega v1.43.0
 ## explicit; go 1.25.0
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -198,7 +198,7 @@ github.com/pkg/errors
 # github.com/square/certstrap v1.3.0
 ## explicit; go 1.18
 github.com/square/certstrap/pkix
-# github.com/tedsuo/ifrit v0.0.0-20260418191334-846868129986 => github.com/tedsuo/ifrit v0.0.0-20260418191334-846868129986
+# github.com/tedsuo/ifrit v0.0.0-20260813155221-94822c932811 => github.com/tedsuo/ifrit v0.0.0-20260418191334-846868129986
 ## explicit; go 1.16
 github.com/tedsuo/ifrit
 github.com/tedsuo/ifrit/ginkgomon_v2
@@ -211,7 +211,7 @@ github.com/tedsuo/rata
 # github.com/vito/go-sse v1.1.3
 ## explicit; go 1.24
 github.com/vito/go-sse/sse
-# go.step.sm/crypto v0.83.0
+# go.step.sm/crypto v0.89.0
 ## explicit; go 1.25.8
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
@@ -222,11 +222,11 @@ go.step.sm/crypto/keyutil
 go.step.sm/crypto/pemutil
 go.step.sm/crypto/randutil
 go.step.sm/crypto/x25519
-# go.yaml.in/yaml/v3 v3.0.4
+# go.yaml.in/yaml/v3 v3.0.5
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
-# golang.org/x/crypto v0.53.0
-## explicit; go 1.25.0
+# golang.org/x/crypto v0.56.0
+## explicit; go 1.26.0
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/cryptobyte
@@ -240,10 +240,10 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/mod v0.37.0
+# golang.org/x/mod v0.40.0
 ## explicit; go 1.25.0
 golang.org/x/mod/semver
-# golang.org/x/net v0.56.0
+# golang.org/x/net v0.58.0
 ## explicit; go 1.25.0
 golang.org/x/net/context
 golang.org/x/net/html
@@ -257,16 +257,16 @@ golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/httpsfv
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sync v0.21.0
+# golang.org/x/sync v0.22.0
 ## explicit; go 1.25.0
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.46.0
+# golang.org/x/sys v0.47.0
 ## explicit; go 1.25.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.38.0
+# golang.org/x/text v0.41.0
 ## explicit; go 1.25.0
 golang.org/x/text/cases
 golang.org/x/text/encoding
@@ -292,7 +292,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.46.0
+# golang.org/x/tools v0.49.0
 ## explicit; go 1.25.0
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/edge
@@ -300,7 +300,6 @@ golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/packages
 golang.org/x/tools/go/types/objectpath
-golang.org/x/tools/go/types/typeutil
 golang.org/x/tools/internal/aliases
 golang.org/x/tools/internal/event
 golang.org/x/tools/internal/event/core
@@ -308,16 +307,16 @@ golang.org/x/tools/internal/event/keys
 golang.org/x/tools/internal/event/label
 golang.org/x/tools/internal/gcimporter
 golang.org/x/tools/internal/gocommand
+golang.org/x/tools/internal/moremaps
 golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/pkgbits
 golang.org/x/tools/internal/stdlib
-golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20260831171406-18b4a7587f8a
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.81.1
+# google.golang.org/grpc v1.83.2
 ## explicit; go 1.25.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
@@ -338,13 +337,13 @@ google.golang.org/grpc/credentials/insecure
 google.golang.org/grpc/encoding
 google.golang.org/grpc/encoding/internal
 google.golang.org/grpc/encoding/proto
+google.golang.org/grpc/experimental/balancer/weight
 google.golang.org/grpc/experimental/stats
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/grpclog/internal
 google.golang.org/grpc/internal
 google.golang.org/grpc/internal/backoff
 google.golang.org/grpc/internal/balancer/gracefulswitch
-google.golang.org/grpc/internal/balancer/weight
 google.golang.org/grpc/internal/balancerload
 google.golang.org/grpc/internal/binarylog
 google.golang.org/grpc/internal/buffer
@@ -370,6 +369,7 @@ google.golang.org/grpc/internal/stats
 google.golang.org/grpc/internal/status
 google.golang.org/grpc/internal/syscall
 google.golang.org/grpc/internal/transport
+google.golang.org/grpc/internal/transport/internal
 google.golang.org/grpc/internal/transport/networktype
 google.golang.org/grpc/internal/transport/readyreader
 google.golang.org/grpc/keepalive
@@ -382,7 +382,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.36.11
+# google.golang.org/protobuf v1.36.12
 ## explicit; go 1.23
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
