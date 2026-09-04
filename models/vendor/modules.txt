@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/bbs/encryption v1.10.0
+# code.cloudfoundry.org/bbs/encryption v1.11.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/encryption
 # code.cloudfoundry.org/bbs/format v1.10.0
