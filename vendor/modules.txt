@@ -2,7 +2,7 @@
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/encryption
 code.cloudfoundry.org/bbs/encryption/encryptionfakes
-# code.cloudfoundry.org/bbs/format v1.9.0
+# code.cloudfoundry.org/bbs/format v1.10.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/format
 # code.cloudfoundry.org/bbs/models v1.9.0
