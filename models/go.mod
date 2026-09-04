@@ -12,7 +12,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/bbs/encryption v1.9.0 // indirect
+	code.cloudfoundry.org/bbs/encryption v1.10.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
