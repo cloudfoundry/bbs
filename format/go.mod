@@ -3,7 +3,7 @@ module code.cloudfoundry.org/bbs/format
 go 1.26.2
 
 require (
-	code.cloudfoundry.org/bbs/encryption v1.9.0
+	code.cloudfoundry.org/bbs/encryption v1.11.0
 	code.cloudfoundry.org/lager/v3 v3.85.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/onsi/ginkgo/v2 v2.32.1
@@ -15,7 +15,7 @@ require (
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20260903180319-d6c3cb2f37ec // indirect
+	github.com/google/pprof v0.0.0-20260906184651-6331bc6350fe // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.40.0 // indirect
