@@ -594,8 +594,8 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 code.cloudfoundry.org/bbs/encryption v1.11.0 h1:Znr2mZ4Z6UyS7Of0GcZxSLBXAasej5x5qzI73l7np6I=
 code.cloudfoundry.org/bbs/encryption v1.11.0/go.mod h1:z4PVatewj/F6aArblg5ruxcldMp/8+Iotz0i/EC9JpY=
-code.cloudfoundry.org/bbs/format v1.10.0 h1:e+L7atwS8e39qsOGBrS0D4KuyhFOXVMI/lx5VcZJszA=
-code.cloudfoundry.org/bbs/format v1.10.0/go.mod h1:Nlxi5VvOHt0GLlsWa2/jZx0Gy2osOl0TEMbQD/N2X+k=
+code.cloudfoundry.org/bbs/format v1.11.0 h1:Y77oGP+VH9oYpaVQn1INwxSjfB1ayGKv0fgS9Dap9RI=
+code.cloudfoundry.org/bbs/format v1.11.0/go.mod h1:I4+i8HlgOKjM+mU78eASGxDpWCCqzPqef7QtGPa4/5g=
 code.cloudfoundry.org/bbs/models v1.12.0 h1:S4BGMK/ekGzEA25VrZPA84QiLRG7EpJlu1ib8+PjQ74=
 code.cloudfoundry.org/bbs/models v1.12.0/go.mod h1:XHmd4dVS2QmCKR+sSFmkAyzEdEi+7osowzy+CqZStqc=
 code.cloudfoundry.org/cfhttp/v2 v2.93.0 h1:uCac6TXNxe9Ltu+2C9sjwExwf9nRHyW2cr08HDWWjLc=
