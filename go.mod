@@ -15,7 +15,7 @@ require (
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
 	code.cloudfoundry.org/lager/v3 v3.86.0
-	code.cloudfoundry.org/locket v1.11.0
+	code.cloudfoundry.org/locket v1.12.0
 	code.cloudfoundry.org/routing-info v1.13.0
 	code.cloudfoundry.org/tlsconfig v0.66.0
 	code.cloudfoundry.org/workpool v0.0.0-20250911194158-1489753f182e
@@ -24,17 +24,17 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.32.1
+	github.com/onsi/ginkgo/v2 v2.32.2
 	github.com/onsi/gomega v1.43.0
 	github.com/openzipkin/zipkin-go v0.4.3
-	github.com/tedsuo/ifrit v0.0.0-20260813155221-94822c932811
+	github.com/tedsuo/ifrit v0.0.0-20260908181113-dd353a7daa27
 	github.com/tedsuo/rata v1.0.0
 	github.com/vito/go-sse v1.1.3
 	google.golang.org/grpc v1.83.2
 )
 
 require (
-	code.cloudfoundry.org/go-diodes v0.0.0-20260831145205-e8366a756183 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20260914115851-7fd03ae06e34 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
@@ -50,14 +50,14 @@ require (
 	github.com/square/certstrap v1.3.0 // indirect
 	go.step.sm/crypto v0.90.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.56.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260908043556-f8649ddbbfe6 // indirect
+	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/tools v0.50.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
