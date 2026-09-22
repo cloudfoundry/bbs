@@ -6,39 +6,38 @@ require (
 	code.cloudfoundry.org/bbs/encryption v1.14.0
 	code.cloudfoundry.org/bbs/format v1.12.0
 	code.cloudfoundry.org/bbs/models v1.13.0
-	code.cloudfoundry.org/cfhttp/v2 v2.94.0
-	code.cloudfoundry.org/clock v1.87.0
-	code.cloudfoundry.org/debugserver v0.114.0
-	code.cloudfoundry.org/diego-db-helpers v0.17.0
-	code.cloudfoundry.org/diego-logging-client v0.124.0
-	code.cloudfoundry.org/durationjson v0.89.0
+	code.cloudfoundry.org/cfhttp/v2 v2.95.0
+	code.cloudfoundry.org/clock v1.88.0
+	code.cloudfoundry.org/debugserver v0.115.0
+	code.cloudfoundry.org/diego-db-helpers v0.18.0
+	code.cloudfoundry.org/diego-logging-client v0.125.0
+	code.cloudfoundry.org/durationjson v0.90.0
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
-	code.cloudfoundry.org/lager/v3 v3.86.0
-	code.cloudfoundry.org/locket v1.12.0
-	code.cloudfoundry.org/routing-info v1.13.0
-	code.cloudfoundry.org/tlsconfig v0.66.0
+	code.cloudfoundry.org/lager/v3 v3.87.0
+	code.cloudfoundry.org/locket v1.13.0
+	code.cloudfoundry.org/routing-info v1.14.0
+	code.cloudfoundry.org/tlsconfig v0.67.0
 	code.cloudfoundry.org/workpool v0.0.0-20250911194158-1489753f182e
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/go-test/deep v1.1.1
 	github.com/gogo/protobuf v1.3.2
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.32.2
-	github.com/onsi/gomega v1.43.0
+	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/onsi/gomega v1.43.1
 	github.com/openzipkin/zipkin-go v0.4.3
 	github.com/tedsuo/ifrit v0.0.0-20260908181113-dd353a7daa27
 	github.com/tedsuo/rata v1.0.0
 	github.com/vito/go-sse v1.1.3
-	google.golang.org/grpc v1.83.2
+	google.golang.org/grpc v1.84.0
 )
 
 require (
-	code.cloudfoundry.org/go-diodes v0.0.0-20260914115851-7fd03ae06e34 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20260921100641-e75e32521ad8 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
@@ -48,7 +47,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
-	go.step.sm/crypto v0.90.0 // indirect
+	go.step.sm/crypto v0.91.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
@@ -57,7 +56,7 @@ require (
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/tools v0.50.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260921155816-b14227669459 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
