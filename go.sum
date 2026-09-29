@@ -594,8 +594,8 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 code.cloudfoundry.org/bbs/encryption v1.16.0 h1:/sw3A7HvupOD/HCta5CYFatBQqvk2FGzgW6Zo41C1R0=
 code.cloudfoundry.org/bbs/encryption v1.16.0/go.mod h1:8w+9l3ctXHuE7gUWaBhtBwUpNmowSvMF2vWVlSP7LRA=
-code.cloudfoundry.org/bbs/format v1.13.0 h1:gLzokleSeLS+TIbDqfGRwT+Yg5mV4yQqGhpyNnO7J7U=
-code.cloudfoundry.org/bbs/format v1.13.0/go.mod h1:+f07f5yznZ3tTkSUnzAmrk5OuCfmLGauGjOkGOup10A=
+code.cloudfoundry.org/bbs/format v1.14.0 h1:zYBX4M1R0vtEXjs+sjpAXyyomwIf0kxi+rK5e4vIeA4=
+code.cloudfoundry.org/bbs/format v1.14.0/go.mod h1:GmyV9vov8nJ8hKcqd90J3mSLLLmVjkozlypkRUQ9x6o=
 code.cloudfoundry.org/bbs/models v1.14.0 h1:VrWUJEhEB56VCEJUBujfMHfTyjz4czkptMyBeT/ci28=
 code.cloudfoundry.org/bbs/models v1.14.0/go.mod h1:D0tHjp4Olnv7xfevvXLyufUrZ90za1onc1sWuSJo7o8=
 code.cloudfoundry.org/cfhttp/v2 v2.95.0 h1:lIadLnwpEJces15YfIvIxGe/kwLfXIdCSP15OenAMFs=
@@ -616,8 +616,8 @@ code.cloudfoundry.org/go-loggregator/v9 v9.2.1 h1:S6Lgg5UJbhh2bt2TGQxs6R00CF8PrU
 code.cloudfoundry.org/go-loggregator/v9 v9.2.1/go.mod h1:FTFFruqGeOhVCDFvyLgl8EV8YW63NNwRzLhxJcporu8=
 code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815 h1:f3kRw+Gb7E8422fnIu0eXhgxqTYZm3siyGuOyyF4RHw=
 code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815/go.mod h1:1ZB1JCh2FAp+SqX79ve6dc8YREvbsziULEOncAilX4Q=
-code.cloudfoundry.org/lager/v3 v3.87.0 h1:e6zDuyV8/jsMhHaSCtFecWh65dSLNeNVlydwAznI9D0=
-code.cloudfoundry.org/lager/v3 v3.87.0/go.mod h1:2PulAlxdP8DQApM9bvxiAiJnV+Xs6HkyxgcPvQ4fTPg=
+code.cloudfoundry.org/lager/v3 v3.88.0 h1:6L5TP+FamXT5pYb0SlinGkap0bTKRalxCt/RGNswZf0=
+code.cloudfoundry.org/lager/v3 v3.88.0/go.mod h1:pT0Xsju4DYiiEDKVxvNfrZllKAYr1qwLZzRQKwT2wOw=
 code.cloudfoundry.org/locket v1.13.0 h1:qmLnQ8qjbgFUcuYkwibXJxu5UQyN9mC0NV3pRQI2cqY=
 code.cloudfoundry.org/locket v1.13.0/go.mod h1:GZysEk+mqoOkeG2lN2CVehM5DrNVvBmMRJGQEBvwJGs=
 code.cloudfoundry.org/routing-info v1.14.0 h1:+g5p8/7qNXSyYOmLQyRbsWoSncjnBVxGMYwTetZrj2c=
@@ -816,8 +816,8 @@ github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38/go.mod h1:kpwsk12EmLe
 github.com/google/pprof v0.0.0-20210601050228-01bbb1931b22/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210609004039-a478d1d731e9/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
-github.com/google/pprof v0.0.0-20260906184651-6331bc6350fe h1:QAinXoAFJdGQYztXn3VpFey7KCwpedbZ/EkzbplQ0cY=
-github.com/google/pprof v0.0.0-20260906184651-6331bc6350fe/go.mod h1:jl5iWTm0/hd5PjEYEOuwAJ57L/CibdZfrqZ5XA5GrCk=
+github.com/google/pprof v0.0.0-20260926063103-aaccee046517 h1:joNby64wfCIWh0HXBMrjZc6ii70nntnG9u3CQSXXwiA=
+github.com/google/pprof v0.0.0-20260926063103-aaccee046517/go.mod h1:jl5iWTm0/hd5PjEYEOuwAJ57L/CibdZfrqZ5XA5GrCk=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
@@ -928,8 +928,8 @@ github.com/onsi/gomega v1.27.1/go.mod h1:aHX5xOykVYzWOV4WqQy0sy8BQptgukenXpCXfad
 github.com/onsi/gomega v1.27.3/go.mod h1:5vG284IBtfDAmDyrK+eGyZmUgUlmi+Wngqo557cZ6Gw=
 github.com/onsi/gomega v1.27.4/go.mod h1:riYq/GJKh8hhoM01HN6Vmuy93AarCXCBGpvFDK3q3fQ=
 github.com/onsi/gomega v1.27.6/go.mod h1:PIQNjfQwkP3aQAH7lf7j87O/5FiNr+ZR8+ipb+qQlhg=
-github.com/onsi/gomega v1.43.1 h1:vGIPFuYrIO6/0Z09s0I0QQQgFchiX4+tb1re3MScJYo=
-github.com/onsi/gomega v1.43.1/go.mod h1:e/C2HwaZ1DhvjzXXuFhcR7hY7Sh9pl7MmoWKEjzwcdA=
+github.com/onsi/gomega v1.44.0 h1:eAiGl3Pw5jz5GQdDff0BcxYpAX1JxW8xD7mFUuwNfZQ=
+github.com/onsi/gomega v1.44.0/go.mod h1:e/C2HwaZ1DhvjzXXuFhcR7hY7Sh9pl7MmoWKEjzwcdA=
 github.com/openzipkin/zipkin-go v0.4.3 h1:9EGwpqkgnwdEIJ+Od7QVSEIH+ocmm5nPat0G7sjsSdg=
 github.com/openzipkin/zipkin-go v0.4.3/go.mod h1:M9wCJZFWCo2RiY+o1eBCEMe0Dp2S5LDHcMZmk3RmK7c=
 github.com/phpdave11/gofpdf v1.4.2/go.mod h1:zpO6xFn9yxo3YLyMvW8HcKWVdbNqgIfOOp2dXMnm1mY=
