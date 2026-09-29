@@ -5,19 +5,19 @@ go 1.26.2
 require (
 	code.cloudfoundry.org/bbs/encryption v1.18.0
 	code.cloudfoundry.org/bbs/format v1.14.0
-	code.cloudfoundry.org/bbs/models v1.17.0
-	code.cloudfoundry.org/cfhttp/v2 v2.95.0
-	code.cloudfoundry.org/clock v1.88.0
-	code.cloudfoundry.org/debugserver v0.115.0
-	code.cloudfoundry.org/diego-db-helpers v0.18.0
-	code.cloudfoundry.org/diego-logging-client v0.125.0
-	code.cloudfoundry.org/durationjson v0.90.0
+	code.cloudfoundry.org/bbs/models v1.18.0
+	code.cloudfoundry.org/cfhttp/v2 v2.97.0
+	code.cloudfoundry.org/clock v1.90.0
+	code.cloudfoundry.org/debugserver v0.117.0
+	code.cloudfoundry.org/diego-db-helpers v0.20.0
+	code.cloudfoundry.org/diego-logging-client v0.127.0
+	code.cloudfoundry.org/durationjson v0.92.0
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
-	code.cloudfoundry.org/lager/v3 v3.88.0
-	code.cloudfoundry.org/locket v1.13.0
-	code.cloudfoundry.org/routing-info v1.14.0
-	code.cloudfoundry.org/tlsconfig v0.67.0
+	code.cloudfoundry.org/lager/v3 v3.89.0
+	code.cloudfoundry.org/locket v1.15.0
+	code.cloudfoundry.org/routing-info v1.16.0
+	code.cloudfoundry.org/tlsconfig v0.68.0
 	code.cloudfoundry.org/workpool v0.0.0-20250911194158-1489753f182e
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/go-test/deep v1.1.1
@@ -34,7 +34,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/go-diodes v0.0.0-20260921100641-e75e32521ad8 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20260928063035-f81ac938b818 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
@@ -56,7 +56,7 @@ require (
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/tools v0.50.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260921155816-b14227669459 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260928230214-8a89bd6388cc // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
