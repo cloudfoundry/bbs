@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	code.cloudfoundry.org/bbs/encryption v1.17.0
 	code.cloudfoundry.org/bbs/format v1.14.0
-	code.cloudfoundry.org/bbs/models v1.15.0
+	code.cloudfoundry.org/bbs/models v1.16.0
 	code.cloudfoundry.org/cfhttp/v2 v2.95.0
 	code.cloudfoundry.org/clock v1.88.0
 	code.cloudfoundry.org/debugserver v0.115.0
