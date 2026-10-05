@@ -59,3 +59,12 @@ func TestServiceAccountCertificatePropertiesValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestAssembledDesiredLRPRetainsServiceAccountIdentity(t *testing.T) {
+	properties := &models.CertificateProperties{ServiceAccount: &models.ServiceAccount{Name: "payments-worker"}}
+	desired := &models.DesiredLRP{}
+	desired.AddRunInfo(models.DesiredLRPRunInfo{CertificateProperties: properties})
+	if desired.CertificateProperties == nil || desired.CertificateProperties.ServiceAccount.Name != "payments-worker" {
+		t.Fatal("assembling stored LRP run info dropped account identity")
+	}
+}
