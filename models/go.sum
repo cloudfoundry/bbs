@@ -1,7 +1,7 @@
 code.cloudfoundry.org/bbs/encryption v1.19.0 h1:mWEicdy2MoeOy78WLZg9l390o4g1Xv3sNB//p8yBPBI=
 code.cloudfoundry.org/bbs/encryption v1.19.0/go.mod h1:hwG3UAQGlEV1/aTPJRqHahCIcPXG+3D6oLwepMe4uac=
-code.cloudfoundry.org/bbs/format v1.15.0 h1:4xTO/wI4uK5WZ60AEF6N9i2MK8FMzCDJeBvYkMDRlnU=
-code.cloudfoundry.org/bbs/format v1.15.0/go.mod h1:Woarxo1+jT9iJb3D6Eae6mTM0OmXIqxxpjIHG9i/Zek=
+code.cloudfoundry.org/bbs/format v1.16.0 h1:Cuthq+dkzZ4vS8j3WgJDktu6N9sGAEAZLY+W9dQF/OI=
+code.cloudfoundry.org/bbs/format v1.16.0/go.mod h1:WRTiR1u8fqsYUsblcEAToKhK457Y7XGWKOOytJDzoBg=
 code.cloudfoundry.org/lager/v3 v3.90.0 h1:BlIboiXg91DaCuxjR2Uu89BEOpTT5GDn0CH8mxt3quc=
 code.cloudfoundry.org/lager/v3 v3.90.0/go.mod h1:lB+0jDPi5kdC308uxGcdTHSVz7HvK88oOkTeWVwrs54=
 github.com/Masterminds/semver/v3 v3.5.0 h1:kQceYJfbupGfZOKZQg0kou0DgAKhzDg2NZPAwZ/2OOE=
