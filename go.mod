@@ -4,7 +4,7 @@ go 1.26.2
 
 require (
 	code.cloudfoundry.org/bbs/encryption v1.23.0
-	code.cloudfoundry.org/bbs/format v1.17.0
+	code.cloudfoundry.org/bbs/format v1.18.0
 	code.cloudfoundry.org/bbs/models v1.22.0
 	code.cloudfoundry.org/cfhttp/v2 v2.99.0
 	code.cloudfoundry.org/clock v1.92.0
@@ -14,7 +14,7 @@ require (
 	code.cloudfoundry.org/durationjson v0.94.0
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
-	code.cloudfoundry.org/lager/v3 v3.91.0
+	code.cloudfoundry.org/lager/v3 v3.92.0
 	code.cloudfoundry.org/locket v1.17.0
 	code.cloudfoundry.org/routing-info v1.18.0
 	code.cloudfoundry.org/tlsconfig v0.69.0
@@ -41,7 +41,7 @@ require (
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50 // indirect
+	github.com/google/pprof v0.0.0-20261026192309-dbd0ed30aa88 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.3 // indirect
