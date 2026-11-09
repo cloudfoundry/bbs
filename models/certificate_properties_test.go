@@ -42,11 +42,17 @@ func TestQualifiedServiceAccountPrefixRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	wire, err := proto.Marshal(&properties)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	var decoded models.CertificateProperties
-	if err := proto.Unmarshal(wire, &decoded); err != nil { t.Fatal(err) }
+	if err := proto.Unmarshal(wire, &decoded); err != nil {
+		t.Fatal(err)
+	}
 	payload, err := json.Marshal(&decoded)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !strings.Contains(string(payload), `"prefix":"payments-team"`) {
 		t.Fatalf("qualified prefix lost: %s", payload)
 	}
