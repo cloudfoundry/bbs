@@ -36,6 +36,22 @@ func TestServiceAccountCertificatePropertiesRoundTrip(t *testing.T) {
 	}
 }
 
+func TestQualifiedServiceAccountPrefixRoundTrip(t *testing.T) {
+	var properties models.CertificateProperties
+	if err := json.Unmarshal([]byte(`{"service_account":{"name":"payments-worker","prefix":"payments-team"}}`), &properties); err != nil {
+		t.Fatal(err)
+	}
+	wire, err := proto.Marshal(&properties)
+	if err != nil { t.Fatal(err) }
+	var decoded models.CertificateProperties
+	if err := proto.Unmarshal(wire, &decoded); err != nil { t.Fatal(err) }
+	payload, err := json.Marshal(&decoded)
+	if err != nil { t.Fatal(err) }
+	if !strings.Contains(string(payload), `"prefix":"payments-team"`) {
+		t.Fatalf("qualified prefix lost: %s", payload)
+	}
+}
+
 func TestServiceAccountCertificatePropertiesValidation(t *testing.T) {
 	for _, name := range []string{"", "ab", "Payments-worker", "-payments", "payments-", "payments.reader", "payments.svc.identity", "payments_worker", strings.Repeat("a", 64)} {
 		t.Run(name, func(t *testing.T) {
