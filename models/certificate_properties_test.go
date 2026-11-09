@@ -58,6 +58,15 @@ func TestQualifiedServiceAccountPrefixRoundTrip(t *testing.T) {
 	}
 }
 
+func TestQualifiedPrefixRejectsNoncanonicalLabels(t *testing.T) {
+	for _, prefix := range []string{"ab", "Upper", "a.b", "-abc", strings.Repeat("a", 64)} {
+		properties := models.CertificateProperties{ServiceAccount: &models.ServiceAccount{Name: "worker-app", Prefix: prefix}}
+		if err := properties.Validate(); err == nil {
+			t.Fatalf("invalid prefix accepted: %q", prefix)
+		}
+	}
+}
+
 func TestServiceAccountCertificatePropertiesValidation(t *testing.T) {
 	for _, name := range []string{"", "ab", "Payments-worker", "-payments", "payments-", "payments.reader", "payments.svc.identity", "payments_worker", strings.Repeat("a", 64)} {
 		t.Run(name, func(t *testing.T) {
