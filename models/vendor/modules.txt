@@ -1,7 +1,7 @@
 # code.cloudfoundry.org/bbs/encryption v1.26.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/encryption
-# code.cloudfoundry.org/bbs/format v1.19.0
+# code.cloudfoundry.org/bbs/format v1.20.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/format
 # code.cloudfoundry.org/lager/v3 v3.94.0
