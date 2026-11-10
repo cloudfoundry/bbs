@@ -3,7 +3,7 @@ module code.cloudfoundry.org/bbs
 go 1.27.3
 
 require (
-	code.cloudfoundry.org/bbs/encryption v1.27.0
+	code.cloudfoundry.org/bbs/encryption v1.28.0
 	code.cloudfoundry.org/bbs/format v1.20.0
 	code.cloudfoundry.org/bbs/models v1.27.0
 	code.cloudfoundry.org/cfhttp/v2 v2.101.0
