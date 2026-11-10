@@ -2,7 +2,7 @@
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/encryption
 code.cloudfoundry.org/bbs/encryption/encryptionfakes
-# code.cloudfoundry.org/bbs/format v1.19.0
+# code.cloudfoundry.org/bbs/format v1.20.0
 ## explicit; go 1.26.2
 code.cloudfoundry.org/bbs/format
 # code.cloudfoundry.org/bbs/models v1.26.0
@@ -44,7 +44,7 @@ code.cloudfoundry.org/go-loggregator/v9/runtimeemitter
 # code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815
 ## explicit
 code.cloudfoundry.org/inigo/helpers/portauthority
-# code.cloudfoundry.org/lager/v3 v3.93.0
+# code.cloudfoundry.org/lager/v3 v3.94.0
 ## explicit; go 1.26.0
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
@@ -114,7 +114,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20261102214848-0031fcd306b0
+# github.com/google/pprof v0.0.0-20261105003125-4bf881d7fb0b
 ## explicit; go 1.26.0
 github.com/google/pprof/profile
 # github.com/jackc/pgpassfile v1.0.0
@@ -241,7 +241,7 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/mod v0.42.0
+# golang.org/x/mod v0.43.0
 ## explicit; go 1.26.0
 golang.org/x/mod/semver
 # golang.org/x/net v0.62.0
@@ -258,16 +258,16 @@ golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/httpsfv
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sync v0.24.0
+# golang.org/x/sync v0.25.0
 ## explicit; go 1.26.0
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.49.0
+# golang.org/x/sys v0.50.0
 ## explicit; go 1.26.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.43.0
+# golang.org/x/text v0.44.0
 ## explicit; go 1.26.0
 golang.org/x/text/cases
 golang.org/x/text/encoding
