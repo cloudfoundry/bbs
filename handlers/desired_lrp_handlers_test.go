@@ -1058,6 +1058,36 @@ var _ = Describe("DesiredLRP Handlers", func() {
 				Expect(response.Error).To(BeNil())
 			})
 
+			Context("with a qualified service account", func() {
+				BeforeEach(func() {
+					desiredLRP.CertificateProperties = &models.CertificateProperties{}
+					Expect(json.Unmarshal([]byte(`{"service_account":{"name":"payments-worker","prefix":"payments-team"}}`), desiredLRP.CertificateProperties)).To(Succeed())
+				})
+
+				It("preserves the service account through server request decoding", func() {
+					Expect(fakeDesiredLRPDB.DesireLRPCallCount()).To(Equal(1))
+					_, _, actual := fakeDesiredLRPDB.DesireLRPArgsForCall(0)
+					payload, err := json.Marshal(actual.CertificateProperties)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(string(payload)).To(MatchJSON(`{"service_account":{"name":"payments-worker","prefix":"payments-team"}}`))
+				})
+			})
+
+			Context("with an unqualified service account", func() {
+				BeforeEach(func() {
+					desiredLRP.CertificateProperties = &models.CertificateProperties{}
+					Expect(json.Unmarshal([]byte(`{"service_account":{"name":"payments-worker"}}`), desiredLRP.CertificateProperties)).To(Succeed())
+				})
+
+				It("rejects the service account before persistence", func() {
+					Expect(fakeDesiredLRPDB.DesireLRPCallCount()).To(BeZero())
+					response := models.DesiredLRPLifecycleResponse{}
+					Expect(response.Unmarshal(responseRecorder.Body.Bytes())).To(Succeed())
+					Expect(response.Error).NotTo(BeNil())
+					Expect(response.Error.Message).To(ContainSubstring("service_account.prefix"))
+				})
+			})
+
 			It("emits a create event to the hub", func() {
 				Eventually(desiredHub.EmitCallCount).Should(Equal(1))
 				event := desiredHub.EmitArgsForCall(0)

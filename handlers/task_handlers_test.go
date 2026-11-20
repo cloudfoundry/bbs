@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -522,6 +523,36 @@ var _ = Describe("Task Handlers", func() {
 		})
 
 		Context("when the desire is successful", func() {
+			Context("with a qualified service account", func() {
+				BeforeEach(func() {
+					taskDef.CertificateProperties = &models.CertificateProperties{}
+					Expect(json.Unmarshal([]byte(`{"service_account":{"name":"payments-worker","prefix":"payments-team"}}`), taskDef.CertificateProperties)).To(Succeed())
+				})
+
+				It("preserves the service account through server request decoding", func() {
+					Expect(controller.DesireTaskCallCount()).To(Equal(1))
+					_, _, actual, _, _ := controller.DesireTaskArgsForCall(0)
+					payload, err := json.Marshal(actual.CertificateProperties)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(string(payload)).To(MatchJSON(`{"service_account":{"name":"payments-worker","prefix":"payments-team"}}`))
+				})
+			})
+
+			Context("with an unqualified service account", func() {
+				BeforeEach(func() {
+					taskDef.CertificateProperties = &models.CertificateProperties{}
+					Expect(json.Unmarshal([]byte(`{"service_account":{"name":"payments-worker"}}`), taskDef.CertificateProperties)).To(Succeed())
+				})
+
+				It("rejects the service account before persistence", func() {
+					Expect(controller.DesireTaskCallCount()).To(BeZero())
+					response := models.TaskLifecycleResponse{}
+					Expect(response.Unmarshal(responseRecorder.Body.Bytes())).To(Succeed())
+					Expect(response.Error).NotTo(BeNil())
+					Expect(response.Error.Message).To(ContainSubstring("service_account.prefix"))
+				})
+			})
+
 			It("desires the task with the requested definitions", func() {
 				Expect(controller.DesireTaskCallCount()).To(Equal(1))
 				_, _, actualTaskDef, actualTaskGuid, actualDomain := controller.DesireTaskArgsForCall(0)
