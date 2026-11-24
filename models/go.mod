@@ -3,7 +3,7 @@ module code.cloudfoundry.org/bbs/models
 go 1.26.2
 
 require (
-	code.cloudfoundry.org/bbs/format v1.21.0
+	code.cloudfoundry.org/bbs/format v1.22.0
 	code.cloudfoundry.org/lager/v3 v3.96.0
 	github.com/go-test/deep v1.1.2
 	github.com/gogo/protobuf v1.3.2
